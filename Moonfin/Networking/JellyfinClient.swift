@@ -7,6 +7,12 @@ final class JellyfinClient {
     let deviceName: String
 
     private let session: URLSession
+    private let encoder = JSONEncoder()
+    private let decoder: JSONDecoder = {
+        let d = JSONDecoder()
+        d.dateDecodingStrategy = .iso8601
+        return d
+    }()
 
     init(
         baseURL: URL? = nil,
@@ -28,36 +34,8 @@ final class JellyfinClient {
         queryItems: [URLQueryItem]? = nil,
         body: (any Encodable)? = nil
     ) async throws -> T {
-        guard let baseURL else { throw NetworkError.invalidURL }
-
-        var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
-        components?.queryItems = queryItems
-
-        guard let url = components?.url else { throw NetworkError.invalidURL }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(authorizationHeader, forHTTPHeaderField: "Authorization")
-
-        if let body {
-            request.httpBody = try JSONEncoder().encode(body)
-        }
-
-        let (data, response) = try await session.data(for: request)
-
-        guard let http = response as? HTTPURLResponse else {
-            throw NetworkError.serverUnavailable
-        }
-
-        guard (200...299).contains(http.statusCode) else {
-            if http.statusCode == 401 { throw NetworkError.unauthorized }
-            throw NetworkError.httpError(statusCode: http.statusCode, data: data)
-        }
-
+        let data = try await performRequest(path, method: method, queryItems: queryItems, body: body)
         do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
             return try decoder.decode(T.self, from: data)
         } catch {
             throw NetworkError.decodingError(error)
@@ -70,6 +48,15 @@ final class JellyfinClient {
         queryItems: [URLQueryItem]? = nil,
         body: (any Encodable)? = nil
     ) async throws {
+        _ = try await performRequest(path, method: method, queryItems: queryItems, body: body)
+    }
+
+    private func performRequest(
+        _ path: String,
+        method: String,
+        queryItems: [URLQueryItem]?,
+        body: (any Encodable)?
+    ) async throws -> Data {
         guard let baseURL else { throw NetworkError.invalidURL }
 
         var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
@@ -83,7 +70,7 @@ final class JellyfinClient {
         request.setValue(authorizationHeader, forHTTPHeaderField: "Authorization")
 
         if let body {
-            request.httpBody = try JSONEncoder().encode(body)
+            request.httpBody = try encoder.encode(body)
         }
 
         let (data, response) = try await session.data(for: request)
@@ -96,6 +83,8 @@ final class JellyfinClient {
             if http.statusCode == 401 { throw NetworkError.unauthorized }
             throw NetworkError.httpError(statusCode: http.statusCode, data: data)
         }
+
+        return data
     }
 
     private var authorizationHeader: String {
