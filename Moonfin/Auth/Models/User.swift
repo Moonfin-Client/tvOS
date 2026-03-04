@@ -1,27 +1,47 @@
 import Foundation
 
-enum User: Identifiable {
-    case privateUser(id: UUID, name: String, accessToken: String?, lastUsed: Date?, imageTag: String?)
-    case publicUser(id: UUID, name: String, hasPassword: Bool, imageTag: String?)
+protocol User: Identifiable {
+    var id: UUID { get }
+    var serverId: UUID { get }
+    var name: String { get }
+    var accessToken: String? { get }
+    var imageTag: String? { get }
+}
 
-    var id: UUID {
-        switch self {
-        case .privateUser(let id, _, _, _, _): return id
-        case .publicUser(let id, _, _, _): return id
-        }
+struct PrivateUser: User, Equatable {
+    let id: UUID
+    let serverId: UUID
+    var name: String
+    var accessToken: String?
+    var imageTag: String?
+    var lastUsed: Date?
+
+    func withToken(_ token: String) -> PrivateUser {
+        var copy = self
+        copy.accessToken = token
+        return copy
     }
 
-    var name: String {
-        switch self {
-        case .privateUser(_, let name, _, _, _): return name
-        case .publicUser(_, let name, _, _): return name
-        }
+    static func == (lhs: PrivateUser, rhs: PrivateUser) -> Bool {
+        lhs.serverId == rhs.serverId && lhs.id == rhs.id
+    }
+}
+
+struct PublicUser: User, Equatable {
+    let id: UUID
+    let serverId: UUID
+    var name: String
+    var accessToken: String?
+    var imageTag: String?
+    var hasPassword: Bool
+
+    func withToken(_ token: String) -> PublicUser {
+        var copy = self
+        copy.accessToken = token
+        return copy
     }
 
-    var imageTag: String? {
-        switch self {
-        case .privateUser(_, _, _, _, let tag): return tag
-        case .publicUser(_, _, _, let tag): return tag
-        }
+    static func == (lhs: PublicUser, rhs: PublicUser) -> Bool {
+        lhs.serverId == rhs.serverId && lhs.id == rhs.id
     }
 }

@@ -13,8 +13,37 @@ final class AuthenticationStore {
         var name: String
         var address: String
         var version: String?
+        var serverType: ServerType
+        var loginDisclaimer: String?
+        var splashscreenEnabled: Bool
+        var setupCompleted: Bool
         var lastUsed: Date?
+        var lastRefreshed: Date?
         var users: [String: AuthStoreUser] = [:]
+
+        init(
+            name: String,
+            address: String,
+            version: String? = nil,
+            serverType: ServerType = .jellyfin,
+            loginDisclaimer: String? = nil,
+            splashscreenEnabled: Bool = false,
+            setupCompleted: Bool = true,
+            lastUsed: Date? = nil,
+            lastRefreshed: Date? = nil,
+            users: [String: AuthStoreUser] = [:]
+        ) {
+            self.name = name
+            self.address = address
+            self.version = version
+            self.serverType = serverType
+            self.loginDisclaimer = loginDisclaimer
+            self.splashscreenEnabled = splashscreenEnabled
+            self.setupCompleted = setupCompleted
+            self.lastUsed = lastUsed
+            self.lastRefreshed = lastRefreshed
+            self.users = users
+        }
     }
 
     struct AuthStoreUser: Codable {
@@ -46,27 +75,42 @@ final class AuthenticationStore {
 
     func getServers() -> [String: AuthStoreServer] { data.servers }
 
-    func putServer(id: String, server: AuthStoreServer) {
-        data.servers[id] = server
+    func getServer(_ id: UUID) -> AuthStoreServer? { data.servers[id.uuidString] }
+
+    @discardableResult
+    func putServer(_ id: UUID, _ server: AuthStoreServer) -> Bool {
+        data.servers[id.uuidString] = server
         save()
+        return true
     }
 
-    func removeServer(id: String) {
-        data.servers.removeValue(forKey: id)
+    @discardableResult
+    func removeServer(_ id: UUID) -> Bool {
+        guard data.servers.removeValue(forKey: id.uuidString) != nil else { return false }
         save()
+        return true
     }
 
-    func getUsers(serverId: String) -> [String: AuthStoreUser] {
-        data.servers[serverId]?.users ?? [:]
+    func getUsers(_ serverId: UUID) -> [String: AuthStoreUser]? {
+        data.servers[serverId.uuidString]?.users
     }
 
-    func putUser(serverId: String, userId: String, user: AuthStoreUser) {
-        data.servers[serverId]?.users[userId] = user
-        save()
+    func getUser(_ serverId: UUID, _ userId: UUID) -> AuthStoreUser? {
+        data.servers[serverId.uuidString]?.users[userId.uuidString]
     }
 
-    func removeUser(serverId: String, userId: String) {
-        data.servers[serverId]?.users.removeValue(forKey: userId)
+    @discardableResult
+    func putUser(_ serverId: UUID, _ userId: UUID, _ user: AuthStoreUser) -> Bool {
+        guard data.servers[serverId.uuidString] != nil else { return false }
+        data.servers[serverId.uuidString]?.users[userId.uuidString] = user
         save()
+        return true
+    }
+
+    @discardableResult
+    func removeUser(_ serverId: UUID, _ userId: UUID) -> Bool {
+        guard data.servers[serverId.uuidString]?.users.removeValue(forKey: userId.uuidString) != nil else { return false }
+        save()
+        return true
     }
 }
