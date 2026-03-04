@@ -23,7 +23,8 @@ struct HomeScreen: View {
 
     private var backdropLayer: some View {
         GeometryReader { geo in
-            if let urlString = viewModel.backgroundService.currentBackdropUrl,
+            if viewModel.backgroundService.enabled,
+               let urlString = viewModel.backgroundService.currentBackdropUrl,
                let url = URL(string: urlString) {
                 AsyncImage(url: url) { phase in
                     switch phase {
@@ -46,7 +47,7 @@ struct HomeScreen: View {
                 .id(urlString)
             }
         }
-        .animation(.easeInOut(duration: 0.8), value: viewModel.backgroundService.currentBackdropUrl)
+        .animation(.easeInOut(duration: BackgroundService.transitionDuration), value: viewModel.backgroundService.currentBackdropUrl)
         .background(theme.colorScheme.background)
     }
 

@@ -26,6 +26,7 @@ final class HomeViewModel: ObservableObject {
 
     init(container: AppContainer) {
         self.container = container
+        backgroundService.configure(preferences: container.userPreferences)
     }
 
     private var client: MediaServerClient? {
@@ -37,6 +38,15 @@ final class HomeViewModel: ObservableObject {
 
     var watchedIndicator: WatchedIndicatorBehavior {
         container.userPreferences[UserPreferences.watchedIndicator]
+    }
+
+    private func imageApi(for item: ServerItem) -> ServerImageApi? {
+        if let serverId = item.serverId,
+           let serverUUID = UUID(uuidString: serverId),
+           let server = container.serverRepository.storedServers.value.first(where: { $0.id == serverUUID }) {
+            return container.serverClientFactory.client(for: server).imageApi
+        }
+        return imageApi
     }
 
     func loadContent() {
@@ -322,12 +332,12 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func backdropUrls(for item: ServerItem) -> [String] {
-        guard let imageApi else { return [] }
+        guard let api = imageApi(for: item) else { return [] }
         var urls: [String] = []
 
         if let tags = item.backdropImageTags, !tags.isEmpty {
             for tag in tags {
-                urls.append(imageApi.getItemImageUrl(
+                urls.append(api.getItemImageUrl(
                     itemId: item.id, imageType: .backdrop, maxWidth: 1920, maxHeight: nil, tag: tag
                 ))
             }
@@ -336,14 +346,14 @@ final class HomeViewModel: ObservableObject {
         if urls.isEmpty, let parentTags = item.parentBackdropImageTags,
            let parentId = item.parentBackdropItemId, !parentTags.isEmpty {
             for tag in parentTags {
-                urls.append(imageApi.getItemImageUrl(
+                urls.append(api.getItemImageUrl(
                     itemId: parentId, imageType: .backdrop, maxWidth: 1920, maxHeight: nil, tag: tag
                 ))
             }
         }
 
         if urls.isEmpty, let seriesId = item.seriesId {
-            urls.append(imageApi.getItemImageUrl(
+            urls.append(api.getItemImageUrl(
                 itemId: seriesId, imageType: .backdrop, maxWidth: 1920, maxHeight: nil, tag: nil
             ))
         }

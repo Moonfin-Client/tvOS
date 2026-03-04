@@ -1,69 +1,124 @@
 import SwiftUI
 import Combine
 
+enum BlurContext {
+    case details
+    case browsing
+    case none
+}
+
 @MainActor
 final class BackgroundService: ObservableObject {
     @Published private(set) var currentBackdropUrl: String?
-    @Published var blurAmount: CGFloat = 20
+    @Published private(set) var blurAmount: CGFloat = 0
+    @Published private(set) var enabled: Bool = true
+
+    private var blurContext: BlurContext = .none
 
     private var backgrounds: [String] = []
     private var currentIndex: Int = 0
     private var slideshowTimer: AnyCancellable?
     private var lastUpdateTime: Date = .distantPast
+    private weak var preferences: UserPreferences?
 
-    private static let slideshowInterval: TimeInterval = 30
-    private static let transitionGuard: TimeInterval = 0.8
+    static let slideshowInterval: TimeInterval = 30
+    static let transitionDuration: TimeInterval = 0.8
 
-    func setBackground(urls: [String]) {
-        guard !urls.isEmpty else {
+    func configure(preferences: UserPreferences) {
+        self.preferences = preferences
+    }
+
+    func setBackground(urls: [String], context: BlurContext = .browsing) {
+        if let prefs = preferences, !prefs[UserPreferences.backdropEnabled] {
             clearBackground()
             return
         }
-
-        backgrounds = urls
-        currentIndex = 0
-        updateCurrentBackdrop()
-        startSlideshow()
+        setBackgroundInternal(urls: urls, context: context)
     }
 
-    func setBackground(url: String?) {
+    func setBackground(url: String?, context: BlurContext = .browsing) {
         guard let url else {
             clearBackground()
             return
         }
-        setBackground(urls: [url])
+        setBackground(urls: [url], context: context)
     }
 
     func clearBackground() {
         slideshowTimer?.cancel()
         slideshowTimer = nil
+        enabled = true
+        if backgrounds.isEmpty { return }
         backgrounds = []
         currentIndex = 0
         currentBackdropUrl = nil
     }
 
-    private func updateCurrentBackdrop() {
-        let now = Date()
-        guard now.timeIntervalSince(lastUpdateTime) >= Self.transitionGuard else { return }
-        lastUpdateTime = now
-
-        guard !backgrounds.isEmpty else { return }
-        currentBackdropUrl = backgrounds[currentIndex % backgrounds.count]
+    func disable() {
+        enabled = false
     }
 
-    private func startSlideshow() {
-        slideshowTimer?.cancel()
-        guard backgrounds.count > 1 else {
-            slideshowTimer = nil
+    private func setBackgroundInternal(urls: [String], context: BlurContext) {
+        guard !urls.isEmpty else {
+            clearBackground()
             return
         }
 
-        slideshowTimer = Timer.publish(every: Self.slideshowInterval, on: .main, in: .common)
+        enabled = true
+        blurContext = context
+        blurAmount = blurAmount(for: context)
+        backgrounds = urls
+        currentIndex = 0
+        update()
+    }
+
+    private func blurAmount(for context: BlurContext) -> CGFloat {
+        guard let prefs = preferences else {
+            switch context {
+            case .details: return 20
+            case .browsing: return 20
+            case .none: return 0
+            }
+        }
+        switch context {
+        case .details: return CGFloat(prefs[UserPreferences.detailsBackgroundBlur])
+        case .browsing: return CGFloat(prefs[UserPreferences.browsingBackgroundBlur])
+        case .none: return 0
+        }
+    }
+
+    private func update() {
+        let now = Date()
+        let elapsed = now.timeIntervalSince(lastUpdateTime)
+
+        if elapsed < Self.transitionDuration {
+            let remaining = Self.transitionDuration - elapsed
+            scheduleTimer(delay: remaining, advanceIndex: false)
+            return
+        }
+
+        lastUpdateTime = now
+
+        if currentIndex >= backgrounds.count { currentIndex = 0 }
+        currentBackdropUrl = backgrounds.isEmpty ? nil : backgrounds[currentIndex]
+
+        if backgrounds.count > 1 {
+            scheduleTimer(delay: Self.slideshowInterval, advanceIndex: true)
+        } else {
+            slideshowTimer?.cancel()
+            slideshowTimer = nil
+        }
+    }
+
+    private func scheduleTimer(delay: TimeInterval, advanceIndex: Bool) {
+        slideshowTimer?.cancel()
+        slideshowTimer = Timer.publish(every: delay, on: .main, in: .common)
             .autoconnect()
+            .first()
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.currentIndex += 1
-                self.updateCurrentBackdrop()
+                if advanceIndex { self.currentIndex += 1 }
+                self.update()
             }
     }
 }

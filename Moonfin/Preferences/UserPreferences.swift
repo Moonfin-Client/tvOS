@@ -31,6 +31,12 @@ final class UserPreferences {
     static let clockBehavior = Preference(key: "clock_behavior", defaultValue: ClockBehavior.always)
     static let watchedIndicator = Preference(key: "watched_indicator", defaultValue: WatchedIndicatorBehavior.always)
 
+    // MARK: - Backdrop
+
+    static let backdropEnabled = Preference(key: "backdrop_enabled", defaultValue: true)
+    static let detailsBackgroundBlur = Preference(key: "details_background_blur", defaultValue: 10)
+    static let browsingBackgroundBlur = Preference(key: "browsing_background_blur", defaultValue: 10)
+
     // MARK: - Telemetry
 
     static let telemetryEnabled = Preference(key: "telemetry_enabled", defaultValue: false)
