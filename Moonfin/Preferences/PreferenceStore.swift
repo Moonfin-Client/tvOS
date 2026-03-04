@@ -5,7 +5,17 @@ struct Preference<T> {
     let defaultValue: T
 }
 
+protocol StringRepresentableEnum {
+    var rawValue: String { get }
+    init?(rawValue: String)
+}
+
+func enumPreference<T: StringRepresentableEnum>(_ key: String, defaultValue: T) -> Preference<T> {
+    Preference(key: key, defaultValue: defaultValue)
+}
+
 protocol PreferenceStore {
-    func get<T>(_ preference: Preference<T>) -> T
-    func set<T>(_ preference: Preference<T>, value: T)
+    subscript<T>(_ preference: Preference<T>) -> T { get set }
+    func delete<T>(_ preference: Preference<T>)
+    func reset<T>(_ preference: Preference<T>)
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A5163E5360F657B68F41BA4 /* UserDefaultsPreferenceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39FCAB733A05955B6246DE1 /* UserDefaultsPreferenceStore.swift */; };
 		0D1E59B7FA6065C5EB3ACA78 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 63089F17261F9A8FF9EF4DE1 /* KeychainAccess */; };
 		127223D3B2F8CE2B6B03280B /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0571DEA564D22C56A0E7C6 /* PlayerView.swift */; };
 		1BB8E4C8488CBC311F94C171 /* FocusBorderColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F86DE652255C343D9C29E4D /* FocusBorderColor.swift */; };
@@ -16,6 +17,7 @@
 		2A2E339F6308A3511769B911 /* SessionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122695A5DBDA9AF4FEA7CC3E /* SessionRepository.swift */; };
 		3363A53733BC3A4924F09B5C /* AuthStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD6EC7EDCB86BC9F390E211 /* AuthStates.swift */; };
 		368AA3266CC102339CC62581 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DE69C03B19FE96985217BAB /* LibraryView.swift */; };
+		382288BD55A9D7ECDC42F70A /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73D2F15693134A15639B26D /* KeychainStore.swift */; };
 		3E0224BD042331F5483E3D3C /* JellyseerrView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B22F64779DA9F2F939D590 /* JellyseerrView.swift */; };
 		40C3CB465621842CC054F475 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A21CCFB4483079540DA000 /* HomeView.swift */; };
 		493970FF836F428B8C0226C8 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA238B35BE531020273CC47 /* Nuke */; };
@@ -35,6 +37,7 @@
 		8E03D63027BE4532F8EA2428 /* TopShelfExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 82577A9FD03CF26B68E531B8 /* TopShelfExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9371FB8730176B61184F8CCC /* MoonfinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26B00488A156C151C0CD62A /* MoonfinApp.swift */; };
 		CC5946EBEE0483E3D3CF414F /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FB992932D9FF916978F6A /* NetworkError.swift */; };
+		D602B6D04FC80CE04DCD3A48 /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB155021D30FE0D971566E3C /* Migration.swift */; };
 		E47331E65CC8768B0A854019 /* TVServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A0EE80F68994FF25EEA2B0C /* TVServices.framework */; };
 		EC0F2D8825A40D8EA7EF3D2D /* ColorScheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4159CF66566044EE7426BC /* ColorScheme.swift */; };
 		EDB11E43146103FF686559F2 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14655AF7A48478F46D0FE802 /* Server.swift */; };
@@ -94,9 +97,12 @@
 		B26B00488A156C151C0CD62A /* MoonfinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinApp.swift; sourceTree = "<group>"; };
 		C60D7F93FF3D01317AC09EE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C689D206E49488A79F0153A8 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
+		C73D2F15693134A15639B26D /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		C88EB3BB9FEABB574E468E4A /* ItemDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailsView.swift; sourceTree = "<group>"; };
 		C94106EFA5B45688EB1AC60F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		CA4159CF66566044EE7426BC /* ColorScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorScheme.swift; sourceTree = "<group>"; };
+		E39FCAB733A05955B6246DE1 /* UserDefaultsPreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsPreferenceStore.swift; sourceTree = "<group>"; };
+		EB155021D30FE0D971566E3C /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
 		EBC459B0D609A9F2851F4152 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		F1B22F64779DA9F2F939D590 /* JellyseerrView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyseerrView.swift; sourceTree = "<group>"; };
 		F966A16008815306B8360A5D /* JellyfinClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinClient.swift; sourceTree = "<group>"; };
@@ -257,7 +263,10 @@
 		BE4F59B4CD5667562ACAA26F /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
+				C73D2F15693134A15639B26D /* KeychainStore.swift */,
+				EB155021D30FE0D971566E3C /* Migration.swift */,
 				4B6BF213289C258496451F29 /* PreferenceStore.swift */,
+				E39FCAB733A05955B6246DE1 /* UserDefaultsPreferenceStore.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -488,8 +497,10 @@
 				75EC68F4B9D0A7C124EB45E6 /* ItemDetailsView.swift in Sources */,
 				5C289389E965E21382DC1DC1 /* JellyfinClient.swift in Sources */,
 				3E0224BD042331F5483E3D3C /* JellyseerrView.swift in Sources */,
+				382288BD55A9D7ECDC42F70A /* KeychainStore.swift in Sources */,
 				368AA3266CC102339CC62581 /* LibraryView.swift in Sources */,
 				8157B4F57970E887ACE3FBE6 /* LiveTVView.swift in Sources */,
+				D602B6D04FC80CE04DCD3A48 /* Migration.swift in Sources */,
 				9371FB8730176B61184F8CCC /* MoonfinApp.swift in Sources */,
 				71A56B5F1AA6D9A47B0D36F8 /* MoonfinTheme.swift in Sources */,
 				CC5946EBEE0483E3D3CF414F /* NetworkError.swift in Sources */,
@@ -502,6 +513,7 @@
 				FE8E24B6F5D6F4AF773AD7C1 /* SettingsView.swift in Sources */,
 				556B973BCE11EF681008F4A2 /* StartupView.swift in Sources */,
 				27C322C6C1A1E71707F6A64C /* User.swift in Sources */,
+				0A5163E5360F657B68F41BA4 /* UserDefaultsPreferenceStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
