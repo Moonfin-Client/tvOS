@@ -9,14 +9,18 @@ struct SimpleInfoRow: View {
             HStack(spacing: SpaceTokens.spaceSm) {
                 ForEach(Array(metadataParts(for: item).enumerated()), id: \.offset) { index, part in
                     if index > 0 {
-                        Text("•")
-                            .font(.captionXs)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
+                        separator
                     }
                     part
                 }
             }
         }
+    }
+
+    private var separator: some View {
+        Text("•")
+            .font(.captionXs)
+            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
     }
 
     private func metadataParts(for item: ServerItem) -> [AnyView] {
@@ -38,46 +42,40 @@ struct SimpleInfoRow: View {
             parts.append(infoText(runtime))
         }
 
-        if let resolution = resolutionText(for: item) {
+        if let resolution = ResolutionHelper.resolutionName(for: item) {
             parts.append(resolutionBadge(resolution))
         }
 
         if let communityRating = item.communityRating, communityRating > 0 {
-            parts.append(ratingStarText(communityRating))
+            parts.append(ratingStarView(communityRating))
         }
 
         if let criticRating = item.criticRating, criticRating > 0 {
-            parts.append(criticRatingText(criticRating))
+            parts.append(criticRatingView(criticRating))
         }
 
         if let genres = item.genres, !genres.isEmpty {
-            let genreText = genres.prefix(3).joined(separator: ", ")
-            parts.append(infoText(genreText))
+            parts.append(infoText(genres.prefix(3).joined(separator: ", ")))
         }
 
         return parts
     }
-
-    // MARK: - Text Builders
 
     private func yearText(for item: ServerItem) -> String? {
         if let year = item.productionYear, year > 0 {
             return String(year)
         }
         if let date = item.premiereDate {
-            let calendar = Calendar.current
-            return String(calendar.component(.year, from: date))
+            return String(Calendar.current.component(.year, from: date))
         }
         return nil
     }
 
     private func seasonEpisodeText(for item: ServerItem) -> String? {
         guard item.type == .episode else { return nil }
-        let season = item.parentIndexNumber
-        let episode = item.indexNumber
-        if let s = season, let e = episode {
+        if let s = item.parentIndexNumber, let e = item.indexNumber {
             return "S\(s)E\(e)"
-        } else if let e = episode {
+        } else if let e = item.indexNumber {
             return "E\(e)"
         }
         return nil
@@ -85,30 +83,8 @@ struct SimpleInfoRow: View {
 
     private func runtimeText(for item: ServerItem) -> String? {
         guard let ticks = item.runTimeTicks, ticks > 0 else { return nil }
-        let totalMinutes = Int(ticks / 600_000_000)
-        if totalMinutes >= 60 {
-            let hours = totalMinutes / 60
-            let minutes = totalMinutes % 60
-            return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
-        }
-        return "\(totalMinutes)m"
+        return RuntimeFormatter.format(ticks: ticks)
     }
-
-    private func resolutionText(for item: ServerItem) -> String? {
-        guard let streams = item.mediaStreams ?? item.mediaSources?.first?.mediaStreams else { return nil }
-        guard let videoStream = streams.first(where: { $0.type == .video }) else { return nil }
-        guard let width = videoStream.width else { return nil }
-
-        switch width {
-        case 3000...: return "4K"
-        case 1800...: return "1080p"
-        case 1200...: return "720p"
-        case 600...: return "480p"
-        default: return nil
-        }
-    }
-
-    // MARK: - View Builders
 
     private func infoText(_ text: String) -> AnyView {
         AnyView(
@@ -147,7 +123,7 @@ struct SimpleInfoRow: View {
         )
     }
 
-    private func ratingStarText(_ rating: Double) -> AnyView {
+    private func ratingStarView(_ rating: Double) -> AnyView {
         AnyView(
             HStack(spacing: 2) {
                 Image(systemName: "star.fill")
@@ -160,12 +136,13 @@ struct SimpleInfoRow: View {
         )
     }
 
-    private func criticRatingText(_ rating: Double) -> AnyView {
-        AnyView(
+    private func criticRatingView(_ rating: Double) -> AnyView {
+        let isFresh = rating >= 60
+        return AnyView(
             HStack(spacing: 2) {
-                Image(systemName: rating >= 60 ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
+                Image(systemName: isFresh ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
                     .font(.system(size: 10))
-                    .foregroundColor(rating >= 60 ? .colorGreen500 : .colorRed500)
+                    .foregroundColor(isFresh ? .colorGreen500 : .colorRed500)
                 Text("\(Int(rating))%")
                     .font(.captionXs)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
