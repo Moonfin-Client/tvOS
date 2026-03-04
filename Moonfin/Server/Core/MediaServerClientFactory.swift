@@ -1,8 +1,6 @@
 import Foundation
 
 final class MediaServerClientFactory {
-    static let shared = MediaServerClientFactory()
-
     private var clients: [UUID: MediaServerClient] = [:]
 
     func client(for server: Server) -> MediaServerClient {
