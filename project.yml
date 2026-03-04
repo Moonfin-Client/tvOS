@@ -18,9 +18,6 @@ packages:
   Nuke:
     url: https://github.com/kean/Nuke
     from: "12.7.0"
-  NukeUI:
-    url: https://github.com/kean/NukeUI
-    from: "0.8.0"
   KeychainAccess:
     url: https://github.com/kishikawakatsumi/KeychainAccess
     from: "4.2.2"
@@ -43,7 +40,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Moonfin/Resources/Moonfin.entitlements
     dependencies:
       - package: Nuke
-      - package: NukeUI
+        product: NukeUI
+      - package: Nuke
       - package: KeychainAccess
       - target: TopShelfExtension
 

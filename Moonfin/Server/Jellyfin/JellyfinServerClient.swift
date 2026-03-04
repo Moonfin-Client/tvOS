@@ -1,0 +1,30 @@
+import Foundation
+
+final class JellyfinServerClient: MediaServerClient {
+    let serverType: ServerType = .jellyfin
+    private let httpClient: HttpClient
+
+    var baseURL: URL? { httpClient.baseURL }
+    var accessToken: String? { httpClient.accessToken }
+    var userId: String? { httpClient.userId }
+
+    init(httpClient: HttpClient? = nil) {
+        self.httpClient = httpClient ?? HttpClient(authFormat: .jellyfin)
+    }
+
+    func configure(baseURL: URL, accessToken: String? = nil, userId: String? = nil) {
+        httpClient.configure(baseURL: baseURL, accessToken: accessToken, userId: userId)
+    }
+
+    var authApi: ServerAuthApi { JellyfinAuthApi(client: httpClient) }
+    var itemsApi: ServerItemsApi { JellyfinItemsApi(client: httpClient) }
+    var userLibraryApi: ServerUserLibraryApi { JellyfinUserLibraryApi(client: httpClient) }
+    var playbackApi: ServerPlaybackApi { JellyfinPlaybackApi(client: httpClient) }
+    var sessionApi: ServerSessionApi { JellyfinSessionApi(client: httpClient) }
+    var imageApi: ServerImageApi { JellyfinImageApi(client: httpClient) }
+    var systemApi: ServerSystemApi { JellyfinSystemApi(client: httpClient) }
+    var userViewsApi: ServerUserViewsApi { JellyfinUserViewsApi(client: httpClient) }
+    var liveTvApi: ServerLiveTvApi { JellyfinLiveTvApi(client: httpClient) }
+    var instantMixApi: ServerInstantMixApi { JellyfinInstantMixApi(client: httpClient) }
+    var displayPreferencesApi: ServerDisplayPreferencesApi { JellyfinDisplayPreferencesApi(client: httpClient) }
+}

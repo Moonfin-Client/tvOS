@@ -1,10 +1,17 @@
 import Foundation
 
-final class JellyfinClient {
+enum AuthHeaderFormat {
+    case jellyfin
+    case emby
+}
+
+final class HttpClient {
     var baseURL: URL?
     var accessToken: String?
+    var userId: String?
     let deviceId: String
     let deviceName: String
+    var authFormat: AuthHeaderFormat
 
     private let session: URLSession
     private let encoder = JSONEncoder()
@@ -17,16 +24,29 @@ final class JellyfinClient {
     init(
         baseURL: URL? = nil,
         accessToken: String? = nil,
+        userId: String? = nil,
+        authFormat: AuthHeaderFormat = .jellyfin,
         deviceId: String = AppConstants.deviceId,
         deviceName: String = AppConstants.deviceName,
         session: URLSession = .shared
     ) {
         self.baseURL = baseURL
         self.accessToken = accessToken
+        self.userId = userId
+        self.authFormat = authFormat
         self.deviceId = deviceId
         self.deviceName = deviceName
         self.session = session
     }
+
+    func configure(baseURL: URL, accessToken: String? = nil, userId: String? = nil) {
+        self.baseURL = baseURL
+        self.accessToken = accessToken
+        self.userId = userId
+    }
+
+    var isConfigured: Bool { baseURL != nil }
+    var isUsable: Bool { baseURL != nil && accessToken != nil }
 
     func request<T: Decodable>(
         _ path: String,
@@ -60,7 +80,9 @@ final class JellyfinClient {
         guard let baseURL else { throw NetworkError.invalidURL }
 
         var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
-        components?.queryItems = queryItems
+        if let queryItems, !queryItems.isEmpty {
+            components?.queryItems = queryItems
+        }
 
         guard let url = components?.url else { throw NetworkError.invalidURL }
 
@@ -87,9 +109,15 @@ final class JellyfinClient {
         return data
     }
 
-    private var authorizationHeader: String {
+    var authorizationHeader: String {
+        let prefix: String
+        switch authFormat {
+        case .jellyfin: prefix = "MediaBrowser"
+        case .emby: prefix = "Emby"
+        }
+
         var parts = [
-            "MediaBrowser Client=\"\(AppConstants.clientName)\"",
+            "\(prefix) Client=\"\(AppConstants.clientName)\"",
             "Device=\"\(deviceName)\"",
             "DeviceId=\"\(deviceId)\"",
             "Version=\"\(AppConstants.clientVersion)\""
