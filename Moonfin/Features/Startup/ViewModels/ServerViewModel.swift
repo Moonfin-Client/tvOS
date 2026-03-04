@@ -1,0 +1,114 @@
+import Foundation
+import Combine
+
+@MainActor
+final class ServerViewModel: ObservableObject {
+    @Published var server: Server?
+    @Published var users: [any User] = []
+    @Published var loginState: LoginState = .idle
+    @Published var showPinEntry = false
+    @Published var pinUser: (any User)? = nil
+    @Published var notification: String? = nil
+
+    private let serverId: UUID
+    private let serverRepository: ServerRepositoryProtocol
+    private let serverUserRepository: ServerUserRepositoryProtocol
+    private let authenticationRepository: AuthenticationRepositoryProtocol
+    private let authPreferences: AuthenticationPreferences
+    private let serverClientFactory: MediaServerClientFactory
+
+    init(
+        serverId: UUID,
+        serverRepository: ServerRepositoryProtocol,
+        serverUserRepository: ServerUserRepositoryProtocol,
+        authenticationRepository: AuthenticationRepositoryProtocol,
+        authPreferences: AuthenticationPreferences,
+        serverClientFactory: MediaServerClientFactory
+    ) {
+        self.serverId = serverId
+        self.serverRepository = serverRepository
+        self.serverUserRepository = serverUserRepository
+        self.authenticationRepository = authenticationRepository
+        self.authPreferences = authPreferences
+        self.serverClientFactory = serverClientFactory
+    }
+
+    func load() async {
+        server = await serverRepository.getServer(id: serverId, eagerUpdate: true)
+        guard let server else { return }
+
+        updateNotification(for: server)
+        await loadUsers(server: server)
+    }
+
+    private func updateNotification(for server: Server) {
+        if !server.versionSupported {
+            let minVersion = server.serverType == .jellyfin
+                ? Server.minimumJellyfinVersion.description
+                : Server.minimumEmbyVersion.description
+            notification = "Server version \(server.version ?? "unknown") is not supported. Minimum: \(minVersion)"
+        } else if !server.setupCompleted {
+            notification = "Server setup is not complete. Please finish setup in the web dashboard."
+        } else {
+            notification = nil
+        }
+    }
+
+    private func loadUsers(server: Server) async {
+        let stored = serverUserRepository.getStoredServerUsers(server: server)
+        let storedIds = Set(stored.map { $0.id })
+
+        let publicUsers = await serverUserRepository.getPublicServerUsers(server: server)
+            .filter { !storedIds.contains($0.id) }
+
+        let sortBy = authPreferences.sortBy
+
+        var merged: [any User] = stored + publicUsers
+        merged.sort { a, b in
+            if sortBy == .lastUsed {
+                if let pa = a as? PrivateUser, let pb = b as? PrivateUser {
+                    if let da = pa.lastUsed, let db = pb.lastUsed, da != db {
+                        return da > db
+                    }
+                } else if a is PrivateUser {
+                    return true
+                } else if b is PrivateUser {
+                    return false
+                }
+            }
+            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
+        users = merged
+    }
+
+    func authenticate(user: any User) {
+        guard let server else { return }
+
+        loginState = .authenticating
+        Task {
+            for await state in authenticationRepository.authenticate(
+                server: server,
+                method: .automatic(user: user)
+            ) {
+                loginState = state
+            }
+        }
+    }
+
+    func getUserImageUrl(_ user: any User) -> String? {
+        guard let server else { return nil }
+        return authenticationRepository.getUserImageUrl(server: server, user: user)
+    }
+
+    func logoutUser(_ user: any User) {
+        _ = authenticationRepository.logout(user: user)
+        guard let server else { return }
+        Task { await loadUsers(server: server) }
+    }
+
+    func deleteUser(_ user: PrivateUser) {
+        serverUserRepository.deleteStoredUser(user)
+        guard let server else { return }
+        Task { await loadUsers(server: server) }
+    }
+}

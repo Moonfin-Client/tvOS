@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RootView: View {
+    @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var theme: MoonfinTheme
 
@@ -10,7 +11,7 @@ struct RootView: View {
 
             switch router.flow {
             case .splash:
-                SplashView()
+                SplashScreen()
             case .startup:
                 StartupNavigationView()
             case .main:
@@ -25,30 +26,32 @@ struct RootView: View {
     }
 }
 
-struct SplashView: View {
-    @EnvironmentObject var theme: MoonfinTheme
-
-    var body: some View {
-        VStack(spacing: SpaceTokens.spaceLg) {
-            Image(systemName: "play.circle.fill")
-                .font(.system(size: 80))
-                .foregroundColor(theme.accent)
-            Text("Moonfin")
-                .font(.title3xl)
-                .foregroundColor(theme.colorScheme.onBackground)
-        }
-    }
-}
-
 struct StartupNavigationView: View {
+    @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
 
     var body: some View {
         NavigationStack(path: $router.path) {
-            StartupPlaceholderView()
+            SelectServerScreen(container: container)
                 .navigationDestination(for: Destination.self) { destination in
-                    destinationView(for: destination)
+                    startupDestinationView(for: destination)
                 }
+        }
+    }
+
+    @ViewBuilder
+    private func startupDestinationView(for destination: Destination) -> some View {
+        switch destination {
+        case .serverAdd:
+            ServerAddScreen(container: container)
+        case .serverUsers(let serverId):
+            ServerScreen(serverId: serverId, container: container)
+        case .userLogin(let serverId, let username):
+            UserLoginScreen(serverId: serverId, username: username, container: container)
+        case .connectHelp:
+            ConnectHelpScreen()
+        default:
+            PlaceholderView(title: "Screen")
         }
     }
 }
@@ -62,7 +65,7 @@ struct MainNavigationView: View {
             NavigationStack(path: $router.path) {
                 HomePlaceholderView()
                     .navigationDestination(for: Destination.self) { destination in
-                        destinationView(for: destination)
+                        mainDestinationView(for: destination)
                     }
             }
 
@@ -73,51 +76,33 @@ struct MainNavigationView: View {
         }
         .animation(.easeInOut(duration: 0.4), value: settingsRouter.isPresented)
     }
-}
 
-@ViewBuilder
-private func destinationView(for destination: Destination) -> some View {
-    switch destination {
-    case .home:
-        HomePlaceholderView()
-    case .search:
-        PlaceholderView(title: "Search")
-    case .libraryBrowser:
-        PlaceholderView(title: "Library")
-    case .itemDetails(let itemId, _):
-        PlaceholderView(title: "Item: \(itemId)")
-    case .nowPlaying:
-        PlaceholderView(title: "Now Playing")
-    case .videoPlayer:
-        PlaceholderView(title: "Video Player")
-    case .liveTvGuide:
-        PlaceholderView(title: "Live TV Guide")
-    case .jellyseerrDiscover:
-        PlaceholderView(title: "Discover")
-    default:
-        PlaceholderView(title: "Screen")
+    @ViewBuilder
+    private func mainDestinationView(for destination: Destination) -> some View {
+        switch destination {
+        case .home:
+            HomePlaceholderView()
+        case .search:
+            PlaceholderView(title: "Search")
+        case .libraryBrowser:
+            PlaceholderView(title: "Library")
+        case .itemDetails(let itemId, _):
+            PlaceholderView(title: "Item: \(itemId)")
+        case .nowPlaying:
+            PlaceholderView(title: "Now Playing")
+        case .videoPlayer:
+            PlaceholderView(title: "Video Player")
+        case .liveTvGuide:
+            PlaceholderView(title: "Live TV Guide")
+        case .jellyseerrDiscover:
+            PlaceholderView(title: "Discover")
+        default:
+            PlaceholderView(title: "Screen")
+        }
     }
 }
 
 // MARK: - Placeholders
-
-struct StartupPlaceholderView: View {
-    @EnvironmentObject var theme: MoonfinTheme
-
-    var body: some View {
-        VStack(spacing: SpaceTokens.spaceLg) {
-            Image(systemName: "server.rack")
-                .font(.system(size: 60))
-                .foregroundColor(theme.accent)
-            Text("Select Server")
-                .font(.titleXl)
-                .foregroundColor(theme.colorScheme.onBackground)
-            Text("Phase 1 will implement server selection & login")
-                .font(.bodyMd)
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-        }
-    }
-}
 
 struct HomePlaceholderView: View {
     @EnvironmentObject var theme: MoonfinTheme
