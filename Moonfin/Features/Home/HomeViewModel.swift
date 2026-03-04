@@ -36,6 +36,10 @@ final class HomeViewModel: ObservableObject {
 
     var imageApi: ServerImageApi? { client?.imageApi }
 
+    var watchedIndicator: WatchedIndicatorBehavior {
+        container.userPreferences[UserPreferences.watchedIndicator]
+    }
+
     func loadContent() {
         loadTask?.cancel()
         loadTask = Task {
@@ -43,11 +47,7 @@ final class HomeViewModel: ObservableObject {
 
             let sections = activeHomeSections()
 
-            var needsViews = false
-            for section in sections {
-                if section == .latestMedia || section == .libraryTiles { needsViews = true; break }
-            }
-            if needsViews {
+            if sections.contains(where: { $0 == .latestMedia || $0 == .libraryTiles }) {
                 do {
                     userViews = try await client.userViewsApi.getUserViews(userId: client.userId ?? "")
                 } catch {

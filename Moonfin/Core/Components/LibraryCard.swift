@@ -1,0 +1,105 @@
+import SwiftUI
+
+struct LibraryCard: View {
+    let item: ServerItem
+    let imageUrl: String?
+    var cardWidth: CGFloat = 280
+    var onFocused: ((ServerItem) -> Void)?
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    private let aspectRatio: CGFloat = 16.0 / 9.0
+    private var cardHeight: CGFloat { cardWidth / aspectRatio }
+
+    var body: some View {
+        ZStack {
+            cardImage
+
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0.3),
+                    .init(color: .black.opacity(0.6), location: 1.0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            VStack {
+                Spacer()
+                HStack {
+                    Image(systemName: libraryIcon)
+                        .font(.captionXs)
+                        .foregroundColor(.white.opacity(0.8))
+                    Text(item.name)
+                        .font(.captionXs)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                    Spacer()
+                }
+                .padding(SpaceTokens.spaceSm)
+            }
+        }
+        .frame(width: cardWidth, height: cardHeight)
+        .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
+        .overlay(
+            RoundedRectangle(cornerRadius: RadiusTokens.small)
+                .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+        )
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+        .focusable()
+        .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+            if focused { onFocused?(item) }
+        }
+    }
+
+    @ViewBuilder
+    private var cardImage: some View {
+        if let urlString = imageUrl, let url = URL(string: urlString) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().aspectRatio(contentMode: .fill)
+                case .failure:
+                    libraryPlaceholder
+                case .empty:
+                    libraryPlaceholder.shimmering()
+                @unknown default:
+                    libraryPlaceholder
+                }
+            }
+            .frame(width: cardWidth, height: cardHeight)
+        } else {
+            libraryPlaceholder
+        }
+    }
+
+    private var libraryPlaceholder: some View {
+        ZStack {
+            Rectangle().fill(theme.colorScheme.surface.opacity(0.3))
+            Image(systemName: libraryIcon)
+                .font(.system(size: 36))
+                .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
+        }
+        .frame(width: cardWidth, height: cardHeight)
+    }
+
+    private var libraryIcon: String {
+        guard let ct = item.collectionType?.lowercased() else { return "folder" }
+        switch ct {
+        case "movies": return "film"
+        case "tvshows": return "tv"
+        case "music": return "music.note"
+        case "books": return "book"
+        case "photos": return "photo"
+        case "homevideos": return "video"
+        case "boxsets": return "square.stack"
+        case "playlists": return "list.bullet"
+        case "livetv": return "antenna.radiowaves.left.and.right"
+        default: return "folder"
+        }
+    }
+}

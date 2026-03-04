@@ -121,7 +121,7 @@ struct HomeScreen: View {
                 LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
                     let visibleRows = viewModel.rows.filter { !$0.isEmpty }
                     ForEach(visibleRows) { row in
-                        ContentRow(row: row, viewModel: viewModel)
+                        ContentRow(row: row, viewModel: viewModel, watchedIndicator: viewModel.watchedIndicator)
                     }
                 }
                 .padding(.horizontal, 50)
