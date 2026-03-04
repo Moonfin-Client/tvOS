@@ -9,11 +9,28 @@ struct MoonfinApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            AppRootView(container: container)
                 .environmentObject(container)
                 .environmentObject(theme)
                 .environmentObject(router)
                 .environmentObject(settingsRouter)
         }
+    }
+}
+
+struct AppRootView: View {
+    @StateObject private var sessionInitializer: SessionInitializer
+    @EnvironmentObject var router: NavigationRouter
+
+    init(container: AppContainer) {
+        _sessionInitializer = StateObject(wrappedValue: SessionInitializer(container: container))
+    }
+
+    var body: some View {
+        RootView()
+            .environmentObject(sessionInitializer)
+            .onOpenURL { url in
+                sessionInitializer.handleDeepLink(url: url, router: router)
+            }
     }
 }

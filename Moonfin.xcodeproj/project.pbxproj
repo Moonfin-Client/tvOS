@@ -10,6 +10,7 @@
 		00D47B65F5554173CE1866D5 /* ServerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074468E8521DA23AB817B560 /* ServerError.swift */; };
 		05598E8B24355E2A7D15EEFB /* JellyfinApis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAB441B2D93DAF13B529D21 /* JellyfinApis.swift */; };
 		063B115422BD6FA165CF8051 /* SplashScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC7A36F3499A0D0B041F9B7 /* SplashScreen.swift */; };
+		08BE93EC9CA5C3E531D22D78 /* SessionInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36892F89FCB6FDDA0932F860 /* SessionInitializer.swift */; };
 		0A5163E5360F657B68F41BA4 /* UserDefaultsPreferenceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39FCAB733A05955B6246DE1 /* UserDefaultsPreferenceStore.swift */; };
 		0D1E59B7FA6065C5EB3ACA78 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 63089F17261F9A8FF9EF4DE1 /* KeychainAccess */; };
 		127223D3B2F8CE2B6B03280B /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B0571DEA564D22C56A0E7C6 /* PlayerView.swift */; };
@@ -122,6 +123,7 @@
 		24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLoginScreen.swift; sourceTree = "<group>"; };
 		2523CF196DD63575C61CB15E /* EmbyServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyServerClient.swift; sourceTree = "<group>"; };
 		30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerWebSocketClient.swift; sourceTree = "<group>"; };
+		36892F89FCB6FDDA0932F860 /* SessionInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionInitializer.swift; sourceTree = "<group>"; };
 		39FB08870D76B932543FCFC8 /* Moonfin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Moonfin.entitlements; sourceTree = "<group>"; };
 		3A0EE80F68994FF25EEA2B0C /* TVServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVServices.framework; path = System/Library/Frameworks/TVServices.framework; sourceTree = SDKROOT; };
 		3C72F20A47DD2A40EE40925E /* SelectServerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectServerViewModel.swift; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 				EE7FAD9331B478B54CAEE858 /* AppContainer.swift */,
 				B26B00488A156C151C0CD62A /* MoonfinApp.swift */,
 				8E351E8E218007D727D970F1 /* RootView.swift */,
+				36892F89FCB6FDDA0932F860 /* SessionInitializer.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -711,6 +714,7 @@
 				9B0960F5FAE82F5DD654D878 /* ServerViewModel.swift in Sources */,
 				430A9475EBE0A3EB82D021AD /* ServerWebSocketClient.swift in Sources */,
 				B273DC84F80FBB5876CCD0F8 /* ServerWebSocketMessage.swift in Sources */,
+				08BE93EC9CA5C3E531D22D78 /* SessionInitializer.swift in Sources */,
 				2A2E339F6308A3511769B911 /* SessionRepository.swift in Sources */,
 				96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */,
 				FE8E24B6F5D6F4AF773AD7C1 /* SettingsView.swift in Sources */,

@@ -4,6 +4,7 @@ struct RootView: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var sessionInitializer: SessionInitializer
 
     var body: some View {
         ZStack {
@@ -19,9 +20,7 @@ struct RootView: View {
             }
         }
         .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                router.switchFlow(to: .startup)
-            }
+            sessionInitializer.initialize(router: router)
         }
     }
 }
@@ -29,6 +28,7 @@ struct RootView: View {
 struct StartupNavigationView: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var sessionInitializer: SessionInitializer
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -36,6 +36,12 @@ struct StartupNavigationView: View {
                 .navigationDestination(for: Destination.self) { destination in
                     startupDestinationView(for: destination)
                 }
+        }
+        .onAppear {
+            if let serverId = sessionInitializer.restoredServerId {
+                sessionInitializer.restoredServerId = nil
+                router.navigate(to: .serverUsers(serverId: serverId))
+            }
         }
     }
 
