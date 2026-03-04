@@ -12,13 +12,12 @@ final class HomeViewModel: ObservableObject {
     private var selectionDebounceTask: Task<Void, Never>?
     private var backdropDebounceTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
-    private var paginationTasks: [String: Task<Void, Never>] = [:]
+    private var dataSources: [String: RowDataSource] = [:]
     private var userViews: [ServerItem] = []
 
     private static let selectionDebounceMs: UInt64 = 150_000_000
     private static let backdropDebounceMs: UInt64 = 200_000_000
     private static let chunkSize = 15
-    private static let maxItems = 100
     private static let latestMediaLimit = 50
 
     private static let defaultFields: [ItemField] = [
@@ -58,13 +57,28 @@ final class HomeViewModel: ObservableObject {
             guard !Task.isCancelled else { return }
 
             var builtRows: [HomeRow] = []
+            dataSources = [:]
             for section in sections {
                 builtRows.append(contentsOf: buildRowDefinitions(for: section))
             }
             rows = builtRows
             isInitialLoad = false
 
-            await loadAllRows()
+            await loadAllRows(client: client)
+        }
+    }
+
+    func refreshContent() {
+        Task {
+            guard let client else { return }
+            let service = container.dataRefreshService
+
+            for (rowId, source) in dataSources {
+                if source.needsRefresh(service: service) {
+                    await source.retrieve(client: client)
+                    syncRow(rowId)
+                }
+            }
         }
     }
 
@@ -80,28 +94,117 @@ final class HomeViewModel: ObservableObject {
     private func buildRowDefinitions(for section: HomeSectionType) -> [HomeRow] {
         switch section {
         case .resume:
-            return [HomeRow(id: "resume_video", title: "Continue Watching", rowType: .continueWatching)]
+            return [makeRow(
+                id: "resume_video",
+                title: "Continue Watching",
+                rowType: .continueWatching,
+                queryType: .resume(GetResumeItemsRequest(
+                    mediaTypes: [.video],
+                    fields: Self.defaultFields,
+                    enableImages: true,
+                    imageTypeLimit: 1
+                )),
+                triggers: [.moviePlayback, .tvPlayback]
+            )]
+
         case .nextUp:
-            return [HomeRow(id: "next_up", title: "Next Up", rowType: .nextUp)]
+            return [makeRow(
+                id: "next_up",
+                title: "Next Up",
+                rowType: .nextUp,
+                queryType: .nextUp(GetNextUpRequest(
+                    fields: Self.defaultFields,
+                    enableImages: true,
+                    imageTypeLimit: 1
+                )),
+                triggers: [.tvPlayback]
+            )]
+
         case .latestMedia:
             return latestMediaViewTypes.map { view in
-                HomeRow(
+                makeRow(
                     id: "latest_\(view.id)",
                     title: "Latest \(view.name)",
-                    rowType: .latestMedia(libraryId: view.id)
+                    rowType: .latestMedia(libraryId: view.id),
+                    queryType: .latestMedia(GetLatestMediaRequest(
+                        parentId: view.id,
+                        fields: Self.defaultFields,
+                        limit: Self.latestMediaLimit,
+                        groupItems: true,
+                        imageTypeLimit: 1
+                    )),
+                    triggers: [.libraryUpdated]
                 )
             }
+
         case .libraryTiles:
-            return [HomeRow(id: "library_tiles", title: "Libraries", rowType: .libraryTiles)]
+            return [makeRow(
+                id: "library_tiles",
+                title: "Libraries",
+                rowType: .libraryTiles,
+                queryType: .staticItems(userViews),
+                triggers: []
+            )]
+
         case .resumeAudio:
-            return [HomeRow(id: "resume_audio", title: "Continue Listening", rowType: .resumeAudio)]
+            return [makeRow(
+                id: "resume_audio",
+                title: "Continue Listening",
+                rowType: .resumeAudio,
+                queryType: .resume(GetResumeItemsRequest(
+                    mediaTypes: [.audio],
+                    fields: Self.defaultFields,
+                    enableImages: true,
+                    imageTypeLimit: 1
+                )),
+                triggers: [.musicPlayback]
+            )]
+
         case .playlists:
-            return [HomeRow(id: "playlists", title: "Playlists", rowType: .playlists)]
+            return [makeRow(
+                id: "playlists",
+                title: "Playlists",
+                rowType: .playlists,
+                queryType: .items(GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: [.playlist],
+                    sortBy: [.dateCreated],
+                    sortOrder: .descending,
+                    fields: Self.defaultFields,
+                    enableImages: true,
+                    imageTypeLimit: 1
+                )),
+                triggers: [.libraryUpdated]
+            )]
+
         case .liveTv:
-            return [HomeRow(id: "live_tv", title: "Live TV", rowType: .liveTv)]
+            return [makeRow(
+                id: "live_tv",
+                title: "Live TV",
+                rowType: .liveTv,
+                queryType: .liveTvPrograms,
+                triggers: []
+            )]
+
         case .none:
             return []
         }
+    }
+
+    private func makeRow(
+        id: String,
+        title: String,
+        rowType: HomeRowType,
+        queryType: RowQueryType,
+        triggers: Set<ChangeTriggerType>
+    ) -> HomeRow {
+        let source = RowDataSource(
+            queryType: queryType,
+            changeTriggers: triggers,
+            chunkSize: Self.chunkSize
+        )
+        dataSources[id] = source
+        return HomeRow(id: id, title: title, rowType: rowType)
     }
 
     private var latestMediaViewTypes: [ServerItem] {
@@ -112,172 +215,39 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func loadAllRows() async {
-        await withTaskGroup(of: (String, [ServerItem], Int)?.self) { group in
-            for row in rows {
-                group.addTask { [weak self] in
-                    guard let self else { return nil }
-                    return await self.fetchRowData(row)
+    private func loadAllRows(client: MediaServerClient) async {
+        await withTaskGroup(of: String?.self) { group in
+            for (rowId, source) in dataSources {
+                group.addTask {
+                    await source.retrieve(client: client)
+                    return rowId
                 }
             }
-            for await result in group {
-                guard let (rowId, items, total) = result else { continue }
-                guard !Task.isCancelled else { return }
-                if let index = rows.firstIndex(where: { $0.id == rowId }) {
-                    rows[index].items = items
-                    rows[index].totalItemCount = total
-                    rows[index].isLoading = false
-                }
+            for await rowId in group {
+                guard let rowId, !Task.isCancelled else { continue }
+                syncRow(rowId)
             }
         }
     }
 
-    private func fetchRowData(_ row: HomeRow) async -> (String, [ServerItem], Int)? {
-        guard let client else { return nil }
-        do {
-            switch row.rowType {
-            case .continueWatching:
-                let result = try await client.itemsApi.getResumeItems(request: GetResumeItemsRequest(
-                    mediaTypes: [.video],
-                    fields: Self.defaultFields,
-                    limit: Self.chunkSize,
-                    enableImages: true,
-                    imageTypeLimit: 1
-                ))
-                return (row.id, result.items, result.totalRecordCount)
-
-            case .nextUp:
-                let result = try await client.itemsApi.getNextUp(request: GetNextUpRequest(
-                    fields: Self.defaultFields,
-                    limit: Self.chunkSize,
-                    enableImages: true,
-                    imageTypeLimit: 1
-                ))
-                return (row.id, result.items, result.totalRecordCount)
-
-            case .latestMedia(let libraryId):
-                let items = try await client.itemsApi.getLatestMedia(request: GetLatestMediaRequest(
-                    parentId: libraryId,
-                    fields: Self.defaultFields,
-                    limit: Self.latestMediaLimit,
-                    groupItems: true,
-                    imageTypeLimit: 1
-                ))
-                return (row.id, Array(items.prefix(Self.chunkSize)), items.count)
-
-            case .libraryTiles:
-                return (row.id, userViews, userViews.count)
-
-            case .resumeAudio:
-                let result = try await client.itemsApi.getResumeItems(request: GetResumeItemsRequest(
-                    mediaTypes: [.audio],
-                    fields: Self.defaultFields,
-                    limit: Self.chunkSize,
-                    enableImages: true,
-                    imageTypeLimit: 1
-                ))
-                return (row.id, result.items, result.totalRecordCount)
-
-            case .playlists:
-                let result = try await client.itemsApi.getItems(request: GetItemsRequest(
-                    recursive: true,
-                    includeItemTypes: [.playlist],
-                    sortBy: [.dateCreated],
-                    sortOrder: .descending,
-                    fields: Self.defaultFields,
-                    limit: Self.latestMediaLimit,
-                    enableImages: true,
-                    imageTypeLimit: 1
-                ))
-                return (row.id, result.items, result.totalRecordCount)
-
-            case .liveTv:
-                let result = try await client.liveTvApi.getRecommendedPrograms(
-                    userId: client.userId,
-                    limit: Self.chunkSize
-                )
-                return (row.id, result.items, result.totalRecordCount)
-            }
-        } catch {
-            return (row.id, [], 0)
-        }
+    private func syncRow(_ rowId: String) {
+        guard let index = rows.firstIndex(where: { $0.id == rowId }),
+              let source = dataSources[rowId]
+        else { return }
+        rows[index].items = source.items
+        rows[index].isLoading = source.isLoading
+        rows[index].totalItemCount = source.totalItemCount
     }
 
     func loadMoreIfNeeded(row: HomeRow, currentIndex: Int) {
-        let threshold = row.items.count - Int(Double(Self.chunkSize) / 1.7)
-        guard currentIndex >= threshold,
-              row.items.count < row.totalItemCount,
-              row.items.count < Self.maxItems,
-              paginationTasks[row.id] == nil
+        guard let source = dataSources[row.id],
+              source.shouldLoadMore(currentIndex: currentIndex),
+              let client
         else { return }
 
-        paginationTasks[row.id] = Task {
-            defer { paginationTasks[row.id] = nil }
-            guard let client else { return }
-
-            do {
-                let startIndex = row.items.count
-                var newItems: [ServerItem] = []
-
-                switch row.rowType {
-                case .continueWatching:
-                    let result = try await client.itemsApi.getResumeItems(request: GetResumeItemsRequest(
-                        mediaTypes: [.video],
-                        fields: Self.defaultFields,
-                        limit: Self.chunkSize,
-                        startIndex: startIndex,
-                        enableImages: true,
-                        imageTypeLimit: 1
-                    ))
-                    newItems = result.items
-
-                case .nextUp:
-                    let result = try await client.itemsApi.getNextUp(request: GetNextUpRequest(
-                        fields: Self.defaultFields,
-                        limit: Self.chunkSize,
-                        startIndex: startIndex,
-                        enableImages: true,
-                        imageTypeLimit: 1
-                    ))
-                    newItems = result.items
-
-                case .latestMedia:
-                    return
-
-                case .resumeAudio:
-                    let result = try await client.itemsApi.getResumeItems(request: GetResumeItemsRequest(
-                        mediaTypes: [.audio],
-                        fields: Self.defaultFields,
-                        limit: Self.chunkSize,
-                        startIndex: startIndex,
-                        enableImages: true,
-                        imageTypeLimit: 1
-                    ))
-                    newItems = result.items
-
-                case .playlists:
-                    let result = try await client.itemsApi.getItems(request: GetItemsRequest(
-                        recursive: true,
-                        includeItemTypes: [.playlist],
-                        sortBy: [.dateCreated],
-                        sortOrder: .descending,
-                        fields: Self.defaultFields,
-                        limit: Self.chunkSize,
-                        startIndex: startIndex,
-                        enableImages: true,
-                        imageTypeLimit: 1
-                    ))
-                    newItems = result.items
-
-                case .liveTv, .libraryTiles:
-                    return
-                }
-
-                guard !Task.isCancelled, !newItems.isEmpty else { return }
-                if let index = rows.firstIndex(where: { $0.id == row.id }) {
-                    rows[index].items.append(contentsOf: newItems)
-                }
-            } catch { }
+        Task {
+            await source.loadMore(client: client)
+            syncRow(row.id)
         }
     }
 

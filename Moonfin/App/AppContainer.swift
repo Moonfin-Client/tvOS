@@ -22,6 +22,10 @@ final class AppContainer: ObservableObject {
 
     let serverClientFactory: MediaServerClientFactory
 
+    // MARK: - Services
+
+    let dataRefreshService: DataRefreshService
+
     // MARK: - Repositories
 
     let userRepository: UserRepositoryProtocol
@@ -48,6 +52,7 @@ final class AppContainer: ObservableObject {
         self.authPreferences = authPrefs
         self.userPreferences = UserPreferences(store: store)
         self.serverClientFactory = factory
+        self.dataRefreshService = DataRefreshService()
 
         let userRepo = UserRepository()
         let serverRepo = ServerRepository(authenticationStore: authStore, serverClientFactory: factory)
