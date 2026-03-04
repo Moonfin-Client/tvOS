@@ -156,6 +156,7 @@ struct ServerItem: Codable, Identifiable {
     let container: String?
     let channelId: String?
     let channelName: String?
+    let collectionType: String?
     let people: [ServerPerson]?
     let genres: [String]?
     let tags: [String]?
@@ -193,6 +194,7 @@ struct ServerItem: Codable, Identifiable {
         case container = "Container"
         case channelId = "ChannelId"
         case channelName = "ChannelName"
+        case collectionType = "CollectionType"
         case people = "People"
         case genres = "Genres"
         case tags = "Tags"

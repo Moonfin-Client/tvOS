@@ -232,6 +232,8 @@ struct GetResumeItemsRequest {
     let userId: String?
     let parentId: String?
     let includeItemTypes: [ItemType]?
+    let excludeItemTypes: [ItemType]?
+    let mediaTypes: [MediaType]?
     let fields: [ItemField]?
     let limit: Int?
     let startIndex: Int?
@@ -242,6 +244,8 @@ struct GetResumeItemsRequest {
         userId: String? = nil,
         parentId: String? = nil,
         includeItemTypes: [ItemType]? = nil,
+        excludeItemTypes: [ItemType]? = nil,
+        mediaTypes: [MediaType]? = nil,
         fields: [ItemField]? = nil,
         limit: Int? = nil,
         startIndex: Int? = nil,
@@ -251,6 +255,8 @@ struct GetResumeItemsRequest {
         self.userId = userId
         self.parentId = parentId
         self.includeItemTypes = includeItemTypes
+        self.excludeItemTypes = excludeItemTypes
+        self.mediaTypes = mediaTypes
         self.fields = fields
         self.limit = limit
         self.startIndex = startIndex

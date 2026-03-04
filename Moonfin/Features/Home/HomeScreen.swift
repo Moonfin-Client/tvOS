@@ -14,13 +14,12 @@ struct HomeScreen: View {
             backdropLayer
             gradientOverlay
             infoArea
-            contentRowsPlaceholder
+            contentRows
         }
         .ignoresSafeArea()
         .environmentObject(viewModel.backgroundService)
+        .onAppear { viewModel.loadContent() }
     }
-
-    // MARK: - Background Layer
 
     private var backdropLayer: some View {
         GeometryReader { geo in
@@ -77,8 +76,6 @@ struct HomeScreen: View {
         .ignoresSafeArea()
     }
 
-    // MARK: - Info Area
-
     private var infoArea: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             if let logoUrl = viewModel.selectedItemState.logoUrl,
@@ -115,88 +112,21 @@ struct HomeScreen: View {
         .animation(.easeInOut(duration: 0.3), value: viewModel.selectedItemState.title)
     }
 
-    // MARK: - Content Rows Area
-
-    private var contentRowsPlaceholder: some View {
+    private var contentRows: some View {
         VStack {
             Spacer()
                 .frame(height: 243)
 
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
-                    ForEach(0..<5, id: \.self) { index in
-                        PlaceholderRow(index: index)
+                    let visibleRows = viewModel.rows.filter { !$0.isEmpty }
+                    ForEach(visibleRows) { row in
+                        ContentRow(row: row, viewModel: viewModel)
                     }
                 }
                 .padding(.horizontal, 50)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    }
-}
-
-private struct PlaceholderRow: View {
-    let index: Int
-    @EnvironmentObject var theme: MoonfinTheme
-
-    private var rowTitle: String {
-        switch index {
-        case 0: return "Continue Watching"
-        case 1: return "Next Up"
-        case 2: return "Latest Movies"
-        case 3: return "Latest TV Shows"
-        case 4: return "Libraries"
-        default: return "Row \(index)"
-        }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            Text(rowTitle)
-                .font(.bodyLg)
-                .fontWeight(.semibold)
-                .foregroundColor(theme.colorScheme.onBackground)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: SpaceTokens.spaceMd) {
-                    ForEach(0..<8, id: \.self) { cardIndex in
-                        PlaceholderCard(rowIndex: index, cardIndex: cardIndex)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct PlaceholderCard: View {
-    let rowIndex: Int
-    let cardIndex: Int
-    @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
-
-    private var aspectRatio: CGFloat {
-        rowIndex <= 1 ? 16.0 / 9.0 : 2.0 / 3.0
-    }
-
-    private var cardWidth: CGFloat {
-        rowIndex <= 1 ? 280 : 150
-    }
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: RadiusTokens.small)
-            .fill(theme.colorScheme.surface.opacity(isFocused ? 0.6 : 0.3))
-            .aspectRatio(aspectRatio, contentMode: .fit)
-            .frame(width: cardWidth)
-            .overlay(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .stroke(
-                        isFocused ? theme.accent : Color.clear,
-                        lineWidth: isFocused ? 3 : 0
-                    )
-            )
-            .scaleEffect(isFocused ? 1.05 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: isFocused)
-            .focusable()
-            .focused($isFocused)
     }
 }

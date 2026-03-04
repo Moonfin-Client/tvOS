@@ -102,6 +102,8 @@ struct EmbyItemsApi: ServerItemsApi {
             ("ParentId", request.parentId),
             ("Fields", request.fields?.map(\.rawValue).joined(separator: ",")),
             ("IncludeItemTypes", request.includeItemTypes?.map(\.apiValue).joined(separator: ",")),
+            ("ExcludeItemTypes", request.excludeItemTypes?.map(\.apiValue).joined(separator: ",")),
+            ("MediaTypes", request.mediaTypes?.map(\.rawValue).joined(separator: ",")),
             ("EnableImages", request.enableImages.map(String.init)),
             ("ImageTypeLimit", request.imageTypeLimit.map(String.init)),
         ])
