@@ -1,0 +1,62 @@
+name: Moonfin
+options:
+  bundleIdPrefix: com.moonfin
+  deploymentTarget:
+    tvOS: "16.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+
+packages:
+  Nuke:
+    url: https://github.com/kean/Nuke
+    from: "12.7.0"
+  NukeUI:
+    url: https://github.com/kean/NukeUI
+    from: "0.8.0"
+  KeychainAccess:
+    url: https://github.com/kishikawakatsumi/KeychainAccess
+    from: "4.2.2"
+
+targets:
+  Moonfin:
+    type: application
+    platform: tvOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: Moonfin
+    resources:
+      - path: Moonfin/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.moonfin.tv
+        INFOPLIST_FILE: Moonfin/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: Moonfin/Resources/Moonfin.entitlements
+    dependencies:
+      - package: Nuke
+      - package: NukeUI
+      - package: KeychainAccess
+      - target: TopShelfExtension
+
+  TopShelfExtension:
+    type: app-extension
+    platform: tvOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: TopShelfExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.moonfin.tv.TopShelf
+        INFOPLIST_FILE: TopShelfExtension/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+    dependencies:
+      - sdk: TVServices.framework
