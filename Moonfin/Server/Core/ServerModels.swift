@@ -147,6 +147,8 @@ struct ServerItem: Codable, Identifiable {
     let parentIndexNumber: Int?
     let imageTags: [String: String]?
     let backdropImageTags: [String]?
+    let parentBackdropImageTags: [String]?
+    let parentBackdropItemId: String?
     let primaryImageAspectRatio: Double?
     let userData: UserItemData?
     let mediaSources: [ServerMediaSource]?
@@ -182,6 +184,8 @@ struct ServerItem: Codable, Identifiable {
         case parentIndexNumber = "ParentIndexNumber"
         case imageTags = "ImageTags"
         case backdropImageTags = "BackdropImageTags"
+        case parentBackdropImageTags = "ParentBackdropImageTags"
+        case parentBackdropItemId = "ParentBackdropItemId"
         case primaryImageAspectRatio = "PrimaryImageAspectRatio"
         case userData = "UserData"
         case mediaSources = "MediaSources"

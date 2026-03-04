@@ -63,13 +63,14 @@ struct StartupNavigationView: View {
 }
 
 struct MainNavigationView: View {
+    @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
 
     var body: some View {
         ZStack {
             NavigationStack(path: $router.path) {
-                HomePlaceholderView()
+                HomeScreen(container: container)
                     .navigationDestination(for: Destination.self) { destination in
                         mainDestinationView(for: destination)
                     }
@@ -87,7 +88,7 @@ struct MainNavigationView: View {
     private func mainDestinationView(for destination: Destination) -> some View {
         switch destination {
         case .home:
-            HomePlaceholderView()
+            HomeScreen(container: container)
         case .search:
             PlaceholderView(title: "Search")
         case .libraryBrowser:
@@ -109,21 +110,6 @@ struct MainNavigationView: View {
 }
 
 // MARK: - Placeholders
-
-struct HomePlaceholderView: View {
-    @EnvironmentObject var theme: MoonfinTheme
-
-    var body: some View {
-        VStack(spacing: SpaceTokens.spaceLg) {
-            Image(systemName: "house.fill")
-                .font(.system(size: 60))
-                .foregroundColor(theme.accent)
-            Text("Home")
-                .font(.titleXl)
-                .foregroundColor(theme.colorScheme.onBackground)
-        }
-    }
-}
 
 struct SettingsOverlayView: View {
     @EnvironmentObject var theme: MoonfinTheme
