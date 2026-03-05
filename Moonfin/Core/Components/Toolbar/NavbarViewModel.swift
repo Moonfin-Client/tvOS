@@ -60,4 +60,80 @@ final class NavbarViewModel: ObservableObject {
     func switchUser() {
         container.sessionRepository.destroyCurrentSession()
     }
+
+    // MARK: - Shuffle
+
+    @Published var isShuffling = false
+
+    private var client: MediaServerClient? {
+        guard let server = container.serverRepository.currentServer.value else { return nil }
+        return container.serverClientFactory.client(for: server)
+    }
+
+    func performQuickShuffle(router: NavigationRouter) {
+        let contentType = container.userPreferences[UserPreferences.shuffleContentType]
+        Task {
+            guard let item = await shuffle(contentType: contentType) else { return }
+            router.navigate(to: .itemDetails(itemId: item.id))
+        }
+    }
+
+    func performShuffle(contentType: ShuffleContentType, router: NavigationRouter) {
+        container.userPreferences[UserPreferences.shuffleContentType] = contentType
+        Task {
+            guard let item = await shuffle(contentType: contentType) else { return }
+            router.navigate(to: .itemDetails(itemId: item.id))
+        }
+    }
+
+    private func shuffle(contentType: ShuffleContentType, libraryId: String? = nil) async -> ServerItem? {
+        guard !isShuffling, let client else { return nil }
+        isShuffling = true
+        defer { isShuffling = false }
+
+        let includeTypes = contentType.itemTypes
+
+        for _ in 1...5 {
+            do {
+                let result = try await client.itemsApi.getItems(request: GetItemsRequest(
+                    parentId: libraryId,
+                    recursive: true,
+                    includeItemTypes: includeTypes,
+                    excludeItemTypes: [.boxSet],
+                    sortBy: [.random],
+                    limit: 1
+                ))
+                guard let item = result.items.first else { return nil }
+                if item.type == .boxSet { continue }
+                return item
+            } catch {
+                break
+            }
+        }
+
+        // Client-side fallback when server-side Random sort fails
+        do {
+            let countResult = try await client.itemsApi.getItems(request: GetItemsRequest(
+                parentId: libraryId,
+                recursive: true,
+                includeItemTypes: includeTypes,
+                excludeItemTypes: [.boxSet],
+                limit: 0
+            ))
+            guard countResult.totalRecordCount > 0 else { return nil }
+            let randomIndex = Int.random(in: 0..<countResult.totalRecordCount)
+            let itemResult = try await client.itemsApi.getItems(request: GetItemsRequest(
+                parentId: libraryId,
+                recursive: true,
+                includeItemTypes: includeTypes,
+                excludeItemTypes: [.boxSet],
+                sortBy: [.sortName],
+                startIndex: randomIndex,
+                limit: 1
+            ))
+            return itemResult.items.first
+        } catch {
+            return nil
+        }
+    }
 }

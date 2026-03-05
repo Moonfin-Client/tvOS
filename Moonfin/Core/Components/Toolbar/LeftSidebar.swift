@@ -79,8 +79,6 @@ struct LeftSidebar: View {
         }
     }
 
-    // MARK: - Sidebar Content
-
     private var sidebarContent: some View {
         VStack(spacing: 0) {
             userSection
@@ -95,8 +93,6 @@ struct LeftSidebar: View {
         .padding(.horizontal, 8)
     }
 
-    // MARK: - User Section
-
     private var userSection: some View {
         SidebarIconItem(
             systemIcon: "person.fill",
@@ -110,8 +106,6 @@ struct LeftSidebar: View {
             }
         )
     }
-
-    // MARK: - Scrollable Nav Items
 
     private var scrollableItems: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -137,8 +131,15 @@ struct LeftSidebar: View {
                     label: "Shuffle",
                     isExpanded: isExpanded,
                     onExpandedChange: handleSidebarFocus,
-                    action: { /* TODO: shuffle action */ }
+                    action: { viewModel.performQuickShuffle(router: router) }
                 )
+                .contextMenu {
+                    ForEach(ShuffleContentType.allCases, id: \.self) { type in
+                        Button(type.displayName) {
+                            viewModel.performShuffle(contentType: type, router: router)
+                        }
+                    }
+                }
 
                 SidebarIconItem(
                     systemIcon: "heart.fill",
@@ -170,8 +171,6 @@ struct LeftSidebar: View {
             }
         }
     }
-
-    // MARK: - Libraries Section
 
     private var librariesSection: some View {
         VStack(spacing: 2) {
@@ -206,8 +205,6 @@ struct LeftSidebar: View {
         }
         .animation(.easeInOut(duration: 0.2), value: librariesFocused)
     }
-
-    // MARK: - Settings
 
     private var settingsItem: some View {
         SidebarIconItem(

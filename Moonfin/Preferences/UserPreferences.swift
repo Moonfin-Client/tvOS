@@ -14,6 +14,7 @@ final class UserPreferences {
     // MARK: - Navigation
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
+    static let shuffleContentType = Preference(key: "shuffle_content_type", defaultValue: ShuffleContentType.both)
 
     // MARK: - Home
 
@@ -65,6 +66,28 @@ enum AudioBehavior: String, StringRepresentableEnum, CaseIterable {
 enum NavbarPosition: String, StringRepresentableEnum, CaseIterable {
     case top
     case left
+}
+
+enum ShuffleContentType: String, StringRepresentableEnum, CaseIterable {
+    case movies
+    case tvShows
+    case both
+
+    var itemTypes: [ItemType] {
+        switch self {
+        case .movies: return [.movie]
+        case .tvShows: return [.series]
+        case .both: return [.movie, .series]
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .movies: return "Movies"
+        case .tvShows: return "TV Shows"
+        case .both: return "Both"
+        }
+    }
 }
 
 enum PosterSize: String, StringRepresentableEnum, CaseIterable {

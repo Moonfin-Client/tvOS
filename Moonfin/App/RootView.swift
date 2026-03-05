@@ -71,10 +71,7 @@ struct MainNavigationView: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
-
-    private var navbarPosition: NavbarPosition {
-        container.userPreferences[UserPreferences.navbarPosition]
-    }
+    @AppStorage("navbar_position") private var navbarPosition: NavbarPosition = .top
 
     var body: some View {
         ZStack {

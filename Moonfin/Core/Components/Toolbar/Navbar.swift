@@ -29,8 +29,6 @@ struct Navbar: View {
         .frame(height: 110)
     }
 
-    // MARK: - Start Section
-
     private var startSection: some View {
         UserAvatarToolbarButton(
             imageUrl: viewModel.userImageUrl,
@@ -40,8 +38,6 @@ struct Navbar: View {
             }
         )
     }
-
-    // MARK: - Center Section
 
     private var centerSection: some View {
         HStack(spacing: 6) {
@@ -62,8 +58,15 @@ struct Navbar: View {
                 icon: "shuffle",
                 label: "Shuffle",
                 isAssetIcon: true,
-                action: { /* TODO: shuffle action */ }
+                action: { viewModel.performQuickShuffle(router: router) }
             )
+            .contextMenu {
+                ForEach(ShuffleContentType.allCases, id: \.self) { type in
+                    Button(type.displayName) {
+                        viewModel.performShuffle(contentType: type, router: router)
+                    }
+                }
+            }
 
             ExpandableToolbarButton(
                 icon: "heart.fill",
@@ -106,8 +109,6 @@ struct Navbar: View {
         .clipShape(Capsule())
         .focusScope(navbarNamespace)
     }
-
-    // MARK: - End Section
 
     private var endSection: some View {
         Group {
