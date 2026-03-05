@@ -72,16 +72,22 @@ struct MainNavigationView: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
 
+    private var navbarPosition: NavbarPosition {
+        container.userPreferences[UserPreferences.navbarPosition]
+    }
+
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                MainToolbar(container: container)
-
-                NavigationStack(path: $router.path) {
-                    HomeScreen(container: container)
-                        .navigationDestination(for: Destination.self) { destination in
-                            mainDestinationView(for: destination)
-                        }
+            switch navbarPosition {
+            case .top:
+                VStack(spacing: 0) {
+                    MainToolbar(container: container)
+                    mainContent
+                }
+            case .left:
+                ZStack {
+                    mainContent
+                    LeftSidebar(container: container)
                 }
             }
 
@@ -91,6 +97,15 @@ struct MainNavigationView: View {
             }
         }
         .animation(.easeInOut(duration: 0.4), value: settingsRouter.isPresented)
+    }
+
+    private var mainContent: some View {
+        NavigationStack(path: $router.path) {
+            HomeScreen(container: container)
+                .navigationDestination(for: Destination.self) { destination in
+                    mainDestinationView(for: destination)
+                }
+        }
     }
 
     @ViewBuilder

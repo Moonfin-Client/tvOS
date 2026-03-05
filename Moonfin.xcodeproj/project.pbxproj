@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00A1958A5335E8638989E525 /* EmbyConnectScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E66A84C747D367236452A40 /* EmbyConnectScreen.swift */; };
 		00D47B65F5554173CE1866D5 /* ServerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074468E8521DA23AB817B560 /* ServerError.swift */; };
 		05598E8B24355E2A7D15EEFB /* JellyfinApis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAB441B2D93DAF13B529D21 /* JellyfinApis.swift */; };
 		063B115422BD6FA165CF8051 /* SplashScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC7A36F3499A0D0B041F9B7 /* SplashScreen.swift */; };
@@ -30,10 +31,8 @@
 		34AE77021F4280ED397150B3 /* ServerEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A3039D72FC265C3A86801E /* ServerEnums.swift */; };
 		368AA3266CC102339CC62581 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DE69C03B19FE96985217BAB /* LibraryView.swift */; };
 		3691F2BA3751A8BE31CDB057 /* EmbyApis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F91BCAC2868F2231BC3267E /* EmbyApis.swift */; };
-		AA11223344556677AABB0001 /* EmbyConnectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11223344556677AABB0011 /* EmbyConnectService.swift */; };
-		AA11223344556677AABB0002 /* EmbyConnectScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11223344556677AABB0022 /* EmbyConnectScreen.swift */; };
-		AA11223344556677AABB0003 /* EmbyConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11223344556677AABB0033 /* EmbyConnectViewModel.swift */; };
 		382288BD55A9D7ECDC42F70A /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73D2F15693134A15639B26D /* KeychainStore.swift */; };
+		39101EA625E8A6477B2EF7AA /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F8D7F07F81C3FFCDAA6497 /* MainToolbar.swift */; };
 		3E0224BD042331F5483E3D3C /* JellyseerrView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B22F64779DA9F2F939D590 /* JellyseerrView.swift */; };
 		4265AA5721AF21B0670F6356 /* LoginControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B60F4A8B14EDBD78F225142 /* LoginControls.swift */; };
 		430A9475EBE0A3EB82D021AD /* ServerWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */; };
@@ -57,6 +56,7 @@
 		627CDA9D73B185C8AAA0DF1E /* LibraryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABDCA99A0E17C8A882E8EA80 /* LibraryCard.swift */; };
 		6382863BD2E5A01AD37F8AC4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 11F9098C62E1011B54DDB936 /* Assets.xcassets */; };
 		659117FFF2FEE58885DFDFBB /* AuthenticationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2E513F01DD8E72DB15C70D /* AuthenticationRepository.swift */; };
+		673C558004586A2BFE0289EF /* EmbyConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */; };
 		69103F97C2C4EBD46C06C687 /* SelectedItemState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0FFB47A15FF8BC8041D824 /* SelectedItemState.swift */; };
 		69844BC09EF3C81958536EF9 /* DataRefreshService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19263A8A3FE6E52F3CC93673 /* DataRefreshService.swift */; };
 		6A381F27D329757511BD7AA3 /* SelectServerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30398C74AA337F81E8F2505 /* SelectServerScreen.swift */; };
@@ -68,6 +68,7 @@
 		78637B934DF5AC002448C822 /* Destination.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DEE53CA1312CDBD0BA68460 /* Destination.swift */; };
 		7A8BFE855F12A9BEF5963DC4 /* RowQueryType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA8AFF9F6F2ECDE4CA0C191 /* RowQueryType.swift */; };
 		7B1DED1CA529E49A3E182C3B /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C689D206E49488A79F0153A8 /* SearchView.swift */; };
+		7CEA607970DEA24AFA2523D6 /* EmbyConnectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68AC9AB298E561DC071CAD60 /* EmbyConnectService.swift */; };
 		7E59908C6B580C47857E7AB0 /* RowDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D350319305B10BAA1D1404CC /* RowDataSource.swift */; };
 		7E70B89EE8D18E4DAA719085 /* AuthenticationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18DDB37B1DD76A59C18BF602 /* AuthenticationStore.swift */; };
 		7F3328F0F4D0E2622F120707 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8E977D051C49141D6B1B30 /* DesignTokens.swift */; };
@@ -78,6 +79,7 @@
 		8BF09E744242E20B4C19DABC /* PlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */; };
 		8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681B5D321FDDC52F49B7EFB7 /* LoginBackground.swift */; };
 		8E03D63027BE4532F8EA2428 /* TopShelfExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 82577A9FD03CF26B68E531B8 /* TopShelfExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		8E23DC82575F15240016EC32 /* ExpandableToolbarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */; };
 		8FD35C90EEFC870588E10181 /* StartupBranding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB17116B5C93DF871B4F946 /* StartupBranding.swift */; };
 		924383CEDED012A0162C4770 /* ServerFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94722BC7ADD0914A190024A /* ServerFeatures.swift */; };
 		92928E8EA23CBED3CFD11BFE /* PinEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15CF03F310991555CAFB32A3 /* PinEntryView.swift */; };
@@ -92,9 +94,11 @@
 		A2A78541C98491B19540AAFC /* FilterOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA92E4943C66A700242A879 /* FilterOptions.swift */; };
 		A7F8A2BD741DA24FBE31E4B0 /* BackgroundService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CBB645AF6ED5272E4D1F2FB /* BackgroundService.swift */; };
 		A9B61DE6EBE4B2392FE96FDD /* ItemCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA52CD4F73CDB1FAE8DE7DB8 /* ItemCard.swift */; };
+		AA1B8F711287B0DB9DE3CD5C /* ToolbarClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D8A6CA4AAF12A0C017D609 /* ToolbarClock.swift */; };
 		AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D633491E2E3C22A82AE90F1A /* SimpleInfoRow.swift */; };
 		AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 443241810250EC1AB21DA8F9 /* LoginCard.swift */; };
 		B273DC84F80FBB5876CCD0F8 /* ServerWebSocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D817B3079DB381F66B8EBE6 /* ServerWebSocketMessage.swift */; };
+		BF435588F9323DB78D072C29 /* LeftSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */; };
 		BF5254DAE58042C682929BD4 /* ResolutionHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7174976F817669A40E47226 /* ResolutionHelper.swift */; };
 		C900DDBE3866AD2AE0994887 /* JellyfinLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84351FB844308F8CE1733E97 /* JellyfinLogo.swift */; };
 		CC5946EBEE0483E3D3CF414F /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FB992932D9FF916978F6A /* NetworkError.swift */; };
@@ -109,14 +113,11 @@
 		EB6655AECBFD44AAAE5AD818 /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC2835C69455EABD2EECAA4C /* UserPreferences.swift */; };
 		EC0F2D8825A40D8EA7EF3D2D /* ColorScheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4159CF66566044EE7426BC /* ColorScheme.swift */; };
 		EDB11E43146103FF686559F2 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14655AF7A48478F46D0FE802 /* Server.swift */; };
+		EF3338B76D9FDB7E5C2BDD5D /* ExpandableLibrariesButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD070B3D16B451F68649E3B /* ExpandableLibrariesButton.swift */; };
 		EF7DF8ADC72954304A9ED8D5 /* ServerQueryHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF728FA7DAC888DE730C3CC3 /* ServerQueryHelpers.swift */; };
+		F63FEA781BF65CF7DDDC546E /* MainToolbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5EC2DDA20E80E4CF3A93F1 /* MainToolbarViewModel.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
 		FE8E24B6F5D6F4AF773AD7C1 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94106EFA5B45688EB1AC60F /* SettingsView.swift */; };
-		459EC4E980C7E5955A9E31F5 /* ExpandableToolbarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2772BF063E843B90D31334E /* ExpandableToolbarButton.swift */; };
-		AEA087D42D2D613A304251BF /* ExpandableLibrariesButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADFBB52FA8ACABD8708DAD2 /* ExpandableLibrariesButton.swift */; };
-		3560A33C2E24EC47CCF4C710 /* ToolbarClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813B08AA5A8C180EDFA6CCB4 /* ToolbarClock.swift */; };
-		061C030FB463594A0436F2A6 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3367DDA56B1D6FF71F238A /* MainToolbar.swift */; };
-		CC4D7C4804F7E17B32C64A1E /* MainToolbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671B91DD612770103042957A /* MainToolbarViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -148,7 +149,6 @@
 		074468E8521DA23AB817B560 /* ServerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerError.swift; sourceTree = "<group>"; };
 		07C8A91EC4A411E6D508CF41 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
 		0F91BCAC2868F2231BC3267E /* EmbyApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyApis.swift; sourceTree = "<group>"; };
-		AA11223344556677AABB0011 /* EmbyConnectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectService.swift; sourceTree = "<group>"; };
 		0FBBAFFE10B2CFDF1FD8D32E /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
 		11ABDCA5F8DCD46037E016B3 /* UUID+Parsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+Parsing.swift"; sourceTree = "<group>"; };
 		11F9098C62E1011B54DDB936 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -161,37 +161,43 @@
 		1BAE1BB034AC6127CFDBAE45 /* ServerApiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerApiModels.swift; sourceTree = "<group>"; };
 		1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAddViewModel.swift; sourceTree = "<group>"; };
 		24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLoginScreen.swift; sourceTree = "<group>"; };
-		AA11223344556677AABB0022 /* EmbyConnectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectScreen.swift; sourceTree = "<group>"; };
 		2523CF196DD63575C61CB15E /* EmbyServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyServerClient.swift; sourceTree = "<group>"; };
 		260C3C82CF4ACF0E8629F5DA /* ChangeTriggerType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeTriggerType.swift; sourceTree = "<group>"; };
 		2B73FA206F8A4DF144150EDF /* FocusBorderButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusBorderButtonStyle.swift; sourceTree = "<group>"; };
 		2CA92E4943C66A700242A879 /* FilterOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterOptions.swift; sourceTree = "<group>"; };
+		2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectViewModel.swift; sourceTree = "<group>"; };
 		30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerWebSocketClient.swift; sourceTree = "<group>"; };
+		30F8D7F07F81C3FFCDAA6497 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		36892F89FCB6FDDA0932F860 /* SessionInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionInitializer.swift; sourceTree = "<group>"; };
 		39FB08870D76B932543FCFC8 /* Moonfin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Moonfin.entitlements; sourceTree = "<group>"; };
 		3A0EE80F68994FF25EEA2B0C /* TVServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVServices.framework; path = System/Library/Frameworks/TVServices.framework; sourceTree = SDKROOT; };
 		3C72F20A47DD2A40EE40925E /* SelectServerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectServerViewModel.swift; sourceTree = "<group>"; };
 		3CBB645AF6ED5272E4D1F2FB /* BackgroundService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundService.swift; sourceTree = "<group>"; };
 		3FEB9DCB39B5C4AF061AF748 /* ServerRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRepository.swift; sourceTree = "<group>"; };
+		3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeftSidebar.swift; sourceTree = "<group>"; };
 		41A3039D72FC265C3A86801E /* ServerEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEnums.swift; sourceTree = "<group>"; };
 		41FA95C5AC76D45F53A84698 /* LiveTVView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTVView.swift; sourceTree = "<group>"; };
 		43EADFDCA2B9073D7A47E0C6 /* ContentRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRow.swift; sourceTree = "<group>"; };
 		443241810250EC1AB21DA8F9 /* LoginCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginCard.swift; sourceTree = "<group>"; };
 		4B6BF213289C258496451F29 /* PreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceStore.swift; sourceTree = "<group>"; };
+		4D5EC2DDA20E80E4CF3A93F1 /* MainToolbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbarViewModel.swift; sourceTree = "<group>"; };
 		4DE69C03B19FE96985217BAB /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		4F9E7FCE39C15D9BACD3A4B8 /* SSLTrustDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSLTrustDelegate.swift; sourceTree = "<group>"; };
 		500F587C5CF0568645B22C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		532FB992932D9FF916978F6A /* NetworkError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkError.swift; sourceTree = "<group>"; };
 		5C8FF3EE89D79751C704B8B0 /* AuthenticationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationPreferences.swift; sourceTree = "<group>"; };
 		5DA8AFF9F6F2ECDE4CA0C191 /* RowQueryType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowQueryType.swift; sourceTree = "<group>"; };
+		5E66A84C747D367236452A40 /* EmbyConnectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectScreen.swift; sourceTree = "<group>"; };
 		63D9C50FCA02AF1FAAC7DD53 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		681B5D321FDDC52F49B7EFB7 /* LoginBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginBackground.swift; sourceTree = "<group>"; };
+		68AC9AB298E561DC071CAD60 /* EmbyConnectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectService.swift; sourceTree = "<group>"; };
 		6BBEE4F3BBDB81FE8A31535C /* JellyfinServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinServerClient.swift; sourceTree = "<group>"; };
 		6D817B3079DB381F66B8EBE6 /* ServerWebSocketMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerWebSocketMessage.swift; sourceTree = "<group>"; };
 		6DEE53CA1312CDBD0BA68460 /* Destination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Destination.swift; sourceTree = "<group>"; };
 		6F50F8BE2C98C1C0C3E4DDF4 /* ConnectHelpScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectHelpScreen.swift; sourceTree = "<group>"; };
 		735FC8641A441A0CF3638A09 /* HomeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeRow.swift; sourceTree = "<group>"; };
 		74EAC8BD97D4DDB42602897B /* ServerAddScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAddScreen.swift; sourceTree = "<group>"; };
+		76D8A6CA4AAF12A0C017D609 /* ToolbarClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarClock.swift; sourceTree = "<group>"; };
 		79E8963CD402B79BAE982A3A /* MoonfinLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinLogo.swift; sourceTree = "<group>"; };
 		7A471FCC6F27C455F463F8D1 /* ServerRequestModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRequestModels.swift; sourceTree = "<group>"; };
 		7A61F4E72236D1D4D7833D6B /* ServerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerModels.swift; sourceTree = "<group>"; };
@@ -205,13 +211,13 @@
 		8A60F06FD18AE36838A1F00E /* ItemPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemPreview.swift; sourceTree = "<group>"; };
 		8B0571DEA564D22C56A0E7C6 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		8B60F4A8B14EDBD78F225142 /* LoginControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginControls.swift; sourceTree = "<group>"; };
+		8CD070B3D16B451F68649E3B /* ExpandableLibrariesButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableLibrariesButton.swift; sourceTree = "<group>"; };
 		8D2E513F01DD8E72DB15C70D /* AuthenticationRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationRepository.swift; sourceTree = "<group>"; };
 		8D6D06129E4065E045734A09 /* ServerUserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerUserRepository.swift; sourceTree = "<group>"; };
 		8DB17116B5C93DF871B4F946 /* StartupBranding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartupBranding.swift; sourceTree = "<group>"; };
 		8E351E8E218007D727D970F1 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		8F86DE652255C343D9C29E4D /* FocusBorderColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusBorderColor.swift; sourceTree = "<group>"; };
 		927459B8F417AB449B24C1F2 /* UserLoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLoginViewModel.swift; sourceTree = "<group>"; };
-		AA11223344556677AABB0033 /* EmbyConnectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectViewModel.swift; sourceTree = "<group>"; };
 		981799823FF91B8BACDB37B4 /* ContentProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentProvider.swift; sourceTree = "<group>"; };
 		9A8E977D051C49141D6B1B30 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		9AAB441B2D93DAF13B529D21 /* JellyfinApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinApis.swift; sourceTree = "<group>"; };
@@ -249,12 +255,8 @@
 		EE7FAD9331B478B54CAEE858 /* AppContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppContainer.swift; sourceTree = "<group>"; };
 		EF7DF5BBB1E07AE8F56A307F /* ServerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerViewModel.swift; sourceTree = "<group>"; };
 		F1B22F64779DA9F2F939D590 /* JellyseerrView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyseerrView.swift; sourceTree = "<group>"; };
+		F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableToolbarButton.swift; sourceTree = "<group>"; };
 		FDDF43F4829FD7991896EA32 /* MoonfinTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinTheme.swift; sourceTree = "<group>"; };
-		F2772BF063E843B90D31334E /* ExpandableToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableToolbarButton.swift; sourceTree = "<group>"; };
-		BADFBB52FA8ACABD8708DAD2 /* ExpandableLibrariesButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableLibrariesButton.swift; sourceTree = "<group>"; };
-		813B08AA5A8C180EDFA6CCB4 /* ToolbarClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarClock.swift; sourceTree = "<group>"; };
-		DE3367DDA56B1D6FF71F238A /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
-		671B91DD612770103042957A /* MainToolbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbarViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -311,7 +313,7 @@
 			isa = PBXGroup;
 			children = (
 				6F50F8BE2C98C1C0C3E4DDF4 /* ConnectHelpScreen.swift */,
-				AA11223344556677AABB0022 /* EmbyConnectScreen.swift */,
+				5E66A84C747D367236452A40 /* EmbyConnectScreen.swift */,
 				E30398C74AA337F81E8F2505 /* SelectServerScreen.swift */,
 				74EAC8BD97D4DDB42602897B /* ServerAddScreen.swift */,
 				D0134334AD83E19655459900 /* ServerScreen.swift */,
@@ -325,7 +327,7 @@
 			isa = PBXGroup;
 			children = (
 				0F91BCAC2868F2231BC3267E /* EmbyApis.swift */,
-				AA11223344556677AABB0011 /* EmbyConnectService.swift */,
+				68AC9AB298E561DC071CAD60 /* EmbyConnectService.swift */,
 				2523CF196DD63575C61CB15E /* EmbyServerClient.swift */,
 			);
 			path = Emby;
@@ -367,7 +369,7 @@
 		27036A711A3797E96F3282AF /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				51DBBB856FFE9B45579D450D /* Toolbar */,
+				508BF5D7E8777F078D1D0EF9 /* Toolbar */,
 				2B73FA206F8A4DF144150EDF /* FocusBorderButtonStyle.swift */,
 				1AF479CA491CFC683C309AEC /* GridButtonCard.swift */,
 				EA52CD4F73CDB1FAE8DE7DB8 /* ItemCard.swift */,
@@ -417,6 +419,19 @@
 				C689D206E49488A79F0153A8 /* SearchView.swift */,
 			);
 			path = Search;
+			sourceTree = "<group>";
+		};
+		508BF5D7E8777F078D1D0EF9 /* Toolbar */ = {
+			isa = PBXGroup;
+			children = (
+				8CD070B3D16B451F68649E3B /* ExpandableLibrariesButton.swift */,
+				F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */,
+				3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */,
+				30F8D7F07F81C3FFCDAA6497 /* MainToolbar.swift */,
+				4D5EC2DDA20E80E4CF3A93F1 /* MainToolbarViewModel.swift */,
+				76D8A6CA4AAF12A0C017D609 /* ToolbarClock.swift */,
+			);
+			path = Toolbar;
 			sourceTree = "<group>";
 		};
 		58D8EADEDAC655BCDB4A73B8 /* Resources */ = {
@@ -480,8 +495,8 @@
 		AA7532FD2D9BC07A1867B22E /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */,
 				3C72F20A47DD2A40EE40925E /* SelectServerViewModel.swift */,
-				AA11223344556677AABB0033 /* EmbyConnectViewModel.swift */,
 				1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */,
 				EF7DF5BBB1E07AE8F56A307F /* ServerViewModel.swift */,
 				927459B8F417AB449B24C1F2 /* UserLoginViewModel.swift */,
@@ -680,18 +695,6 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
-		51DBBB856FFE9B45579D450D /* Toolbar */ = {
-			isa = PBXGroup;
-			children = (
-				F2772BF063E843B90D31334E /* ExpandableToolbarButton.swift */,
-				BADFBB52FA8ACABD8708DAD2 /* ExpandableLibrariesButton.swift */,
-				813B08AA5A8C180EDFA6CCB4 /* ToolbarClock.swift */,
-				DE3367DDA56B1D6FF71F238A /* MainToolbar.swift */,
-				671B91DD612770103042957A /* MainToolbarViewModel.swift */,
-			);
-			path = Toolbar;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -802,11 +805,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				459EC4E980C7E5955A9E31F5 /* ExpandableToolbarButton.swift in Sources */,
-				AEA087D42D2D613A304251BF /* ExpandableLibrariesButton.swift in Sources */,
-				3560A33C2E24EC47CCF4C710 /* ToolbarClock.swift in Sources */,
-				061C030FB463594A0436F2A6 /* MainToolbar.swift in Sources */,
-				CC4D7C4804F7E17B32C64A1E /* MainToolbarViewModel.swift in Sources */,
 				23CC21872990F7E4CE746C3D /* AppConstants.swift in Sources */,
 				4EFD2067E471639216BC6F31 /* AppContainer.swift in Sources */,
 				3363A53733BC3A4924F09B5C /* AuthStates.swift in Sources */,
@@ -824,11 +822,13 @@
 				78637B934DF5AC002448C822 /* Destination.swift in Sources */,
 				1B3799F847B730273FABEFC4 /* DeviceInfo.swift in Sources */,
 				3691F2BA3751A8BE31CDB057 /* EmbyApis.swift in Sources */,
-				AA11223344556677AABB0001 /* EmbyConnectService.swift in Sources */,
-				AA11223344556677AABB0002 /* EmbyConnectScreen.swift in Sources */,
-				AA11223344556677AABB0003 /* EmbyConnectViewModel.swift in Sources */,
+				00A1958A5335E8638989E525 /* EmbyConnectScreen.swift in Sources */,
+				7CEA607970DEA24AFA2523D6 /* EmbyConnectService.swift in Sources */,
+				673C558004586A2BFE0289EF /* EmbyConnectViewModel.swift in Sources */,
 				5AE1EAEF4D90171F63A28D54 /* EmbyLogo.swift in Sources */,
 				58B2FEB879281C327AA158AD /* EmbyServerClient.swift in Sources */,
+				EF3338B76D9FDB7E5C2BDD5D /* ExpandableLibrariesButton.swift in Sources */,
+				8E23DC82575F15240016EC32 /* ExpandableToolbarButton.swift in Sources */,
 				A2A78541C98491B19540AAFC /* FilterOptions.swift in Sources */,
 				E33C3A41393A0163F0B89AEC /* FocusBorderButtonStyle.swift in Sources */,
 				1BB8E4C8488CBC311F94C171 /* FocusBorderColor.swift in Sources */,
@@ -845,6 +845,7 @@
 				95F316DC7B4ABC5D52E5B35F /* JellyfinServerClient.swift in Sources */,
 				3E0224BD042331F5483E3D3C /* JellyseerrView.swift in Sources */,
 				382288BD55A9D7ECDC42F70A /* KeychainStore.swift in Sources */,
+				BF435588F9323DB78D072C29 /* LeftSidebar.swift in Sources */,
 				627CDA9D73B185C8AAA0DF1E /* LibraryCard.swift in Sources */,
 				368AA3266CC102339CC62581 /* LibraryView.swift in Sources */,
 				8157B4F57970E887ACE3FBE6 /* LiveTVView.swift in Sources */,
@@ -852,6 +853,8 @@
 				8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */,
 				AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */,
 				4265AA5721AF21B0670F6356 /* LoginControls.swift in Sources */,
+				39101EA625E8A6477B2EF7AA /* MainToolbar.swift in Sources */,
+				F63FEA781BF65CF7DDDC546E /* MainToolbarViewModel.swift in Sources */,
 				87CC28D4B3586526C0E231E0 /* MediaServerClient.swift in Sources */,
 				D93E1952BE5AC80F49540141 /* MediaServerClientFactory.swift in Sources */,
 				D602B6D04FC80CE04DCD3A48 /* Migration.swift in Sources */,
@@ -898,6 +901,7 @@
 				AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */,
 				063B115422BD6FA165CF8051 /* SplashScreen.swift in Sources */,
 				8FD35C90EEFC870588E10181 /* StartupBranding.swift in Sources */,
+				AA1B8F711287B0DB9DE3CD5C /* ToolbarClock.swift in Sources */,
 				531794D91B2DAF454CB71AF5 /* UUID+Parsing.swift in Sources */,
 				27C322C6C1A1E71707F6A64C /* User.swift in Sources */,
 				0A5163E5360F657B68F41BA4 /* UserDefaultsPreferenceStore.swift in Sources */,
