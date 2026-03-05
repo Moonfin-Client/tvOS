@@ -13,10 +13,10 @@ struct AuthResult: Codable {
 }
 
 struct PublicSystemInfo: Codable {
-    let serverName: String
-    let version: String
-    let productName: String
-    let id: String
+    let serverName: String?
+    let version: String?
+    let productName: String?
+    let id: String?
     let startupWizardCompleted: Bool?
     let localAddress: String?
     let wanAddress: String?

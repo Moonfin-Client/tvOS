@@ -8,6 +8,7 @@ final class ServerViewModel: ObservableObject {
     @Published var loginState: LoginState = .idle
     @Published var showPinEntry = false
     @Published var pinUser: (any User)? = nil
+    @Published var authenticatingUser: (any User)? = nil
     @Published var notification: String? = nil
 
     private let serverId: UUID
@@ -84,11 +85,27 @@ final class ServerViewModel: ObservableObject {
     func authenticate(user: any User) {
         guard let server else { return }
 
+        authenticatingUser = user
         loginState = .authenticating
         Task {
             for await state in authenticationRepository.authenticate(
                 server: server,
                 method: .automatic(user: user)
+            ) {
+                loginState = state
+            }
+        }
+    }
+
+    func loginWithoutPassword(user: any User) {
+        guard let server else { return }
+
+        authenticatingUser = user
+        loginState = .authenticating
+        Task {
+            for await state in authenticationRepository.authenticate(
+                server: server,
+                method: .credentials(username: user.name, password: "")
             ) {
                 loginState = state
             }

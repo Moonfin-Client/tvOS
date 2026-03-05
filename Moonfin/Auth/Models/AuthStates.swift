@@ -19,7 +19,7 @@ enum QuickConnectState: Equatable {
 
 enum ServerAdditionState: Equatable {
     case connecting(address: String)
-    case unableToConnect(candidates: [String])
+    case unableToConnect(candidates: [String], errors: [String: String] = [:])
     case connected(id: UUID, name: String)
 }
 

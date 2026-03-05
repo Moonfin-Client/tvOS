@@ -207,8 +207,8 @@ struct ServerUser: Codable {
     let name: String
     let serverName: String?
     let primaryImageTag: String?
-    let hasPassword: Bool
-    let hasConfiguredPassword: Bool
+    let hasPassword: Bool?
+    let hasConfiguredPassword: Bool?
     let lastLoginDate: Date?
     let lastActivityDate: Date?
 

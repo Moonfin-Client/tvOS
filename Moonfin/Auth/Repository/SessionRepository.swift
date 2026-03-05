@@ -72,7 +72,10 @@ final class SessionRepository: SessionRepositoryProtocol {
     }
 
     func switchCurrentSession(serverId: UUID, userId: UUID) async -> Bool {
-        if currentSession.value?.userId == userId { return false }
+        if currentSession.value?.userId == userId,
+           currentSession.value?.serverId == serverId {
+            return true
+        }
 
         state.send(.switchingSession)
 

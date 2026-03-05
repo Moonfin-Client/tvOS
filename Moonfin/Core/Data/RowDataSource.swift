@@ -1,5 +1,7 @@
 import Foundation
 
+private let defaultRowChunkSize = 15
+
 @MainActor
 final class RowDataSource {
     let queryType: RowQueryType
@@ -18,13 +20,12 @@ final class RowDataSource {
     var sortOrder: SortOrder?
     var filters = FilterOptions()
 
-    static let defaultChunkSize = 15
     static let maxItems = 100
 
     init(
         queryType: RowQueryType,
         changeTriggers: Set<ChangeTriggerType> = [],
-        chunkSize: Int = defaultChunkSize
+        chunkSize: Int = defaultRowChunkSize
     ) {
         self.queryType = queryType
         self.changeTriggers = changeTriggers

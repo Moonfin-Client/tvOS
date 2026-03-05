@@ -19,7 +19,7 @@ final class ServerUserRepository: ServerUserRepositoryProtocol {
         guard let users = authenticationStore.getUsers(server.id) else { return [] }
 
         return users.compactMap { (userIdString, userInfo) -> PrivateUser? in
-            guard let userId = UUID(uuidString: userIdString) else { return nil }
+            guard let userId = UUID.from(rawId: userIdString) else { return nil }
             return PrivateUser(
                 id: userId,
                 serverId: server.id,
@@ -41,12 +41,12 @@ final class ServerUserRepository: ServerUserRepositoryProtocol {
             let serverUsers = try await client.authApi.getPublicUsers()
             return serverUsers.map { dto in
                 PublicUser(
-                    id: UUID(uuidString: dto.id) ?? UUID(),
+                    id: UUID.from(rawId: dto.id) ?? UUID(),
                     serverId: server.id,
                     name: dto.name,
                     accessToken: nil,
                     imageTag: dto.primaryImageTag,
-                    hasPassword: dto.hasPassword
+                    hasPassword: dto.hasConfiguredPassword ?? dto.hasPassword ?? false
                 )
             }
         } catch {

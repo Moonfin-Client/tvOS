@@ -84,7 +84,8 @@ final class AuthenticationRepository: AuthenticationRepositoryProtocol {
 
                 do {
                     let currentUser = try await client.authApi.getCurrentUser()
-                    authenticateFinish(server: server, userInfo: currentUser, accessToken: user.accessToken ?? "")
+                    let userId = UUID.from(rawId: currentUser.id) ?? user.id
+                    authenticateFinish(server: server, userId: userId, userInfo: currentUser, accessToken: user.accessToken ?? "")
                     continuation.yield(.authenticated)
                 } catch let error as NetworkError where error.isUnavailable {
                     continuation.yield(.serverUnavailable)
@@ -153,9 +154,9 @@ final class AuthenticationRepository: AuthenticationRepositoryProtocol {
             Task {
                 let accessToken = result.accessToken
                 let userInfo = result.user
-                let userId = UUID(uuidString: userInfo.id) ?? UUID()
+                let userId = UUID.from(rawId: userInfo.id) ?? UUID()
 
-                authenticateFinish(server: server, userInfo: userInfo, accessToken: accessToken)
+                authenticateFinish(server: server, userId: userId, userInfo: userInfo, accessToken: accessToken)
 
                 let success = await sessionRepository.switchCurrentSession(serverId: server.id, userId: userId)
                 if success {
@@ -170,8 +171,7 @@ final class AuthenticationRepository: AuthenticationRepositoryProtocol {
         }
     }
 
-    private func authenticateFinish(server: Server, userInfo: ServerUser, accessToken: String) {
-        let userId = UUID(uuidString: userInfo.id) ?? UUID()
+    private func authenticateFinish(server: Server, userId: UUID, userInfo: ServerUser, accessToken: String) {
         let existing = authenticationStore.getUser(server.id, userId)
 
         let updated = AuthenticationStore.AuthStoreUser(

@@ -13,8 +13,16 @@ final class ServerAddViewModel: ObservableObject {
     }
 
     var errorMessage: String? {
-        guard case .unableToConnect(let candidates) = state else { return nil }
-        return "Unable to connect. Tried:\n" + candidates.joined(separator: "\n")
+        guard case .unableToConnect(let candidates, let errors) = state else { return nil }
+        var lines = ["Unable to connect:"]
+        for candidate in candidates {
+            if let error = errors[candidate] {
+                lines.append("\(candidate) — \(error)")
+            } else {
+                lines.append("\(candidate) — Unknown error")
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 
     func connect() {

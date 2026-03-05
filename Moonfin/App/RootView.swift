@@ -3,22 +3,25 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var sessionInitializer: SessionInitializer
 
     var body: some View {
         ZStack {
-            theme.colorScheme.background.ignoresSafeArea()
+            LoginBackground()
 
             switch router.flow {
             case .splash:
                 SplashScreen()
+                    .transition(.opacity)
             case .startup:
                 StartupNavigationView()
+                    .transition(.opacity)
             case .main:
                 MainNavigationView()
+                    .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.5), value: router.flow)
         .onAppear {
             sessionInitializer.initialize(router: router)
         }
@@ -50,6 +53,8 @@ struct StartupNavigationView: View {
         switch destination {
         case .serverAdd:
             ServerAddScreen(container: container)
+        case .embyConnect:
+            EmbyConnectScreen(container: container)
         case .serverUsers(let serverId):
             ServerScreen(serverId: serverId, container: container)
         case .userLogin(let serverId, let username):

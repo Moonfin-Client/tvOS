@@ -3,7 +3,6 @@ import SwiftUI
 struct ServerAddScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var theme: MoonfinTheme
     @StateObject private var viewModel: ServerAddViewModel
 
     init(container: AppContainer) {
@@ -14,67 +13,59 @@ struct ServerAddScreen: View {
 
     var body: some View {
         ZStack {
-            theme.colorScheme.background.ignoresSafeArea()
+            LoginBackground()
 
-            VStack(spacing: 0) {
-                Spacer()
-
+            ScrollView {
                 VStack(spacing: SpaceTokens.spaceLg) {
-                    Text("Add Server")
-                        .font(.title2xl)
-                        .foregroundColor(theme.colorScheme.onBackground)
+                    Spacer(minLength: 40)
 
-                    Text("Enter your Jellyfin or Emby server address")
-                        .font(.bodyMd)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    StartupBranding()
 
-                    TextField("https://your-server.com", text: $viewModel.address)
-                        .textFieldStyle(.plain)
-                        .font(.bodyLg)
-                        .keyboardType(.URL)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .padding(SpaceTokens.spaceMd)
-                        .background(
-                            RoundedRectangle(cornerRadius: RadiusTokens.small)
-                                .fill(theme.colorScheme.input)
-                        )
-                        .foregroundColor(theme.colorScheme.onInput)
-                        .disabled(viewModel.isConnecting)
-                        .frame(maxWidth: 500)
-                        .onSubmit { viewModel.connect() }
+                    LoginCard {
+                        VStack(spacing: SpaceTokens.spaceLg) {
+                            Text("Enter server address")
+                                .font(.title2xl)
+                                .foregroundColor(.white)
 
-                    if let error = viewModel.errorMessage {
-                        Text(error)
-                            .font(.bodySm)
-                            .foregroundColor(.colorRed300)
-                            .multilineTextAlignment(.center)
-                    }
+                            Text("Enter a valid server address")
+                                .font(.bodyMd)
+                                .foregroundColor(.white.opacity(0.7))
 
-                    if viewModel.isConnecting {
-                        ProgressView()
-                            .tint(theme.accent)
-                    }
-
-                    Button {
-                        viewModel.connect()
-                    } label: {
-                        Text("Connect")
-                            .font(.bodyMd)
-                            .foregroundColor(theme.colorScheme.onButtonFocused)
-                            .padding(.horizontal, SpaceTokens.space2xl)
-                            .padding(.vertical, SpaceTokens.spaceSm)
-                            .background(
-                                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                                    .fill(theme.colorScheme.buttonFocused)
+                            LoginTextField(
+                                placeholder: "192.168.1.100 or jellyfin.example.com",
+                                text: $viewModel.address,
+                                isDisabled: viewModel.isConnecting,
+                                keyboardType: .URL,
+                                onSubmit: { viewModel.connect() }
                             )
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(viewModel.isConnecting || viewModel.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-                .padding(.horizontal, SpaceTokens.space3xl)
 
-                Spacer()
+                            if let error = viewModel.errorMessage {
+                                LoginErrorText(message: error)
+                            }
+
+                            if viewModel.isConnecting {
+                                ProgressView()
+                                    .tint(.colorCyan500)
+                            }
+
+                            LoginButton(
+                                title: "Connect",
+                                isDisabled: viewModel.isConnecting || viewModel.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                                action: { viewModel.connect() }
+                            )
+
+                            LoginButton(
+                                title: "Change Server",
+                                icon: "arrow.left",
+                                style: .secondary,
+                                action: { router.goBack() }
+                            )
+                        }
+                    }
+
+                    Spacer(minLength: 40)
+                }
+                .frame(maxWidth: .infinity)
             }
         }
         .onChange(of: viewModel.state) { state in

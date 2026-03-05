@@ -15,7 +15,8 @@ struct EmbyAuthApi: ServerAuthApi {
     }
 
     func getCurrentUser() async throws -> ServerUser {
-        try await client.request("/Users/Me")
+        let userId = client.userId ?? ""
+        return try await client.request("/Users/\(userId)")
     }
 
     func getPublicUsers() async throws -> [ServerUser] {

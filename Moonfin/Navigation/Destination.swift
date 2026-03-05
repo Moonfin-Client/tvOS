@@ -5,6 +5,7 @@ enum Destination: Hashable {
     // MARK: - Startup
 
     case serverAdd
+    case embyConnect
     case serverUsers(serverId: UUID)
     case userLogin(serverId: UUID, username: String?)
     case connectHelp

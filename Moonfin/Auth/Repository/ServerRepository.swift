@@ -29,7 +29,7 @@ final class ServerRepository: ServerRepositoryProtocol {
     func loadStoredServers() {
         let servers = authenticationStore.getServers()
             .compactMap { (idString, entry) -> Server? in
-                guard let id = UUID(uuidString: idString) else { return nil }
+                guard let id = UUID.from(rawId: idString) else { return nil }
                 return entry.asServer(id: id)
             }
             .sorted {
@@ -48,32 +48,58 @@ final class ServerRepository: ServerRepositoryProtocol {
 
                 let candidates = Self.addressCandidates(for: address)
                 var connectedServer: (id: UUID, info: PublicSystemInfo, address: String)?
+                var candidateErrors: [String: String] = [:]
+
+                let trustDelegate = SSLTrustDelegate()
+                let session = URLSession(configuration: {
+                    let config = URLSessionConfiguration.default
+                    config.timeoutIntervalForRequest = 10
+                    config.timeoutIntervalForResource = 15
+                    return config
+                }(), delegate: trustDelegate, delegateQueue: nil)
 
                 for candidate in candidates {
-                    let client = HttpClient(baseURL: URL(string: candidate))
+                    let client = HttpClient(baseURL: URL(string: candidate), session: session)
                     do {
                         let info: PublicSystemInfo = try await client.request("/System/Info/Public")
-                        let serverType = ServerType.detect(productName: info.productName, version: info.version)
+                        let productName = info.productName ?? ""
+                        let version = info.version ?? ""
+                        let serverType = ServerType.detect(productName: productName, version: version)
 
-                        // Skip if Jellyfin SDK would've scored this as BAD for non-Emby
                         if serverType == .jellyfin {
-                            let version = ServerVersion(info.version)
-                            if version < Server.minimumJellyfinVersion {
+                            let ver = ServerVersion(version)
+                            if ver < Server.minimumJellyfinVersion {
+                                let msg = "Version \(version) below minimum"
+                                print("[ServerRepository] \(candidate) — \(msg)")
+                                candidateErrors[candidate] = msg
                                 continue
                             }
                         }
 
-                        guard let id = UUID(uuidString: info.id) else { continue }
+                        guard let idString = info.id, let id = UUID.from(rawId: idString) else {
+                            let msg = "Invalid or missing server id (raw: \(info.id ?? "nil"))"
+                            print("[ServerRepository] \(candidate) — \(msg)")
+                            candidateErrors[candidate] = msg
+                            continue
+                        }
                         connectedServer = (id, info, candidate)
                         break
+                    } catch let urlError as URLError {
+                        let msg = "Network: \(urlError.localizedDescription) (code \(urlError.code.rawValue))"
+                        print("[ServerRepository] \(candidate) — \(msg)")
+                        candidateErrors[candidate] = msg
                     } catch {
-                        continue
+                        let msg = String(describing: error)
+                        print("[ServerRepository] \(candidate) — \(msg)")
+                        candidateErrors[candidate] = msg
                     }
                 }
 
+                session.invalidateAndCancel()
+
                 if let result = connectedServer {
-                    let defaultName = result.info.serverName
-                    let detectedType = ServerType.detect(productName: result.info.productName, version: result.info.version)
+                    let defaultName = result.info.serverName ?? result.info.productName ?? "Server"
+                    let detectedType = ServerType.detect(productName: result.info.productName ?? "", version: result.info.version ?? "")
 
                     var storeServer = self.authenticationStore.getServer(result.id) ?? AuthenticationStore.AuthStoreServer(
                         name: defaultName,
@@ -82,7 +108,7 @@ final class ServerRepository: ServerRepositoryProtocol {
                     )
                     storeServer.name = defaultName
                     storeServer.address = result.address
-                    storeServer.version = result.info.version
+                    storeServer.version = result.info.version ?? ""
                     storeServer.setupCompleted = result.info.startupWizardCompleted ?? true
                     storeServer.lastUsed = Date()
                     storeServer.serverType = detectedType
@@ -91,7 +117,7 @@ final class ServerRepository: ServerRepositoryProtocol {
                     self.loadStoredServers()
                     continuation.yield(.connected(id: result.id, name: defaultName))
                 } else {
-                    continuation.yield(.unableToConnect(candidates: candidates))
+                    continuation.yield(.unableToConnect(candidates: candidates, errors: candidateErrors))
                 }
 
                 continuation.finish()
@@ -141,10 +167,10 @@ final class ServerRepository: ServerRepositoryProtocol {
         do {
             let info: PublicSystemInfo = try await client.request("/System/Info/Public")
             var updated = server
-            updated.name = info.serverName
+            updated.name = info.serverName ?? info.productName ?? server.name
             updated.version = info.version
             updated.setupCompleted = info.startupWizardCompleted ?? server.setupCompleted
-            updated.serverType = ServerType.detect(productName: info.productName, version: info.version)
+            updated.serverType = ServerType.detect(productName: info.productName ?? "", version: info.version ?? "")
             updated.lastRefreshed = now
             authenticationStore.putServer(id, updated)
             return updated
@@ -153,21 +179,51 @@ final class ServerRepository: ServerRepositoryProtocol {
         }
     }
 
-    private static func addressCandidates(for input: String) -> [String] {
-        let address = input.trimmingCharacters(in: .whitespacesAndNewlines)
+    static func addressCandidates(for input: String) -> [String] {
+        var address = input.trimmingCharacters(in: .whitespacesAndNewlines)
         if address.isEmpty { return [] }
 
+        while address.hasSuffix("/") { address = String(address.dropLast()) }
+
+        var seen = Set<String>()
         var candidates: [String] = []
 
-        if !address.contains("://") {
-            candidates.append("https://\(address)")
-            candidates.append("http://\(address)")
-        } else {
-            candidates.append(address)
+        func add(_ url: String) {
+            let normalized = url.lowercased()
+            guard !seen.contains(normalized) else { return }
+            seen.insert(normalized)
+            candidates.append(url)
         }
 
-        return candidates.map { $0.hasSuffix("/") ? String($0.dropLast()) : $0 }
+        if address.contains("://") {
+            add(address)
+            if !address.contains("/jellyfin") {
+                add("\(address)/jellyfin")
+            }
+            return candidates
+        }
+
+        let hasPort = address.contains(":")
+
+        if hasPort {
+            add("https://\(address)")
+            add("https://\(address)/jellyfin")
+            add("http://\(address)")
+            add("http://\(address)/jellyfin")
+        } else {
+            add("https://\(address):8920")
+            add("https://\(address)")
+            add("http://\(address):8096")
+            add("http://\(address)")
+            add("https://\(address):8920/jellyfin")
+            add("https://\(address)/jellyfin")
+            add("http://\(address):8096/jellyfin")
+            add("http://\(address)/jellyfin")
+        }
+
+        return candidates
     }
+
 }
 
 private extension AuthenticationStore.AuthStoreServer {

@@ -3,7 +3,6 @@ import SwiftUI
 struct ServerScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var theme: MoonfinTheme
     @StateObject private var viewModel: ServerViewModel
 
     let serverId: UUID
@@ -22,40 +21,17 @@ struct ServerScreen: View {
 
     var body: some View {
         ZStack {
-            theme.colorScheme.background.ignoresSafeArea()
+            LoginBackground()
 
-            VStack(spacing: 0) {
-                if let server = viewModel.server {
-                    serverContent(server)
-                } else {
-                    Spacer()
-                    ProgressView()
-                        .tint(theme.accent)
-                    Spacer()
-                }
+            if let server = viewModel.server {
+                serverContent(server)
+            } else {
+                ProgressView()
+                    .tint(.colorCyan500)
             }
 
             if viewModel.showPinEntry {
-                PinEntryView(
-                    mode: .verify,
-                    onComplete: { pin in
-                        viewModel.showPinEntry = false
-                        if let pin, let user = viewModel.pinUser {
-                            viewModel.authenticate(user: user)
-                        }
-                        viewModel.pinUser = nil
-                    },
-                    onForgotPin: {
-                        viewModel.showPinEntry = false
-                        if let user = viewModel.pinUser, let server = viewModel.server {
-                            router.navigate(to: .userLogin(
-                                serverId: server.id,
-                                username: user.name
-                            ))
-                        }
-                        viewModel.pinUser = nil
-                    }
-                )
+                pinEntryOverlay
             }
         }
         .task { await viewModel.load() }
@@ -65,9 +41,10 @@ struct ServerScreen: View {
                 router.switchFlow(to: .main)
             case .requireSignIn:
                 if let server = viewModel.server {
+                    let username = viewModel.authenticatingUser?.name ?? viewModel.pinUser?.name
                     router.navigate(to: .userLogin(
                         serverId: server.id,
-                        username: viewModel.pinUser?.name
+                        username: username
                     ))
                 }
             default:
@@ -76,43 +53,86 @@ struct ServerScreen: View {
         }
     }
 
+    private var pinEntryOverlay: some View {
+        PinEntryView(
+            mode: .verify,
+            onComplete: {
+                viewModel.showPinEntry = false
+                if $0 != nil, let user = viewModel.pinUser {
+                    viewModel.authenticate(user: user)
+                }
+                viewModel.pinUser = nil
+            },
+            onForgotPin: {
+                viewModel.showPinEntry = false
+                if let user = viewModel.pinUser, let server = viewModel.server {
+                    router.navigate(to: .userLogin(
+                        serverId: server.id,
+                        username: user.name
+                    ))
+                }
+                viewModel.pinUser = nil
+            }
+        )
+    }
+
     @ViewBuilder
     private func serverContent(_ server: Server) -> some View {
         ScrollView {
             VStack(spacing: SpaceTokens.spaceLg) {
-                serverHeader(server)
+                Spacer(minLength: 40)
 
-                if let notification = viewModel.notification {
-                    notificationBanner(notification)
+                StartupBranding()
+
+                LoginCard(maxWidth: 900) {
+                    VStack(spacing: SpaceTokens.spaceLg) {
+                        serverHeader(server)
+
+                        if let notification = viewModel.notification {
+                            notificationBanner(notification)
+                        }
+
+                        LoginDivider()
+
+                        Text("Who's watching?")
+                            .font(.titleXl)
+                            .foregroundColor(.white.opacity(0.7))
+
+                        if viewModel.users.isEmpty {
+                            noUsersView
+                        } else {
+                            userGrid
+                        }
+
+                        LoginDivider()
+
+                        actionButtons(server)
+                    }
                 }
 
-                if viewModel.users.isEmpty {
-                    noUsersView
-                } else {
-                    userGrid
-                }
-
-                actionButtons(server)
+                Spacer(minLength: 40)
             }
-            .padding(.horizontal, SpaceTokens.space3xl)
-            .padding(.vertical, SpaceTokens.spaceLg)
+            .frame(maxWidth: .infinity)
         }
     }
 
     private func serverHeader(_ server: Server) -> some View {
         VStack(spacing: SpaceTokens.spaceSm) {
             HStack(spacing: SpaceTokens.spaceSm) {
-                Image(systemName: server.serverType == .jellyfin ? "server.rack" : "desktopcomputer")
-                    .foregroundColor(theme.accent)
+                if server.serverType == .jellyfin {
+                    JellyfinLogo(size: 28, color: .white)
+                } else {
+                    EmbyLogo(size: 28, color: .white)
+                }
                 Text(server.name)
                     .font(.title2xl)
-                    .foregroundColor(theme.colorScheme.onBackground)
+                    .foregroundColor(.white)
             }
 
             if let disclaimer = server.loginDisclaimer, !disclaimer.isEmpty {
                 Text(disclaimer)
                     .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
         }
@@ -134,65 +154,39 @@ struct ServerScreen: View {
         VStack(spacing: SpaceTokens.spaceMd) {
             Image(systemName: "person.slash")
                 .font(.system(size: 40))
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.3))
+                .foregroundColor(.white.opacity(0.3))
             Text("No users found")
                 .font(.bodyMd)
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
+                .foregroundColor(.white.opacity(0.5))
         }
         .padding(.vertical, SpaceTokens.space2xl)
     }
 
     private var userGrid: some View {
-        LazyVGrid(
-            columns: Array(repeating: GridItem(.fixed(150), spacing: SpaceTokens.spaceMd), count: min(viewModel.users.count, 6)),
-            spacing: SpaceTokens.spaceLg
-        ) {
-            ForEach(viewModel.users.indices, id: \.self) { index in
-                let user = viewModel.users[index]
-                userCard(user)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: SpaceTokens.spaceLg) {
+                ForEach(viewModel.users.indices, id: \.self) { index in
+                    let user = viewModel.users[index]
+                    userCard(user)
+                }
             }
+            .padding(.horizontal, SpaceTokens.spaceMd)
+            .padding(.vertical, SpaceTokens.spaceSm)
         }
-        .frame(maxWidth: .infinity)
+        .focusSection()
     }
 
     @ViewBuilder
     private func userCard(_ user: any User) -> some View {
         let imageUrl = viewModel.getUserImageUrl(user)
+        let url = imageUrl.flatMap { URL(string: $0) }
 
         Button {
             handleUserTap(user)
         } label: {
-            VStack(spacing: SpaceTokens.spaceSm) {
-                ZStack {
-                    Circle()
-                        .fill(theme.colorScheme.surface)
-
-                    if let imageUrl, let url = URL(string: imageUrl) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            default:
-                                personIcon
-                            }
-                        }
-                        .clipShape(Circle())
-                    } else {
-                        personIcon
-                    }
-                }
-                .frame(width: 130, height: 130)
-
-                Text(user.name)
-                    .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground)
-                    .lineLimit(1)
-                    .frame(width: 130)
-            }
+            UserCardContent(imageUrl: url, name: user.name)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CleanButtonStyle())
         .contextMenu {
             if let privateUser = user as? PrivateUser {
                 if privateUser.accessToken != nil {
@@ -212,17 +206,11 @@ struct ServerScreen: View {
         }
     }
 
-    private var personIcon: some View {
-        Image(systemName: "person.fill")
-            .font(.system(size: 40))
-            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
-    }
-
     private func handleUserTap(_ user: any User) {
         if let privateUser = user as? PrivateUser, privateUser.accessToken != nil {
             viewModel.authenticate(user: user)
         } else if let publicUser = user as? PublicUser, !publicUser.hasPassword {
-            viewModel.authenticate(user: user)
+            viewModel.loginWithoutPassword(user: user)
         } else {
             if let server = viewModel.server {
                 router.navigate(to: .userLogin(
@@ -235,41 +223,72 @@ struct ServerScreen: View {
 
     private func actionButtons(_ server: Server) -> some View {
         HStack(spacing: SpaceTokens.spaceMd) {
-            Button {
-                router.navigate(to: .userLogin(serverId: server.id, username: nil))
-            } label: {
-                HStack(spacing: SpaceTokens.spaceXs) {
-                    Image(systemName: "person.badge.plus")
-                    Text("Add User")
-                }
-                .font(.bodyMd)
-                .foregroundColor(theme.colorScheme.onButton)
-                .padding(.horizontal, SpaceTokens.spaceLg)
-                .padding(.vertical, SpaceTokens.spaceSm)
-                .background(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .fill(theme.colorScheme.button)
-                )
-            }
-            .buttonStyle(.plain)
+            LoginButton(
+                title: "Add User",
+                icon: "person.badge.plus",
+                style: .secondary,
+                action: { router.navigate(to: .userLogin(serverId: server.id, username: nil)) }
+            )
 
-            Button {
-                router.goBack()
-            } label: {
-                HStack(spacing: SpaceTokens.spaceXs) {
-                    Image(systemName: "arrow.left")
-                    Text("Change Server")
-                }
-                .font(.bodyMd)
-                .foregroundColor(theme.colorScheme.onButton)
-                .padding(.horizontal, SpaceTokens.spaceLg)
-                .padding(.vertical, SpaceTokens.spaceSm)
-                .background(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .fill(theme.colorScheme.button)
-                )
-            }
-            .buttonStyle(.plain)
+            LoginButton(
+                title: "Change Server",
+                icon: "arrow.left",
+                style: .secondary,
+                action: { router.goBack() }
+            )
         }
+    }
+}
+
+private struct UserCardContent: View {
+    let imageUrl: URL?
+    let name: String
+
+    @Environment(\.isFocused) private var isFocused
+
+    var body: some View {
+        VStack(spacing: SpaceTokens.spaceSm) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.1))
+                    .overlay(
+                        Circle().stroke(
+                            isFocused ? Color.colorCyan500 : Color.white.opacity(0.15),
+                            lineWidth: isFocused ? 3 : 1
+                        )
+                    )
+
+                if let imageUrl {
+                    AsyncImage(url: imageUrl) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .clipShape(Circle())
+                        default:
+                            personIcon
+                        }
+                    }
+                } else {
+                    personIcon
+                }
+            }
+            .frame(width: 130, height: 130)
+
+            Text(name)
+                .font(.bodySm)
+                .foregroundColor(isFocused ? .colorCyan500 : .white)
+                .lineLimit(1)
+                .frame(width: 130)
+        }
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+
+    private var personIcon: some View {
+        PersonAvatarShape()
+            .fill(Color.white)
+            .frame(width: 56, height: 56)
     }
 }

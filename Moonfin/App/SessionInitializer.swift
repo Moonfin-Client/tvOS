@@ -12,7 +12,10 @@ final class SessionInitializer: ObservableObject {
 
     func initialize(router: NavigationRouter) {
         Task {
-            await container.sessionRepository.restoreSession(destroyOnly: false)
+            async let restore: Void = container.sessionRepository.restoreSession(destroyOnly: false)
+            async let minDelay: Void = Task.sleep(nanoseconds: 2_500_000_000)
+
+            _ = await (restore, try? minDelay)
 
             if container.sessionRepository.isAuthenticated,
                container.userRepository.currentUser.value != nil {

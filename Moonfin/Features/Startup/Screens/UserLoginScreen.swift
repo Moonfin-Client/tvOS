@@ -3,7 +3,6 @@ import SwiftUI
 struct UserLoginScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
-    @EnvironmentObject var theme: MoonfinTheme
     @StateObject private var viewModel: UserLoginViewModel
 
     @State private var selectedTab: LoginTab = .credentials
@@ -30,33 +29,44 @@ struct UserLoginScreen: View {
 
     var body: some View {
         ZStack {
-            theme.colorScheme.background.ignoresSafeArea()
+            LoginBackground()
 
-            VStack(spacing: 0) {
-                Spacer()
-
+            ScrollView {
                 VStack(spacing: SpaceTokens.spaceLg) {
-                    if let server = viewModel.server {
-                        Text("Sign in to \(server.name)")
-                            .font(.title2xl)
-                            .foregroundColor(theme.colorScheme.onBackground)
+                    Spacer(minLength: 40)
+
+                    StartupBranding()
+
+                    LoginCard {
+                        VStack(spacing: SpaceTokens.spaceLg) {
+                            if let server = viewModel.server {
+                                VStack(spacing: SpaceTokens.spaceXs) {
+                                    Text("Sign In")
+                                        .font(.title2xl)
+                                        .foregroundColor(.white)
+
+                                    Text("Connecting to \(server.name)")
+                                        .font(.bodyMd)
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
+                            }
+
+                            if viewModel.isQuickConnectSupported {
+                                tabSelector
+                            }
+
+                            switch selectedTab {
+                            case .quickConnect:
+                                quickConnectTab
+                            case .credentials:
+                                credentialsTab
+                            }
+                        }
                     }
 
-                    if viewModel.isQuickConnectSupported {
-                        tabSelector
-                    }
-
-                    switch selectedTab {
-                    case .quickConnect:
-                        quickConnectTab
-                    case .credentials:
-                        credentialsTab
-                    }
+                    Spacer(minLength: 40)
                 }
-                .padding(.horizontal, SpaceTokens.space3xl)
-                .frame(maxWidth: 500)
-
-                Spacer()
+                .frame(maxWidth: .infinity)
             }
         }
         .onAppear {
@@ -64,6 +74,11 @@ struct UserLoginScreen: View {
                 selectedTab = .credentials
             } else {
                 selectedTab = .quickConnect
+                viewModel.initiateQuickConnect()
+            }
+        }
+        .onChange(of: viewModel.server != nil) { serverLoaded in
+            if serverLoaded, selectedTab == .quickConnect, viewModel.quickConnectState == .unknown {
                 viewModel.initiateQuickConnect()
             }
         }
@@ -83,14 +98,10 @@ struct UserLoginScreen: View {
     }
 
     private var tabSelector: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: SpaceTokens.spaceMd) {
             tabButton("Quick Connect", tab: .quickConnect)
             tabButton("Password", tab: .credentials)
         }
-        .background(
-            RoundedRectangle(cornerRadius: RadiusTokens.small)
-                .fill(theme.colorScheme.surface)
-        )
     }
 
     private func tabButton(_ title: String, tab: LoginTab) -> some View {
@@ -101,21 +112,9 @@ struct UserLoginScreen: View {
                 viewModel.initiateQuickConnect()
             }
         } label: {
-            Text(title)
-                .font(.bodyMd)
-                .foregroundColor(
-                    selectedTab == tab
-                        ? theme.colorScheme.onButtonFocused
-                        : theme.colorScheme.onButton
-                )
-                .padding(.horizontal, SpaceTokens.spaceLg)
-                .padding(.vertical, SpaceTokens.spaceSm)
-                .background(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .fill(selectedTab == tab ? theme.colorScheme.buttonFocused : .clear)
-                )
+            TabButtonLabel(title: title, isSelected: selectedTab == tab)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CleanButtonStyle())
     }
 
     private var quickConnectTab: some View {
@@ -123,38 +122,38 @@ struct UserLoginScreen: View {
             switch viewModel.quickConnectState {
             case .unknown:
                 ProgressView()
-                    .tint(theme.accent)
+                    .tint(.colorCyan500)
                 Text("Connecting to Quick Connect...")
                     .font(.bodyMd)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.6))
 
             case .unavailable:
                 Text("Quick Connect is not available on this server")
                     .font(.bodyMd)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.6))
 
             case .pending:
                 Text("Enter this code on your server's web dashboard:")
                     .font(.bodyMd)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.6))
 
                 Text(viewModel.quickConnectCode)
                     .font(.token(48, weight: .bold))
-                    .foregroundColor(theme.accent)
+                    .foregroundColor(.colorCyan500)
                     .tracking(4)
 
                 ProgressView()
-                    .tint(theme.accent)
+                    .tint(.colorCyan500)
                 Text("Waiting for authorization...")
                     .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+                    .foregroundColor(.white.opacity(0.4))
 
             case .connected:
                 ProgressView()
-                    .tint(theme.accent)
+                    .tint(.colorCyan500)
                 Text("Authorized! Signing in...")
                     .font(.bodyMd)
-                    .foregroundColor(theme.accent)
+                    .foregroundColor(.colorCyan500)
             }
 
             loginError
@@ -163,52 +162,32 @@ struct UserLoginScreen: View {
 
     private var credentialsTab: some View {
         VStack(spacing: SpaceTokens.spaceMd) {
-            TextField("Username", text: $viewModel.username)
-                .textFieldStyle(.plain)
-                .font(.bodyLg)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .padding(SpaceTokens.spaceMd)
-                .background(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .fill(theme.colorScheme.input)
+            if viewModel.forcedUsername == nil {
+                LoginTextField(
+                    placeholder: "Username",
+                    text: $viewModel.username
                 )
-                .foregroundColor(theme.colorScheme.onInput)
-                .disabled(viewModel.forcedUsername != nil)
+            }
 
-            SecureField("Password", text: $viewModel.password)
-                .textFieldStyle(.plain)
-                .font(.bodyLg)
-                .padding(SpaceTokens.spaceMd)
-                .background(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .fill(theme.colorScheme.input)
-                )
-                .foregroundColor(theme.colorScheme.onInput)
-                .onSubmit { viewModel.login() }
+            LoginTextField(
+                placeholder: "Password",
+                text: $viewModel.password,
+                isSecure: true,
+                onSubmit: { viewModel.login() }
+            )
 
             if viewModel.loginState == .authenticating {
                 ProgressView()
-                    .tint(theme.accent)
+                    .tint(.colorCyan500)
             }
 
             loginError
 
-            Button {
-                viewModel.login()
-            } label: {
-                Text("Sign In")
-                    .font(.bodyMd)
-                    .foregroundColor(theme.colorScheme.onButtonFocused)
-                    .padding(.horizontal, SpaceTokens.space2xl)
-                    .padding(.vertical, SpaceTokens.spaceSm)
-                    .background(
-                        RoundedRectangle(cornerRadius: RadiusTokens.small)
-                            .fill(theme.colorScheme.buttonFocused)
-                    )
-            }
-            .buttonStyle(.plain)
-            .disabled(viewModel.loginState == .authenticating)
+            LoginButton(
+                title: "Sign In",
+                isDisabled: viewModel.loginState == .authenticating,
+                action: { viewModel.login() }
+            )
         }
     }
 
@@ -216,23 +195,39 @@ struct UserLoginScreen: View {
     private var loginError: some View {
         switch viewModel.loginState {
         case .requireSignIn:
-            Text("Invalid credentials")
-                .font(.bodySm)
-                .foregroundColor(.colorRed300)
+            LoginErrorText(message: "Invalid credentials")
         case .serverUnavailable:
-            Text("Server unavailable")
-                .font(.bodySm)
-                .foregroundColor(.colorRed300)
+            LoginErrorText(message: "Server unavailable")
         case .apiClientError(let message):
-            Text(message)
-                .font(.bodySm)
-                .foregroundColor(.colorRed300)
+            LoginErrorText(message: message)
         case .versionNotSupported(let server):
-            Text("Server version \(server.version ?? "unknown") is not supported")
-                .font(.bodySm)
-                .foregroundColor(.colorRed300)
+            LoginErrorText(message: "Server version \(server.version ?? "unknown") is not supported")
         default:
             EmptyView()
         }
+    }
+}
+
+private struct TabButtonLabel: View {
+    let title: String
+    let isSelected: Bool
+
+    @Environment(\.isFocused) private var isFocused
+
+    var body: some View {
+        Text(title)
+            .font(.bodyMd)
+            .foregroundColor(.white)
+            .padding(.horizontal, SpaceTokens.spaceLg)
+            .padding(.vertical, SpaceTokens.spaceSm)
+            .frame(minWidth: 160)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(isFocused ? Color.colorCyan500 : isSelected ? Color.white.opacity(0.2) : Color.white.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .stroke(isSelected ? Color.colorCyan500 : Color.clear, lineWidth: 2)
+            )
     }
 }
