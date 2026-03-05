@@ -1,27 +1,32 @@
 import SwiftUI
 
-struct MainToolbar: View {
-    @StateObject private var viewModel: MainToolbarViewModel
+struct Navbar: View {
+    @StateObject private var viewModel: NavbarViewModel
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @Namespace private var navbarNamespace
 
     init(container: AppContainer) {
-        _viewModel = StateObject(wrappedValue: MainToolbarViewModel(container: container))
+        _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
     }
 
     var body: some View {
-        HStack(alignment: .center) {
-            startSection
-            Spacer()
+        ZStack {
+            HStack {
+                startSection
+                Spacer()
+            }
             centerSection
-            Spacer()
-            endSection
+            HStack {
+                Spacer()
+                endSection
+            }
         }
         .padding(.horizontal, 48)
-        .padding(.top, 27)
-        .padding(.bottom, 12)
-        .frame(height: 95)
+        .padding(.top, 24)
+        .padding(.bottom, 16)
+        .frame(height: 110)
     }
 
     // MARK: - Start Section
@@ -39,61 +44,67 @@ struct MainToolbar: View {
     // MARK: - Center Section
 
     private var centerSection: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: SpaceTokens.spaceXs) {
-                ExpandableToolbarButton(
-                    icon: "house.fill",
-                    label: "Home",
-                    action: { router.reset() }
-                )
+        HStack(spacing: 6) {
+            ExpandableToolbarButton(
+                icon: "house",
+                label: "Home",
+                action: { router.reset() }
+            )
+            .prefersDefaultFocus(in: navbarNamespace)
 
-                ExpandableToolbarButton(
-                    icon: "magnifyingglass",
-                    label: "Search",
-                    action: { router.navigate(to: .search()) }
-                )
+            ExpandableToolbarButton(
+                icon: "magnifyingglass",
+                label: "Search",
+                action: { router.navigate(to: .search()) }
+            )
 
-                ExpandableToolbarButton(
-                    icon: "heart.fill",
-                    label: "Favorites",
-                    action: { router.navigate(to: .allFavorites) }
-                )
+            ExpandableToolbarButton(
+                icon: "shuffle",
+                label: "Shuffle",
+                isAssetIcon: true,
+                action: { /* TODO: shuffle action */ }
+            )
 
-                ExpandableToolbarButton(
-                    icon: "theatermasks.fill",
-                    label: "Genres",
-                    action: { router.navigate(to: .allGenres) }
-                )
+            ExpandableToolbarButton(
+                icon: "heart.fill",
+                label: "Favorites",
+                action: { router.navigate(to: .allFavorites) }
+            )
 
-                ExpandableToolbarButton(
-                    icon: "folder.fill",
-                    label: "Folders",
-                    action: { router.navigate(to: .folderView) }
-                )
+            ExpandableToolbarButton(
+                icon: "theatermasks",
+                label: "Genres",
+                action: { router.navigate(to: .allGenres) }
+            )
 
-                if !viewModel.userViews.isEmpty {
-                    ExpandableLibrariesButton(
-                        libraries: viewModel.userViews,
-                        activeLibraryId: nil,
-                        onLibrarySelected: { library in
-                            router.navigate(to: .libraryBrowser(itemId: library.id))
-                        }
-                    )
-                }
+            ExpandableToolbarButton(
+                icon: "folder.fill",
+                label: "Folders",
+                action: { router.navigate(to: .folderView) }
+            )
 
-                ExpandableToolbarButton(
-                    icon: "gearshape.fill",
-                    label: "Settings",
-                    action: { settingsRouter.open() }
+            if !viewModel.userViews.isEmpty {
+                ExpandableLibrariesButton(
+                    libraries: viewModel.userViews,
+                    activeLibraryId: nil,
+                    onLibrarySelected: { library in
+                        router.navigate(to: .libraryBrowser(itemId: library.id))
+                    }
                 )
             }
-            .padding(.horizontal, SpaceTokens.spaceSm)
-            .padding(.vertical, SpaceTokens.spaceXs)
-            .background(
-                Capsule()
-                    .fill(theme.colorScheme.surface.opacity(0.6))
+
+            ExpandableToolbarButton(
+                icon: "gearshape.fill",
+                label: "Settings",
+                action: { settingsRouter.open() }
             )
         }
+        .background(
+            Capsule()
+                .fill(theme.colorScheme.surface.opacity(0.6))
+        )
+        .clipShape(Capsule())
+        .focusScope(navbarNamespace)
     }
 
     // MARK: - End Section

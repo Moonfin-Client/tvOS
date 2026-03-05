@@ -80,10 +80,11 @@ struct MainNavigationView: View {
         ZStack {
             switch navbarPosition {
             case .top:
-                VStack(spacing: 0) {
-                    MainToolbar(container: container)
-                    mainContent
-                }
+                mainContent
+                    .overlay(alignment: .top) {
+                        Navbar(container: container)
+                            .ignoresSafeArea(edges: .top)
+                    }
             case .left:
                 ZStack {
                     mainContent

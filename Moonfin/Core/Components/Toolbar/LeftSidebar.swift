@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LeftSidebar: View {
-    @StateObject private var viewModel: MainToolbarViewModel
+    @StateObject private var viewModel: NavbarViewModel
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
@@ -12,7 +12,7 @@ struct LeftSidebar: View {
     @State private var librariesCollapseTask: Task<Void, Never>?
 
     init(container: AppContainer) {
-        _viewModel = StateObject(wrappedValue: MainToolbarViewModel(container: container))
+        _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
     }
 
     private static let collapsedWidth: CGFloat = 56
@@ -117,7 +117,7 @@ struct LeftSidebar: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 2) {
                 SidebarIconItem(
-                    systemIcon: "house.fill",
+                    systemIcon: "house",
                     label: "Home",
                     isExpanded: isExpanded,
                     onExpandedChange: handleSidebarFocus,
@@ -133,6 +133,14 @@ struct LeftSidebar: View {
                 )
 
                 SidebarIconItem(
+                    assetIcon: "shuffle",
+                    label: "Shuffle",
+                    isExpanded: isExpanded,
+                    onExpandedChange: handleSidebarFocus,
+                    action: { /* TODO: shuffle action */ }
+                )
+
+                SidebarIconItem(
                     systemIcon: "heart.fill",
                     label: "Favorites",
                     isExpanded: isExpanded,
@@ -141,7 +149,7 @@ struct LeftSidebar: View {
                 )
 
                 SidebarIconItem(
-                    systemIcon: "theatermasks.fill",
+                    systemIcon: "theatermasks",
                     label: "Genres",
                     isExpanded: isExpanded,
                     onExpandedChange: handleSidebarFocus,
@@ -168,7 +176,7 @@ struct LeftSidebar: View {
     private var librariesSection: some View {
         VStack(spacing: 2) {
             SidebarIconItem(
-                systemIcon: "rectangle.stack.fill",
+                systemIcon: "movieclapper.fill",
                 label: "Libraries",
                 isExpanded: isExpanded,
                 onExpandedChange: handleSidebarFocus,
@@ -215,13 +223,33 @@ struct LeftSidebar: View {
 // MARK: - SidebarIconItem
 
 private struct SidebarIconItem: View {
-    let systemIcon: String
+    var systemIcon: String?
+    var assetIcon: String?
     var imageUrl: String?
     let label: String
     let isExpanded: Bool
     let onExpandedChange: (Bool) -> Void
     var onFocusChange: ((Bool) -> Void)?
     let action: () -> Void
+
+    init(systemIcon: String, imageUrl: String? = nil, label: String, isExpanded: Bool, onExpandedChange: @escaping (Bool) -> Void, onFocusChange: ((Bool) -> Void)? = nil, action: @escaping () -> Void) {
+        self.init(systemIcon: systemIcon, assetIcon: nil, imageUrl: imageUrl, label: label, isExpanded: isExpanded, onExpandedChange: onExpandedChange, onFocusChange: onFocusChange, action: action)
+    }
+
+    init(assetIcon: String, label: String, isExpanded: Bool, onExpandedChange: @escaping (Bool) -> Void, onFocusChange: ((Bool) -> Void)? = nil, action: @escaping () -> Void) {
+        self.init(systemIcon: nil, assetIcon: assetIcon, imageUrl: nil, label: label, isExpanded: isExpanded, onExpandedChange: onExpandedChange, onFocusChange: onFocusChange, action: action)
+    }
+
+    private init(systemIcon: String?, assetIcon: String?, imageUrl: String?, label: String, isExpanded: Bool, onExpandedChange: @escaping (Bool) -> Void, onFocusChange: ((Bool) -> Void)?, action: @escaping () -> Void) {
+        self.systemIcon = systemIcon
+        self.assetIcon = assetIcon
+        self.imageUrl = imageUrl
+        self.label = label
+        self.isExpanded = isExpanded
+        self.onExpandedChange = onExpandedChange
+        self.onFocusChange = onFocusChange
+        self.action = action
+    }
 
     @FocusState private var isFocused: Bool
     @State private var delayedShowLabel = false
@@ -284,14 +312,21 @@ private struct SidebarIconItem: View {
                 case .success(let image):
                     image.resizable().aspectRatio(contentMode: .fill)
                 default:
-                    Image(systemName: systemIcon)
+                    Image(systemName: systemIcon ?? "questionmark")
                         .font(.system(size: 24))
                         .foregroundColor(.white)
                 }
             }
             .clipShape(Circle())
+        } else if let assetIcon {
+            Image(assetIcon)
+                .renderingMode(.template)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 24, height: 24)
+                .foregroundColor(.white)
         } else {
-            Image(systemName: systemIcon)
+            Image(systemName: systemIcon ?? "questionmark")
                 .font(.system(size: 24))
                 .foregroundColor(.white)
         }

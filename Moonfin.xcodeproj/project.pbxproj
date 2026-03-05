@@ -32,7 +32,6 @@
 		368AA3266CC102339CC62581 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DE69C03B19FE96985217BAB /* LibraryView.swift */; };
 		3691F2BA3751A8BE31CDB057 /* EmbyApis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F91BCAC2868F2231BC3267E /* EmbyApis.swift */; };
 		382288BD55A9D7ECDC42F70A /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73D2F15693134A15639B26D /* KeychainStore.swift */; };
-		39101EA625E8A6477B2EF7AA /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F8D7F07F81C3FFCDAA6497 /* MainToolbar.swift */; };
 		3E0224BD042331F5483E3D3C /* JellyseerrView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B22F64779DA9F2F939D590 /* JellyseerrView.swift */; };
 		4265AA5721AF21B0670F6356 /* LoginControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B60F4A8B14EDBD78F225142 /* LoginControls.swift */; };
 		430A9475EBE0A3EB82D021AD /* ServerWebSocketClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */; };
@@ -98,6 +97,7 @@
 		AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D633491E2E3C22A82AE90F1A /* SimpleInfoRow.swift */; };
 		AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 443241810250EC1AB21DA8F9 /* LoginCard.swift */; };
 		B273DC84F80FBB5876CCD0F8 /* ServerWebSocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D817B3079DB381F66B8EBE6 /* ServerWebSocketMessage.swift */; };
+		BB8A8389816DAB9F4A557AA4 /* NavbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBF6559E6FDF03DBF08F2D8 /* NavbarViewModel.swift */; };
 		BF435588F9323DB78D072C29 /* LeftSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */; };
 		BF5254DAE58042C682929BD4 /* ResolutionHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7174976F817669A40E47226 /* ResolutionHelper.swift */; };
 		C900DDBE3866AD2AE0994887 /* JellyfinLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84351FB844308F8CE1733E97 /* JellyfinLogo.swift */; };
@@ -115,7 +115,7 @@
 		EDB11E43146103FF686559F2 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14655AF7A48478F46D0FE802 /* Server.swift */; };
 		EF3338B76D9FDB7E5C2BDD5D /* ExpandableLibrariesButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD070B3D16B451F68649E3B /* ExpandableLibrariesButton.swift */; };
 		EF7DF8ADC72954304A9ED8D5 /* ServerQueryHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF728FA7DAC888DE730C3CC3 /* ServerQueryHelpers.swift */; };
-		F63FEA781BF65CF7DDDC546E /* MainToolbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5EC2DDA20E80E4CF3A93F1 /* MainToolbarViewModel.swift */; };
+		F3A45AB09B898ECA8E8D6BF0 /* Navbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112499C198A05F78A779F663 /* Navbar.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
 		FE8E24B6F5D6F4AF773AD7C1 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94106EFA5B45688EB1AC60F /* SettingsView.swift */; };
 /* End PBXBuildFile section */
@@ -150,6 +150,7 @@
 		07C8A91EC4A411E6D508CF41 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
 		0F91BCAC2868F2231BC3267E /* EmbyApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyApis.swift; sourceTree = "<group>"; };
 		0FBBAFFE10B2CFDF1FD8D32E /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
+		112499C198A05F78A779F663 /* Navbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navbar.swift; sourceTree = "<group>"; };
 		11ABDCA5F8DCD46037E016B3 /* UUID+Parsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+Parsing.swift"; sourceTree = "<group>"; };
 		11F9098C62E1011B54DDB936 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		122695A5DBDA9AF4FEA7CC3E /* SessionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRepository.swift; sourceTree = "<group>"; };
@@ -167,12 +168,12 @@
 		2CA92E4943C66A700242A879 /* FilterOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterOptions.swift; sourceTree = "<group>"; };
 		2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectViewModel.swift; sourceTree = "<group>"; };
 		30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerWebSocketClient.swift; sourceTree = "<group>"; };
-		30F8D7F07F81C3FFCDAA6497 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		36892F89FCB6FDDA0932F860 /* SessionInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionInitializer.swift; sourceTree = "<group>"; };
 		39FB08870D76B932543FCFC8 /* Moonfin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Moonfin.entitlements; sourceTree = "<group>"; };
 		3A0EE80F68994FF25EEA2B0C /* TVServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = TVServices.framework; path = System/Library/Frameworks/TVServices.framework; sourceTree = SDKROOT; };
 		3C72F20A47DD2A40EE40925E /* SelectServerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectServerViewModel.swift; sourceTree = "<group>"; };
 		3CBB645AF6ED5272E4D1F2FB /* BackgroundService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundService.swift; sourceTree = "<group>"; };
+		3DBF6559E6FDF03DBF08F2D8 /* NavbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavbarViewModel.swift; sourceTree = "<group>"; };
 		3FEB9DCB39B5C4AF061AF748 /* ServerRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRepository.swift; sourceTree = "<group>"; };
 		3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeftSidebar.swift; sourceTree = "<group>"; };
 		41A3039D72FC265C3A86801E /* ServerEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEnums.swift; sourceTree = "<group>"; };
@@ -180,7 +181,6 @@
 		43EADFDCA2B9073D7A47E0C6 /* ContentRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRow.swift; sourceTree = "<group>"; };
 		443241810250EC1AB21DA8F9 /* LoginCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginCard.swift; sourceTree = "<group>"; };
 		4B6BF213289C258496451F29 /* PreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceStore.swift; sourceTree = "<group>"; };
-		4D5EC2DDA20E80E4CF3A93F1 /* MainToolbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbarViewModel.swift; sourceTree = "<group>"; };
 		4DE69C03B19FE96985217BAB /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		4F9E7FCE39C15D9BACD3A4B8 /* SSLTrustDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSLTrustDelegate.swift; sourceTree = "<group>"; };
 		500F587C5CF0568645B22C19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -427,8 +427,8 @@
 				8CD070B3D16B451F68649E3B /* ExpandableLibrariesButton.swift */,
 				F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */,
 				3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */,
-				30F8D7F07F81C3FFCDAA6497 /* MainToolbar.swift */,
-				4D5EC2DDA20E80E4CF3A93F1 /* MainToolbarViewModel.swift */,
+				112499C198A05F78A779F663 /* Navbar.swift */,
+				3DBF6559E6FDF03DBF08F2D8 /* NavbarViewModel.swift */,
 				76D8A6CA4AAF12A0C017D609 /* ToolbarClock.swift */,
 			);
 			path = Toolbar;
@@ -853,14 +853,14 @@
 				8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */,
 				AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */,
 				4265AA5721AF21B0670F6356 /* LoginControls.swift in Sources */,
-				39101EA625E8A6477B2EF7AA /* MainToolbar.swift in Sources */,
-				F63FEA781BF65CF7DDDC546E /* MainToolbarViewModel.swift in Sources */,
 				87CC28D4B3586526C0E231E0 /* MediaServerClient.swift in Sources */,
 				D93E1952BE5AC80F49540141 /* MediaServerClientFactory.swift in Sources */,
 				D602B6D04FC80CE04DCD3A48 /* Migration.swift in Sources */,
 				9371FB8730176B61184F8CCC /* MoonfinApp.swift in Sources */,
 				61C25359FCE5DE43AB03A366 /* MoonfinLogo.swift in Sources */,
 				71A56B5F1AA6D9A47B0D36F8 /* MoonfinTheme.swift in Sources */,
+				F3A45AB09B898ECA8E8D6BF0 /* Navbar.swift in Sources */,
+				BB8A8389816DAB9F4A557AA4 /* NavbarViewModel.swift in Sources */,
 				2AC4802334AE8E8949708E15 /* NavigationRouter.swift in Sources */,
 				CC5946EBEE0483E3D3CF414F /* NetworkError.swift in Sources */,
 				6C6B858CD836169931DDA8FF /* PersonAvatarShape.swift in Sources */,

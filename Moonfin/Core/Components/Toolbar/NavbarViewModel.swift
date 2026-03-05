@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 @MainActor
-final class MainToolbarViewModel: ObservableObject {
+final class NavbarViewModel: ObservableObject {
     @Published var userImageUrl: String?
     @Published var userViews: [ServerItem] = []
     @Published var clockBehavior: ClockBehavior = .always
