@@ -86,6 +86,7 @@ final class LocalServerDiscovery: ObservableObject {
 
         var results: [(id: String, name: String, address: String, serverType: DiscoveredServerType)] = []
         var seen = Set<String>()
+        var buffer = [UInt8](repeating: 0, count: 4096)
 
         let queries: [(message: String, type: DiscoveredServerType)] = [
             ("who is JellyfinServer?", .jellyfin),

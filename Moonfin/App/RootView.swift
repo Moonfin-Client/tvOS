@@ -74,11 +74,15 @@ struct MainNavigationView: View {
 
     var body: some View {
         ZStack {
-            NavigationStack(path: $router.path) {
-                HomeScreen(container: container)
-                    .navigationDestination(for: Destination.self) { destination in
-                        mainDestinationView(for: destination)
-                    }
+            VStack(spacing: 0) {
+                MainToolbar(container: container)
+
+                NavigationStack(path: $router.path) {
+                    HomeScreen(container: container)
+                        .navigationDestination(for: Destination.self) { destination in
+                            mainDestinationView(for: destination)
+                        }
+                }
             }
 
             if settingsRouter.isPresented {

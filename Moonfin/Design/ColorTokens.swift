@@ -8,6 +8,14 @@ extension Color {
         self.init(red: r, green: g, blue: b, opacity: opacity)
     }
 
+    var contrastingContentColor: Color {
+        let uiColor = UIColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        return luminance > 0.4 ? Color(hex: 0x444444) : Color(hex: 0xDDDDDD)
+    }
+
     // MARK: - Black & White
     static let colorBlack = Color(hex: 0x000000)
     static let colorWhite = Color(hex: 0xFFFFFF)

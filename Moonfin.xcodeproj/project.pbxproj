@@ -112,6 +112,11 @@
 		EF7DF8ADC72954304A9ED8D5 /* ServerQueryHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF728FA7DAC888DE730C3CC3 /* ServerQueryHelpers.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
 		FE8E24B6F5D6F4AF773AD7C1 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94106EFA5B45688EB1AC60F /* SettingsView.swift */; };
+		459EC4E980C7E5955A9E31F5 /* ExpandableToolbarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2772BF063E843B90D31334E /* ExpandableToolbarButton.swift */; };
+		AEA087D42D2D613A304251BF /* ExpandableLibrariesButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADFBB52FA8ACABD8708DAD2 /* ExpandableLibrariesButton.swift */; };
+		3560A33C2E24EC47CCF4C710 /* ToolbarClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813B08AA5A8C180EDFA6CCB4 /* ToolbarClock.swift */; };
+		061C030FB463594A0436F2A6 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3367DDA56B1D6FF71F238A /* MainToolbar.swift */; };
+		CC4D7C4804F7E17B32C64A1E /* MainToolbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671B91DD612770103042957A /* MainToolbarViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -245,6 +250,11 @@
 		EF7DF5BBB1E07AE8F56A307F /* ServerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerViewModel.swift; sourceTree = "<group>"; };
 		F1B22F64779DA9F2F939D590 /* JellyseerrView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyseerrView.swift; sourceTree = "<group>"; };
 		FDDF43F4829FD7991896EA32 /* MoonfinTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinTheme.swift; sourceTree = "<group>"; };
+		F2772BF063E843B90D31334E /* ExpandableToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableToolbarButton.swift; sourceTree = "<group>"; };
+		BADFBB52FA8ACABD8708DAD2 /* ExpandableLibrariesButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableLibrariesButton.swift; sourceTree = "<group>"; };
+		813B08AA5A8C180EDFA6CCB4 /* ToolbarClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolbarClock.swift; sourceTree = "<group>"; };
+		DE3367DDA56B1D6FF71F238A /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
+		671B91DD612770103042957A /* MainToolbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbarViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -357,6 +367,7 @@
 		27036A711A3797E96F3282AF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				51DBBB856FFE9B45579D450D /* Toolbar */,
 				2B73FA206F8A4DF144150EDF /* FocusBorderButtonStyle.swift */,
 				1AF479CA491CFC683C309AEC /* GridButtonCard.swift */,
 				EA52CD4F73CDB1FAE8DE7DB8 /* ItemCard.swift */,
@@ -669,6 +680,18 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
+		51DBBB856FFE9B45579D450D /* Toolbar */ = {
+			isa = PBXGroup;
+			children = (
+				F2772BF063E843B90D31334E /* ExpandableToolbarButton.swift */,
+				BADFBB52FA8ACABD8708DAD2 /* ExpandableLibrariesButton.swift */,
+				813B08AA5A8C180EDFA6CCB4 /* ToolbarClock.swift */,
+				DE3367DDA56B1D6FF71F238A /* MainToolbar.swift */,
+				671B91DD612770103042957A /* MainToolbarViewModel.swift */,
+			);
+			path = Toolbar;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -779,6 +802,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				459EC4E980C7E5955A9E31F5 /* ExpandableToolbarButton.swift in Sources */,
+				AEA087D42D2D613A304251BF /* ExpandableLibrariesButton.swift in Sources */,
+				3560A33C2E24EC47CCF4C710 /* ToolbarClock.swift in Sources */,
+				061C030FB463594A0436F2A6 /* MainToolbar.swift in Sources */,
+				CC4D7C4804F7E17B32C64A1E /* MainToolbarViewModel.swift in Sources */,
 				23CC21872990F7E4CE746C3D /* AppConstants.swift in Sources */,
 				4EFD2067E471639216BC6F31 /* AppContainer.swift in Sources */,
 				3363A53733BC3A4924F09B5C /* AuthStates.swift in Sources */,
