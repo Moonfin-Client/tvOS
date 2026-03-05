@@ -71,30 +71,48 @@ struct MainNavigationView: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @EnvironmentObject var theme: MoonfinTheme
     @AppStorage("navbar_position") private var navbarPosition: NavbarPosition = .top
+    @Namespace private var mainNamespace
+    @Environment(\.resetFocus) private var resetFocus
 
     var body: some View {
         ZStack {
-            switch navbarPosition {
-            case .top:
-                mainContent
-                    .overlay(alignment: .top) {
-                        Navbar(container: container)
-                            .ignoresSafeArea(edges: .top)
-                    }
-            case .left:
-                ZStack {
+            Group {
+                switch navbarPosition {
+                case .top:
                     mainContent
-                    LeftSidebar(container: container)
+                        .overlay(alignment: .top) {
+                            Navbar(container: container)
+                                .ignoresSafeArea(edges: .top)
+                        }
+                case .left:
+                    ZStack {
+                        mainContent
+                        LeftSidebar(container: container)
+                    }
                 }
             }
+            .disabled(settingsRouter.isPresented)
 
             if settingsRouter.isPresented {
-                SettingsOverlayView()
+                theme.colorScheme.scrim
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
+                SettingsOverlayView(focusNamespace: mainNamespace)
                     .transition(.move(edge: .trailing))
             }
         }
+        .focusScope(mainNamespace)
         .animation(.easeInOut(duration: 0.4), value: settingsRouter.isPresented)
+        .onChange(of: settingsRouter.isPresented) { presented in
+            if presented {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    resetFocus(in: mainNamespace)
+                }
+            }
+        }
     }
 
     private var mainContent: some View {
@@ -127,34 +145,6 @@ struct MainNavigationView: View {
             PlaceholderView(title: "Discover")
         default:
             PlaceholderView(title: "Screen")
-        }
-    }
-}
-
-// MARK: - Placeholders
-
-struct SettingsOverlayView: View {
-    @EnvironmentObject var theme: MoonfinTheme
-    @EnvironmentObject var settingsRouter: SettingsRouter
-
-    var body: some View {
-        HStack {
-            Spacer()
-            ZStack {
-                RoundedRectangle(cornerRadius: RadiusTokens.large, style: .continuous)
-                    .fill(theme.colorScheme.surface)
-                    .frame(width: 350)
-
-                VStack(spacing: SpaceTokens.spaceMd) {
-                    Text("Settings")
-                        .font(.titleXl)
-                        .foregroundColor(theme.colorScheme.onBackground)
-                    Text("Phase 4 will implement settings screens")
-                        .font(.bodySm)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-                }
-                .frame(width: 350)
-            }
         }
     }
 }

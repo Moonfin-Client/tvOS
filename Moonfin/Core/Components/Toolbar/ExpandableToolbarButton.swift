@@ -40,7 +40,6 @@ struct ExpandableToolbarButton: View {
             .foregroundColor(isFocused ? focusContentColor : theme.colorScheme.onButton)
         }
         .buttonStyle(CleanButtonStyle())
-        .focusable()
         .focused($isFocused)
         .scaleEffect(isFocused ? 1.05 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isFocused)

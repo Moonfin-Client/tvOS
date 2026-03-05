@@ -119,8 +119,6 @@ struct Navbar: View {
     }
 }
 
-// MARK: - User Avatar Button
-
 private struct UserAvatarToolbarButton: View {
     let imageUrl: String?
     let onTap: () -> Void
@@ -154,7 +152,6 @@ private struct UserAvatarToolbarButton: View {
             )
         }
         .buttonStyle(CleanButtonStyle())
-        .focusable()
         .focused($isFocused)
         .scaleEffect(isFocused ? 1.1 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isFocused)

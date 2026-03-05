@@ -29,7 +29,6 @@ struct ExpandableLibrariesButton: View {
                     .foregroundColor(iconForeground)
             }
             .buttonStyle(CleanButtonStyle())
-            .focusable()
             .focused($focusedItem, equals: .icon)
 
             if isExpanded {
@@ -48,7 +47,6 @@ struct ExpandableLibrariesButton: View {
                                 .foregroundColor(pillForeground(for: library))
                         }
                         .buttonStyle(CleanButtonStyle())
-                        .focusable()
                         .focused($focusedItem, equals: .library(library.id))
                         .scaleEffect(focusedItem == .library(library.id) ? 1.05 : 1.0)
                         .animation(.easeInOut(duration: 0.15), value: focusedItem)

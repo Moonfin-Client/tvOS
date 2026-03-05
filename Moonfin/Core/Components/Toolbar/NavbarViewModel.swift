@@ -61,8 +61,6 @@ final class NavbarViewModel: ObservableObject {
         container.sessionRepository.destroyCurrentSession()
     }
 
-    // MARK: - Shuffle
-
     @Published var isShuffling = false
 
     private var client: MediaServerClient? {
@@ -128,8 +126,8 @@ final class NavbarViewModel: ObservableObject {
                 includeItemTypes: includeTypes,
                 excludeItemTypes: [.boxSet],
                 sortBy: [.sortName],
-                startIndex: randomIndex,
-                limit: 1
+                limit: 1,
+                startIndex: randomIndex
             ))
             return itemResult.items.first
         } catch {

@@ -55,9 +55,24 @@ enum AutoLoginBehavior: String, StringRepresentableEnum, CaseIterable {
     case lastUser
     case disabled
     case specificUser
+
+    var displayName: String {
+        switch self {
+        case .lastUser: return "Last User"
+        case .disabled: return "Disabled"
+        case .specificUser: return "Specific User"
+        }
+    }
 }
 
 enum ServerSortBy: String, StringRepresentableEnum, CaseIterable {
     case lastUsed
     case alphabetical
+
+    var displayName: String {
+        switch self {
+        case .lastUsed: return "Last Used"
+        case .alphabetical: return "Alphabetical"
+        }
+    }
 }

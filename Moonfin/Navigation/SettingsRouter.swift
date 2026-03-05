@@ -1,12 +1,7 @@
 import SwiftUI
 
 enum SettingsRoute: Hashable {
-
-    // MARK: - Main
-
     case main
-
-    // MARK: - Authentication
 
     case authentication
     case authenticationServer(serverId: String)
@@ -14,8 +9,6 @@ enum SettingsRoute: Hashable {
     case authenticationSortBy
     case authenticationAutoSignIn
     case authenticationPinCode
-
-    // MARK: - Customization
 
     case customization
     case customizationTheme
@@ -26,22 +19,16 @@ enum SettingsRoute: Hashable {
     case customizationSubtitlesBackgroundColor
     case customizationSubtitlesEdgeColor
 
-    // MARK: - Screensaver
-
     case customizationScreensaver
     case customizationScreensaverTimeout
     case customizationScreensaverAgeRating
     case customizationScreensaverMode
     case customizationScreensaverDimming
 
-    // MARK: - Home
-
     case home
     case homeSection(index: Int)
     case homePosterSize
     case homeRowsImageType
-
-    // MARK: - Libraries
 
     case libraries
     case librariesDisplay(itemId: String, displayPreferencesId: String, serverId: String, userId: String)
@@ -49,13 +36,9 @@ enum SettingsRoute: Hashable {
     case librariesDisplayImageType(itemId: String, displayPreferencesId: String, serverId: String, userId: String)
     case librariesDisplayGrid(itemId: String, displayPreferencesId: String, serverId: String, userId: String)
 
-    // MARK: - Live TV
-
     case liveTvGuideFilters
     case liveTvGuideOptions
     case liveTvGuideChannelOrder
-
-    // MARK: - Playback
 
     case playback
     case playbackPlayer
@@ -73,12 +56,8 @@ enum SettingsRoute: Hashable {
     case playbackZoomMode
     case playbackAudioBehavior
 
-    // MARK: - Jellyseerr
-
     case jellyseerr
     case jellyseerrRows
-
-    // MARK: - Moonfin
 
     case plugin
     case moonfinNavbarPosition
@@ -99,8 +78,6 @@ enum SettingsRoute: Hashable {
     case moonfinSyncPlayMinDelaySkip
     case moonfinSyncPlayExtraOffset
 
-    // MARK: - Other
-
     case syncPlay
     case telemetry
     case developer
@@ -113,13 +90,20 @@ enum SettingsRoute: Hashable {
 final class SettingsRouter: ObservableObject {
     @Published var isPresented = false
     @Published var path: [SettingsRoute] = []
+    var navigationDirection: NavigationDirection = .forward
+
+    enum NavigationDirection {
+        case forward, backward
+    }
 
     func open(to route: SettingsRoute = .main) {
+        navigationDirection = .forward
         path = [route]
         isPresented = true
     }
 
     func navigate(to route: SettingsRoute) {
+        navigationDirection = .forward
         path.append(route)
     }
 
@@ -128,6 +112,7 @@ final class SettingsRouter: ObservableObject {
             dismiss()
             return
         }
+        navigationDirection = .backward
         path.removeLast()
         if path.isEmpty { dismiss() }
     }
@@ -135,9 +120,5 @@ final class SettingsRouter: ObservableObject {
     func dismiss() {
         isPresented = false
         path = []
-    }
-
-    func reset(to route: SettingsRoute = .main) {
-        path = [route]
     }
 }

@@ -217,8 +217,6 @@ struct LeftSidebar: View {
     }
 }
 
-// MARK: - SidebarIconItem
-
 private struct SidebarIconItem: View {
     var systemIcon: String?
     var assetIcon: String?
@@ -278,7 +276,6 @@ private struct SidebarIconItem: View {
             )
         }
         .buttonStyle(CleanButtonStyle())
-        .focusable()
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
             onExpandedChange(focused)
@@ -330,8 +327,6 @@ private struct SidebarIconItem: View {
     }
 }
 
-// MARK: - SidebarTextItem
-
 private struct SidebarTextItem: View {
     let label: String
     var onFocusChange: ((Bool) -> Void)?
@@ -358,7 +353,6 @@ private struct SidebarTextItem: View {
             )
         }
         .buttonStyle(CleanButtonStyle())
-        .focusable()
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
             onFocusChange?(focused)

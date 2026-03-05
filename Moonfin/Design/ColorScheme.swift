@@ -1,13 +1,11 @@
 import SwiftUI
 
 struct MoonfinColorScheme {
-    // MARK: - Background & Surface
     let background: Color
     let onBackground: Color
     let surface: Color
     let scrim: Color
 
-    // MARK: - Buttons
     let button: Color
     let onButton: Color
     let buttonFocused: Color
@@ -17,33 +15,30 @@ struct MoonfinColorScheme {
     let buttonActive: Color
     let onButtonActive: Color
 
-    // MARK: - Input
     let input: Color
     let onInput: Color
     let inputFocused: Color
     let onInputFocused: Color
 
-    // MARK: - Range / Seekbar
     let rangeControlBackground: Color
     let rangeControlFill: Color
     let rangeControlKnob: Color
     let seekbarBuffer: Color
 
-    // MARK: - Recording
     let recording: Color
     let onRecording: Color
 
-    // MARK: - Badge
     let badge: Color
     let onBadge: Color
 
-    // MARK: - List
     let listHeader: Color
     let listOverline: Color
     let listHeadline: Color
     let listCaption: Color
     let listButton: Color
     let listButtonFocused: Color
+    let listHeadlineFocused: Color
+    let listCaptionFocused: Color
 }
 
 extension MoonfinColorScheme {
@@ -83,6 +78,8 @@ extension MoonfinColorScheme {
         listHeadline: .colorGrey25,
         listCaption: .colorGrey200,
         listButton: .clear,
-        listButtonFocused: .colorBluegrey800
+        listButtonFocused: .colorBluegrey800,
+        listHeadlineFocused: .colorGrey25,
+        listCaptionFocused: .colorGrey200
     )
 }
