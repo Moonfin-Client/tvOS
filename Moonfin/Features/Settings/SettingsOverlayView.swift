@@ -111,6 +111,26 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.shuffleContentType),
                 displayName: \.displayName
             )
+        case .moonfinMediaBarContentType:
+            SettingsPickerScreen(
+                title: "Media Bar Content",
+                selection: container.userPreferences.binding(for: UserPreferences.mediaBarContentType),
+                displayName: \.displayName
+            )
+        case .moonfinMediaBarItemCount:
+            SettingsPickerScreen(
+                title: "Media Bar Items",
+                selection: container.userPreferences.binding(for: UserPreferences.mediaBarItemCount),
+                displayName: \.displayName
+            )
+        case .moonfinMediaBarColor:
+            SettingsPickerScreen(
+                title: "Media Bar Color",
+                selection: container.userPreferences.binding(for: UserPreferences.mediaBarOverlayColor),
+                displayName: \.displayName
+            )
+        case .moonfinMediaBarOpacity:
+            SettingsMediaBarOpacityScreen()
         case .playback:
             SettingsPlaybackScreen()
         case .playbackNextUpBehavior:

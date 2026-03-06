@@ -30,6 +30,45 @@ struct SettingsMoonfinScreen: View {
                 caption: "Show background images",
                 isOn: prefs.binding(for: UserPreferences.backdropEnabled)
             )
+
+            SettingsToggleButton(
+                icon: "rectangle.inset.filled",
+                heading: "Media Bar",
+                caption: "Featured slideshow on home screen",
+                isOn: prefs.binding(for: UserPreferences.mediaBarEnabled)
+            )
+
+            SettingsListButton(
+                icon: "film.stack",
+                heading: "Media Bar Content",
+                caption: "What to show in the media bar",
+                trailingText: prefs[UserPreferences.mediaBarContentType].displayName,
+                action: { settingsRouter.navigate(to: .moonfinMediaBarContentType) }
+            )
+
+            SettingsListButton(
+                icon: "number",
+                heading: "Media Bar Items",
+                caption: "Number of slides",
+                trailingText: prefs[UserPreferences.mediaBarItemCount].displayName,
+                action: { settingsRouter.navigate(to: .moonfinMediaBarItemCount) }
+            )
+
+            SettingsListButton(
+                icon: "circle.lefthalf.filled.inverse",
+                heading: "Media Bar Overlay",
+                caption: "Overlay opacity",
+                trailingText: "\(prefs[UserPreferences.mediaBarOverlayOpacity])%",
+                action: { settingsRouter.navigate(to: .moonfinMediaBarOpacity) }
+            )
+
+            SettingsListButton(
+                icon: "paintpalette",
+                heading: "Media Bar Color",
+                caption: "Overlay color",
+                trailingText: prefs[UserPreferences.mediaBarOverlayColor].displayName,
+                action: { settingsRouter.navigate(to: .moonfinMediaBarColor) }
+            )
         }
     }
 }

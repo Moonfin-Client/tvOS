@@ -22,6 +22,12 @@ final class UserPreferences {
     static let clockBehavior = Preference(key: "clock_behavior", defaultValue: ClockBehavior.always)
     static let watchedIndicator = Preference(key: "watched_indicator", defaultValue: WatchedIndicatorBehavior.always)
 
+    static let mediaBarEnabled = Preference(key: "media_bar_enabled", defaultValue: true)
+    static let mediaBarContentType = Preference(key: "media_bar_content_type", defaultValue: MediaBarContentType.both)
+    static let mediaBarItemCount = Preference(key: "media_bar_item_count", defaultValue: MediaBarItemCount.ten)
+    static let mediaBarOverlayOpacity = Preference(key: "media_bar_overlay_opacity", defaultValue: 50)
+    static let mediaBarOverlayColor = Preference(key: "media_bar_overlay_color", defaultValue: MediaBarOverlayColor.gray)
+
     static let backdropEnabled = Preference(key: "backdrop_enabled", defaultValue: true)
     static let detailsBackgroundBlur = Preference(key: "details_background_blur", defaultValue: 10)
     static let browsingBackgroundBlur = Preference(key: "browsing_background_blur", defaultValue: 10)

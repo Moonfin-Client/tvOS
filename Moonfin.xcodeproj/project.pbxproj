@@ -57,6 +57,7 @@
 		61C25359FCE5DE43AB03A366 /* MoonfinLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E8963CD402B79BAE982A3A /* MoonfinLogo.swift */; };
 		627CDA9D73B185C8AAA0DF1E /* LibraryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABDCA99A0E17C8A882E8EA80 /* LibraryCard.swift */; };
 		6382863BD2E5A01AD37F8AC4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 11F9098C62E1011B54DDB936 /* Assets.xcassets */; };
+		649E00A5609B7BBD44570631 /* MediaBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCFD36E7AB44A85691E2CCA1 /* MediaBarView.swift */; };
 		659117FFF2FEE58885DFDFBB /* AuthenticationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2E513F01DD8E72DB15C70D /* AuthenticationRepository.swift */; };
 		673C558004586A2BFE0289EF /* EmbyConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */; };
 		69103F97C2C4EBD46C06C687 /* SelectedItemState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0FFB47A15FF8BC8041D824 /* SelectedItemState.swift */; };
@@ -81,6 +82,7 @@
 		82451D7208563267D1B9CDD1 /* SettingsListButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87B60A668EFA251CA87BE91 /* SettingsListButton.swift */; };
 		87CC28D4B3586526C0E231E0 /* MediaServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7B40972308862B6CCB20F4 /* MediaServerClient.swift */; };
 		8B06D277855492E3283E3C02 /* ServerRequestModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A471FCC6F27C455F463F8D1 /* ServerRequestModels.swift */; };
+		8BED70158CE7B75EBDEBC7C0 /* MediaBarModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2532D5B583DB1A74F1810BC /* MediaBarModels.swift */; };
 		8BF09E744242E20B4C19DABC /* PlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */; };
 		8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681B5D321FDDC52F49B7EFB7 /* LoginBackground.swift */; };
 		8E03D63027BE4532F8EA2428 /* TopShelfExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 82577A9FD03CF26B68E531B8 /* TopShelfExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -93,12 +95,14 @@
 		9371FB8730176B61184F8CCC /* MoonfinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26B00488A156C151C0CD62A /* MoonfinApp.swift */; };
 		95F316DC7B4ABC5D52E5B35F /* JellyfinServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBEE4F3BBDB81FE8A31535C /* JellyfinServerClient.swift */; };
 		96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D4DD05CBC00A79C149DD76 /* SettingsRouter.swift */; };
+		9B00EB8569A9A8EEEBEB93EC /* MediaBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F01563FD7C1AA3617D202D0 /* MediaBarViewModel.swift */; };
 		9B0960F5FAE82F5DD654D878 /* ServerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7DF5BBB1E07AE8F56A307F /* ServerViewModel.swift */; };
 		9C276CBD301A91D706F97692 /* ServerUserRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6D06129E4065E045734A09 /* ServerUserRepository.swift */; };
 		9CD0DA512439908E4A8868B9 /* ServerAddScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EAC8BD97D4DDB42602897B /* ServerAddScreen.swift */; };
 		9D05A466603B6AEF61199F46 /* HttpClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF7FDB4358658D30158F8BC5 /* HttpClient.swift */; };
 		A19CD5CA5D73BAF24E7DBDF1 /* ContentRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EADFDCA2B9073D7A47E0C6 /* ContentRow.swift */; };
 		A1F80FB37CD563848A6C9E27 /* SettingsItemContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C0086B57731786307976A35 /* SettingsItemContent.swift */; };
+		A200413036907DE04D1FF0CC /* SettingsMediaBarOpacityScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D7DAD20426F96F052F9D238 /* SettingsMediaBarOpacityScreen.swift */; };
 		A2A78541C98491B19540AAFC /* FilterOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA92E4943C66A700242A879 /* FilterOptions.swift */; };
 		A38E580FEA09E92D9FADFA4F /* PreferenceBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34592157726E5A36E66EAAAB /* PreferenceBinding.swift */; };
 		A7F8A2BD741DA24FBE31E4B0 /* BackgroundService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CBB645AF6ED5272E4D1F2FB /* BackgroundService.swift */; };
@@ -182,6 +186,7 @@
 		260C3C82CF4ACF0E8629F5DA /* ChangeTriggerType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeTriggerType.swift; sourceTree = "<group>"; };
 		2B73FA206F8A4DF144150EDF /* FocusBorderButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusBorderButtonStyle.swift; sourceTree = "<group>"; };
 		2CA92E4943C66A700242A879 /* FilterOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterOptions.swift; sourceTree = "<group>"; };
+		2D7DAD20426F96F052F9D238 /* SettingsMediaBarOpacityScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaBarOpacityScreen.swift; sourceTree = "<group>"; };
 		2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectViewModel.swift; sourceTree = "<group>"; };
 		30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerWebSocketClient.swift; sourceTree = "<group>"; };
 		34592157726E5A36E66EAAAB /* PreferenceBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceBinding.swift; sourceTree = "<group>"; };
@@ -244,12 +249,14 @@
 		98784D7402B2F3DB94726461 /* SettingsPickerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPickerScreen.swift; sourceTree = "<group>"; };
 		9A8E977D051C49141D6B1B30 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		9AAB441B2D93DAF13B529D21 /* JellyfinApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinApis.swift; sourceTree = "<group>"; };
+		9F01563FD7C1AA3617D202D0 /* MediaBarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarViewModel.swift; sourceTree = "<group>"; };
 		9FBDE0DA7AABA47AF63658FE /* SettingsCustomizationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCustomizationScreen.swift; sourceTree = "<group>"; };
 		A671C30D8FBFBADDB8A6654C /* MediaServerClientFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServerClientFactory.swift; sourceTree = "<group>"; };
 		A87B60A668EFA251CA87BE91 /* SettingsListButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsListButton.swift; sourceTree = "<group>"; };
 		ABDCA99A0E17C8A882E8EA80 /* LibraryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCard.swift; sourceTree = "<group>"; };
 		ADD2B0ADBDA59B45EBF81A4E /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		AE0FFB47A15FF8BC8041D824 /* SelectedItemState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectedItemState.swift; sourceTree = "<group>"; };
+		B2532D5B583DB1A74F1810BC /* MediaBarModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarModels.swift; sourceTree = "<group>"; };
 		B26B00488A156C151C0CD62A /* MoonfinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinApp.swift; sourceTree = "<group>"; };
 		B5A47538C7C003A0A0368BEF /* SettingsAboutScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAboutScreen.swift; sourceTree = "<group>"; };
 		B94722BC7ADD0914A190024A /* ServerFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerFeatures.swift; sourceTree = "<group>"; };
@@ -286,6 +293,7 @@
 		F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableToolbarButton.swift; sourceTree = "<group>"; };
 		F95BEDEB81DA59E7BD971A55 /* SettingsMoonfinScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMoonfinScreen.swift; sourceTree = "<group>"; };
 		FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaybackScreen.swift; sourceTree = "<group>"; };
+		FCFD36E7AB44A85691E2CCA1 /* MediaBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarView.swift; sourceTree = "<group>"; };
 		FDDF43F4829FD7991896EA32 /* MoonfinTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinTheme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -311,6 +319,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0104A58D67098884A5DA9128 /* MediaBar */ = {
+			isa = PBXGroup;
+			children = (
+				B2532D5B583DB1A74F1810BC /* MediaBarModels.swift */,
+				FCFD36E7AB44A85691E2CCA1 /* MediaBarView.swift */,
+				9F01563FD7C1AA3617D202D0 /* MediaBarViewModel.swift */,
+			);
+			path = MediaBar;
+			sourceTree = "<group>";
+		};
 		02214FA3C6ACFBFFAEEAB5D0 /* Player */ = {
 			isa = PBXGroup;
 			children = (
@@ -377,6 +395,7 @@
 		14C9194162D78D8E62134CC6 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				0104A58D67098884A5DA9128 /* MediaBar */,
 				3CBB645AF6ED5272E4D1F2FB /* BackgroundService.swift */,
 				43EADFDCA2B9073D7A47E0C6 /* ContentRow.swift */,
 				735FC8641A441A0CF3638A09 /* HomeRow.swift */,
@@ -499,6 +518,7 @@
 				BA6436C126ED88EEFEDCF93D /* SettingsAuthenticationScreen.swift */,
 				9FBDE0DA7AABA47AF63658FE /* SettingsCustomizationScreen.swift */,
 				6E52B4DEA949C89B86A017B2 /* SettingsMainScreen.swift */,
+				2D7DAD20426F96F052F9D238 /* SettingsMediaBarOpacityScreen.swift */,
 				F95BEDEB81DA59E7BD971A55 /* SettingsMoonfinScreen.swift */,
 				FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */,
 				8AC153185AA86A0600FF5D61 /* SettingsScreensaverScreen.swift */,
@@ -914,6 +934,9 @@
 				8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */,
 				AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */,
 				4265AA5721AF21B0670F6356 /* LoginControls.swift in Sources */,
+				8BED70158CE7B75EBDEBC7C0 /* MediaBarModels.swift in Sources */,
+				649E00A5609B7BBD44570631 /* MediaBarView.swift in Sources */,
+				9B00EB8569A9A8EEEBEB93EC /* MediaBarViewModel.swift in Sources */,
 				87CC28D4B3586526C0E231E0 /* MediaServerClient.swift in Sources */,
 				D93E1952BE5AC80F49540141 /* MediaServerClientFactory.swift in Sources */,
 				D602B6D04FC80CE04DCD3A48 /* Migration.swift in Sources */,
@@ -964,6 +987,7 @@
 				A1F80FB37CD563848A6C9E27 /* SettingsItemContent.swift in Sources */,
 				82451D7208563267D1B9CDD1 /* SettingsListButton.swift in Sources */,
 				BF09C05738B1479D39355ABE /* SettingsMainScreen.swift in Sources */,
+				A200413036907DE04D1FF0CC /* SettingsMediaBarOpacityScreen.swift in Sources */,
 				D56E3F5FB626810283B26437 /* SettingsMoonfinScreen.swift in Sources */,
 				ECB007532A15853573FD30B7 /* SettingsOverlayView.swift in Sources */,
 				180127D423D36F0B0B80EA63 /* SettingsPickerScreen.swift in Sources */,

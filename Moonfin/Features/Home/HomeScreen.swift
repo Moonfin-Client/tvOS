@@ -2,23 +2,53 @@ import SwiftUI
 
 struct HomeScreen: View {
     @StateObject private var viewModel: HomeViewModel
+    @EnvironmentObject var container: AppContainer
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
+    let mainNamespace: Namespace.ID
+    @State private var isMediaBarMode = true
+    @State private var sentinelEnabled = false
 
-    init(container: AppContainer) {
+    init(container: AppContainer, mainNamespace: Namespace.ID) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
+        self.mainNamespace = mainNamespace
     }
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            backdropLayer
-            gradientOverlay
-            infoArea
-            contentRows
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                if viewModel.isMediaBarActive && isMediaBarMode {
+                    MediaBarView(
+                        viewModel: viewModel.mediaBarViewModel,
+                        userPreferences: container.userPreferences,
+                        screenHeight: geo.size.height,
+                        focusNamespace: mainNamespace,
+                        onItemSelected: { item in
+                            router.navigate(to: .itemDetails(itemId: item.id))
+                        },
+                        onNavigateDown: {
+                            sentinelEnabled = false
+                            isMediaBarMode = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                sentinelEnabled = true
+                            }
+                        }
+                    )
+                } else {
+                    backdropLayer
+                    gradientOverlay
+                    infoArea
+                    rowsContent(screenHeight: geo.size.height)
+                }
+            }
         }
         .ignoresSafeArea()
         .environmentObject(viewModel.backgroundService)
         .onAppear { viewModel.loadContent() }
+        .onDisappear { viewModel.mediaBarViewModel.cleanup() }
+        .onChange(of: viewModel.isMediaBarActive) { active in
+            if active { isMediaBarMode = true }
+        }
     }
 
     private var backdropLayer: some View {
@@ -113,21 +143,65 @@ struct HomeScreen: View {
         .animation(.easeInOut(duration: 0.3), value: viewModel.selectedItemState.title)
     }
 
-    private var contentRows: some View {
-        VStack {
-            Spacer()
-                .frame(height: 243)
-
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
-                    let visibleRows = viewModel.rows.filter { !$0.isEmpty }
-                    ForEach(visibleRows) { row in
-                        ContentRow(row: row, viewModel: viewModel, watchedIndicator: viewModel.watchedIndicator)
+    private func rowsContent(screenHeight: CGFloat) -> some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
+                if viewModel.isMediaBarActive && sentinelEnabled {
+                    MediaBarReturnSentinel {
+                        isMediaBarMode = true
                     }
+                    .frame(height: 2)
                 }
-                .padding(.horizontal, 50)
+
+                let visibleRows = viewModel.rows.filter { !$0.isEmpty }
+                ForEach(visibleRows) { row in
+                    ContentRow(row: row, viewModel: viewModel, watchedIndicator: viewModel.watchedIndicator)
+                }
             }
+            .padding(.horizontal, 50)
+            .padding(.top, screenHeight * 0.38)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - Media Bar Return Sentinel
+
+private struct MediaBarReturnSentinel: UIViewRepresentable {
+    let onReturn: () -> Void
+
+    func makeUIView(context: Context) -> SentinelFocusView {
+        let view = SentinelFocusView()
+        view.onReturnToMediaBar = onReturn
+        return view
+    }
+
+    func updateUIView(_ uiView: SentinelFocusView, context: Context) {
+        uiView.onReturnToMediaBar = onReturn
+    }
+}
+
+private class SentinelFocusView: UIView {
+    var onReturnToMediaBar: (() -> Void)?
+    private var isFocusEnabled = true
+
+    override var canBecomeFocused: Bool { isFocusEnabled }
+
+    override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
+        super.didUpdateFocus(in: context, with: coordinator)
+        guard isFocused else { return }
+
+        if context.focusHeading.contains(.up) {
+            DispatchQueue.main.async { [weak self] in
+                self?.onReturnToMediaBar?()
+            }
+        } else {
+            isFocusEnabled = false
+            setNeedsFocusUpdate()
+            updateFocusIfNeeded()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.isFocusEnabled = true
+            }
+        }
     }
 }

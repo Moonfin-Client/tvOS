@@ -1,12 +1,15 @@
 import SwiftUI
+import Combine
 
 @MainActor
 final class HomeViewModel: ObservableObject {
     @Published private(set) var selectedItemState: SelectedItemState = .empty
     @Published private(set) var rows: [HomeRow] = []
     @Published private(set) var isInitialLoad = true
+    @Published private(set) var isMediaBarActive: Bool = false
 
     let backgroundService = BackgroundService()
+    let mediaBarViewModel: MediaBarViewModel
 
     private let container: AppContainer
     private var selectionDebounceTask: Task<Void, Never>?
@@ -26,7 +29,18 @@ final class HomeViewModel: ObservableObject {
 
     init(container: AppContainer) {
         self.container = container
+        self.mediaBarViewModel = MediaBarViewModel(container: container)
         backgroundService.configure(preferences: container.userPreferences)
+        observeMediaBar()
+    }
+
+    private func observeMediaBar() {
+        mediaBarViewModel.$state
+            .map { state in
+                if case .ready(let items) = state, !items.isEmpty { return true }
+                return false
+            }
+            .assign(to: &$isMediaBarActive)
     }
 
     private var client: MediaServerClient? {
@@ -52,11 +66,16 @@ final class HomeViewModel: ObservableObject {
     func loadContent() {
         loadTask?.cancel()
         loadTask = Task {
-            guard let client else { return }
+            guard let client else {
+                mediaBarViewModel.load()
+                return
+            }
 
             let sections = activeHomeSections()
+            let needsViews = mediaBarViewModel.isEnabled
+                || sections.contains(where: { $0 == .latestMedia || $0 == .libraryTiles })
 
-            if sections.contains(where: { $0 == .latestMedia || $0 == .libraryTiles }) {
+            if needsViews {
                 do {
                     userViews = try await client.userViewsApi.getUserViews(userId: client.userId ?? "")
                 } catch {
@@ -65,6 +84,8 @@ final class HomeViewModel: ObservableObject {
             }
 
             guard !Task.isCancelled else { return }
+
+            mediaBarViewModel.load(userViews: userViews)
 
             var builtRows: [HomeRow] = []
             dataSources = [:]

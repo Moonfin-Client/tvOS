@@ -5,7 +5,7 @@ struct Navbar: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
-    @Namespace private var navbarNamespace
+    @FocusState private var navFocusItem: NavbarItem?
 
     init(container: AppContainer) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
@@ -27,6 +27,7 @@ struct Navbar: View {
         .padding(.top, 24)
         .padding(.bottom, 16)
         .frame(height: 110)
+        .defaultFocus($navFocusItem, .home, priority: .userInitiated)
     }
 
     private var startSection: some View {
@@ -46,7 +47,7 @@ struct Navbar: View {
                 label: "Home",
                 action: { router.reset() }
             )
-            .prefersDefaultFocus(in: navbarNamespace)
+            .focused($navFocusItem, equals: .home)
 
             ExpandableToolbarButton(
                 icon: "magnifyingglass",
@@ -107,7 +108,6 @@ struct Navbar: View {
                 .fill(theme.colorScheme.surface.opacity(0.6))
         )
         .clipShape(Capsule())
-        .focusScope(navbarNamespace)
     }
 
     private var endSection: some View {
@@ -117,6 +117,10 @@ struct Navbar: View {
             }
         }
     }
+}
+
+private enum NavbarItem: Hashable {
+    case home
 }
 
 private struct UserAvatarToolbarButton: View {

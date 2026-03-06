@@ -76,20 +76,31 @@ struct MainNavigationView: View {
     @Namespace private var mainNamespace
     @Environment(\.resetFocus) private var resetFocus
 
+    private let navbarHeight: CGFloat = 110
+
     var body: some View {
         ZStack {
             Group {
                 switch navbarPosition {
                 case .top:
-                    mainContent
-                        .overlay(alignment: .top) {
-                            Navbar(container: container)
-                                .ignoresSafeArea(edges: .top)
-                        }
+                    VStack(spacing: 0) {
+                        Navbar(container: container)
+                            .frame(height: navbarHeight)
+                            .focusSection()
+                            .zIndex(1)
+
+                        mainContent
+                            .focusSection()
+                            .offset(y: -navbarHeight)
+                            .padding(.bottom, -navbarHeight)
+                    }
+                    .ignoresSafeArea(edges: .top)
                 case .left:
                     ZStack {
                         mainContent
+                            .focusSection()
                         LeftSidebar(container: container)
+                            .focusSection()
                     }
                 }
             }
@@ -117,18 +128,19 @@ struct MainNavigationView: View {
 
     private var mainContent: some View {
         NavigationStack(path: $router.path) {
-            HomeScreen(container: container)
+            HomeScreen(container: container, mainNamespace: mainNamespace)
                 .navigationDestination(for: Destination.self) { destination in
                     mainDestinationView(for: destination)
                 }
         }
+        .prefersDefaultFocus(in: mainNamespace)
     }
 
     @ViewBuilder
     private func mainDestinationView(for destination: Destination) -> some View {
         switch destination {
         case .home:
-            HomeScreen(container: container)
+            HomeScreen(container: container, mainNamespace: mainNamespace)
         case .search:
             PlaceholderView(title: "Search")
         case .libraryBrowser:
