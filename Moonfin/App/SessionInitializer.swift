@@ -10,12 +10,23 @@ final class SessionInitializer: ObservableObject {
         self.container = container
     }
 
+    private static let sessionTimeoutNs: UInt64 = 15_000_000_000
+
     func initialize(router: NavigationRouter) {
         Task {
-            async let restore: Void = container.sessionRepository.restoreSession(destroyOnly: false)
-            async let minDelay: Void = Task.sleep(nanoseconds: 2_500_000_000)
+            let restoreTask = Task {
+                await container.sessionRepository.restoreSession(destroyOnly: false)
+            }
 
-            _ = await (restore, try? minDelay)
+            let timeoutTask = Task {
+                try await Task.sleep(nanoseconds: Self.sessionTimeoutNs)
+                restoreTask.cancel()
+            }
+
+            // Wait for whichever finishes first, plus minimum splash delay
+            async let minDelay: Void = Task.sleep(nanoseconds: 2_500_000_000)
+            _ = await (restoreTask.value, try? minDelay)
+            timeoutTask.cancel()
 
             if container.sessionRepository.isAuthenticated,
                container.userRepository.currentUser.value != nil {
