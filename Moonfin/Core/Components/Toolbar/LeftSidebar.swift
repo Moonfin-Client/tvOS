@@ -14,11 +14,15 @@ struct LeftSidebar: View {
     @State private var collapseTask: Task<Void, Never>?
     @FocusState private var focusedItem: SidebarFocusItem?
 
-    static let sidebarInset: CGFloat = 70
+    let mainNamespace: Namespace.ID
+    @Environment(\.resetFocus) private var resetFocus
+
+    static let sidebarInset: CGFloat = 90
     private static let expandedWidth: CGFloat = 280
 
-    init(container: AppContainer) {
+    init(container: AppContainer, mainNamespace: Namespace.ID) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
+        self.mainNamespace = mainNamespace
     }
 
     private var isLibraryFocused: Bool {
@@ -30,9 +34,13 @@ struct LeftSidebar: View {
 
     var body: some View {
         sidebarColumn
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .ignoresSafeArea()
-            .defaultFocus($focusedItem, .home)
+            .defaultFocus($focusedItem, .home, priority: .userInitiated)
+            .onMoveCommand { direction in
+                if direction == .right {
+                    resetFocus(in: mainNamespace)
+                }
+            }
             .onChange(of: focusedItem) { newValue in
                 collapseTask?.cancel()
                 if newValue != nil {
@@ -45,13 +53,6 @@ struct LeftSidebar: View {
                     }
                 }
             }
-            .overlay(alignment: .topTrailing) {
-                if viewModel.clockBehavior != .never {
-                    ToolbarClock()
-                        .padding(.top, 24)
-                        .padding(.trailing, 32)
-                }
-            }
     }
 
     private var sidebarColumn: some View {
@@ -61,11 +62,13 @@ struct LeftSidebar: View {
 
             scrollableItems
                 .frame(maxHeight: .infinity, alignment: .center)
-                .padding(.vertical, SpaceTokens.spaceXs)
+
+            settingsSection
+                .padding(.bottom, 16)
         }
         .padding(.leading, 16)
         .padding(.trailing, 8)
-        .frame(width: Self.expandedWidth, alignment: .leading)
+        .frame(width: isExpanded ? Self.expandedWidth : Self.sidebarInset, alignment: .leading)
         .background(alignment: .leading) {
             Rectangle()
                 .fill(
@@ -91,7 +94,7 @@ struct LeftSidebar: View {
         SidebarIconItem(
             systemIcon: "person.fill",
             imageUrl: viewModel.userImageUrl,
-            label: "User",
+            label: viewModel.userName.isEmpty ? "User" : viewModel.userName,
             isExpanded: isExpanded,
             isFocused: focusedItem == .user,
             action: {
@@ -103,7 +106,7 @@ struct LeftSidebar: View {
     }
 
     private var sidebarItems: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 28) {
             SidebarIconItem(
                 systemIcon: "house",
                 label: "Home",
@@ -192,24 +195,33 @@ struct LeftSidebar: View {
                     .focused($focusedItem, equals: .library(library.id))
                 }
             }
-
-            SidebarIconItem(
-                systemIcon: "gearshape.fill",
-                label: "Settings",
-                isExpanded: isExpanded,
-                isFocused: focusedItem == .settings,
-                action: { settingsRouter.open() }
-            )
-            .focused($focusedItem, equals: .settings)
         }
     }
 
+    private var settingsSection: some View {
+        SidebarIconItem(
+            systemIcon: "gearshape.fill",
+            label: "Settings",
+            isExpanded: isExpanded,
+            isFocused: focusedItem == .settings,
+            action: { settingsRouter.open() }
+        )
+        .focused($focusedItem, equals: .settings)
+    }
+
     private var scrollableItems: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            sidebarItems
-                .frame(maxWidth: .infinity, alignment: .leading)
+        GeometryReader { geo in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    sidebarItems
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer(minLength: 0)
+                }
+                .frame(minHeight: geo.size.height)
+            }
+            .scrollDisabled(!isExpanded)
         }
-        .scrollDisabled(!isExpanded)
     }
 }
 

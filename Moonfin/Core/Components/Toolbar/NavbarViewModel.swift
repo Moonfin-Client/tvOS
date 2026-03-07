@@ -4,6 +4,7 @@ import Combine
 @MainActor
 final class NavbarViewModel: ObservableObject {
     @Published var userImageUrl: String?
+    @Published var userName: String = ""
     @Published var userViews: [ServerItem] = []
     @Published var clockBehavior: ClockBehavior = .always
 
@@ -22,9 +23,11 @@ final class NavbarViewModel: ObservableObject {
             .sink { [weak self] user in
                 guard let self else { return }
                 if let user {
+                    self.userName = user.name
                     self.loadUserImage(user: user)
                     self.loadUserViews(userId: user.id)
                 } else {
+                    self.userName = ""
                     self.userImageUrl = nil
                     self.userViews = []
                 }
