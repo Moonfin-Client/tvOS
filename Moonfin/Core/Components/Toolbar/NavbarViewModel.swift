@@ -6,14 +6,12 @@ final class NavbarViewModel: ObservableObject {
     @Published var userImageUrl: String?
     @Published var userName: String = ""
     @Published var userViews: [ServerItem] = []
-    @Published var clockBehavior: ClockBehavior = .always
 
     private let container: AppContainer
     private var cancellables = Set<AnyCancellable>()
 
     init(container: AppContainer) {
         self.container = container
-        clockBehavior = container.userPreferences[UserPreferences.clockBehavior]
         observeUser()
     }
 

@@ -7,6 +7,13 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var rows: [HomeRow] = []
     @Published private(set) var isInitialLoad = true
     @Published private(set) var isMediaBarActive: Bool = false
+    @Published private(set) var isMediaBarLoading: Bool = true
+
+    var hasFocusableContent: Bool {
+        if isMediaBarActive { return true }
+        if mediaBarViewModel.isEnabled && isMediaBarLoading { return false }
+        return rows.contains(where: { !$0.items.isEmpty })
+    }
 
     let backgroundService = BackgroundService()
     let mediaBarViewModel: MediaBarViewModel
@@ -41,6 +48,13 @@ final class HomeViewModel: ObservableObject {
                 return false
             }
             .assign(to: &$isMediaBarActive)
+
+        mediaBarViewModel.$state
+            .map { state in
+                if case .loading = state { return true }
+                return false
+            }
+            .assign(to: &$isMediaBarLoading)
     }
 
     private var client: MediaServerClient? {

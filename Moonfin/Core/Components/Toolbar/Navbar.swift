@@ -18,16 +18,12 @@ struct Navbar: View {
                 Spacer()
             }
             centerSection
-            HStack {
-                Spacer()
-                endSection
-            }
         }
-        .padding(.horizontal, 48)
-        .padding(.top, 24)
+        .padding(.leading, 32)
+        .padding(.trailing, 48)
+        .padding(.top, 12)
         .padding(.bottom, 16)
         .frame(height: 110)
-        .defaultFocus($navFocusItem, .home, priority: .userInitiated)
     }
 
     private var startSection: some View {
@@ -108,14 +104,8 @@ struct Navbar: View {
                 .fill(theme.colorScheme.surface.opacity(0.6))
         )
         .clipShape(Capsule())
-    }
-
-    private var endSection: some View {
-        Group {
-            if viewModel.clockBehavior != .never {
-                ToolbarClock()
-            }
-        }
+        .focusSection()
+        .defaultFocus($navFocusItem, .home)
     }
 }
 

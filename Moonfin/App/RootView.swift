@@ -98,21 +98,23 @@ struct MainNavigationView: View {
                 case .left:
                     ZStack(alignment: .leading) {
                         mainContent
+                            .focusSection()
                         LeftSidebar(container: container, mainNamespace: mainNamespace)
                             .ignoresSafeArea()
                             .zIndex(1)
                     }
                     .ignoresSafeArea()
-                    .overlay(alignment: .topTrailing) {
-                        if container.userPreferences[UserPreferences.clockBehavior] != .never {
-                            ToolbarClock()
-                                .padding(.top, 24)
-                                .padding(.trailing, 32)
-                        }
-                    }
                 }
             }
             .disabled(settingsRouter.isPresented)
+            .overlay(alignment: .topTrailing) {
+                if container.userPreferences[UserPreferences.clockBehavior] != .never {
+                    ToolbarClock()
+                        .frame(height: navbarHeight)
+                        .padding(.trailing, 8)
+                        .ignoresSafeArea()
+                }
+            }
 
             if settingsRouter.isPresented {
                 theme.colorScheme.scrim

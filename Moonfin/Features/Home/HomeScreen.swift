@@ -8,6 +8,7 @@ struct HomeScreen: View {
     let mainNamespace: Namespace.ID
     @State private var isMediaBarMode = true
     @State private var sentinelEnabled = false
+    @Environment(\.resetFocus) private var resetFocus
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -49,7 +50,7 @@ struct HomeScreen: View {
                     rowsContent(screenHeight: geo.size.height)
                 }
 
-                if viewModel.isInitialLoad {
+                if !viewModel.hasFocusableContent {
                     initialFocusLanding
                 }
             }
@@ -60,6 +61,13 @@ struct HomeScreen: View {
         .onDisappear { viewModel.mediaBarViewModel.cleanup() }
         .onChange(of: viewModel.isMediaBarActive) { active in
             if active { isMediaBarMode = true }
+        }
+        .onChange(of: viewModel.hasFocusableContent) { ready in
+            if ready {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    resetFocus(in: mainNamespace)
+                }
+            }
         }
     }
 

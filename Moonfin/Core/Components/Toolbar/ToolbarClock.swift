@@ -8,7 +8,7 @@ struct ToolbarClock: View {
 
     var body: some View {
         Text(timeString)
-            .font(.bodyLg)
+            .font(.titleXl)
             .fontWeight(.medium)
             .foregroundColor(theme.colorScheme.onBackground.opacity(0.9))
             .monospacedDigit()
