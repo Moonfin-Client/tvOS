@@ -9,6 +9,14 @@ struct HomeScreen: View {
     @State private var isMediaBarMode = true
     @State private var sentinelEnabled = false
 
+    private var navbarIsLeft: Bool {
+        container.userPreferences[UserPreferences.navbarPosition] == .left
+    }
+
+    private var contentLeading: CGFloat {
+        navbarIsLeft ? LeftSidebar.sidebarInset : 50
+    }
+
     init(container: AppContainer, mainNamespace: Namespace.ID) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
         self.mainNamespace = mainNamespace
@@ -34,11 +42,15 @@ struct HomeScreen: View {
                             }
                         }
                     )
-                } else {
+                } else if !viewModel.isInitialLoad {
                     backdropLayer
                     gradientOverlay
                     infoArea
                     rowsContent(screenHeight: geo.size.height)
+                }
+
+                if viewModel.isInitialLoad {
+                    initialFocusLanding
                 }
             }
         }
@@ -49,6 +61,16 @@ struct HomeScreen: View {
         .onChange(of: viewModel.isMediaBarActive) { active in
             if active { isMediaBarMode = true }
         }
+    }
+
+    private var initialFocusLanding: some View {
+        Button(action: {}) {
+            Color.white.opacity(0.001)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .buttonStyle(CleanButtonStyle())
+        .padding(.leading, navbarIsLeft ? LeftSidebar.sidebarInset : 0)
+        .prefersDefaultFocus(in: mainNamespace)
     }
 
     private var backdropLayer: some View {
@@ -137,7 +159,7 @@ struct HomeScreen: View {
                     .frame(maxWidth: 600, alignment: .leading)
             }
         }
-        .padding(.leading, 50)
+        .padding(.leading, contentLeading)
         .padding(.top, 80)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .animation(.easeInOut(duration: 0.3), value: viewModel.selectedItemState.title)
@@ -158,7 +180,8 @@ struct HomeScreen: View {
                     ContentRow(row: row, viewModel: viewModel, watchedIndicator: viewModel.watchedIndicator)
                 }
             }
-            .padding(.horizontal, 50)
+            .padding(.leading, contentLeading)
+            .padding(.trailing, 50)
             .padding(.top, screenHeight * 0.38)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

@@ -96,12 +96,13 @@ struct MainNavigationView: View {
                     }
                     .ignoresSafeArea(edges: .top)
                 case .left:
-                    ZStack {
+                    ZStack(alignment: .leading) {
                         mainContent
                             .focusSection()
                         LeftSidebar(container: container)
-                            .focusSection()
+                            .ignoresSafeArea()
                     }
+                    .ignoresSafeArea()
                 }
             }
             .disabled(settingsRouter.isPresented)
@@ -112,6 +113,7 @@ struct MainNavigationView: View {
                     .transition(.opacity)
 
                 SettingsOverlayView(focusNamespace: mainNamespace)
+                    .ignoresSafeArea()
                     .transition(.move(edge: .trailing))
             }
         }

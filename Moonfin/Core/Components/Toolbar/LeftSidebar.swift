@@ -1,96 +1,90 @@
 import SwiftUI
 
+private enum SidebarFocusItem: Hashable {
+    case user, home, search, shuffle, favorites, genres, folders, libraries, settings
+    case library(String)
+}
+
 struct LeftSidebar: View {
     @StateObject private var viewModel: NavbarViewModel
-    @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
 
     @State private var isExpanded = false
-    @State private var librariesFocused = false
     @State private var collapseTask: Task<Void, Never>?
-    @State private var librariesCollapseTask: Task<Void, Never>?
+    @FocusState private var focusedItem: SidebarFocusItem?
+
+    static let sidebarInset: CGFloat = 70
+    private static let expandedWidth: CGFloat = 280
 
     init(container: AppContainer) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
     }
 
-    private static let collapsedWidth: CGFloat = 56
-    private static let expandedWidth: CGFloat = 280
+    private var isLibraryFocused: Bool {
+        switch focusedItem {
+        case .libraries, .library: return true
+        default: return false
+        }
+    }
 
     var body: some View {
-        HStack(spacing: 0) {
-            sidebarContent
-                .frame(width: isExpanded ? Self.expandedWidth : Self.collapsedWidth)
-                .background(
-                    isExpanded
-                        ? LinearGradient(
-                            colors: [
-                                Color.black.opacity(0.9),
-                                Color.black.opacity(0.7),
-                                Color.clear
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                        : LinearGradient(
-                            colors: [Color.clear],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                )
-                .clipped()
-                .animation(.easeInOut(duration: 0.3), value: isExpanded)
-
-            Spacer()
-        }
-        .overlay(alignment: .topTrailing) {
-            if viewModel.clockBehavior != .never {
-                ToolbarClock()
-                    .padding(.top, 24)
-                    .padding(.trailing, 32)
+        sidebarColumn
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .ignoresSafeArea()
+            .defaultFocus($focusedItem, .home)
+            .onChange(of: focusedItem) { newValue in
+                collapseTask?.cancel()
+                if newValue != nil {
+                    isExpanded = true
+                } else {
+                    collapseTask = Task {
+                        try? await Task.sleep(nanoseconds: 150_000_000)
+                        guard !Task.isCancelled else { return }
+                        isExpanded = false
+                    }
+                }
             }
-        }
+            .overlay(alignment: .topTrailing) {
+                if viewModel.clockBehavior != .never {
+                    ToolbarClock()
+                        .padding(.top, 24)
+                        .padding(.trailing, 32)
+                }
+            }
     }
 
-    private func handleSidebarFocus(_ focused: Bool) {
-        collapseTask?.cancel()
-        if focused {
-            isExpanded = true
-        } else {
-            collapseTask = Task {
-                try? await Task.sleep(nanoseconds: 50_000_000)
-                guard !Task.isCancelled else { return }
-                isExpanded = false
-            }
-        }
-    }
-
-    private func handleLibraryFocus(_ focused: Bool) {
-        librariesCollapseTask?.cancel()
-        if focused {
-            librariesFocused = true
-        } else {
-            librariesCollapseTask = Task {
-                try? await Task.sleep(nanoseconds: 50_000_000)
-                guard !Task.isCancelled else { return }
-                librariesFocused = false
-            }
-        }
-    }
-
-    private var sidebarContent: some View {
+    private var sidebarColumn: some View {
         VStack(spacing: 0) {
             userSection
                 .padding(.top, 16)
 
             scrollableItems
+                .frame(maxHeight: .infinity, alignment: .center)
                 .padding(.vertical, SpaceTokens.spaceXs)
-
-            settingsItem
-                .padding(.bottom, 16)
         }
-        .padding(.horizontal, 8)
+        .padding(.leading, 16)
+        .padding(.trailing, 8)
+        .frame(width: Self.expandedWidth, alignment: .leading)
+        .background(alignment: .leading) {
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.black.opacity(0.95),
+                            Color.black.opacity(0.85),
+                            Color.black.opacity(0.6),
+                            Color.clear
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(width: isExpanded ? Self.expandedWidth : 0)
+                .animation(.easeInOut(duration: 0.25), value: isExpanded)
+        }
+        .clipped()
+        .focusSection()
     }
 
     private var userSection: some View {
@@ -99,154 +93,155 @@ struct LeftSidebar: View {
             imageUrl: viewModel.userImageUrl,
             label: "User",
             isExpanded: isExpanded,
-            onExpandedChange: handleSidebarFocus,
+            isFocused: focusedItem == .user,
             action: {
                 viewModel.switchUser()
                 router.switchFlow(to: .startup)
             }
         )
+        .focused($focusedItem, equals: .user)
     }
 
-    private var scrollableItems: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 2) {
-                SidebarIconItem(
-                    systemIcon: "house",
-                    label: "Home",
-                    isExpanded: isExpanded,
-                    onExpandedChange: handleSidebarFocus,
-                    action: { router.reset() }
-                )
+    private var sidebarItems: some View {
+        VStack(spacing: 2) {
+            SidebarIconItem(
+                systemIcon: "house",
+                label: "Home",
+                isExpanded: isExpanded,
+                isFocused: focusedItem == .home,
+                action: { router.reset() }
+            )
+            .focused($focusedItem, equals: .home)
 
-                SidebarIconItem(
-                    systemIcon: "magnifyingglass",
-                    label: "Search",
-                    isExpanded: isExpanded,
-                    onExpandedChange: handleSidebarFocus,
-                    action: { router.navigate(to: .search()) }
-                )
+            SidebarIconItem(
+                systemIcon: "magnifyingglass",
+                label: "Search",
+                isExpanded: isExpanded,
+                isFocused: focusedItem == .search,
+                action: { router.navigate(to: .search()) }
+            )
+            .focused($focusedItem, equals: .search)
 
-                SidebarIconItem(
-                    assetIcon: "shuffle",
-                    label: "Shuffle",
-                    isExpanded: isExpanded,
-                    onExpandedChange: handleSidebarFocus,
-                    action: { viewModel.performQuickShuffle(router: router) }
-                )
-                .contextMenu {
-                    ForEach(ShuffleContentType.allCases, id: \.self) { type in
-                        Button(type.displayName) {
-                            viewModel.performShuffle(contentType: type, router: router)
-                        }
+            SidebarIconItem(
+                assetIcon: "shuffle",
+                label: "Shuffle",
+                isExpanded: isExpanded,
+                isFocused: focusedItem == .shuffle,
+                action: { viewModel.performQuickShuffle(router: router) }
+            )
+            .focused($focusedItem, equals: .shuffle)
+            .contextMenu {
+                ForEach(ShuffleContentType.allCases, id: \.self) { type in
+                    Button(type.displayName) {
+                        viewModel.performShuffle(contentType: type, router: router)
                     }
                 }
-
-                SidebarIconItem(
-                    systemIcon: "heart.fill",
-                    label: "Favorites",
-                    isExpanded: isExpanded,
-                    onExpandedChange: handleSidebarFocus,
-                    action: { router.navigate(to: .allFavorites) }
-                )
-
-                SidebarIconItem(
-                    systemIcon: "theatermasks",
-                    label: "Genres",
-                    isExpanded: isExpanded,
-                    onExpandedChange: handleSidebarFocus,
-                    action: { router.navigate(to: .allGenres) }
-                )
-
-                SidebarIconItem(
-                    systemIcon: "folder.fill",
-                    label: "Folders",
-                    isExpanded: isExpanded,
-                    onExpandedChange: handleSidebarFocus,
-                    action: { router.navigate(to: .folderView) }
-                )
-
-                if !viewModel.userViews.isEmpty {
-                    librariesSection
-                }
             }
-        }
-    }
 
-    private var librariesSection: some View {
-        VStack(spacing: 2) {
+            SidebarIconItem(
+                systemIcon: "heart.fill",
+                label: "Favorites",
+                isExpanded: isExpanded,
+                isFocused: focusedItem == .favorites,
+                action: { router.navigate(to: .allFavorites) }
+            )
+            .focused($focusedItem, equals: .favorites)
+
+            SidebarIconItem(
+                systemIcon: "theatermasks",
+                label: "Genres",
+                isExpanded: isExpanded,
+                isFocused: focusedItem == .genres,
+                action: { router.navigate(to: .allGenres) }
+            )
+            .focused($focusedItem, equals: .genres)
+
+            SidebarIconItem(
+                systemIcon: "folder.fill",
+                label: "Folders",
+                isExpanded: isExpanded,
+                isFocused: focusedItem == .folders,
+                action: { router.navigate(to: .folderView) }
+            )
+            .focused($focusedItem, equals: .folders)
+
             SidebarIconItem(
                 systemIcon: "movieclapper.fill",
                 label: "Libraries",
                 isExpanded: isExpanded,
-                onExpandedChange: handleSidebarFocus,
-                onFocusChange: handleLibraryFocus,
+                isFocused: focusedItem == .libraries,
                 action: {
                     if let first = viewModel.userViews.first {
                         router.navigate(to: .libraryBrowser(itemId: first.id))
                     }
                 }
             )
+            .focused($focusedItem, equals: .libraries)
+            .opacity(viewModel.userViews.isEmpty ? 0 : 1)
+            .disabled(viewModel.userViews.isEmpty)
 
-            if isExpanded && librariesFocused {
+            if isExpanded && isLibraryFocused {
                 ForEach(viewModel.userViews, id: \.id) { library in
                     SidebarTextItem(
                         label: library.name,
-                        onFocusChange: { focused in
-                            handleSidebarFocus(focused)
-                            handleLibraryFocus(focused)
-                        },
+                        isFocused: focusedItem == .library(library.id),
                         action: {
                             router.navigate(to: .libraryBrowser(itemId: library.id))
                         }
                     )
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .focused($focusedItem, equals: .library(library.id))
                 }
             }
+
+            SidebarIconItem(
+                systemIcon: "gearshape.fill",
+                label: "Settings",
+                isExpanded: isExpanded,
+                isFocused: focusedItem == .settings,
+                action: { settingsRouter.open() }
+            )
+            .focused($focusedItem, equals: .settings)
         }
-        .animation(.easeInOut(duration: 0.2), value: librariesFocused)
     }
 
-    private var settingsItem: some View {
-        SidebarIconItem(
-            systemIcon: "gearshape.fill",
-            label: "Settings",
-            isExpanded: isExpanded,
-            onExpandedChange: handleSidebarFocus,
-            action: { settingsRouter.open() }
-        )
+    private var scrollableItems: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            sidebarItems
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollDisabled(!isExpanded)
     }
 }
 
 private struct SidebarIconItem: View {
-    var systemIcon: String?
-    var assetIcon: String?
-    var imageUrl: String?
+    let systemIcon: String?
+    let assetIcon: String?
+    let imageUrl: String?
     let label: String
     let isExpanded: Bool
-    let onExpandedChange: (Bool) -> Void
-    var onFocusChange: ((Bool) -> Void)?
+    let isFocused: Bool
     let action: () -> Void
 
-    init(systemIcon: String, imageUrl: String? = nil, label: String, isExpanded: Bool, onExpandedChange: @escaping (Bool) -> Void, onFocusChange: ((Bool) -> Void)? = nil, action: @escaping () -> Void) {
-        self.init(systemIcon: systemIcon, assetIcon: nil, imageUrl: imageUrl, label: label, isExpanded: isExpanded, onExpandedChange: onExpandedChange, onFocusChange: onFocusChange, action: action)
-    }
-
-    init(assetIcon: String, label: String, isExpanded: Bool, onExpandedChange: @escaping (Bool) -> Void, onFocusChange: ((Bool) -> Void)? = nil, action: @escaping () -> Void) {
-        self.init(systemIcon: nil, assetIcon: assetIcon, imageUrl: nil, label: label, isExpanded: isExpanded, onExpandedChange: onExpandedChange, onFocusChange: onFocusChange, action: action)
-    }
-
-    private init(systemIcon: String?, assetIcon: String?, imageUrl: String?, label: String, isExpanded: Bool, onExpandedChange: @escaping (Bool) -> Void, onFocusChange: ((Bool) -> Void)?, action: @escaping () -> Void) {
+    init(systemIcon: String, imageUrl: String? = nil, label: String, isExpanded: Bool, isFocused: Bool, action: @escaping () -> Void) {
         self.systemIcon = systemIcon
-        self.assetIcon = assetIcon
+        self.assetIcon = nil
         self.imageUrl = imageUrl
         self.label = label
         self.isExpanded = isExpanded
-        self.onExpandedChange = onExpandedChange
-        self.onFocusChange = onFocusChange
+        self.isFocused = isFocused
         self.action = action
     }
 
-    @FocusState private var isFocused: Bool
+    init(assetIcon: String, label: String, isExpanded: Bool, isFocused: Bool, action: @escaping () -> Void) {
+        self.systemIcon = nil
+        self.assetIcon = assetIcon
+        self.imageUrl = nil
+        self.label = label
+        self.isExpanded = isExpanded
+        self.isFocused = isFocused
+        self.action = action
+    }
+
     @State private var delayedShowLabel = false
     @State private var labelTask: Task<Void, Never>?
     @EnvironmentObject var theme: MoonfinTheme
@@ -254,48 +249,49 @@ private struct SidebarIconItem: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 0) {
-                iconContent
-                    .frame(width: 32, height: 32)
+                HStack(spacing: 12) {
+                    iconContent
+                        .frame(width: 32, height: 32)
 
-                if delayedShowLabel {
-                    HStack(spacing: 0) {
-                        Spacer().frame(width: 12)
+                    if delayedShowLabel {
                         Text(label)
                             .font(.bodyMd)
                             .foregroundColor(.white)
-                        Spacer().frame(width: 8)
+                            .lineLimit(1)
                     }
                 }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 2)
+                )
+
+                Spacer(minLength: 0)
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 2)
-                    .padding(.horizontal, -4)
-            )
         }
         .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-            onExpandedChange(focused)
-            onFocusChange?(focused)
-        }
         .onChange(of: isExpanded) { expanded in
             labelTask?.cancel()
             if expanded {
                 labelTask = Task {
                     try? await Task.sleep(nanoseconds: 150_000_000)
                     guard !Task.isCancelled else { return }
-                    delayedShowLabel = true
+                    var transaction = Transaction()
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) {
+                        delayedShowLabel = true
+                    }
                 }
             } else {
-                delayedShowLabel = false
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    delayedShowLabel = false
+                }
             }
         }
         .opacity(imageUrl != nil ? 1.0 : (isExpanded ? 1.0 : 0.5))
-        .animation(.easeInOut(duration: 0.2), value: isExpanded)
-        .animation(.easeInOut(duration: 0.15), value: delayedShowLabel)
     }
 
     @ViewBuilder
@@ -329,33 +325,30 @@ private struct SidebarIconItem: View {
 
 private struct SidebarTextItem: View {
     let label: String
-    var onFocusChange: ((Bool) -> Void)?
+    let isFocused: Bool
     let action: () -> Void
 
-    @FocusState private var isFocused: Bool
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 0) {
-                Spacer().frame(width: 48)
+                Spacer().frame(width: 56)
+
                 Text(label)
                     .font(.bodyMd)
                     .foregroundColor(.white)
-                Spacer().frame(width: 8)
+                    .lineLimit(1)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 2)
+                    )
+
+                Spacer(minLength: 0)
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 2)
-                    .padding(.horizontal, -4)
-            )
         }
         .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-            onFocusChange?(focused)
-        }
     }
 }

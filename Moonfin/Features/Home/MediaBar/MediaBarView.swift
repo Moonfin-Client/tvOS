@@ -13,6 +13,14 @@ struct MediaBarView: View {
 
     private let navbarClearance: CGFloat = 120
 
+    private var sidebarInset: CGFloat {
+        navbarIsLeft ? LeftSidebar.sidebarInset : 0
+    }
+
+    private var navbarIsLeft: Bool {
+        userPreferences[UserPreferences.navbarPosition] == .left
+    }
+
     private var overlayColor: Color {
         userPreferences[UserPreferences.mediaBarOverlayColor].color
     }
@@ -37,6 +45,7 @@ struct MediaBarView: View {
                     }
                     .buttonStyle(MediaBarButtonStyle())
                     .focused($isFocused)
+                    .padding(.leading, sidebarInset)
                     .prefersDefaultFocus(in: focusNamespace)
                 }
             }
@@ -74,6 +83,7 @@ struct MediaBarView: View {
                 Spacer().frame(height: navbarClearance + 20)
                 FocusableMediaBarControl(
                     isFocused: $isFocused,
+                    navbarIsLeft: navbarIsLeft,
                     onSelect: {
                         if let item = viewModel.currentItem {
                             onItemSelected(item)
@@ -84,6 +94,7 @@ struct MediaBarView: View {
                     onDown: onNavigateDown
                 )
                 .frame(height: screenHeight - navbarClearance - 120)
+                .padding(.leading, sidebarInset)
                 .prefersDefaultFocus(in: focusNamespace)
                 .onChange(of: isFocused) { focused in
                     viewModel.setFocused(focused)
@@ -286,6 +297,7 @@ private struct MediaBarButtonStyle: ButtonStyle {
 
 private struct FocusableMediaBarControl: UIViewRepresentable {
     var isFocused: FocusState<Bool>.Binding
+    let navbarIsLeft: Bool
     let onSelect: () -> Void
     let onLeft: () -> Void
     let onRight: () -> Void
@@ -294,6 +306,7 @@ private struct FocusableMediaBarControl: UIViewRepresentable {
     func makeUIView(context: Context) -> FocusablePressView {
         let view = FocusablePressView()
         view.coordinator = context.coordinator
+        view.navbarIsLeft = navbarIsLeft
         return view
     }
 
@@ -303,6 +316,7 @@ private struct FocusableMediaBarControl: UIViewRepresentable {
         context.coordinator.onRight = onRight
         context.coordinator.onDown = onDown
         context.coordinator.isFocused = isFocused
+        uiView.navbarIsLeft = navbarIsLeft
     }
 
     func makeCoordinator() -> Coordinator {
@@ -328,8 +342,15 @@ private struct FocusableMediaBarControl: UIViewRepresentable {
 
 private class FocusablePressView: UIView {
     weak var coordinator: FocusableMediaBarControl.Coordinator?
+    var navbarIsLeft = false
 
     override var canBecomeFocused: Bool { true }
+
+    private var consumedTypes: Set<UIPress.PressType> {
+        var types: Set<UIPress.PressType> = [.rightArrow, .select, .downArrow]
+        if !navbarIsLeft { types.insert(.leftArrow) }
+        return types
+    }
 
     override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
         super.didUpdateFocus(in: context, with: coordinator)
@@ -341,7 +362,8 @@ private class FocusablePressView: UIView {
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         for press in presses {
             switch press.type {
-            case .leftArrow:  coordinator?.onLeft()
+            case .leftArrow where !navbarIsLeft:
+                coordinator?.onLeft()
             case .rightArrow: coordinator?.onRight()
             case .select:     coordinator?.onSelect()
             case .downArrow:  coordinator?.onDown()
@@ -354,7 +376,8 @@ private class FocusablePressView: UIView {
     }
 
     private func isConsumedPress(_ presses: Set<UIPress>) -> Bool {
-        presses.contains { [.leftArrow, .rightArrow, .select, .downArrow].contains($0.type) }
+        let consumed = consumedTypes
+        return presses.contains { consumed.contains($0.type) }
     }
 
     override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
