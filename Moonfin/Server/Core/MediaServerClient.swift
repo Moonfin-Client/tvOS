@@ -6,6 +6,7 @@ protocol MediaServerClient: AnyObject {
     var accessToken: String? { get }
     var userId: String? { get }
     var isUsable: Bool { get }
+    var httpClient: HttpClient { get }
 
     func configure(baseURL: URL, accessToken: String?, userId: String?)
 

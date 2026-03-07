@@ -24,13 +24,14 @@ final class SessionInitializer: ObservableObject {
             }
 
             // Wait for whichever finishes first, plus minimum splash delay
-            async let minDelay: Void = Task.sleep(nanoseconds: 2_500_000_000)
+            async let minDelay = Task.sleep(nanoseconds: 2_500_000_000)
             _ = await (restoreTask.value, try? minDelay)
             timeoutTask.cancel()
 
             if container.sessionRepository.isAuthenticated,
                container.userRepository.currentUser.value != nil {
                 router.switchFlow(to: .main)
+                Task { await container.pluginSyncService.syncOnStartup() }
                 return
             }
 

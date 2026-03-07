@@ -2,7 +2,7 @@ import Foundation
 
 final class EmbyServerClient: MediaServerClient {
     let serverType: ServerType = .emby
-    private let httpClient: HttpClient
+    let httpClient: HttpClient
 
     var baseURL: URL? { httpClient.baseURL }
     var accessToken: String? { httpClient.accessToken }

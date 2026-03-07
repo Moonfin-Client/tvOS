@@ -17,6 +17,7 @@ final class HomeViewModel: ObservableObject {
 
     let backgroundService = BackgroundService()
     let mediaBarViewModel: MediaBarViewModel
+    let mediaBarRatingsViewModel: MediaBarRatingsViewModel
 
     private let container: AppContainer
     private var selectionDebounceTask: Task<Void, Never>?
@@ -37,6 +38,10 @@ final class HomeViewModel: ObservableObject {
     init(container: AppContainer) {
         self.container = container
         self.mediaBarViewModel = MediaBarViewModel(container: container)
+        self.mediaBarRatingsViewModel = MediaBarRatingsViewModel(
+            mdbListRepository: container.mdbListRepository,
+            userPreferences: container.userPreferences
+        )
         backgroundService.configure(preferences: container.userPreferences)
         observeMediaBar()
     }

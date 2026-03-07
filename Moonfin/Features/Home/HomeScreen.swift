@@ -29,6 +29,7 @@ struct HomeScreen: View {
                 if viewModel.isMediaBarActive && isMediaBarMode {
                     MediaBarView(
                         viewModel: viewModel.mediaBarViewModel,
+                        ratingsViewModel: viewModel.mediaBarRatingsViewModel,
                         userPreferences: container.userPreferences,
                         screenHeight: geo.size.height,
                         focusNamespace: mainNamespace,

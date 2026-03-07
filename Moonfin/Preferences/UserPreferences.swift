@@ -28,9 +28,15 @@ final class UserPreferences {
     static let mediaBarOverlayOpacity = Preference(key: "media_bar_overlay_opacity", defaultValue: 50)
     static let mediaBarOverlayColor = Preference(key: "media_bar_overlay_color", defaultValue: MediaBarOverlayColor.gray)
 
+    static let enableAdditionalRatings = Preference(key: "enable_additional_ratings", defaultValue: false)
+    static let enableEpisodeRatings = Preference(key: "enable_episode_ratings", defaultValue: false)
+    static let showRatingLabels = Preference(key: "show_rating_labels", defaultValue: true)
+
     static let backdropEnabled = Preference(key: "backdrop_enabled", defaultValue: true)
     static let detailsBackgroundBlur = Preference(key: "details_background_blur", defaultValue: 10)
     static let browsingBackgroundBlur = Preference(key: "browsing_background_blur", defaultValue: 10)
+
+    static let pluginSyncEnabled = Preference(key: "plugin_sync_enabled", defaultValue: false)
 
     static let telemetryEnabled = Preference(key: "telemetry_enabled", defaultValue: false)
 

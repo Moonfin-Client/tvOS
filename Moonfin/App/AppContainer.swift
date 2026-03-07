@@ -25,6 +25,7 @@ final class AppContainer: ObservableObject {
     // MARK: - Services
 
     let dataRefreshService: DataRefreshService
+    let pluginSyncService: PluginSyncService
 
     // MARK: - Repositories
 
@@ -33,6 +34,8 @@ final class AppContainer: ObservableObject {
     let sessionRepository: SessionRepositoryProtocol
     let serverUserRepository: ServerUserRepositoryProtocol
     let authenticationRepository: AuthenticationRepositoryProtocol
+    let mdbListRepository: MdbListRepository
+    let tmdbRepository: TmdbRepository
 
     init(
         preferenceStore: PreferenceStore? = nil,
@@ -76,5 +79,17 @@ final class AppContainer: ObservableObject {
         self.sessionRepository = sessionRepo
         self.serverUserRepository = serverUserRepo
         self.authenticationRepository = authRepo
+
+        let resolveClient: () -> HttpClient? = { [weak serverRepo] in
+            guard let server = serverRepo?.currentServer.value else { return nil }
+            return factory.client(for: server).httpClient
+        }
+
+        self.mdbListRepository = MdbListRepository(resolveClient: resolveClient)
+        self.tmdbRepository = TmdbRepository(resolveClient: resolveClient)
+        self.pluginSyncService = PluginSyncService(
+            preferenceStore: store,
+            resolveClient: resolveClient
+        )
     }
 }

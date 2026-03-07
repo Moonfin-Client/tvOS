@@ -13,7 +13,7 @@ final class MediaBarViewModel: ObservableObject {
     private var loadTask: Task<Void, Never>?
 
     static let autoAdvanceInterval: TimeInterval = 7
-    static let fetchFields: [ItemField] = [.overview, .genres, .primaryImageAspectRatio]
+    static let fetchFields: [ItemField] = [.overview, .genres, .primaryImageAspectRatio, .providerIds]
 
     var currentItem: MediaBarSlideItem? {
         guard case .ready(let items) = state, !items.isEmpty else { return nil }
@@ -191,7 +191,8 @@ final class MediaBarViewModel: ObservableObject {
             officialRating: item.officialRating,
             communityRating: item.communityRating,
             criticRating: item.criticRating,
-            itemType: item.type
+            itemType: item.type,
+            providerIds: item.providerIds
         )
     }
 

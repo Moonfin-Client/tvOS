@@ -5,9 +5,17 @@ struct SettingsMoonfinScreen: View {
     @EnvironmentObject var settingsRouter: SettingsRouter
 
     private var prefs: UserPreferences { container.userPreferences }
+    private var pluginEnabled: Bool { prefs[UserPreferences.pluginSyncEnabled] }
 
     var body: some View {
         SettingsScreenLayout(title: "Moonfin") {
+            SettingsToggleButton(
+                icon: "arrow.triangle.2.circlepath",
+                heading: "Plugin Sync",
+                caption: "Sync settings with Moonfin server plugin",
+                isOn: pluginSyncBinding
+            )
+
             SettingsListButton(
                 icon: "rectangle.topthird.inset.filled",
                 heading: "Navbar Position",
@@ -69,6 +77,43 @@ struct SettingsMoonfinScreen: View {
                 trailingText: prefs[UserPreferences.mediaBarOverlayColor].displayName,
                 action: { settingsRouter.navigate(to: .moonfinMediaBarColor) }
             )
+
+            if pluginEnabled {
+                SettingsToggleButton(
+                    icon: "star.fill",
+                    heading: "Additional Ratings",
+                    caption: "Show MDBList ratings on media bar",
+                    isOn: prefs.binding(for: UserPreferences.enableAdditionalRatings)
+                )
+
+                SettingsToggleButton(
+                    icon: "tv",
+                    heading: "Episode Ratings",
+                    caption: "Show TMDB episode ratings",
+                    isOn: prefs.binding(for: UserPreferences.enableEpisodeRatings)
+                )
+
+                SettingsToggleButton(
+                    icon: "textformat",
+                    heading: "Rating Labels",
+                    caption: "Show text labels next to rating icons",
+                    isOn: prefs.binding(for: UserPreferences.showRatingLabels)
+                )
+            }
         }
+    }
+
+    private var pluginSyncBinding: Binding<Bool> {
+        Binding(
+            get: { prefs[UserPreferences.pluginSyncEnabled] },
+            set: { newValue in
+                prefs[UserPreferences.pluginSyncEnabled] = newValue
+                if newValue {
+                    Task { await container.pluginSyncService.initialSync() }
+                } else {
+                    container.pluginSyncService.unregisterChangeListener()
+                }
+            }
+        )
     }
 }

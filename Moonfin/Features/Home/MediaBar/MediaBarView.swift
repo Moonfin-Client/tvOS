@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MediaBarView: View {
     @ObservedObject var viewModel: MediaBarViewModel
+    @ObservedObject var ratingsViewModel: MediaBarRatingsViewModel
     let userPreferences: UserPreferences
     let screenHeight: CGFloat
     let focusNamespace: Namespace.ID
@@ -189,6 +190,13 @@ struct MediaBarView: View {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 mediaBarMetadata(item: item)
 
+                if !ratingsViewModel.isLoading {
+                    MediaBarRatingsRow(
+                        ratings: ratingsViewModel.ratings,
+                        enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
+                    )
+                }
+
                 Text(item.overview ?? " ")
                     .font(.titleXl)
                     .foregroundColor(.white.opacity(0.85))
@@ -199,6 +207,14 @@ struct MediaBarView: View {
             .padding(.horizontal, SpaceTokens.spaceXl)
             .frame(maxWidth: .infinity, alignment: .leading)
             .animation(.easeInOut(duration: 0.3), value: viewModel.currentIndex)
+            .onChange(of: viewModel.currentIndex) { _ in
+                if let item = viewModel.currentItem {
+                    ratingsViewModel.loadRatings(for: item)
+                }
+            }
+            .onAppear {
+                ratingsViewModel.loadRatings(for: item)
+            }
         }
     }
 
@@ -216,25 +232,6 @@ struct MediaBarView: View {
                 metadataText(runtime)
             }
 
-            if let community = item.communityRating, community > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 15))
-                        .foregroundColor(.colorYellow500)
-                    metadataText(String(format: "%.1f", community))
-                }
-            }
-
-            if let critic = item.criticRating, critic > 0 {
-                let fresh = critic >= 60
-                HStack(spacing: 4) {
-                    Image(systemName: fresh ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
-                        .font(.system(size: 15))
-                        .foregroundColor(fresh ? .colorGreen500 : .colorRed500)
-                    metadataText("\(Int(critic))%")
-                }
-            }
-
             if !item.genres.isEmpty {
                 metadataText(item.genres.prefix(3).joined(separator: ", "))
             }
@@ -243,13 +240,13 @@ struct MediaBarView: View {
 
     private func metadataText(_ text: String) -> some View {
         Text(text)
-            .font(.bodyMd)
+            .font(.bodyLg)
             .foregroundColor(.white.opacity(0.7))
     }
 
     private func metadataBadge(_ text: String) -> some View {
         Text(text)
-            .font(.bodyMd)
+            .font(.bodyLg)
             .foregroundColor(.white.opacity(0.8))
             .padding(.horizontal, SpaceTokens.spaceXs)
             .padding(.vertical, 1)

@@ -14,6 +14,9 @@ struct MediaBarSlideItem: Identifiable, Equatable {
     let communityRating: Double?
     let criticRating: Double?
     let itemType: ItemType
+    let providerIds: [String: String]?
+
+    var tmdbId: String? { providerIds?["Tmdb"] }
 
     static func == (lhs: MediaBarSlideItem, rhs: MediaBarSlideItem) -> Bool {
         lhs.id == rhs.id

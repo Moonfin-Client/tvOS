@@ -161,6 +161,7 @@ struct ServerItem: Codable, Identifiable {
     let genres: [String]?
     let tags: [String]?
     let studios: [NameIdPair]?
+    let providerIds: [String: String]?
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -199,6 +200,7 @@ struct ServerItem: Codable, Identifiable {
         case genres = "Genres"
         case tags = "Tags"
         case studios = "Studios"
+        case providerIds = "ProviderIds"
     }
 }
 

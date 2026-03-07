@@ -2,7 +2,7 @@ import Foundation
 
 final class JellyfinServerClient: MediaServerClient {
     let serverType: ServerType = .jellyfin
-    private let httpClient: HttpClient
+    let httpClient: HttpClient
 
     var baseURL: URL? { httpClient.baseURL }
     var accessToken: String? { httpClient.accessToken }
