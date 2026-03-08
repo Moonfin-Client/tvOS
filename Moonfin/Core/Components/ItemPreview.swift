@@ -12,7 +12,7 @@ struct ItemPreview: View {
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             ItemCard(
                 item: item,
                 imageUrl: imageUrl,
@@ -29,9 +29,9 @@ struct ItemPreview: View {
                     .foregroundColor(theme.colorScheme.onBackground)
                     .lineLimit(1)
 
-                if let subtitle = subtitle {
-                    Text(subtitle)
-                        .font(.caption2xs)
+                if !subtitleParts.isEmpty {
+                    Text(subtitleParts.joined(separator: " • "))
+                        .font(.captionXs)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                         .lineLimit(1)
                 }
@@ -40,28 +40,42 @@ struct ItemPreview: View {
         }
     }
 
-    private var subtitle: String? {
+    private var subtitleParts: [String] {
+        var parts: [String] = []
+
         switch item.type {
+        case .movie:
+            parts.append("Movie")
+        case .series:
+            parts.append("Series")
         case .episode:
             if let s = item.parentIndexNumber, let e = item.indexNumber {
-                return "S\(s)E\(e)"
+                parts.append("S\(s)E\(e)")
             }
-            return item.seriesName
-        case .series, .movie:
-            return item.productionYear.map(String.init)
-        case .musicAlbum:
-            return item.genres?.first
-        case .playlist:
-            if let count = item.userData?.unplayedItemCount {
-                return "\(count) items"
-            }
-            return nil
         case .season:
-            return item.seriesName
+            if let name = item.seriesName {
+                parts.append(name)
+            }
+        case .musicAlbum:
+            if let genre = item.genres?.first {
+                parts.append(genre)
+            }
+        case .playlist:
+            parts.append("Playlist")
         case .person:
-            return nil
+            return []
         default:
-            return item.productionYear.map(String.init)
+            break
         }
+
+        if let year = item.productionYear, year > 0 {
+            parts.append(String(year))
+        }
+
+        if let resolution = ResolutionHelper.resolutionName(for: item) {
+            parts.append(resolution)
+        }
+
+        return parts
     }
 }

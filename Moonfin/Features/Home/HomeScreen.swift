@@ -8,6 +8,8 @@ struct HomeScreen: View {
     let mainNamespace: Namespace.ID
     @State private var isMediaBarMode = true
     @State private var sentinelEnabled = false
+    @State private var focusedRowId: String?
+    @State private var scrollTrigger: Int = 0
     @Environment(\.resetFocus) private var resetFocus
 
     private var navbarIsLeft: Bool {
@@ -48,7 +50,10 @@ struct HomeScreen: View {
                     backdropLayer
                     gradientOverlay
                     infoArea
+                        .allowsHitTesting(false)
+                        .zIndex(1)
                     rowsContent(screenHeight: geo.size.height)
+                        .zIndex(0)
                 }
 
                 if !viewModel.hasFocusableContent {
@@ -147,51 +152,95 @@ struct HomeScreen: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 60)
+                            .frame(maxHeight: 120)
                     }
                 }
             } else if !viewModel.selectedItemState.title.isEmpty {
                 Text(viewModel.selectedItemState.title)
-                    .font(.title3xl)
-                    .fontWeight(.bold)
+                    .font(.system(size: 48, weight: .bold))
                     .foregroundColor(theme.colorScheme.onBackground)
                     .lineLimit(1)
             }
 
             SimpleInfoRow(item: viewModel.selectedItemState.item)
 
+            if !viewModel.mediaBarRatingsViewModel.ratings.isEmpty {
+                MediaBarRatingsRow(
+                    ratings: viewModel.mediaBarRatingsViewModel.ratings,
+                    enableAdditionalRatings: viewModel.mediaBarRatingsViewModel.enableAdditionalRatings
+                )
+            }
+
             if !viewModel.selectedItemState.summary.isEmpty {
                 Text(viewModel.selectedItemState.summary)
-                    .font(.bodySm)
+                    .font(.titleXl)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                     .lineLimit(4)
-                    .frame(maxWidth: 600, alignment: .leading)
             }
         }
         .padding(.leading, contentLeading)
+        .padding(.trailing, 50)
         .padding(.top, 80)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .animation(.easeInOut(duration: 0.3), value: viewModel.selectedItemState.title)
     }
 
     private func rowsContent(screenHeight: CGFloat) -> some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
-                if viewModel.isMediaBarActive && sentinelEnabled {
-                    MediaBarReturnSentinel {
-                        isMediaBarMode = true
-                    }
-                    .frame(height: 2)
-                }
+        let rowsTop = screenHeight * 0.38
 
-                let visibleRows = viewModel.rows.filter { !$0.isEmpty }
-                ForEach(visibleRows) { row in
-                    ContentRow(row: row, viewModel: viewModel, watchedIndicator: viewModel.watchedIndicator)
+        return VStack(spacing: 0) {
+            Spacer()
+                .frame(height: rowsTop)
+
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
+                        if viewModel.isMediaBarActive && sentinelEnabled {
+                            MediaBarReturnSentinel {
+                                isMediaBarMode = true
+                            }
+                            .frame(height: 2)
+                        }
+
+                        let visibleRows = viewModel.rows.filter { !$0.isEmpty }
+                        ForEach(visibleRows) { row in
+                            ContentRow(
+                                row: row,
+                                viewModel: viewModel,
+                                watchedIndicator: viewModel.watchedIndicator,
+                                onRowFocused: {
+                                    focusedRowId = row.id
+                                    scrollTrigger += 1
+                                }
+                            )
+                            .id(row.id)
+                        }
+                    }
+                    .padding(.leading, contentLeading)
+                    .padding(.trailing, 50)
+                }
+                .mask(
+                    VStack(spacing: 0) {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: .black, location: 0.5)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 30)
+
+                        Color.black
+                    }
+                )
+                .onChange(of: scrollTrigger) { _ in
+                    guard let id = focusedRowId else { return }
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(id, anchor: UnitPoint(x: 0, y: 0.05))
+                    }
                 }
             }
-            .padding(.leading, contentLeading)
-            .padding(.trailing, 50)
-            .padding(.top, screenHeight * 0.38)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }

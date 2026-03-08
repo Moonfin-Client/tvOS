@@ -23,42 +23,62 @@ final class MediaBarRatingsViewModel: ObservableObject {
         guard currentItemId != item.id else { return }
         currentItemId = item.id
 
+        let communityRating = item.communityRating
+        let criticRating = item.criticRating
+
         guard enableAdditionalRatings, let tmdbId = item.tmdbId else {
-            ratings = buildFallbackRatings(item: item)
+            ratings = buildFallbackRatings(communityRating: communityRating, criticRating: criticRating)
             return
         }
 
+        fetchAndApplyRatings(itemId: item.id, tmdbId: tmdbId, type: item.itemType, communityRating: communityRating, criticRating: criticRating)
+    }
+
+    func loadRatings(for item: ServerItem) {
+        guard currentItemId != item.id else { return }
+        currentItemId = item.id
+
+        let tmdbId = item.providerIds?["Tmdb"]
+        let communityRating = item.communityRating
+        let criticRating = item.criticRating
+
+        guard enableAdditionalRatings, let tmdbId else {
+            ratings = buildFallbackRatings(communityRating: communityRating, criticRating: criticRating)
+            return
+        }
+
+        fetchAndApplyRatings(itemId: item.id, tmdbId: tmdbId, type: item.type, communityRating: communityRating, criticRating: criticRating)
+    }
+
+    private func fetchAndApplyRatings(itemId: String, tmdbId: String, type: ItemType, communityRating: Double?, criticRating: Double?) {
+        ratings = buildFallbackRatings(communityRating: communityRating, criticRating: criticRating)
         isLoading = true
         loadTask?.cancel()
-        let itemId = item.id
         loadTask = Task {
-            let apiRatings = await mdbListRepository.getRatings(
-                tmdbId: tmdbId,
-                type: item.itemType
-            )
+            defer { if currentItemId == itemId { isLoading = false } }
+
+            let apiRatings = await mdbListRepository.getRatings(tmdbId: tmdbId, type: type)
             guard !Task.isCancelled, currentItemId == itemId else { return }
 
             var result: [(String, Float)] = []
 
-            if let community = item.communityRating, community > 0 {
+            if let community = communityRating, community > 0 {
                 result.append(("stars", Float(community)))
             }
 
             if let apiRatings {
                 for (source, value) in apiRatings {
-                    if source == "tomatoes" && item.criticRating != nil { continue }
+                    if source == "tomatoes" && criticRating != nil { continue }
                     result.append((source, value))
                 }
             }
 
-            if !result.contains(where: { $0.0 == "tomatoes" }) {
-                if let critic = item.criticRating, critic > 0 {
-                    result.append(("tomatoes", Float(critic)))
-                }
+            if !result.contains(where: { $0.0 == "tomatoes" }),
+               let critic = criticRating, critic > 0 {
+                result.append(("tomatoes", Float(critic)))
             }
 
             self.ratings = result
-            self.isLoading = false
         }
     }
 
@@ -68,12 +88,12 @@ final class MediaBarRatingsViewModel: ObservableObject {
         isLoading = false
     }
 
-    private func buildFallbackRatings(item: MediaBarSlideItem) -> [(String, Float)] {
+    private func buildFallbackRatings(communityRating: Double?, criticRating: Double?) -> [(String, Float)] {
         var result: [(String, Float)] = []
-        if let community = item.communityRating, community > 0 {
+        if let community = communityRating, community > 0 {
             result.append(("stars", Float(community)))
         }
-        if let critic = item.criticRating, critic > 0 {
+        if let critic = criticRating, critic > 0 {
             result.append(("tomatoes", Float(critic)))
         }
         return result

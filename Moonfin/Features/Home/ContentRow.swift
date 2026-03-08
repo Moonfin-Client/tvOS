@@ -4,6 +4,7 @@ struct ContentRow: View {
     let row: HomeRow
     let viewModel: HomeViewModel
     var watchedIndicator: WatchedIndicatorBehavior = .always
+    var onRowFocused: (() -> Void)?
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
@@ -52,6 +53,8 @@ struct ContentRow: View {
                             }
                     }
                 }
+                .padding(.vertical, 10)
+                .padding(.leading, 6)
             }
         }
     }
@@ -63,7 +66,10 @@ struct ContentRow: View {
                 item: item,
                 imageUrl: viewModel.thumbImageUrl(for: item),
                 cardWidth: row.rowType.cardWidth,
-                onFocused: { viewModel.onItemFocused($0) }
+                onFocused: { item in
+                    viewModel.onItemFocused(item)
+                    onRowFocused?()
+                }
             )
         } else {
             ItemPreview(
@@ -72,7 +78,10 @@ struct ContentRow: View {
                 aspectRatio: row.rowType.aspectRatio,
                 cardWidth: row.rowType.cardWidth,
                 watchedIndicator: watchedIndicator,
-                onFocused: { viewModel.onItemFocused($0) }
+                onFocused: { item in
+                    viewModel.onItemFocused(item)
+                    onRowFocused?()
+                }
             )
         }
     }

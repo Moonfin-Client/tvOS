@@ -25,14 +25,14 @@ final class HomeViewModel: ObservableObject {
     private var loadTask: Task<Void, Never>?
     private var dataSources: [String: RowDataSource] = [:]
     private var userViews: [ServerItem] = []
-
+    private var cancellables = Set<AnyCancellable>()
     private static let selectionDebounceMs: UInt64 = 150_000_000
     private static let backdropDebounceMs: UInt64 = 200_000_000
     private static let chunkSize = 15
     private static let latestMediaLimit = 50
 
     private static let defaultFields: [ItemField] = [
-        .overview, .primaryImageAspectRatio, .genres, .mediaSources
+        .overview, .primaryImageAspectRatio, .genres, .mediaSources, .providerIds
     ]
 
     init(container: AppContainer) {
@@ -44,6 +44,17 @@ final class HomeViewModel: ObservableObject {
         )
         backgroundService.configure(preferences: container.userPreferences)
         observeMediaBar()
+
+        // Nested ObservableObjects don't propagate changes automatically.
+        backgroundService.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        mediaBarRatingsViewModel.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     private func observeMediaBar() {
@@ -315,6 +326,7 @@ final class HomeViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: Self.selectionDebounceMs)
             guard !Task.isCancelled else { return }
             selectedItemState = buildSelectedState(for: item)
+            mediaBarRatingsViewModel.loadRatings(for: item)
         }
 
         backdropDebounceTask?.cancel()

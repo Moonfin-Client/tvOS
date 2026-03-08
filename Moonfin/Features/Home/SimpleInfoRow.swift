@@ -19,7 +19,7 @@ struct SimpleInfoRow: View {
 
     private var separator: some View {
         Text("•")
-            .font(.captionXs)
+            .font(.bodyLg)
             .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
     }
 
@@ -44,14 +44,6 @@ struct SimpleInfoRow: View {
 
         if let resolution = ResolutionHelper.resolutionName(for: item) {
             parts.append(resolutionBadge(resolution))
-        }
-
-        if let communityRating = item.communityRating, communityRating > 0 {
-            parts.append(ratingStarView(communityRating))
-        }
-
-        if let criticRating = item.criticRating, criticRating > 0 {
-            parts.append(criticRatingView(criticRating))
         }
 
         if let genres = item.genres, !genres.isEmpty {
@@ -89,7 +81,7 @@ struct SimpleInfoRow: View {
     private func infoText(_ text: String) -> AnyView {
         AnyView(
             Text(text)
-                .font(.captionXs)
+                .font(.bodyLg)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
         )
     }
@@ -97,10 +89,10 @@ struct SimpleInfoRow: View {
     private func ratingBadge(_ rating: String) -> AnyView {
         AnyView(
             Text(rating)
-                .font(.captionXs)
+                .font(.bodyLg)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                .padding(.horizontal, SpaceTokens.spaceXs)
-                .padding(.vertical, 1)
+                .padding(.horizontal, SpaceTokens.spaceSm)
+                .padding(.vertical, 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
                         .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
@@ -111,42 +103,15 @@ struct SimpleInfoRow: View {
     private func resolutionBadge(_ resolution: String) -> AnyView {
         AnyView(
             Text(resolution)
-                .font(.captionXs)
+                .font(.bodyLg)
                 .fontWeight(.semibold)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                .padding(.horizontal, SpaceTokens.spaceXs)
-                .padding(.vertical, 1)
+                .padding(.horizontal, SpaceTokens.spaceSm)
+                .padding(.vertical, 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
                         .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
                 )
-        )
-    }
-
-    private func ratingStarView(_ rating: Double) -> AnyView {
-        AnyView(
-            HStack(spacing: 2) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(.colorYellow500)
-                Text(String(format: "%.1f", rating))
-                    .font(.captionXs)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
-            }
-        )
-    }
-
-    private func criticRatingView(_ rating: Double) -> AnyView {
-        let isFresh = rating >= 60
-        return AnyView(
-            HStack(spacing: 2) {
-                Image(systemName: isFresh ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(isFresh ? .colorGreen500 : .colorRed500)
-                Text("\(Int(rating))%")
-                    .font(.captionXs)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
-            }
         )
     }
 }

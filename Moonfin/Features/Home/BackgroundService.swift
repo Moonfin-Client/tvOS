@@ -69,7 +69,15 @@ final class BackgroundService: ObservableObject {
         blurAmount = blurAmount(for: context)
         backgrounds = urls
         currentIndex = 0
-        update()
+        currentBackdropUrl = urls.first
+        lastUpdateTime = Date()
+
+        if backgrounds.count > 1 {
+            scheduleTimer(delay: Self.slideshowInterval, advanceIndex: true)
+        } else {
+            slideshowTimer?.cancel()
+            slideshowTimer = nil
+        }
     }
 
     private func blurAmount(for context: BlurContext) -> CGFloat {

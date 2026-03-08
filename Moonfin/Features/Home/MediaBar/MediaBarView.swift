@@ -190,7 +190,7 @@ struct MediaBarView: View {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 mediaBarMetadata(item: item)
 
-                if !ratingsViewModel.isLoading {
+                if !ratingsViewModel.ratings.isEmpty {
                     MediaBarRatingsRow(
                         ratings: ratingsViewModel.ratings,
                         enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
