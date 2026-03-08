@@ -156,8 +156,8 @@ struct MainNavigationView: View {
         switch destination {
         case .home:
             HomeScreen(container: container, mainNamespace: mainNamespace)
-        case .search:
-            PlaceholderView(title: "Search")
+        case .search(let query):
+            SearchScreen(container: container, query: query)
         case .libraryBrowser(let itemId, _, let serverId, _):
             LibraryBrowseScreen(container: container, parentId: itemId, serverId: serverId)
         case .libraryBrowserByType(let itemId, let includeType):
