@@ -23,6 +23,7 @@ struct ItemDetailUiState {
     var albums: [ServerItem] = []
     var specialFeatures: [ServerItem] = []
     var filmography: [ServerItem] = []
+    var instantMixItems: [ServerItem] = []
     var isFavorite: Bool = false
     var isPlayed: Bool = false
 }
@@ -305,12 +306,14 @@ final class ItemDetailViewModel: ObservableObject {
             await loadFilmography(personId: item.id, client: client)
 
         case .musicArtist:
-            async let albumsTask: () = loadAlbums(artistId: item.id, client: client)
+            async let albumsTask: () = loadArtistAlbums(artistId: item.id, client: client)
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
             _ = await (albumsTask, similarTask)
 
         case .musicAlbum, .playlist:
-            await loadTracks(albumId: item.id, client: client)
+            async let tracksTask: () = loadTracks(albumId: item.id, client: client)
+            async let similarTask: () = loadSimilar(itemId: item.id, client: client)
+            _ = await (tracksTask, similarTask)
 
         case .movie, .video:
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
@@ -395,22 +398,37 @@ final class ItemDetailViewModel: ObservableObject {
     private func loadTracks(albumId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getItems(
-                request: GetItemsRequest(parentId: albumId, sortBy: [.sortName])
+                request: GetItemsRequest(parentId: albumId)
             )
             state.tracks = result.items
         } catch { }
     }
 
-    private func loadAlbums(artistId: String, client: MediaServerClient) async {
+    private func loadArtistAlbums(artistId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getItems(
                 request: GetItemsRequest(
-                    parentId: artistId,
+                    recursive: true,
                     includeItemTypes: [.musicAlbum],
-                    sortBy: [.sortName]
+                    sortBy: [.premiereDate],
+                    sortOrder: .descending,
+                    artistIds: [artistId],
+                    enableUserData: true
                 )
             )
             state.albums = result.items
+        } catch { }
+    }
+
+    func loadInstantMix() async {
+        guard let item = state.item, let client else { return }
+        do {
+            let result = try await client.instantMixApi.getInstantMix(
+                itemId: item.id,
+                userId: client.userId,
+                limit: 50
+            )
+            state.instantMixItems = result.items
         } catch { }
     }
 

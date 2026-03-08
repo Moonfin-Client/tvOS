@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum ActionButtonID: Hashable {
-    case resume, play, nextEpisode, watched, favorite, goToSeries
+    case resume, play, shuffle, instantMix, nextEpisode, watched, favorite, goToSeries
 }
 
 struct ActionButtonsRow: View {
@@ -17,6 +17,8 @@ struct ActionButtonsRow: View {
     let onToggleFavorite: () -> Void
     let onGoToSeries: (() -> Void)?
     let onNextEpisode: (() -> Void)?
+    let onShuffle: (() -> Void)?
+    let onInstantMix: (() -> Void)?
 
     var body: some View {
         HStack {
@@ -38,6 +40,24 @@ struct ActionButtonsRow: View {
                     action: onPlay
                 )
                 .focused(focusedButton, equals: .play)
+
+                if let onShuffle {
+                    ActionButton(
+                        label: "Shuffle",
+                        icon: "shuffle",
+                        action: onShuffle
+                    )
+                    .focused(focusedButton, equals: .shuffle)
+                }
+
+                if let onInstantMix {
+                    ActionButton(
+                        label: "Instant Mix",
+                        icon: "wand.and.stars",
+                        action: onInstantMix
+                    )
+                    .focused(focusedButton, equals: .instantMix)
+                }
 
                 if let onNextEpisode {
                     ActionButton(

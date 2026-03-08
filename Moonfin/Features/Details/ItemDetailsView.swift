@@ -6,7 +6,7 @@ struct ItemDetailsView: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @FocusState private var focusedButton: ActionButtonID?
-    @State private var showFullBiography = false
+    @State private var showFullBio = false
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -361,7 +361,8 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func actionButtonsSection(item: ServerItem) -> some View {
-        let canPlay = [ItemType.movie, .episode, .video, .series, .season, .musicAlbum, .playlist, .musicArtist].contains(item.type)
+        let isMusicType = [ItemType.musicAlbum, .musicArtist, .playlist].contains(item.type)
+        let canPlay = isMusicType || [ItemType.movie, .episode, .video, .series, .season].contains(item.type)
         let showGoToSeries = item.type == .episode && item.seriesId != nil
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
 
@@ -387,6 +388,15 @@ struct ItemDetailsView: View {
                 onNextEpisode: hasNextEpisode ? {
                     if let nextEp = viewModel.nextEpisode {
                         router.navigate(to: .itemDetails(itemId: nextEp.id, serverId: nextEp.serverId))
+                    }
+                } : nil,
+                onShuffle: isMusicType ? {
+                    router.navigate(to: .videoPlayer(position: 0))
+                } : nil,
+                onInstantMix: isMusicType ? {
+                    Task {
+                        await viewModel.loadInstantMix()
+                        router.navigate(to: .videoPlayer(position: 0))
                     }
                 } : nil
             )
@@ -529,14 +539,10 @@ struct ItemDetailsView: View {
 
             if let overview = item.overview, !overview.isEmpty {
                 detailSection(title: "Biography", id: "biography") {
-                    Text(overview)
-                        .font(.bodyLg)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                        .lineLimit(showFullBiography ? nil : 6)
-                        .padding(.horizontal, SpaceTokens.spaceSm)
-                        .onLongPressGesture {
-                            showFullBiography.toggle()
-                        }
+                    ExpandableBioText(
+                        text: overview,
+                        isExpanded: $showFullBio
+                    )
                 }
             }
         }
@@ -591,15 +597,24 @@ struct ItemDetailsView: View {
     private func musicSections() -> some View {
         if !viewModel.state.tracks.isEmpty {
             detailSection(title: "Tracks", id: "tracks") {
-                trackList(items: viewModel.state.tracks)
+                interactiveTrackList(items: viewModel.state.tracks)
             }
         }
+        similarSection
     }
 
     @ViewBuilder
     private func artistSections() -> some View {
+        if let item = viewModel.state.item, let bio = item.overview, !bio.isEmpty {
+            detailSection(title: "Biography", id: "artistBio") {
+                ExpandableBioText(
+                    text: bio,
+                    isExpanded: $showFullBio
+                )
+            }
+        }
         if !viewModel.state.albums.isEmpty {
-            detailSection(title: "Albums", id: "albums") {
+            detailSection(title: "Discography", id: "albums") {
                 itemRow(items: viewModel.state.albums, aspectRatio: 1.0)
             }
         }
@@ -753,31 +768,15 @@ struct ItemDetailsView: View {
         }
     }
 
-    private func trackList(items: [ServerItem]) -> some View {
+    private func interactiveTrackList(items: [ServerItem]) -> some View {
         VStack(spacing: 0) {
             ForEach(items) { track in
-                HStack {
-                    if let num = track.indexNumber {
-                        Text("\(num)")
-                            .font(.bodyMd)
-                            .foregroundColor(theme.colorScheme.listCaption)
-                            .frame(width: 40, alignment: .trailing)
+                FocusableTrackRow(
+                    track: track,
+                    onSelect: {
+                        router.navigate(to: .videoPlayer(position: 0))
                     }
-                    Text(track.name)
-                        .font(.bodyMd)
-                        .foregroundColor(theme.colorScheme.onBackground)
-                    Spacer()
-                    if let ticks = track.runTimeTicks {
-                        Text(RuntimeFormatter.format(ticks: ticks))
-                            .font(.bodySm)
-                            .foregroundColor(theme.colorScheme.listCaption)
-                    }
-                }
-                .padding(.horizontal, SpaceTokens.spaceMd)
-                .padding(.vertical, SpaceTokens.spaceSm)
-
-                Divider()
-                    .background(theme.colorScheme.onBackground.opacity(0.1))
+                )
             }
         }
     }
@@ -1068,5 +1067,81 @@ private struct FocusableEpisodeCard: View {
         .focused($isFocused)
         .scaleEffect(isFocused ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct ExpandableBioText: View {
+    let text: String
+    @Binding var isExpanded: Bool
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button {
+            isExpanded.toggle()
+        } label: {
+            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                Text(text)
+                    .font(.bodyLg)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                    .lineLimit(isExpanded ? nil : 6)
+                    .padding(.horizontal, SpaceTokens.spaceSm)
+
+                if !isExpanded {
+                    Text("Press to expand")
+                        .font(.captionXs)
+                        .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.onBackground.opacity(0.4))
+                        .padding(.horizontal, SpaceTokens.spaceSm)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, SpaceTokens.spaceSm)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(isFocused ? Color.white.opacity(0.08) : Color.clear)
+            )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+    }
+}
+
+private struct FocusableTrackRow: View {
+    let track: ServerItem
+    let onSelect: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: SpaceTokens.spaceSm) {
+                if let num = track.indexNumber {
+                    Text("\(num)")
+                        .font(.bodyMd)
+                        .foregroundColor(isFocused ? .white : theme.colorScheme.listCaption)
+                        .frame(width: 40, alignment: .trailing)
+                }
+                Text(track.name)
+                    .font(.bodyMd)
+                    .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground)
+                    .lineLimit(1)
+                Spacer()
+                if let ticks = track.runTimeTicks {
+                    Text(RuntimeFormatter.format(ticks: ticks))
+                        .font(.bodySm)
+                        .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.listCaption)
+                }
+            }
+            .padding(.horizontal, SpaceTokens.spaceMd)
+            .padding(.vertical, SpaceTokens.spaceSm)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(isFocused ? theme.accent : Color.clear)
+            )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
     }
 }
