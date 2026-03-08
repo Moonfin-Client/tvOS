@@ -184,6 +184,8 @@ struct MainNavigationView: View {
                 includeTypes: includeType.flatMap { ItemType(rawValue: $0) }.map { [$0] },
                 genreName: genreName
             )
+        case .musicBrowser(let itemId, let serverId, _):
+            MusicBrowseScreen(container: container, parentId: itemId, serverId: serverId)
         case .itemDetails(let itemId, let serverId):
             ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
         case .nowPlaying:

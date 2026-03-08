@@ -89,7 +89,11 @@ struct Navbar: View {
                     libraries: viewModel.userViews,
                     activeLibraryId: nil,
                     onLibrarySelected: { library in
-                        router.navigate(to: .libraryBrowser(itemId: library.id))
+                        if library.collectionType == "music" {
+                            router.navigate(to: .musicBrowser(itemId: library.id))
+                        } else {
+                            router.navigate(to: .libraryBrowser(itemId: library.id))
+                        }
                     }
                 )
             }

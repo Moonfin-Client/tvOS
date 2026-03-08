@@ -165,6 +165,13 @@ struct ServerItem: Codable, Identifiable {
     let providerIds: [String: String]?
     let endDate: Date?
     let productionLocations: [String]?
+    let artists: [String]?
+    let albumArtists: [NameIdPair]?
+    let albumArtist: String?
+    let albumId: String?
+    let albumPrimaryImageTag: String?
+    let childCount: Int?
+    let albumCount: Int?
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -207,6 +214,13 @@ struct ServerItem: Codable, Identifiable {
         case providerIds = "ProviderIds"
         case endDate = "EndDate"
         case productionLocations = "ProductionLocations"
+        case artists = "Artists"
+        case albumArtists = "AlbumArtists"
+        case albumArtist = "AlbumArtist"
+        case albumId = "AlbumId"
+        case albumPrimaryImageTag = "AlbumPrimaryImageTag"
+        case childCount = "ChildCount"
+        case albumCount = "AlbumCount"
     }
 }
 
