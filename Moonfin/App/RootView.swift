@@ -156,8 +156,8 @@ struct MainNavigationView: View {
             PlaceholderView(title: "Search")
         case .libraryBrowser:
             PlaceholderView(title: "Library")
-        case .itemDetails(let itemId, _):
-            PlaceholderView(title: "Item: \(itemId)")
+        case .itemDetails(let itemId, let serverId):
+            ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
         case .nowPlaying:
             PlaceholderView(title: "Now Playing")
         case .videoPlayer:
