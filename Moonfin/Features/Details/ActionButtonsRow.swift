@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum ActionButtonID: Hashable {
-    case resume, play, watched, favorite, goToSeries
+    case resume, play, nextEpisode, watched, favorite, goToSeries
 }
 
 struct ActionButtonsRow: View {
@@ -16,6 +16,7 @@ struct ActionButtonsRow: View {
     let onToggleWatched: () -> Void
     let onToggleFavorite: () -> Void
     let onGoToSeries: (() -> Void)?
+    let onNextEpisode: (() -> Void)?
 
     var body: some View {
         HStack {
@@ -37,6 +38,15 @@ struct ActionButtonsRow: View {
                     action: onPlay
                 )
                 .focused(focusedButton, equals: .play)
+
+                if let onNextEpisode {
+                    ActionButton(
+                        label: "Next",
+                        icon: "forward.fill",
+                        action: onNextEpisode
+                    )
+                    .focused(focusedButton, equals: .nextEpisode)
+                }
 
                 ActionButton(
                     label: isPlayed ? "Watched" : "Unwatched",
@@ -102,14 +112,14 @@ private struct ActionButton: View {
                 Text(label)
                     .font(.captionXs)
                     .fontWeight(.semibold)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                    .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground.opacity(0.8))
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
 
                 if let detail {
                     Text(detail)
                         .font(.caption2xs)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(isFocused ? 0.9 : 0.5))
+                        .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.onBackground.opacity(0.5))
                         .lineLimit(isFocused ? 2 : 1)
                         .fixedSize(horizontal: true, vertical: false)
                 }
@@ -124,7 +134,7 @@ private struct ActionButton: View {
 
     private var backgroundColor: Color {
         if isFocused {
-            return theme.colorScheme.buttonFocused
+            return .white
         }
         if isActive {
             return theme.colorScheme.buttonActive
@@ -134,17 +144,14 @@ private struct ActionButton: View {
 
     private var borderColor: Color {
         if isFocused {
-            return theme.focusBorder.color
+            return .clear
         }
         return Color.white.opacity(0.15)
     }
 
     private var iconColor: Color {
         if isFocused {
-            if isActive, let activeColor {
-                return activeColor
-            }
-            return theme.colorScheme.onButtonFocused
+            return Color(white: 0.3)
         }
         if isActive, let activeColor {
             return activeColor

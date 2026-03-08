@@ -146,6 +146,13 @@ struct ItemDetailsView: View {
 
             HStack(alignment: .top, spacing: SpaceTokens.spaceXl) {
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+                    if (item.type == .episode || item.type == .season),
+                       let seriesName = item.seriesName {
+                        Text(seriesName)
+                            .font(.title2xl)
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    }
+
                     if let logoUrl = viewModel.logoUrl(for: item),
                        let url = URL(string: logoUrl) {
                         AsyncImage(url: url) { phase in
@@ -184,7 +191,7 @@ struct ItemDetailsView: View {
 
                     if let overview = item.overview, !overview.isEmpty {
                         Text(overview)
-                            .font(.bodyLg)
+                            .font(.titleXl)
                             .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                             .lineLimit(5)
                             .padding(.top, SpaceTokens.spaceXs)
@@ -213,6 +220,13 @@ struct ItemDetailsView: View {
 
     private func detailInfoRow(item: ServerItem) -> some View {
         HStack(spacing: SpaceTokens.spaceSm) {
+            if item.type == .episode,
+               let season = item.parentIndexNumber,
+               let episode = item.indexNumber {
+                infoText("S\(season):E\(episode)")
+                infoSeparator
+            }
+
             if let year = item.productionYear, year > 0 {
                 infoText(String(year))
                 infoSeparator
@@ -332,6 +346,7 @@ struct ItemDetailsView: View {
     private func actionButtonsSection(item: ServerItem) -> some View {
         let canPlay = [ItemType.movie, .episode, .video, .series, .season, .musicAlbum, .playlist, .musicArtist].contains(item.type)
         let showGoToSeries = item.type == .episode && item.seriesId != nil
+        let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
 
         if canPlay || item.userData != nil {
             ActionButtonsRow(
@@ -350,6 +365,11 @@ struct ItemDetailsView: View {
                 onGoToSeries: showGoToSeries ? {
                     if let seriesId = item.seriesId {
                         router.navigate(to: .itemDetails(itemId: seriesId))
+                    }
+                } : nil,
+                onNextEpisode: hasNextEpisode ? {
+                    if let nextEp = viewModel.nextEpisode {
+                        router.navigate(to: .itemDetails(itemId: nextEp.id, serverId: nextEp.serverId))
                     }
                 } : nil
             )
@@ -424,12 +444,12 @@ struct ItemDetailsView: View {
     private func seriesSections() -> some View {
         if !viewModel.state.nextUp.isEmpty {
             detailSection(title: "Next Up", id: "nextUp") {
-                itemRow(items: viewModel.state.nextUp, imageType: .thumb, aspectRatio: 16.0/9.0)
+                episodeList(items: viewModel.state.nextUp)
             }
         }
         if !viewModel.state.seasons.isEmpty {
             detailSection(title: "Seasons", id: "seasons") {
-                itemRow(items: viewModel.state.seasons)
+                seasonRow
             }
         }
         castSection
@@ -440,13 +460,28 @@ struct ItemDetailsView: View {
     private func seasonSections() -> some View {
         if !viewModel.state.episodes.isEmpty {
             detailSection(title: "Episodes", id: "episodes") {
-                itemRow(items: viewModel.state.episodes, imageType: .thumb, aspectRatio: 16.0/9.0)
+                episodeList(items: viewModel.state.episodes)
             }
         }
+        castSection
+        similarSection
     }
 
     @ViewBuilder
     private func episodeSections() -> some View {
+        if let nextEp = viewModel.nextEpisode {
+            detailSection(title: "Next Episode", id: "nextEp") {
+                episodeList(items: [nextEp])
+            }
+        }
+        if viewModel.state.episodes.count > 1 {
+            let others = viewModel.state.episodes.filter { $0.id != viewModel.state.item?.id }
+            if !others.isEmpty {
+                detailSection(title: "More from This Season", id: "moreEpisodes") {
+                    itemRow(items: others, imageType: .thumb, aspectRatio: 16.0/9.0, cardWidth: 280)
+                }
+            }
+        }
         castSection
         similarSection
     }
@@ -549,9 +584,10 @@ struct ItemDetailsView: View {
     private func itemRow(
         items: [ServerItem],
         imageType: ImageType = .primary,
-        aspectRatio: CGFloat = 2.0/3.0
+        aspectRatio: CGFloat = 2.0/3.0,
+        cardWidth overrideWidth: CGFloat? = nil
     ) -> some View {
-        let cardWidth: CGFloat = aspectRatio >= 1.0 ? 200 : 160
+        let cardWidth: CGFloat = overrideWidth ?? (aspectRatio >= 1.0 ? 200 : 160)
         let cardHeight = cardWidth / aspectRatio
 
         return ScrollView(.horizontal, showsIndicators: false) {
@@ -590,6 +626,38 @@ struct ItemDetailsView: View {
             }
             .padding(.horizontal, SpaceTokens.spaceSm)
             .padding(.vertical, SpaceTokens.spaceSm)
+        }
+    }
+
+    private var seasonRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: SpaceTokens.spaceMd) {
+                ForEach(viewModel.state.seasons) { season in
+                    FocusableSeasonCard(
+                        item: season,
+                        imageUrl: viewModel.imageUrl(for: season, maxWidth: 320),
+                        onSelect: {
+                            router.navigate(to: .itemDetails(itemId: season.id, serverId: season.serverId))
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, SpaceTokens.spaceSm)
+        }
+    }
+
+    private func episodeList(items: [ServerItem]) -> some View {
+        VStack(spacing: SpaceTokens.spaceSm) {
+            ForEach(items) { episode in
+                FocusableEpisodeCard(
+                    item: episode,
+                    imageUrl: viewModel.imageUrl(for: episode, imageType: .thumb, maxWidth: 560),
+                    onSelect: {
+                        router.navigate(to: .itemDetails(itemId: episode.id, serverId: episode.serverId))
+                    }
+                )
+            }
         }
     }
 
@@ -722,6 +790,191 @@ private struct FocusableCastCard: View {
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
         .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct FocusableSeasonCard: View {
+    let item: ServerItem
+    let imageUrl: String?
+    let onSelect: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    private let cardWidth: CGFloat = 160
+    private var cardHeight: CGFloat { cardWidth / (2.0 / 3.0) }
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                ZStack {
+                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let image) = phase {
+                                image.resizable().aspectRatio(contentMode: .fill)
+                            } else {
+                                theme.colorScheme.surface
+                            }
+                        }
+                        .frame(width: cardWidth, height: cardHeight)
+                        .clipped()
+                    } else {
+                        theme.colorScheme.surface
+                            .frame(width: cardWidth, height: cardHeight)
+                    }
+
+                    if let count = item.userData?.unplayedItemCount, count > 0 {
+                        Text("\(count)")
+                            .font(.caption2xs)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(theme.accent)
+                            .clipShape(Capsule())
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                            .padding(6)
+                    } else if item.userData?.played ?? false {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.colorGreen500)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                            .padding(6)
+                    }
+
+                    if let progress = item.userData?.playedPercentage, progress > 0 {
+                        VStack {
+                            Spacer()
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    Rectangle()
+                                        .fill(Color.black.opacity(0.5))
+                                        .frame(height: 4)
+                                    Rectangle()
+                                        .fill(theme.accent)
+                                        .frame(width: geo.size.width * CGFloat(progress / 100.0), height: 4)
+                                }
+                            }
+                            .frame(height: 4)
+                        }
+                    }
+                }
+                .cornerRadius(RadiusTokens.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                )
+
+                Text(item.name)
+                    .font(.bodySm)
+                    .foregroundColor(theme.colorScheme.onBackground)
+                    .lineLimit(1)
+                    .frame(width: cardWidth, alignment: .leading)
+            }
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct FocusableEpisodeCard: View {
+    let item: ServerItem
+    let imageUrl: String?
+    let onSelect: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    private let thumbWidth: CGFloat = 280
+    private let thumbHeight: CGFloat = 158
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(alignment: .top, spacing: SpaceTokens.spaceMd) {
+                ZStack {
+                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let image) = phase {
+                                image.resizable().aspectRatio(contentMode: .fill)
+                            } else {
+                                theme.colorScheme.surface
+                            }
+                        }
+                        .frame(width: thumbWidth, height: thumbHeight)
+                        .clipped()
+                    } else {
+                        theme.colorScheme.surface
+                            .frame(width: thumbWidth, height: thumbHeight)
+                    }
+
+                    if let progress = item.userData?.playedPercentage, progress > 0,
+                       !(item.userData?.played ?? false) {
+                        VStack {
+                            Spacer()
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    Rectangle()
+                                        .fill(Color.black.opacity(0.5))
+                                        .frame(height: 4)
+                                    Rectangle()
+                                        .fill(theme.accent)
+                                        .frame(width: geo.size.width * CGFloat(progress / 100.0), height: 4)
+                                }
+                            }
+                            .frame(height: 4)
+                        }
+                    }
+
+                    if item.userData?.played ?? false {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.colorGreen500)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                            .padding(6)
+                    }
+                }
+                .cornerRadius(RadiusTokens.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                )
+
+                VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                    if let num = item.indexNumber {
+                        Text("Episode \(num)")
+                            .font(.captionXs)
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
+                    }
+
+                    Text(item.name)
+                        .font(.bodyLg)
+                        .fontWeight(.semibold)
+                        .foregroundColor(theme.colorScheme.onBackground)
+                        .lineLimit(1)
+
+                    if let ticks = item.runTimeTicks, ticks > 0 {
+                        Text(RuntimeFormatter.format(ticks: ticks))
+                            .font(.captionXs)
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+                    }
+
+                    if let overview = item.overview, !overview.isEmpty {
+                        Text(overview)
+                            .font(.bodySm)
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                            .lineLimit(3)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, SpaceTokens.spaceXs)
+            }
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .scaleEffect(isFocused ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }

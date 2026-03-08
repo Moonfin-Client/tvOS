@@ -59,6 +59,12 @@ final class ItemDetailViewModel: ObservableObject {
         (state.item?.userData?.playbackPositionTicks ?? 0) > 0
     }
 
+    var nextEpisode: ServerItem? {
+        guard let item = state.item,
+              let currentIndex = item.indexNumber else { return nil }
+        return state.episodes.first { ($0.indexNumber ?? 0) > currentIndex }
+    }
+
     var resumePositionText: String? {
         guard let ticks = state.item?.userData?.playbackPositionTicks, ticks > 0 else { return nil }
         return RuntimeFormatter.format(ticks: ticks)
@@ -228,16 +234,36 @@ final class ItemDetailViewModel: ObservableObject {
 
     func imageUrl(for item: ServerItem, imageType: ImageType = .primary, maxWidth: Int = 400) -> String? {
         guard let client else { return nil }
+        let resolvedType: ImageType
         let tag: String?
         switch imageType {
-        case .primary: tag = item.imageTags?["Primary"]
-        case .backdrop: tag = item.backdropImageTags?.first
-        case .thumb: tag = item.imageTags?["Thumb"]
-        default: tag = nil
+        case .primary:
+            tag = item.imageTags?["Primary"]
+            resolvedType = .primary
+        case .backdrop:
+            tag = item.backdropImageTags?.first
+            resolvedType = .backdrop
+        case .thumb:
+            if let t = item.imageTags?["Thumb"] {
+                tag = t
+                resolvedType = .thumb
+            } else if let t = item.imageTags?["Primary"] {
+                tag = t
+                resolvedType = .primary
+            } else if let t = item.backdropImageTags?.first {
+                tag = t
+                resolvedType = .backdrop
+            } else {
+                tag = nil
+                resolvedType = .thumb
+            }
+        default:
+            tag = nil
+            resolvedType = imageType
         }
         return client.imageApi.getItemImageUrl(
             itemId: item.id,
-            imageType: imageType,
+            imageType: resolvedType,
             maxWidth: maxWidth,
             maxHeight: nil,
             tag: tag
@@ -256,15 +282,20 @@ final class ItemDetailViewModel: ObservableObject {
 
         case .season:
             guard let seriesId = item.seriesId else { return }
-            await loadEpisodes(seriesId: seriesId, seasonId: item.id, userId: userId, client: client)
+            async let episodesTask: () = loadEpisodes(seriesId: seriesId, seasonId: item.id, userId: userId, client: client)
+            async let similarTask: () = loadSimilar(itemId: item.id, client: client)
+            _ = await (episodesTask, similarTask)
 
         case .episode:
             let seriesId = item.seriesId ?? ""
             let seasonId = item.seasonId ?? item.parentId ?? ""
             if !seriesId.isEmpty && !seasonId.isEmpty {
-                await loadEpisodes(seriesId: seriesId, seasonId: seasonId, userId: userId, client: client)
+                async let episodesTask: () = loadEpisodes(seriesId: seriesId, seasonId: seasonId, userId: userId, client: client)
+                async let similarTask: () = loadSimilar(itemId: item.id, client: client)
+                _ = await (episodesTask, similarTask)
+            } else {
+                await loadSimilar(itemId: item.id, client: client)
             }
-            await loadSimilar(itemId: item.id, client: client)
 
         case .boxSet:
             await loadCollectionItems(itemId: item.id, client: client)
@@ -304,7 +335,7 @@ final class ItemDetailViewModel: ObservableObject {
     private func loadNextUp(seriesId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getNextUp(
-                request: GetNextUpRequest(seriesId: seriesId, limit: 1)
+                request: GetNextUpRequest(seriesId: seriesId, fields: [.overview], limit: 1)
             )
             state.nextUp = result.items
         } catch { }

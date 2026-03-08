@@ -155,6 +155,7 @@ struct EmbyItemsApi: ServerItemsApi {
         let query = buildQuery([
             ("SeasonId", seasonId),
             ("UserId", userId),
+            ("Fields", "Overview"),
         ])
         return try await client.request("/Shows/\(seriesId)/Episodes", queryItems: query)
     }
