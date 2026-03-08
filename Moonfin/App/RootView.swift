@@ -169,11 +169,9 @@ struct MainNavigationView: View {
         case .collectionBrowser(let itemId, let serverId, _):
             LibraryBrowseScreen(container: container, parentId: itemId, serverId: serverId)
         case .allFavorites:
-            LibraryBrowseScreen(
-                container: container,
-                parentId: "",
-                includeTypes: [.movie, .series, .episode, .musicAlbum, .audio]
-            )
+            FavoritesScreen(container: container)
+        case .librarySuggestions(let itemId):
+            SuggestedScreen(container: container, parentId: itemId)
         case .allGenres:
             GenreBrowseScreen(container: container)
         case .genreBrowse(let genreName, let parentId, let includeType, let serverId):
