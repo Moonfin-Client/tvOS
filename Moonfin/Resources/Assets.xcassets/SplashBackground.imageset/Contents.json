@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "splash-background.png",
+      "filename" : "moonfin_1920x1080.png",
       "idiom" : "tv",
       "scale" : "1x"
     },
     {
-      "filename" : "splash-background.png",
+      "filename" : "moonfin_3840x2160.png",
       "idiom" : "tv",
       "scale" : "2x"
     }
