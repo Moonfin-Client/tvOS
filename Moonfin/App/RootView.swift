@@ -186,6 +186,10 @@ struct MainNavigationView: View {
             )
         case .musicBrowser(let itemId, let serverId, _):
             MusicBrowseScreen(container: container, parentId: itemId, serverId: serverId)
+        case .folderView:
+            FolderBrowseScreen(container: container)
+        case .folderBrowser(let itemId, _, _):
+            FolderBrowseScreen(container: container, folderId: itemId)
         case .itemDetails(let itemId, let serverId):
             ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
         case .nowPlaying:
