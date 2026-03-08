@@ -188,6 +188,14 @@ struct JellyfinUserLibraryApi: ServerUserLibraryApi {
         return try await client.request("/Users/\(userId)/Items/\(itemId)/SpecialFeatures")
     }
 
+    func getThemeMedia(itemId: String, userId: String, inheritFromParent: Bool) async throws -> AllThemeMediaResult {
+        let query = buildQuery([
+            ("UserId", userId),
+            ("InheritFromParent", String(inheritFromParent)),
+        ])
+        return try await client.request("/Items/\(itemId)/ThemeMedia", queryItems: query)
+    }
+
     func markFavorite(itemId: String, userId: String) async throws -> UserItemData {
         try await client.request("/Users/\(userId)/FavoriteItems/\(itemId)", method: "POST")
     }

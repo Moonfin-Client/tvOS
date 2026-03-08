@@ -38,6 +38,9 @@ final class UserPreferences {
 
     static let pluginSyncEnabled = Preference(key: "plugin_sync_enabled", defaultValue: false)
 
+    static let themeMusicEnabled = Preference(key: "theme_music_enabled", defaultValue: false)
+    static let themeMusicVolume = Preference(key: "theme_music_volume", defaultValue: 30)
+
     static let telemetryEnabled = Preference(key: "telemetry_enabled", defaultValue: false)
 
     init(store: PreferenceStore) {

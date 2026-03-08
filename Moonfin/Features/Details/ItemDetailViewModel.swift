@@ -33,6 +33,7 @@ final class ItemDetailViewModel: ObservableObject {
     @Published private(set) var state = ItemDetailUiState()
 
     let backgroundService = BackgroundService()
+    let themeMusicPlayer = ThemeMusicPlayer()
 
     private let container: AppContainer
     private let itemId: String
@@ -47,6 +48,11 @@ final class ItemDetailViewModel: ObservableObject {
         backgroundService.configure(preferences: container.userPreferences)
 
         backgroundService.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        themeMusicPlayer.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
@@ -112,6 +118,7 @@ final class ItemDetailViewModel: ObservableObject {
                 )
 
                 updateBackdrop(for: item)
+                themeMusicPlayer.playThemeMusic(for: item, client: client, preferences: container.userPreferences)
 
                 async let ratingsTask: () = loadRatings(for: item)
                 async let additionalTask: () = loadAdditionalData(for: item, client: client)
@@ -123,17 +130,12 @@ final class ItemDetailViewModel: ObservableObject {
     }
 
     func toggleFavorite() {
-        guard let client, let userId = client.userId else { return }
         let newValue = !state.isFavorite
         state.isFavorite = newValue
 
         Task {
             do {
-                if newValue {
-                    _ = try await client.userLibraryApi.markFavorite(itemId: itemId, userId: userId)
-                } else {
-                    _ = try await client.userLibraryApi.unmarkFavorite(itemId: itemId, userId: userId)
-                }
+                _ = try await container.itemMutationService.setFavorite(itemId: itemId, isFavorite: newValue)
             } catch {
                 state.isFavorite = !newValue
             }
@@ -141,17 +143,12 @@ final class ItemDetailViewModel: ObservableObject {
     }
 
     func toggleWatched() {
-        guard let client, let userId = client.userId else { return }
         let newValue = !state.isPlayed
         state.isPlayed = newValue
 
         Task {
             do {
-                if newValue {
-                    _ = try await client.userLibraryApi.markPlayed(itemId: itemId, userId: userId)
-                } else {
-                    _ = try await client.userLibraryApi.unmarkPlayed(itemId: itemId, userId: userId)
-                }
+                _ = try await container.itemMutationService.setPlayed(itemId: itemId, isPlayed: newValue)
             } catch {
                 state.isPlayed = !newValue
             }
@@ -471,6 +468,7 @@ final class ItemDetailViewModel: ObservableObject {
 
     func cleanup() {
         loadTask?.cancel()
+        themeMusicPlayer.fadeOutAndStop()
         backgroundService.clearBackground()
     }
 

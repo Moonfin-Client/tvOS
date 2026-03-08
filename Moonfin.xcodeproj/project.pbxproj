@@ -91,6 +91,7 @@
 		8BED70158CE7B75EBDEBC7C0 /* MediaBarModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2532D5B583DB1A74F1810BC /* MediaBarModels.swift */; };
 		8BF09E744242E20B4C19DABC /* PlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */; };
 		8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681B5D321FDDC52F49B7EFB7 /* LoginBackground.swift */; };
+		8DC3DC9D827C8C5CE5EA476F /* ThemeMusicPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */; };
 		8E03D63027BE4532F8EA2428 /* TopShelfExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 82577A9FD03CF26B68E531B8 /* TopShelfExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8E23DC82575F15240016EC32 /* ExpandableToolbarButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */; };
 		8FD35C90EEFC870588E10181 /* StartupBranding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB17116B5C93DF871B4F946 /* StartupBranding.swift */; };
@@ -102,6 +103,7 @@
 		95F316DC7B4ABC5D52E5B35F /* JellyfinServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBEE4F3BBDB81FE8A31535C /* JellyfinServerClient.swift */; };
 		96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D4DD05CBC00A79C149DD76 /* SettingsRouter.swift */; };
 		99F3A085014B9D7AD3D8ACD8 /* AddToPlaylistDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018C13D44C3EF94E92CC7381 /* AddToPlaylistDialog.swift */; };
+		9A8C636BA1C70FB5D8ADB189 /* ItemMutationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 474A9D6EC7CE650E681495B6 /* ItemMutationService.swift */; };
 		9B00EB8569A9A8EEEBEB93EC /* MediaBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F01563FD7C1AA3617D202D0 /* MediaBarViewModel.swift */; };
 		9B0960F5FAE82F5DD654D878 /* ServerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF7DF5BBB1E07AE8F56A307F /* ServerViewModel.swift */; };
 		9C276CBD301A91D706F97692 /* ServerUserRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D6D06129E4065E045734A09 /* ServerUserRepository.swift */; };
@@ -178,6 +180,7 @@
 
 /* Begin PBXFileReference section */
 		018C13D44C3EF94E92CC7381 /* AddToPlaylistDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToPlaylistDialog.swift; sourceTree = "<group>"; };
+		029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMusicPlayer.swift; sourceTree = "<group>"; };
 		0491A1B49F0F5B7E4C4256DE /* PluginSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginSyncService.swift; sourceTree = "<group>"; };
 		049723F642FD3A50FFD849EC /* NavigationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationRouter.swift; sourceTree = "<group>"; };
 		074468E8521DA23AB817B560 /* ServerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerError.swift; sourceTree = "<group>"; };
@@ -223,6 +226,7 @@
 		41FA95C5AC76D45F53A84698 /* LiveTVView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTVView.swift; sourceTree = "<group>"; };
 		43EADFDCA2B9073D7A47E0C6 /* ContentRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRow.swift; sourceTree = "<group>"; };
 		443241810250EC1AB21DA8F9 /* LoginCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginCard.swift; sourceTree = "<group>"; };
+		474A9D6EC7CE650E681495B6 /* ItemMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemMutationService.swift; sourceTree = "<group>"; };
 		486F52E19F9373BB4464D037 /* TrackSelectorDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSelectorDialog.swift; sourceTree = "<group>"; };
 		48A554C71793F4265E794FAD /* TmdbRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmdbRepository.swift; sourceTree = "<group>"; };
 		4B6BF213289C258496451F29 /* PreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceStore.swift; sourceTree = "<group>"; };
@@ -533,6 +537,7 @@
 			isa = PBXGroup;
 			children = (
 				84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */,
+				029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */,
 			);
 			path = Playback;
 			sourceTree = "<group>";
@@ -643,6 +648,7 @@
 		B162EB02D6D2ADDF9AE8E352 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				474A9D6EC7CE650E681495B6 /* ItemMutationService.swift */,
 				BB7B40972308862B6CCB20F4 /* MediaServerClient.swift */,
 				A671C30D8FBFBADDB8A6654C /* MediaServerClientFactory.swift */,
 				1BAE1BB034AC6127CFDBAE45 /* ServerApiModels.swift */,
@@ -963,6 +969,7 @@
 				D3D9E67F5AA1CB47DD677623 /* ItemCardOverlays.swift in Sources */,
 				E9212B3E5D93D67A93EDBC7F /* ItemDetailViewModel.swift in Sources */,
 				75EC68F4B9D0A7C124EB45E6 /* ItemDetailsView.swift in Sources */,
+				9A8C636BA1C70FB5D8ADB189 /* ItemMutationService.swift in Sources */,
 				5518ED9BC8AF6AA2DE4DBBC4 /* ItemPreview.swift in Sources */,
 				05598E8B24355E2A7D15EEFB /* JellyfinApis.swift in Sources */,
 				C900DDBE3866AD2AE0994887 /* JellyfinLogo.swift in Sources */,
@@ -1051,6 +1058,7 @@
 				AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */,
 				063B115422BD6FA165CF8051 /* SplashScreen.swift in Sources */,
 				8FD35C90EEFC870588E10181 /* StartupBranding.swift in Sources */,
+				8DC3DC9D827C8C5CE5EA476F /* ThemeMusicPlayer.swift in Sources */,
 				AEF10B94D7C04E71D90E08BA /* TmdbRepository.swift in Sources */,
 				AA1B8F711287B0DB9DE3CD5C /* ToolbarClock.swift in Sources */,
 				452672237B4048790575A569 /* TrackSelectorDialog.swift in Sources */,

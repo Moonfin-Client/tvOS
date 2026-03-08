@@ -249,3 +249,13 @@ struct ItemsResult: Codable {
         self.startIndex = startIndex
     }
 }
+
+struct AllThemeMediaResult: Codable {
+    let themeSongsResult: ItemsResult
+    let themeVideosResult: ItemsResult
+
+    enum CodingKeys: String, CodingKey {
+        case themeSongsResult = "ThemeSongsResult"
+        case themeVideosResult = "ThemeVideosResult"
+    }
+}

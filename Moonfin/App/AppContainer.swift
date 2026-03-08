@@ -26,6 +26,7 @@ final class AppContainer: ObservableObject {
 
     let dataRefreshService: DataRefreshService
     let pluginSyncService: PluginSyncService
+    let itemMutationService: ItemMutationService
 
     // MARK: - Repositories
 
@@ -79,6 +80,7 @@ final class AppContainer: ObservableObject {
         self.sessionRepository = sessionRepo
         self.serverUserRepository = serverUserRepo
         self.authenticationRepository = authRepo
+        self.itemMutationService = ItemMutationService(serverClientFactory: factory, serverRepository: serverRepo)
 
         let resolveClient: () -> HttpClient? = { [weak serverRepo] in
             guard let server = serverRepo?.currentServer.value else { return nil }
