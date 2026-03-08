@@ -138,7 +138,7 @@ struct ServerItem: Codable, Identifiable {
     let officialRating: String?
     let communityRating: Double?
     let criticRating: Double?
-    let isFolder: Bool
+    let isFolder: Bool?
     let parentId: String?
     let seriesId: String?
     let seriesName: String?
@@ -163,6 +163,8 @@ struct ServerItem: Codable, Identifiable {
     let taglines: [String]?
     let studios: [NameIdPair]?
     let providerIds: [String: String]?
+    let endDate: Date?
+    let productionLocations: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -203,6 +205,8 @@ struct ServerItem: Codable, Identifiable {
         case taglines = "Taglines"
         case studios = "Studios"
         case providerIds = "ProviderIds"
+        case endDate = "EndDate"
+        case productionLocations = "ProductionLocations"
     }
 }
 

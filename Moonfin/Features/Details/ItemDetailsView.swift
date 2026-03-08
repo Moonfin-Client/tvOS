@@ -6,6 +6,7 @@ struct ItemDetailsView: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @FocusState private var focusedButton: ActionButtonID?
+    @State private var showFullBiography = false
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -145,6 +146,20 @@ struct ItemDetailsView: View {
             Spacer()
 
             HStack(alignment: .top, spacing: SpaceTokens.spaceXl) {
+                if item.type == .person, let posterUrl = viewModel.posterUrl(for: item),
+                   let url = URL(string: posterUrl) {
+                    AsyncImage(url: url) { phase in
+                        if case .success(let image) = phase {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: 280, maxHeight: 420)
+                                .cornerRadius(RadiusTokens.medium)
+                                .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
+                        }
+                    }
+                }
+
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                     if (item.type == .episode || item.type == .season),
                        let seriesName = item.seriesName {
@@ -170,36 +185,38 @@ struct ItemDetailsView: View {
                             .lineLimit(2)
                     }
 
-                    detailInfoRow(item: item)
+                    if item.type != .person {
+                        detailInfoRow(item: item)
 
-                    if let genres = item.genres, !genres.isEmpty {
-                        Text(genres.joined(separator: ", "))
-                            .font(.bodyMd)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-                    }
+                        if let genres = item.genres, !genres.isEmpty {
+                            Text(genres.joined(separator: ", "))
+                                .font(.bodyMd)
+                                .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                        }
 
-                    if !viewModel.state.ratings.isEmpty {
-                        ratingsRow
-                    }
+                        if !viewModel.state.ratings.isEmpty {
+                            ratingsRow
+                        }
 
-                    if let tagline = item.taglines?.first, !tagline.isEmpty {
-                        Text("\"\(tagline)\"")
-                            .font(.bodyMd)
-                            .italic()
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-                    }
+                        if let tagline = item.taglines?.first, !tagline.isEmpty {
+                            Text("\"\(tagline)\"")
+                                .font(.bodyMd)
+                                .italic()
+                                .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                        }
 
-                    if let overview = item.overview, !overview.isEmpty {
-                        Text(overview)
-                            .font(.titleXl)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                            .lineLimit(5)
-                            .padding(.top, SpaceTokens.spaceXs)
+                        if let overview = item.overview, !overview.isEmpty {
+                            Text(overview)
+                                .font(.titleXl)
+                                .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                                .lineLimit(5)
+                                .padding(.top, SpaceTokens.spaceXs)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if let posterUrl = viewModel.posterUrl(for: item),
+                if item.type != .person, let posterUrl = viewModel.posterUrl(for: item),
                    let url = URL(string: posterUrl) {
                     AsyncImage(url: url) { phase in
                         if case .success(let image) = phase {
@@ -348,7 +365,7 @@ struct ItemDetailsView: View {
         let showGoToSeries = item.type == .episode && item.seriesId != nil
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
 
-        if canPlay || item.userData != nil {
+        if item.type != .person, canPlay || item.userData != nil {
             ActionButtonsRow(
                 isFavorite: viewModel.state.isFavorite,
                 isPlayed: viewModel.state.isPlayed,
@@ -488,11 +505,86 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func personSections() -> some View {
-        if !viewModel.state.similar.isEmpty {
-            detailSection(title: "Known For", id: "filmography") {
-                itemRow(items: viewModel.state.similar)
+        if let item = viewModel.state.item {
+            personInfoSection(item: item)
+        }
+        let movies = viewModel.state.filmography.filter { $0.type == .movie }
+        let series = viewModel.state.filmography.filter { $0.type == .series }
+        if !movies.isEmpty {
+            detailSection(title: "Movies", id: "movies") {
+                itemRow(items: movies)
             }
         }
+        if !series.isEmpty {
+            detailSection(title: "Series", id: "series") {
+                itemRow(items: series)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func personInfoSection(item: ServerItem) -> some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
+            personDateRow(item: item)
+
+            if let overview = item.overview, !overview.isEmpty {
+                detailSection(title: "Biography", id: "biography") {
+                    Text(overview)
+                        .font(.bodyLg)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                        .lineLimit(showFullBiography ? nil : 6)
+                        .padding(.horizontal, SpaceTokens.spaceSm)
+                        .onLongPressGesture {
+                            showFullBiography.toggle()
+                        }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func personDateRow(item: ServerItem) -> some View {
+        let parts = personDateParts(item: item)
+        if !parts.isEmpty {
+            HStack(spacing: SpaceTokens.spaceSm) {
+                ForEach(Array(parts.enumerated()), id: \.offset) { index, part in
+                    if index > 0 { infoSeparator }
+                    infoText(part)
+                }
+            }
+        }
+    }
+
+    private static let dateDisplayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
+
+    private func personDateParts(item: ServerItem) -> [String] {
+        var parts: [String] = []
+        let formatter = Self.dateDisplayFormatter
+
+        if let birthDate = item.premiereDate {
+            parts.append("Born \(formatter.string(from: birthDate))")
+            if let deathDate = item.endDate {
+                parts.append("Died \(formatter.string(from: deathDate))")
+            }
+            if let age = Self.calculateAge(from: birthDate, to: item.endDate) {
+                parts.append("Age \(age)")
+            }
+        }
+
+        if let locations = item.productionLocations, let birthplace = locations.first {
+            parts.append(birthplace)
+        }
+
+        return parts
+    }
+
+    private static func calculateAge(from birthDate: Date, to endDate: Date?) -> Int? {
+        Calendar.current.dateComponents([.year], from: birthDate, to: endDate ?? Date()).year
     }
 
     @ViewBuilder

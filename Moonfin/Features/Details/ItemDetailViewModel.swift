@@ -22,6 +22,7 @@ struct ItemDetailUiState {
     var tracks: [ServerItem] = []
     var albums: [ServerItem] = []
     var specialFeatures: [ServerItem] = []
+    var filmography: [ServerItem] = []
     var isFavorite: Bool = false
     var isPlayed: Bool = false
 }
@@ -300,6 +301,9 @@ final class ItemDetailViewModel: ObservableObject {
         case .boxSet:
             await loadCollectionItems(itemId: item.id, client: client)
 
+        case .person:
+            await loadFilmography(personId: item.id, client: client)
+
         case .musicArtist:
             async let albumsTask: () = loadAlbums(artistId: item.id, client: client)
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
@@ -345,6 +349,37 @@ final class ItemDetailViewModel: ObservableObject {
         do {
             let result = try await client.itemsApi.getSimilarItems(itemId: itemId, limit: 16)
             state.similar = result.items
+        } catch { }
+    }
+
+    private func loadFilmography(personId: String, client: MediaServerClient) async {
+        do {
+            let result = try await client.itemsApi.getItems(
+                request: GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: [.movie, .series],
+                    sortBy: [.premiereDate],
+                    sortOrder: .descending,
+                    limit: 100,
+                    personIds: [personId],
+                    enableUserData: true
+                )
+            )
+            state.filmography = result.items
+
+            let backdropUrls = result.items.compactMap { item -> String? in
+                guard let tag = item.backdropImageTags?.first else { return nil }
+                return client.imageApi.getItemImageUrl(
+                    itemId: item.id,
+                    imageType: .backdrop,
+                    maxWidth: 1920,
+                    maxHeight: nil,
+                    tag: tag
+                )
+            }
+            if !backdropUrls.isEmpty {
+                backgroundService.setBackground(urls: Array(backdropUrls.prefix(10)), context: .details)
+            }
         } catch { }
     }
 
