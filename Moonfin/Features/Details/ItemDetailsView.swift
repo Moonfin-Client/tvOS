@@ -5,6 +5,7 @@ struct ItemDetailsView: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
+    @FocusState private var focusedButton: ActionButtonID?
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -40,6 +41,13 @@ struct ItemDetailsView: View {
         .ignoresSafeArea()
         .onAppear { viewModel.loadItem() }
         .onDisappear { viewModel.cleanup() }
+        .onChange(of: viewModel.state.isLoading) { isLoading in
+            if !isLoading, viewModel.state.item != nil {
+                DispatchQueue.main.async {
+                    focusedButton = viewModel.canResume ? .resume : .play
+                }
+            }
+        }
     }
 
     private var backdropLayer: some View {
@@ -116,6 +124,14 @@ struct ItemDetailsView: View {
                 headerSection(item: item)
                     .frame(minHeight: screenHeight * 0.52)
 
+                actionButtonsSection(item: item)
+                    .padding(.top, SpaceTokens.spaceXl)
+                    .padding(.leading, -contentLeading)
+                    .padding(.trailing, -50)
+
+                metadataSection(item: item)
+                    .padding(.top, SpaceTokens.spaceMd)
+
                 contentSections(item: item)
                     .padding(.top, SpaceTokens.spaceLg)
             }
@@ -129,20 +145,6 @@ struct ItemDetailsView: View {
             Spacer()
 
             HStack(alignment: .top, spacing: SpaceTokens.spaceXl) {
-                if let posterUrl = viewModel.posterUrl(for: item),
-                   let url = URL(string: posterUrl) {
-                    AsyncImage(url: url) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: 240, maxHeight: 360)
-                                .cornerRadius(RadiusTokens.medium)
-                                .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
-                        }
-                    }
-                }
-
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                     if let logoUrl = viewModel.logoUrl(for: item),
                        let url = URL(string: logoUrl) {
@@ -161,10 +163,23 @@ struct ItemDetailsView: View {
                             .lineLimit(2)
                     }
 
-                    SimpleInfoRow(item: item)
+                    detailInfoRow(item: item)
 
-                    if !viewModel.state.badges.isEmpty {
-                        badgeRow
+                    if let genres = item.genres, !genres.isEmpty {
+                        Text(genres.joined(separator: ", "))
+                            .font(.bodyMd)
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    }
+
+                    if !viewModel.state.ratings.isEmpty {
+                        ratingsRow
+                    }
+
+                    if let tagline = item.taglines?.first, !tagline.isEmpty {
+                        Text("\"\(tagline)\"")
+                            .font(.bodyMd)
+                            .italic()
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                     }
 
                     if let overview = item.overview, !overview.isEmpty {
@@ -172,7 +187,22 @@ struct ItemDetailsView: View {
                             .font(.bodyLg)
                             .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                             .lineLimit(5)
-                            .padding(.top, SpaceTokens.spaceSm)
+                            .padding(.top, SpaceTokens.spaceXs)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if let posterUrl = viewModel.posterUrl(for: item),
+                   let url = URL(string: posterUrl) {
+                    AsyncImage(url: url) { phase in
+                        if case .success(let image) = phase {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: 240, maxHeight: 360)
+                                .cornerRadius(RadiusTokens.medium)
+                                .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
+                        }
                     }
                 }
             }
@@ -181,25 +211,100 @@ struct ItemDetailsView: View {
         }
     }
 
-    private var badgeRow: some View {
+    private func detailInfoRow(item: ServerItem) -> some View {
         HStack(spacing: SpaceTokens.spaceSm) {
+            if let year = item.productionYear, year > 0 {
+                infoText(String(year))
+                infoSeparator
+            }
+
+            if let ticks = item.runTimeTicks, ticks > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 14))
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+                    infoText(RuntimeFormatter.format(ticks: ticks))
+                }
+                infoSeparator
+            }
+
+            if let endsAt = viewModel.endsAtText {
+                infoText(endsAt)
+                infoSeparator
+            }
+
+            if let rating = item.officialRating, !rating.isEmpty {
+                infoBadge(rating)
+                if !viewModel.state.badges.isEmpty {
+                    infoSeparator
+                }
+            }
+
             ForEach(viewModel.state.badges) { badge in
-                Text(badge.label)
-                    .font(.captionXs)
-                    .foregroundColor(theme.colorScheme.onBadge)
-                    .padding(.horizontal, SpaceTokens.spaceSm)
-                    .padding(.vertical, 3)
-                    .background(
-                        RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
-                            .fill(theme.colorScheme.badge)
-                    )
+                infoBadge(badge.label)
             }
         }
     }
 
+    private func infoText(_ text: String) -> some View {
+        Text(text)
+            .font(.bodyMd)
+            .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+    }
+
+    private var infoSeparator: some View {
+        Text("·")
+            .font(.bodyMd)
+            .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+    }
+
+    private func infoBadge(_ text: String) -> some View {
+        Text(text)
+            .font(.bodySm)
+            .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
+                    .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
+            )
+    }
+
+    private var ratingsRow: some View {
+        HStack(spacing: SpaceTokens.spaceSm) {
+            ForEach(viewModel.state.ratings, id: \.0) { source, value in
+                if source == "stars" {
+                    starRatingChip(value: value)
+                } else {
+                    RatingChipView(source: source, normalizedValue: value, showLabel: true)
+                }
+            }
+        }
+    }
+
+    private func starRatingChip(value: Float) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "star.fill")
+                .font(.system(size: 18))
+                .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
+            VStack(alignment: .leading, spacing: 0) {
+                Text(String(format: "%.1f", value))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                Text("Community rating")
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.5))
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.white.opacity(0.1))
+        .cornerRadius(6)
+    }
+
     @ViewBuilder
     private func contentSections(item: ServerItem) -> some View {
-        LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceXl) {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceXl) {
             switch item.type {
             case .series:
                 seriesSections()
@@ -215,9 +320,103 @@ struct ItemDetailsView: View {
                 artistSections()
             case .boxSet:
                 collectionSections()
+            case .movie, .video:
+                movieSections()
             default:
                 defaultSections()
             }
+        }
+    }
+
+    @ViewBuilder
+    private func actionButtonsSection(item: ServerItem) -> some View {
+        let canPlay = [ItemType.movie, .episode, .video, .series, .season, .musicAlbum, .playlist, .musicArtist].contains(item.type)
+        let showGoToSeries = item.type == .episode && item.seriesId != nil
+
+        if canPlay || item.userData != nil {
+            ActionButtonsRow(
+                isFavorite: viewModel.state.isFavorite,
+                isPlayed: viewModel.state.isPlayed,
+                canResume: viewModel.canResume,
+                resumePositionText: viewModel.resumePositionText,
+                focusedButton: $focusedButton,
+                onPlay: { router.navigate(to: .videoPlayer(position: 0)) },
+                onResume: {
+                    let pos = Int(item.userData?.playbackPositionTicks ?? 0)
+                    router.navigate(to: .videoPlayer(position: pos))
+                },
+                onToggleWatched: { viewModel.toggleWatched() },
+                onToggleFavorite: { viewModel.toggleFavorite() },
+                onGoToSeries: showGoToSeries ? {
+                    if let seriesId = item.seriesId {
+                        router.navigate(to: .itemDetails(itemId: seriesId))
+                    }
+                } : nil
+            )
+        }
+    }
+
+    private func metadataColumns(for item: ServerItem) -> [(label: String, value: String)] {
+        var columns: [(label: String, value: String)] = []
+        let genres = item.genres ?? []
+        let directors = viewModel.state.directors
+        let writers = viewModel.state.writers
+        let studios = item.studios ?? []
+
+        if !genres.isEmpty {
+            columns.append(("Genres", genres.joined(separator: ", ")))
+        }
+        if !directors.isEmpty {
+            columns.append((directors.count > 1 ? "Directors" : "Director",
+                            directors.map(\.name).joined(separator: ", ")))
+        }
+        if !writers.isEmpty {
+            columns.append((writers.count > 1 ? "Writers" : "Writer",
+                            writers.map(\.name).joined(separator: ", ")))
+        }
+        if !studios.isEmpty {
+            columns.append((studios.count > 1 ? "Studios" : "Studio",
+                            studios.compactMap(\.name).joined(separator: ", ")))
+        }
+        return columns
+    }
+
+    @ViewBuilder
+    private func metadataSection(item: ServerItem) -> some View {
+        let columns = metadataColumns(for: item)
+
+        if !columns.isEmpty {
+            HStack(spacing: 0) {
+                ForEach(Array(columns.enumerated()), id: \.offset) { index, column in
+                    if index > 0 {
+                        Rectangle()
+                            .fill(Color.white.opacity(0.08))
+                            .frame(width: 1, height: 36)
+                    }
+
+                    VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                        Text(column.label.uppercased())
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+                            .tracking(0.5)
+                        Text(column.value)
+                            .font(.bodySm)
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.85))
+                            .lineLimit(2)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, SpaceTokens.spaceLg)
+                }
+            }
+            .padding(.vertical, SpaceTokens.spaceMd)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(Color.white.opacity(0.03))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RadiusTokens.small)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    )
+            )
         }
     }
 
@@ -290,6 +489,13 @@ struct ItemDetailsView: View {
     }
 
     @ViewBuilder
+    private func movieSections() -> some View {
+        castSection
+        specialFeaturesSection
+        similarSection
+    }
+
+    @ViewBuilder
     private func defaultSections() -> some View {
         castSection
         similarSection
@@ -313,6 +519,15 @@ struct ItemDetailsView: View {
         }
     }
 
+    @ViewBuilder
+    private var specialFeaturesSection: some View {
+        if !viewModel.state.specialFeatures.isEmpty {
+            detailSection(title: "Special Features", id: "specials") {
+                itemRow(items: viewModel.state.specialFeatures, imageType: .primary, aspectRatio: 16.0/9.0)
+            }
+        }
+    }
+
     private func detailSection<Content: View>(
         title: String,
         id: String,
@@ -323,6 +538,7 @@ struct ItemDetailsView: View {
                 .font(.titleXl)
                 .foregroundColor(theme.colorScheme.listHeader)
                 .padding(.leading, SpaceTokens.spaceSm)
+                .padding(.bottom, SpaceTokens.spaceXs)
 
             content()
         }
@@ -341,39 +557,19 @@ struct ItemDetailsView: View {
         return ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(items) { item in
-                    Button {
-                        router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
-                    } label: {
-                        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                            if let urlStr = viewModel.imageUrl(for: item, imageType: imageType, maxWidth: Int(cardWidth * 2)),
-                               let url = URL(string: urlStr) {
-                                AsyncImage(url: url) { phase in
-                                    if case .success(let image) = phase {
-                                        image.resizable().aspectRatio(contentMode: .fill)
-                                    } else {
-                                        theme.colorScheme.surface
-                                    }
-                                }
-                                .frame(width: cardWidth, height: cardHeight)
-                                .clipped()
-                                .cornerRadius(RadiusTokens.small)
-                            } else {
-                                theme.colorScheme.surface
-                                    .frame(width: cardWidth, height: cardHeight)
-                                    .cornerRadius(RadiusTokens.small)
-                            }
-
-                            Text(item.name)
-                                .font(.bodySm)
-                                .foregroundColor(theme.colorScheme.onBackground)
-                                .lineLimit(1)
-                                .frame(width: cardWidth, alignment: .leading)
+                    FocusableItemCard(
+                        item: item,
+                        imageUrl: viewModel.imageUrl(for: item, imageType: imageType, maxWidth: Int(cardWidth * 2)),
+                        cardWidth: cardWidth,
+                        cardHeight: cardHeight,
+                        onSelect: {
+                            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
                         }
-                    }
-                    .buttonStyle(CleanButtonStyle())
+                    )
                 }
             }
             .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, SpaceTokens.spaceSm)
         }
     }
 
@@ -381,47 +577,19 @@ struct ItemDetailsView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(viewModel.state.cast, id: \.name) { person in
-                    Button {
-                        if let id = person.id {
-                            router.navigate(to: .itemDetails(itemId: id))
-                        }
-                    } label: {
-                        VStack(spacing: SpaceTokens.spaceXs) {
-                            if let urlStr = viewModel.imageUrl(for: person),
-                               let url = URL(string: urlStr) {
-                                AsyncImage(url: url) { phase in
-                                    if case .success(let image) = phase {
-                                        image.resizable().aspectRatio(contentMode: .fill)
-                                    } else {
-                                        theme.colorScheme.surface
-                                    }
-                                }
-                                .frame(width: 120, height: 120)
-                                .clipShape(Circle())
-                            } else {
-                                Circle()
-                                    .fill(theme.colorScheme.surface)
-                                    .frame(width: 120, height: 120)
-                            }
-
-                            Text(person.name)
-                                .font(.bodySm)
-                                .foregroundColor(theme.colorScheme.onBackground)
-                                .lineLimit(1)
-
-                            if let role = person.role, !role.isEmpty {
-                                Text(role)
-                                    .font(.caption2xs)
-                                    .foregroundColor(theme.colorScheme.listCaption)
-                                    .lineLimit(1)
+                    FocusableCastCard(
+                        person: person,
+                        imageUrl: viewModel.imageUrl(for: person),
+                        onSelect: {
+                            if let id = person.id {
+                                router.navigate(to: .itemDetails(itemId: id))
                             }
                         }
-                        .frame(width: 130)
-                    }
-                    .buttonStyle(CleanButtonStyle())
+                    )
                 }
             }
             .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, SpaceTokens.spaceSm)
         }
     }
 
@@ -452,5 +620,108 @@ struct ItemDetailsView: View {
                     .background(theme.colorScheme.onBackground.opacity(0.1))
             }
         }
+    }
+}
+
+private struct FocusableItemCard: View {
+    let item: ServerItem
+    let imageUrl: String?
+    let cardWidth: CGFloat
+    let cardHeight: CGFloat
+    let onSelect: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                ZStack {
+                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let image) = phase {
+                                image.resizable().aspectRatio(contentMode: .fill)
+                            } else {
+                                theme.colorScheme.surface
+                            }
+                        }
+                        .frame(width: cardWidth, height: cardHeight)
+                        .clipped()
+                    } else {
+                        theme.colorScheme.surface
+                            .frame(width: cardWidth, height: cardHeight)
+                    }
+                }
+                .cornerRadius(RadiusTokens.small)
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                )
+
+                Text(item.name)
+                    .font(.bodySm)
+                    .foregroundColor(theme.colorScheme.onBackground)
+                    .lineLimit(1)
+                    .frame(width: cardWidth, alignment: .leading)
+            }
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct FocusableCastCard: View {
+    let person: ServerPerson
+    let imageUrl: String?
+    let onSelect: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(spacing: SpaceTokens.spaceXs) {
+                ZStack {
+                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let image) = phase {
+                                image.resizable().aspectRatio(contentMode: .fill)
+                            } else {
+                                theme.colorScheme.surface
+                            }
+                        }
+                        .frame(width: 120, height: 120)
+                        .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(theme.colorScheme.surface)
+                            .frame(width: 120, height: 120)
+                    }
+                }
+                .overlay(
+                    Circle()
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                )
+
+                Text(person.name)
+                    .font(.bodySm)
+                    .foregroundColor(theme.colorScheme.onBackground)
+                    .lineLimit(1)
+
+                if let role = person.role, !role.isEmpty {
+                    Text(role)
+                        .font(.caption2xs)
+                        .foregroundColor(theme.colorScheme.listCaption)
+                        .lineLimit(1)
+                }
+            }
+            .frame(width: 130)
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }

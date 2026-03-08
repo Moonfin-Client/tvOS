@@ -13,6 +13,7 @@ struct ItemDetailUiState {
     var directors: [ServerPerson] = []
     var writers: [ServerPerson] = []
     var badges: [MediaBadge] = []
+    var ratings: [(String, Float)] = []
     var seasons: [ServerItem] = []
     var episodes: [ServerItem] = []
     var similar: [ServerItem] = []
@@ -20,6 +21,9 @@ struct ItemDetailUiState {
     var collectionItems: [ServerItem] = []
     var tracks: [ServerItem] = []
     var albums: [ServerItem] = []
+    var specialFeatures: [ServerItem] = []
+    var isFavorite: Bool = false
+    var isPlayed: Bool = false
 }
 
 @MainActor
@@ -51,6 +55,27 @@ final class ItemDetailViewModel: ObservableObject {
         return container.serverClientFactory.client(for: server)
     }
 
+    var canResume: Bool {
+        (state.item?.userData?.playbackPositionTicks ?? 0) > 0
+    }
+
+    var resumePositionText: String? {
+        guard let ticks = state.item?.userData?.playbackPositionTicks, ticks > 0 else { return nil }
+        return RuntimeFormatter.format(ticks: ticks)
+    }
+
+    private static let endsAtFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return f
+    }()
+
+    var endsAtText: String? {
+        guard let ticks = state.item?.runTimeTicks, ticks > 0 else { return nil }
+        let endDate = Date().addingTimeInterval(TimeInterval(ticks) / 10_000_000.0)
+        return "Ends at \(Self.endsAtFormatter.string(from: endDate))"
+    }
+
     func loadItem() {
         loadTask?.cancel()
         loadTask = Task {
@@ -73,13 +98,54 @@ final class ItemDetailViewModel: ObservableObject {
                     cast: people.filter { $0.type == .actor || $0.type == .guestStar },
                     directors: people.filter { $0.type == .director },
                     writers: people.filter { $0.type == .writer },
-                    badges: badges
+                    badges: badges,
+                    isFavorite: item.userData?.isFavorite ?? false,
+                    isPlayed: item.userData?.played ?? false
                 )
 
                 updateBackdrop(for: item)
-                await loadAdditionalData(for: item, client: client)
+
+                async let ratingsTask: () = loadRatings(for: item)
+                async let additionalTask: () = loadAdditionalData(for: item, client: client)
+                _ = await (ratingsTask, additionalTask)
             } catch {
                 state = ItemDetailUiState(isLoading: false)
+            }
+        }
+    }
+
+    func toggleFavorite() {
+        guard let client, let userId = client.userId else { return }
+        let newValue = !state.isFavorite
+        state.isFavorite = newValue
+
+        Task {
+            do {
+                if newValue {
+                    _ = try await client.userLibraryApi.markFavorite(itemId: itemId, userId: userId)
+                } else {
+                    _ = try await client.userLibraryApi.unmarkFavorite(itemId: itemId, userId: userId)
+                }
+            } catch {
+                state.isFavorite = !newValue
+            }
+        }
+    }
+
+    func toggleWatched() {
+        guard let client, let userId = client.userId else { return }
+        let newValue = !state.isPlayed
+        state.isPlayed = newValue
+
+        Task {
+            do {
+                if newValue {
+                    _ = try await client.userLibraryApi.markPlayed(itemId: itemId, userId: userId)
+                } else {
+                    _ = try await client.userLibraryApi.unmarkPlayed(itemId: itemId, userId: userId)
+                }
+            } catch {
+                state.isPlayed = !newValue
             }
         }
     }
@@ -211,6 +277,11 @@ final class ItemDetailViewModel: ObservableObject {
         case .musicAlbum, .playlist:
             await loadTracks(albumId: item.id, client: client)
 
+        case .movie, .video:
+            async let similarTask: () = loadSimilar(itemId: item.id, client: client)
+            async let specialTask: () = loadSpecialFeatures(itemId: item.id, client: client)
+            _ = await (similarTask, specialTask)
+
         default:
             await loadSimilar(itemId: item.id, client: client)
         }
@@ -277,6 +348,13 @@ final class ItemDetailViewModel: ObservableObject {
         } catch { }
     }
 
+    private func loadSpecialFeatures(itemId: String, client: MediaServerClient) async {
+        do {
+            let items = try await client.userLibraryApi.getSpecialFeatures(itemId: itemId)
+            state.specialFeatures = items
+        } catch { }
+    }
+
     private func buildMediaBadges(for item: ServerItem) -> [MediaBadge] {
         var badges: [MediaBadge] = []
 
@@ -310,6 +388,38 @@ final class ItemDetailViewModel: ObservableObject {
     func cleanup() {
         loadTask?.cancel()
         backgroundService.clearBackground()
+    }
+
+    private func loadRatings(for item: ServerItem) async {
+        let communityRating = item.communityRating
+        let criticRating = item.criticRating
+        let tmdbId = item.providerIds?["Tmdb"]
+        let enableAdditional = container.userPreferences[UserPreferences.enableAdditionalRatings]
+
+        var result: [(String, Float)] = []
+
+        if let community = communityRating, community > 0 {
+            result.append(("stars", Float(community)))
+        }
+
+        if enableAdditional, let tmdbId {
+            let apiRatings = await container.mdbListRepository.getRatings(tmdbId: tmdbId, type: item.type)
+            if let apiRatings {
+                for (source, value) in apiRatings {
+                    if source == "tomatoes" && criticRating != nil { continue }
+                    let normalized = RatingSource(rawValue: source)?.normalize(value) ?? (value / 100.0)
+                    result.append((source, normalized))
+                }
+            }
+        }
+
+        if !result.contains(where: { $0.0 == "tomatoes" }),
+           let critic = criticRating, critic > 0 {
+            let normalized = RatingSource.tomatoes.normalize(Float(critic))
+            result.append(("tomatoes", normalized))
+        }
+
+        state.ratings = result
     }
 
     private static func audioChannelLabel(channels: Int) -> String {

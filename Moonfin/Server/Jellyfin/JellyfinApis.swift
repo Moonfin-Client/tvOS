@@ -182,6 +182,11 @@ struct JellyfinUserLibraryApi: ServerUserLibraryApi {
         return try await client.request("/Users/\(userId)/Items/\(itemId)")
     }
 
+    func getSpecialFeatures(itemId: String) async throws -> [ServerItem] {
+        let userId = client.userId ?? ""
+        return try await client.request("/Users/\(userId)/Items/\(itemId)/SpecialFeatures")
+    }
+
     func markFavorite(itemId: String, userId: String) async throws -> UserItemData {
         try await client.request("/Users/\(userId)/FavoriteItems/\(itemId)", method: "POST")
     }

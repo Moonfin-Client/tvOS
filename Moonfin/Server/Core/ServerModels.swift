@@ -160,6 +160,7 @@ struct ServerItem: Codable, Identifiable {
     let people: [ServerPerson]?
     let genres: [String]?
     let tags: [String]?
+    let taglines: [String]?
     let studios: [NameIdPair]?
     let providerIds: [String: String]?
 
@@ -199,6 +200,7 @@ struct ServerItem: Codable, Identifiable {
         case people = "People"
         case genres = "Genres"
         case tags = "Tags"
+        case taglines = "Taglines"
         case studios = "Studios"
         case providerIds = "ProviderIds"
     }
