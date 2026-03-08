@@ -7,6 +7,10 @@ struct ItemDetailsView: View {
     @EnvironmentObject var router: NavigationRouter
     @FocusState private var focusedButton: ActionButtonID?
     @State private var showFullBio = false
+    @State private var showTrackSelector: TrackSelectorMode?
+    @State private var showAddToPlaylist = false
+    @State private var selectedAudioIndex: Int?
+    @State private var selectedSubtitleIndex: Int?
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -47,8 +51,52 @@ struct ItemDetailsView: View {
                 DispatchQueue.main.async {
                     focusedButton = viewModel.canResume ? .resume : .play
                 }
+                initializeTrackIndices()
             }
         }
+        .sheet(item: $showTrackSelector) { mode in
+            if let item = viewModel.state.item {
+                TrackSelectorDialog(
+                    mode: mode,
+                    streams: resolvedStreams(for: item),
+                    selectedIndex: mode == .audio ? selectedAudioIndex : selectedSubtitleIndex,
+                    onSelect: { index in
+                        if mode == .audio {
+                            selectedAudioIndex = index
+                        } else {
+                            selectedSubtitleIndex = index
+                        }
+                        showTrackSelector = nil
+                    },
+                    onDismiss: { showTrackSelector = nil }
+                )
+            }
+        }
+        .fullScreenCover(isPresented: $showAddToPlaylist) {
+            if let item = viewModel.state.item {
+                AddToPlaylistDialog(
+                    itemIds: [item.id],
+                    onDismiss: { showAddToPlaylist = false },
+                    onAdded: { showAddToPlaylist = false }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black.opacity(0.8))
+            }
+        }
+    }
+
+    private func initializeTrackIndices() {
+        guard let source = viewModel.state.item?.mediaSources?.first else { return }
+        if selectedAudioIndex == nil {
+            selectedAudioIndex = source.defaultAudioStreamIndex
+        }
+        if selectedSubtitleIndex == nil {
+            selectedSubtitleIndex = source.defaultSubtitleStreamIndex
+        }
+    }
+
+    private func resolvedStreams(for item: ServerItem) -> [ServerMediaStream] {
+        item.mediaStreams ?? item.mediaSources?.first?.mediaStreams ?? []
     }
 
     private var backdropLayer: some View {
@@ -365,6 +413,9 @@ struct ItemDetailsView: View {
         let canPlay = isMusicType || [ItemType.movie, .episode, .video, .series, .season].contains(item.type)
         let showGoToSeries = item.type == .episode && item.seriesId != nil
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
+        let streams = resolvedStreams(for: item)
+        let hasAudioStreams = streams.contains { $0.type == .audio }
+        let hasSubtitleStreams = streams.contains { $0.type == .subtitle }
 
         if item.type != .person, canPlay || item.userData != nil {
             ActionButtonsRow(
@@ -398,6 +449,15 @@ struct ItemDetailsView: View {
                         await viewModel.loadInstantMix()
                         router.navigate(to: .videoPlayer(position: 0))
                     }
+                } : nil,
+                onAudioTrack: hasAudioStreams ? {
+                    showTrackSelector = .audio
+                } : nil,
+                onSubtitleTrack: hasSubtitleStreams ? {
+                    showTrackSelector = .subtitle
+                } : nil,
+                onAddToPlaylist: canPlay ? {
+                    showAddToPlaylist = true
                 } : nil
             )
         }
@@ -623,9 +683,23 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func collectionSections() -> some View {
-        if !viewModel.state.collectionItems.isEmpty {
-            detailSection(title: "Items", id: "collection") {
-                itemRow(items: viewModel.state.collectionItems)
+        let movies = viewModel.state.collectionItems.filter { $0.type == .movie }
+        let series = viewModel.state.collectionItems.filter { $0.type == .series }
+        let other = viewModel.state.collectionItems.filter { $0.type != .movie && $0.type != .series }
+
+        if !movies.isEmpty {
+            detailSection(title: "Movies", id: "collectionMovies") {
+                itemRow(items: movies)
+            }
+        }
+        if !series.isEmpty {
+            detailSection(title: "Series", id: "collectionSeries") {
+                itemRow(items: series)
+            }
+        }
+        if !other.isEmpty {
+            detailSection(title: "Other", id: "collectionOther") {
+                itemRow(items: other)
             }
         }
     }
@@ -810,6 +884,8 @@ private struct FocusableItemCard: View {
                         theme.colorScheme.surface
                             .frame(width: cardWidth, height: cardHeight)
                     }
+
+                    ItemCardOverlays(item: item)
                 }
                 .cornerRadius(RadiusTokens.small)
                 .overlay(
@@ -915,41 +991,7 @@ private struct FocusableSeasonCard: View {
                             .frame(width: cardWidth, height: cardHeight)
                     }
 
-                    if let count = item.userData?.unplayedItemCount, count > 0 {
-                        Text("\(count)")
-                            .font(.caption2xs)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(theme.accent)
-                            .clipShape(Capsule())
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                            .padding(6)
-                    } else if item.userData?.played ?? false {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.colorGreen500)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                            .padding(6)
-                    }
-
-                    if let progress = item.userData?.playedPercentage, progress > 0 {
-                        VStack {
-                            Spacer()
-                            GeometryReader { geo in
-                                ZStack(alignment: .leading) {
-                                    Rectangle()
-                                        .fill(Color.black.opacity(0.5))
-                                        .frame(height: 4)
-                                    Rectangle()
-                                        .fill(theme.accent)
-                                        .frame(width: geo.size.width * CGFloat(progress / 100.0), height: 4)
-                                }
-                            }
-                            .frame(height: 4)
-                        }
-                    }
+                    ItemCardOverlays(item: item)
                 }
                 .cornerRadius(RadiusTokens.small)
                 .overlay(

@@ -26,5 +26,6 @@ final class EmbyServerClient: MediaServerClient {
     var userViewsApi: ServerUserViewsApi { EmbyUserViewsApi(client: httpClient) }
     var liveTvApi: ServerLiveTvApi { EmbyLiveTvApi(client: httpClient) }
     var instantMixApi: ServerInstantMixApi { EmbyInstantMixApi(client: httpClient) }
+    var playlistApi: ServerPlaylistApi { EmbyPlaylistApi(client: httpClient) }
     var displayPreferencesApi: ServerDisplayPreferencesApi { EmbyDisplayPreferencesApi(client: httpClient) }
 }

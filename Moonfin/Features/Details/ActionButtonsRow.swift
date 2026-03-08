@@ -2,6 +2,7 @@ import SwiftUI
 
 enum ActionButtonID: Hashable {
     case resume, play, shuffle, instantMix, nextEpisode, watched, favorite, goToSeries
+    case audioTrack, subtitleTrack, addToPlaylist
 }
 
 struct ActionButtonsRow: View {
@@ -19,6 +20,9 @@ struct ActionButtonsRow: View {
     let onNextEpisode: (() -> Void)?
     let onShuffle: (() -> Void)?
     let onInstantMix: (() -> Void)?
+    let onAudioTrack: (() -> Void)?
+    let onSubtitleTrack: (() -> Void)?
+    let onAddToPlaylist: (() -> Void)?
 
     var body: some View {
         HStack {
@@ -93,6 +97,33 @@ struct ActionButtonsRow: View {
                         action: onGoToSeries
                     )
                     .focused(focusedButton, equals: .goToSeries)
+                }
+
+                if let onAudioTrack {
+                    ActionButton(
+                        label: "Audio",
+                        icon: "speaker.wave.2",
+                        action: onAudioTrack
+                    )
+                    .focused(focusedButton, equals: .audioTrack)
+                }
+
+                if let onSubtitleTrack {
+                    ActionButton(
+                        label: "Subtitles",
+                        icon: "captions.bubble",
+                        action: onSubtitleTrack
+                    )
+                    .focused(focusedButton, equals: .subtitleTrack)
+                }
+
+                if let onAddToPlaylist {
+                    ActionButton(
+                        label: "Add to List",
+                        icon: "text.badge.plus",
+                        action: onAddToPlaylist
+                    )
+                    .focused(focusedButton, equals: .addToPlaylist)
                 }
             }
             Spacer()

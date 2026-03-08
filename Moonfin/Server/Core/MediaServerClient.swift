@@ -20,6 +20,7 @@ protocol MediaServerClient: AnyObject {
     var userViewsApi: ServerUserViewsApi { get }
     var liveTvApi: ServerLiveTvApi { get }
     var instantMixApi: ServerInstantMixApi { get }
+    var playlistApi: ServerPlaylistApi { get }
     var displayPreferencesApi: ServerDisplayPreferencesApi { get }
 }
 
@@ -119,6 +120,23 @@ protocol ServerLiveTvApi {
 
 protocol ServerInstantMixApi {
     func getInstantMix(itemId: String, userId: String?, limit: Int?) async throws -> ItemsResult
+}
+
+// MARK: - Playlist
+
+struct PlaylistCreationResult: Codable {
+    let id: String
+
+    enum CodingKeys: String, CodingKey {
+        case id = "Id"
+    }
+}
+
+protocol ServerPlaylistApi {
+    func createPlaylist(name: String, itemIds: [String], mediaType: String?) async throws -> PlaylistCreationResult
+    func addToPlaylist(playlistId: String, itemIds: [String], userId: String?) async throws
+    func removeFromPlaylist(playlistId: String, entryIds: [String]) async throws
+    func getPlaylists(userId: String) async throws -> ItemsResult
 }
 
 // MARK: - Display Preferences

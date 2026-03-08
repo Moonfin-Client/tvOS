@@ -381,6 +381,45 @@ struct EmbyInstantMixApi: ServerInstantMixApi {
     }
 }
 
+// MARK: - Playlist
+
+struct EmbyPlaylistApi: ServerPlaylistApi {
+    let client: HttpClient
+
+    func createPlaylist(name: String, itemIds: [String], mediaType: String?) async throws -> PlaylistCreationResult {
+        let query = buildQuery([
+            ("Name", name),
+            ("Ids", itemIds.isEmpty ? nil : itemIds.joined(separator: ",")),
+            ("MediaType", mediaType),
+        ])
+        return try await client.request("/Playlists", method: "POST", queryItems: query)
+    }
+
+    func addToPlaylist(playlistId: String, itemIds: [String], userId: String?) async throws {
+        let query = buildQuery([
+            ("Ids", itemIds.joined(separator: ",")),
+            ("UserId", userId ?? client.userId),
+        ])
+        try await client.requestVoid("/Playlists/\(playlistId)/Items", method: "POST", queryItems: query)
+    }
+
+    func removeFromPlaylist(playlistId: String, entryIds: [String]) async throws {
+        let query = buildQuery([
+            ("EntryIds", entryIds.joined(separator: ",")),
+        ])
+        try await client.requestVoid("/Playlists/\(playlistId)/Items", method: "DELETE", queryItems: query)
+    }
+
+    func getPlaylists(userId: String) async throws -> ItemsResult {
+        let query = buildQuery([
+            ("IncludeItemTypes", "Playlist"),
+            ("Recursive", "true"),
+            ("UserId", userId),
+        ])
+        return try await client.request("/Items", queryItems: query)
+    }
+}
+
 // MARK: - Display Preferences
 
 struct EmbyDisplayPreferencesApi: ServerDisplayPreferencesApi {
