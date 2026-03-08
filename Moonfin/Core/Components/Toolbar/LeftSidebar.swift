@@ -35,7 +35,7 @@ struct LeftSidebar: View {
     var body: some View {
         sidebarColumn
             .ignoresSafeArea()
-            .defaultFocus($focusedItem, .home)
+            .defaultFocus($focusedItem, .home, priority: .userInitiated)
             .onMoveCommand { direction in
                 if direction == .right {
                     resetFocus(in: mainNamespace)

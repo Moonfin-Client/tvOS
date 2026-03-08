@@ -114,15 +114,19 @@ enum ShuffleContentType: String, StringRepresentableEnum, CaseIterable {
 }
 
 enum PosterSize: String, StringRepresentableEnum, CaseIterable {
+    case smallest
     case small
     case medium
     case large
+    case xLarge
 
     var displayName: String {
         switch self {
+        case .smallest: return "Smallest"
         case .small: return "Small"
         case .medium: return "Medium"
         case .large: return "Large"
+        case .xLarge: return "X-Large"
         }
     }
 }
@@ -131,12 +135,14 @@ enum ImageDisplayType: String, StringRepresentableEnum, CaseIterable {
     case poster
     case thumb
     case banner
+    case square
 
     var displayName: String {
         switch self {
         case .poster: return "Poster"
         case .thumb: return "Thumbnail"
         case .banner: return "Banner"
+        case .square: return "Square"
         }
     }
 }

@@ -150,7 +150,7 @@ struct MediaBarRatingsRow: View {
         }
 
         if !filtered.isEmpty {
-            HStack(spacing: 20) {
+            HStack(spacing: 28) {
                 ForEach(filtered, id: \.0) { source, value in
                     MediaBarRatingRow(source: source, value: value)
                 }

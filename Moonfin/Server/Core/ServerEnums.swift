@@ -95,6 +95,7 @@ enum ItemSortBy: String, Codable {
     case premiereDate = "PremiereDate"
     case dateCreated = "DateCreated"
     case datePlayed = "DatePlayed"
+    case seriesDatePlayed = "SeriesDatePlayed"
     case communityRating = "CommunityRating"
     case criticRating = "CriticRating"
     case runtime = "Runtime"

@@ -172,6 +172,9 @@ struct GetItemsRequest {
     let imageTypeLimit: Int?
     let enableUserData: Bool?
     let groupItems: Bool?
+    let nameStartsWith: String?
+    let collapseBoxSetItems: Bool?
+    let enableTotalRecordCount: Bool?
 
     init(
         userId: String? = nil,
@@ -198,7 +201,10 @@ struct GetItemsRequest {
         enableImages: Bool? = nil,
         imageTypeLimit: Int? = nil,
         enableUserData: Bool? = nil,
-        groupItems: Bool? = nil
+        groupItems: Bool? = nil,
+        nameStartsWith: String? = nil,
+        collapseBoxSetItems: Bool? = nil,
+        enableTotalRecordCount: Bool? = nil
     ) {
         self.userId = userId
         self.parentId = parentId
@@ -225,6 +231,9 @@ struct GetItemsRequest {
         self.imageTypeLimit = imageTypeLimit
         self.enableUserData = enableUserData
         self.groupItems = groupItems
+        self.nameStartsWith = nameStartsWith
+        self.collapseBoxSetItems = collapseBoxSetItems
+        self.enableTotalRecordCount = enableTotalRecordCount
     }
 }
 

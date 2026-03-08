@@ -24,6 +24,7 @@ struct Navbar: View {
         .padding(.top, 12)
         .padding(.bottom, 16)
         .frame(height: 110)
+        .defaultFocus($navFocusItem, .home, priority: .userInitiated)
     }
 
     private var startSection: some View {
@@ -104,8 +105,6 @@ struct Navbar: View {
                 .fill(theme.colorScheme.surface.opacity(0.6))
         )
         .clipShape(Capsule())
-        .focusSection()
-        .defaultFocus($navFocusItem, .home)
     }
 }
 

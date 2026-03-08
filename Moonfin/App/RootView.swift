@@ -84,24 +84,28 @@ struct MainNavigationView: View {
                 switch navbarPosition {
                 case .top:
                     VStack(spacing: 0) {
-                        Navbar(container: container)
-                            .frame(height: navbarHeight)
-                            .focusSection()
-                            .zIndex(1)
+                        if !router.hideNavbar {
+                            Navbar(container: container)
+                                .frame(height: navbarHeight)
+                                .focusSection()
+                                .zIndex(1)
+                        }
 
                         mainContent
                             .focusSection()
-                            .offset(y: -navbarHeight)
-                            .padding(.bottom, -navbarHeight)
+                            .offset(y: router.hideNavbar ? 0 : -navbarHeight)
+                            .padding(.bottom, router.hideNavbar ? 0 : -navbarHeight)
                     }
                     .ignoresSafeArea(edges: .top)
                 case .left:
                     ZStack(alignment: .leading) {
                         mainContent
                             .focusSection()
-                        LeftSidebar(container: container, mainNamespace: mainNamespace)
-                            .ignoresSafeArea()
-                            .zIndex(1)
+                        if !router.hideNavbar {
+                            LeftSidebar(container: container, mainNamespace: mainNamespace)
+                                .ignoresSafeArea()
+                                .zIndex(1)
+                        }
                     }
                     .ignoresSafeArea()
                 }
@@ -154,8 +158,22 @@ struct MainNavigationView: View {
             HomeScreen(container: container, mainNamespace: mainNamespace)
         case .search:
             PlaceholderView(title: "Search")
-        case .libraryBrowser:
-            PlaceholderView(title: "Library")
+        case .libraryBrowser(let itemId, _, let serverId, _):
+            LibraryBrowseScreen(container: container, parentId: itemId, serverId: serverId)
+        case .libraryBrowserByType(let itemId, let includeType):
+            LibraryBrowseScreen(
+                container: container,
+                parentId: itemId,
+                includeTypes: [ItemType(rawValue: includeType) ?? .movie]
+            )
+        case .collectionBrowser(let itemId, let serverId, _):
+            LibraryBrowseScreen(container: container, parentId: itemId, serverId: serverId)
+        case .allFavorites:
+            LibraryBrowseScreen(
+                container: container,
+                parentId: "",
+                includeTypes: [.movie, .series, .episode, .musicAlbum, .audio]
+            )
         case .itemDetails(let itemId, let serverId):
             ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
         case .nowPlaying:

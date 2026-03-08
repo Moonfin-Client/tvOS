@@ -103,6 +103,9 @@ struct JellyfinItemsApi: ServerItemsApi {
             ("ImageTypeLimit", request.imageTypeLimit.map(String.init)),
             ("EnableUserData", request.enableUserData.map(String.init)),
             ("GroupItemsIntoCollections", request.groupItems.map(String.init)),
+            ("NameStartsWith", request.nameStartsWith),
+            ("CollapseBoxSetItems", request.collapseBoxSetItems.map(String.init)),
+            ("EnableTotalRecordCount", request.enableTotalRecordCount.map(String.init)),
         ])
         return try await client.request("/Users/\(userId)/Items", queryItems: query)
     }

@@ -10,6 +10,7 @@ enum AppFlow: Hashable {
 final class NavigationRouter: ObservableObject {
     @Published var flow: AppFlow = .splash
     @Published var path = NavigationPath()
+    @Published var hideNavbar = false
 
     func navigate(to destination: Destination) {
         path.append(destination)
