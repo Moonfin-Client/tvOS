@@ -63,7 +63,10 @@ struct HomeScreen: View {
         }
         .ignoresSafeArea()
         .environmentObject(viewModel.backgroundService)
-        .onAppear { viewModel.loadContent() }
+        .onAppear {
+            viewModel.loadContent()
+            router.hideNavbar = false
+        }
         .onDisappear { viewModel.mediaBarViewModel.cleanup() }
         .onChange(of: viewModel.isMediaBarActive) { active in
             if active { isMediaBarMode = true }

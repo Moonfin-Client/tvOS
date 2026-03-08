@@ -174,6 +174,16 @@ struct MainNavigationView: View {
                 parentId: "",
                 includeTypes: [.movie, .series, .episode, .musicAlbum, .audio]
             )
+        case .allGenres:
+            GenreBrowseScreen(container: container)
+        case .genreBrowse(let genreName, let parentId, let includeType, let serverId):
+            LibraryBrowseScreen(
+                container: container,
+                parentId: parentId ?? "",
+                serverId: serverId,
+                includeTypes: includeType.flatMap { ItemType(rawValue: $0) }.map { [$0] },
+                genreName: genreName
+            )
         case .itemDetails(let itemId, let serverId):
             ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
         case .nowPlaying:

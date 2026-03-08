@@ -55,9 +55,6 @@ struct LibraryBrowseScreen: View {
             viewModel.initialize()
             router.hideNavbar = true
         }
-        .onDisappear {
-            router.hideNavbar = false
-        }
         .sheet(isPresented: $showSortDialog) {
             FilterSortDialogView(
                 sortOptions: viewModel.sortOptions,
@@ -420,7 +417,7 @@ private struct LibraryCardButtonStyle: ButtonStyle {
 
 // MARK: - Toolbar Icon Button
 
-private struct ToolbarIconButton: View {
+struct ToolbarIconButton: View {
     let systemImage: String
     let isActive: Bool
     let theme: MoonfinTheme
@@ -620,7 +617,7 @@ struct FilterSortDialogView: View {
     }
 }
 
-private struct SortRowButtonStyle: ButtonStyle {
+struct SortRowButtonStyle: ButtonStyle {
     @Environment(\.isFocused) var isFocused
 
     func makeBody(configuration: Configuration) -> some View {
