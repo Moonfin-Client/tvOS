@@ -23,6 +23,7 @@ final class PlaybackManager: ObservableObject {
     private let client: MediaServerClient
     private let preferences: UserPreferences
     private let streamResolver: StreamResolver
+    private let subtitleConfigurator: SubtitleConfigurator
     private var reportingTask: Task<Void, Never>?
     private var stateObserver: AnyCancellable?
 
@@ -43,6 +44,8 @@ final class PlaybackManager: ObservableObject {
         self.client = client
         self.preferences = preferences
         self.streamResolver = ServerStreamResolver(client: client)
+        self.subtitleConfigurator = SubtitleConfigurator(preferences: preferences)
+        player.configureSubtitleAppearance(subtitleConfigurator.mediaOptions())
         observePlayerState()
     }
 
@@ -125,6 +128,7 @@ final class PlaybackManager: ObservableObject {
 
         let pref = preferences[UserPreferences.maxBitrate]
         let maxBitrate: Int64? = pref > 0 ? Int64(pref) : nil
+        let subtitleIndex: Int? = subtitleConfigurator.shouldDefaultToNone ? -1 : nil
 
         do {
             let stream = try await streamResolver.resolve(
@@ -132,11 +136,14 @@ final class PlaybackManager: ObservableObject {
                 mediaSourceId: entry.mediaSourceId,
                 maxBitrate: maxBitrate,
                 audioStreamIndex: nil,
-                subtitleStreamIndex: nil,
+                subtitleStreamIndex: subtitleIndex,
                 startTimeTicks: entry.startPositionTicks > 0 ? entry.startPositionTicks : nil
             )
             currentStreamInfo = stream
             await player.play(streamUrl: stream.url)
+            if subtitleConfigurator.shouldDefaultToNone {
+                player.disableSubtitles()
+            }
             await reportPlaybackStart()
             startProgressReporting()
         } catch {

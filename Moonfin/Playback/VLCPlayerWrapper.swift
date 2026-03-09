@@ -33,12 +33,17 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
 
     private(set) var mediaPlayer: VLCMediaPlayer?
     private(set) var videoView: UIView?
+    private var subtitleOptions: [String: Any] = [:]
 
     var isPlaying: Bool { state == .playing }
 
     func attachVideoView(_ view: UIView) {
         videoView = view
         mediaPlayer?.drawable = view
+    }
+
+    func configureSubtitleAppearance(_ options: [String: Any]) {
+        subtitleOptions = options
     }
 
     func play(url: URL) async {
@@ -51,10 +56,12 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         }
 
         let media = VLCMedia(url: url)
-        media.addOptions([
+        var mediaOpts: [String: Any] = [
             "network-caching": 3000,
             "clock-jitter": 0,
-        ])
+        ]
+        mediaOpts.merge(subtitleOptions) { _, new in new }
+        media.addOptions(mediaOpts)
         player.media = media
         mediaPlayer = player
         state = .opening

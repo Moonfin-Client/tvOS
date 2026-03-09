@@ -98,7 +98,46 @@ struct TrackSelectionView: View {
                     viewModel.playbackManager.setSubtitleTrack(track.id)
                 }
             }
+
+            Divider().background(Color.white.opacity(0.2))
+
+            subtitleDelayControls
         }
+    }
+
+    private var subtitleDelayControls: some View {
+        VStack(spacing: SpaceTokens.spaceSm) {
+            Text("Subtitle Delay: \(subtitleDelayLabel)")
+                .font(.bodySm)
+                .foregroundColor(.white.opacity(0.7))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: SpaceTokens.spaceMd) {
+                delayButton("−0.25s") { viewModel.adjustSubtitleDelay(by: -0.25) }
+                delayButton("Reset") { viewModel.resetSubtitleDelay() }
+                delayButton("+0.25s") { viewModel.adjustSubtitleDelay(by: 0.25) }
+            }
+        }
+        .padding(.horizontal, SpaceTokens.spaceMd)
+        .padding(.vertical, SpaceTokens.spaceSm)
+    }
+
+    private func delayButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.bodySm)
+                .foregroundColor(.white)
+                .padding(.horizontal, SpaceTokens.spaceMd)
+                .padding(.vertical, SpaceTokens.spaceSm)
+                .background(RoundedRectangle(cornerRadius: RadiusTokens.small).fill(Color.white.opacity(0.1)))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var subtitleDelayLabel: String {
+        let delay = viewModel.subtitleDelay
+        if abs(delay) < 0.001 { return "0s" }
+        return String(format: "%+gs", delay)
     }
 
     private var speedList: some View {

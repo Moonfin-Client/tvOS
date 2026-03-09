@@ -5,6 +5,7 @@ final class VideoPlayerViewModel: ObservableObject {
     @Published var overlayVisible = false
     @Published var trackSelectionVisible = false
     @Published var trackSelectionTab: TrackSelectionTab = .audio
+    @Published var subtitleDelay: TimeInterval = 0
 
     let playbackManager: PlaybackManager
 
@@ -94,6 +95,16 @@ final class VideoPlayerViewModel: ObservableObject {
 
     func setPlaybackSpeed(_ speed: Float) {
         playbackManager.setRate(speed)
+    }
+
+    func adjustSubtitleDelay(by delta: TimeInterval) {
+        subtitleDelay += delta
+        player.setSubtitleDelay(subtitleDelay)
+    }
+
+    func resetSubtitleDelay() {
+        subtitleDelay = 0
+        player.setSubtitleDelay(0)
     }
 
     private func formatTime(_ seconds: TimeInterval) -> String {

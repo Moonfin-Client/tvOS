@@ -43,6 +43,13 @@ final class UserPreferences {
 
     static let telemetryEnabled = Preference(key: "telemetry_enabled", defaultValue: false)
 
+    static let subtitlesTextColor = Preference(key: "subtitles_text_color", defaultValue: SubtitleColor.white)
+    static let subtitlesBackgroundColor = Preference(key: "subtitles_background_color", defaultValue: SubtitleColor.transparent)
+    static let subtitlesStrokeColor = Preference(key: "subtitles_text_stroke_color", defaultValue: SubtitleColor.black)
+    static let subtitlesTextSize = Preference(key: "subtitles_text_size", defaultValue: 24)
+    static let subtitlesOffsetPosition = Preference(key: "subtitles_offset_position", defaultValue: 8)
+    static let subtitlesDefaultToNone = Preference(key: "subtitles_default_to_none", defaultValue: false)
+
     init(store: PreferenceStore) {
         self.store = store
     }
@@ -187,4 +194,49 @@ enum WatchedIndicatorBehavior: String, StringRepresentableEnum, CaseIterable {
         case .hideAfterWatched: return "Hide After Watched"
         }
     }
+}
+
+enum SubtitleColor: String, StringRepresentableEnum, CaseIterable {
+    case transparent
+    case white
+    case black
+    case gray
+    case red
+    case green
+    case blue
+    case yellow
+    case magenta
+    case cyan
+
+    var displayName: String {
+        switch self {
+        case .transparent: return "None"
+        case .white: return "White"
+        case .black: return "Black"
+        case .gray: return "Gray"
+        case .red: return "Red"
+        case .green: return "Green"
+        case .blue: return "Blue"
+        case .yellow: return "Yellow"
+        case .magenta: return "Magenta"
+        case .cyan: return "Cyan"
+        }
+    }
+
+    var argb: UInt32 {
+        switch self {
+        case .transparent: return 0x00FFFFFF
+        case .white: return 0xFFFFFFFF
+        case .black: return 0xFF000000
+        case .gray: return 0xFF7F7F7F
+        case .red: return 0xFFC80000
+        case .green: return 0xFF00C800
+        case .blue: return 0xFF0000C8
+        case .yellow: return 0xFFEEDC00
+        case .magenta: return 0xFFD60080
+        case .cyan: return 0xFF009FDA
+        }
+    }
+
+    var isTransparent: Bool { self == .transparent }
 }
