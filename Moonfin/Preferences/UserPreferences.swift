@@ -57,6 +57,8 @@ final class UserPreferences {
         defaultValue: "Intro=askToSkip,Outro=askToSkip"
     )
 
+    static let photoSlideshowInterval = Preference(key: "photo_slideshow_interval", defaultValue: SlideshowInterval.medium)
+
     init(store: PreferenceStore) {
         self.store = store
     }
@@ -246,4 +248,29 @@ enum SubtitleColor: String, StringRepresentableEnum, CaseIterable {
     }
 
     var isTransparent: Bool { self == .transparent }
+}
+
+enum SlideshowInterval: String, StringRepresentableEnum, CaseIterable {
+    case short
+    case medium
+    case long
+    case extraLong
+
+    var seconds: Double {
+        switch self {
+        case .short: return 3
+        case .medium: return 5
+        case .long: return 8
+        case .extraLong: return 10
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .short: return "3 seconds"
+        case .medium: return "5 seconds"
+        case .long: return "8 seconds"
+        case .extraLong: return "10 seconds"
+        }
+    }
 }

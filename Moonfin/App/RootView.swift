@@ -192,6 +192,14 @@ struct MainNavigationView: View {
             ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
         case .nowPlaying:
             PlaceholderView(title: "Now Playing")
+        case .photoPlayer(let itemId, let autoPlay, let sortBy, let sortOrder):
+            PhotoPlayerScreen(
+                container: container,
+                itemId: itemId,
+                autoPlay: autoPlay,
+                sortBy: sortBy,
+                sortOrder: sortOrder
+            )
         case .videoPlayer:
             PlaceholderView(title: "Video Player")
         case .liveTvGuide:

@@ -48,6 +48,14 @@ struct SettingsPlaybackScreen: View {
                 action: { settingsRouter.navigate(to: .playbackMaxBitrate) }
             )
 
+            SettingsListButton(
+                icon: "photo.on.rectangle",
+                heading: "Slideshow Interval",
+                caption: "Time between photos",
+                trailingText: prefs[UserPreferences.photoSlideshowInterval].displayName,
+                action: { settingsRouter.navigate(to: .playbackSlideshowInterval) }
+            )
+
             if supportsMediaSegments {
                 SettingsListButton(
                     icon: "scissors",

@@ -55,6 +55,7 @@ enum SettingsRoute: Hashable {
     case playbackRefreshRateSwitching
     case playbackZoomMode
     case playbackAudioBehavior
+    case playbackSlideshowInterval
 
     case jellyseerr
     case jellyseerrRows

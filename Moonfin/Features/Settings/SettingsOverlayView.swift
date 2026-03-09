@@ -155,6 +155,12 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.audioBehavior),
                 displayName: \.displayName
             )
+        case .playbackSlideshowInterval:
+            SettingsPickerScreen(
+                title: "Slideshow Interval",
+                selection: container.userPreferences.binding(for: UserPreferences.photoSlideshowInterval),
+                displayName: \.displayName
+            )
         case .telemetry:
             SettingsTelemetryScreen()
         case .about:
