@@ -5,6 +5,7 @@ struct LibraryCard: View {
     let imageUrl: String?
     var cardWidth: CGFloat = 280
     var onFocused: ((ServerItem) -> Void)?
+    var onSelect: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
@@ -13,43 +14,43 @@ struct LibraryCard: View {
     private var cardHeight: CGFloat { cardWidth / aspectRatio }
 
     var body: some View {
-        ZStack {
-            cardImage
+        Button(action: { onSelect?() }) {
+            ZStack {
+                cardImage
 
-            LinearGradient(
-                stops: [
-                    .init(color: .clear, location: 0.3),
-                    .init(color: .black.opacity(0.6), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.3),
+                        .init(color: .black.opacity(0.6), location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
 
-            VStack {
-                Spacer()
-                HStack {
-                    Image(systemName: libraryIcon)
-                        .font(.captionXs)
-                        .foregroundColor(.white.opacity(0.8))
-                    Text(item.name)
-                        .font(.captionXs)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .lineLimit(1)
+                VStack {
                     Spacer()
+                    HStack {
+                        Image(systemName: libraryIcon)
+                            .font(.captionXs)
+                            .foregroundColor(.white.opacity(0.8))
+                        Text(item.name)
+                            .font(.captionXs)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                        Spacer()
+                    }
+                    .padding(SpaceTokens.spaceSm)
                 }
-                .padding(SpaceTokens.spaceSm)
             }
+            .frame(width: cardWidth, height: cardHeight)
+            .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
         }
-        .frame(width: cardWidth, height: cardHeight)
-        .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
-        .overlay(
-            RoundedRectangle(cornerRadius: RadiusTokens.small)
-                .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
-        )
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
-        .focusable()
+        .buttonStyle(ItemCardButtonStyle(
+            isFocused: isFocused,
+            cornerRadius: RadiusTokens.small,
+            focusBorderColor: theme.focusBorder.color
+        ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
             if focused { onFocused?(item) }

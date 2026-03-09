@@ -13,6 +13,7 @@ struct ItemCard: View {
     var shape: CardShape = .rounded
     var watchedIndicator: WatchedIndicatorBehavior = .always
     var onFocused: ((ServerItem) -> Void)?
+    var onSelect: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
@@ -24,19 +25,19 @@ struct ItemCard: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            cardImage
-            cardOverlays
+        Button(action: { onSelect?() }) {
+            ZStack(alignment: .bottomLeading) {
+                cardImage
+                cardOverlays
+            }
+            .frame(width: cardWidth, height: cardHeight)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
-        .frame(width: cardWidth, height: cardHeight)
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
-        .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
-        )
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
-        .focusable()
+        .buttonStyle(ItemCardButtonStyle(
+            isFocused: isFocused,
+            cornerRadius: cornerRadius,
+            focusBorderColor: theme.focusBorder.color
+        ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
             if focused { onFocused?(item) }
@@ -142,6 +143,22 @@ struct ItemCard: View {
                 Spacer()
             }
         }
+    }
+}
+
+struct ItemCardButtonStyle: ButtonStyle {
+    let isFocused: Bool
+    let cornerRadius: CGFloat
+    let focusBorderColor: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(isFocused ? focusBorderColor : .clear, lineWidth: isFocused ? 3 : 0)
+            )
+            .scaleEffect(isFocused ? 1.05 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }
 

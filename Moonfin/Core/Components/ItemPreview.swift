@@ -8,6 +8,7 @@ struct ItemPreview: View {
     var shape: CardShape = .rounded
     var watchedIndicator: WatchedIndicatorBehavior = .always
     var onFocused: ((ServerItem) -> Void)?
+    var onSelect: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
 
@@ -20,7 +21,8 @@ struct ItemPreview: View {
                 cardWidth: cardWidth,
                 shape: shape,
                 watchedIndicator: watchedIndicator,
-                onFocused: onFocused
+                onFocused: onFocused,
+                onSelect: onSelect
             )
 
             VStack(alignment: .leading, spacing: 2) {

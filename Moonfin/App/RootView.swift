@@ -112,7 +112,7 @@ struct MainNavigationView: View {
             }
             .disabled(settingsRouter.isPresented)
             .overlay(alignment: .topTrailing) {
-                if container.userPreferences[UserPreferences.clockBehavior] != .never {
+                if !router.hideNavbar && container.userPreferences[UserPreferences.clockBehavior] != .never {
                     ToolbarClock()
                         .frame(height: navbarHeight)
                         .padding(.trailing, 8)

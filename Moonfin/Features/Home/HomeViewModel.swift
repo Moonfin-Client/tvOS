@@ -93,7 +93,11 @@ final class HomeViewModel: ObservableObject {
         return imageApi
     }
 
-    func loadContent() {
+    func loadContent(forceReload: Bool = false) {
+        guard forceReload || isInitialLoad else {
+            refreshContent()
+            return
+        }
         loadTask?.cancel()
         loadTask = Task {
             guard let client else {

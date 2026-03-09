@@ -5,6 +5,8 @@ struct ContentRow: View {
     let viewModel: HomeViewModel
     var watchedIndicator: WatchedIndicatorBehavior = .always
     var onRowFocused: (() -> Void)?
+    var onItemSelected: ((ServerItem) -> Void)?
+    var restoredItemId: String?
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
@@ -44,17 +46,28 @@ struct ContentRow: View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             rowTitle
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: SpaceTokens.spaceMd) {
-                    ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
-                        cardView(for: item)
-                            .onAppear {
-                                viewModel.loadMoreIfNeeded(row: row, currentIndex: index)
-                            }
+            ScrollViewReader { scrollProxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: SpaceTokens.spaceMd) {
+                        ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
+                            cardView(for: item)
+                                .id(item.id)
+                                .onAppear {
+                                    viewModel.loadMoreIfNeeded(row: row, currentIndex: index)
+                                }
+                        }
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 12)
+                }
+                .modifier(ScrollClipDisabledModifier())
+                .onAppear {
+                    if let targetId = restoredItemId {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            scrollProxy.scrollTo(targetId, anchor: .leading)
+                        }
                     }
                 }
-                .padding(.vertical, 10)
-                .padding(.leading, 6)
             }
         }
     }
@@ -69,7 +82,8 @@ struct ContentRow: View {
                 onFocused: { item in
                     viewModel.onItemFocused(item)
                     onRowFocused?()
-                }
+                },
+                onSelect: { onItemSelected?(item) }
             )
         } else {
             ItemPreview(
@@ -81,7 +95,8 @@ struct ContentRow: View {
                 onFocused: { item in
                     viewModel.onItemFocused(item)
                     onRowFocused?()
-                }
+                },
+                onSelect: { onItemSelected?(item) }
             )
         }
     }
@@ -92,6 +107,16 @@ struct ContentRow: View {
             return viewModel.thumbImageUrl(for: item)
         default:
             return viewModel.posterImageUrl(for: item)
+        }
+    }
+}
+
+private struct ScrollClipDisabledModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(tvOS 17.0, *) {
+            content.scrollClipDisabled()
+        } else {
+            content
         }
     }
 }

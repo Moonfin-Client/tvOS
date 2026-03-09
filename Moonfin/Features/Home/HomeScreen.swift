@@ -10,6 +10,10 @@ struct HomeScreen: View {
     @State private var sentinelEnabled = false
     @State private var focusedRowId: String?
     @State private var scrollTrigger: Int = 0
+    @State private var lastFocusedRowId: String?
+    @State private var lastFocusedItemId: String?
+    @State private var navigatedFromMediaBar = false
+    @State private var isRestoringPosition = false
     @Environment(\.resetFocus) private var resetFocus
 
     private var navbarIsLeft: Bool {
@@ -36,6 +40,7 @@ struct HomeScreen: View {
                         screenHeight: geo.size.height,
                         focusNamespace: mainNamespace,
                         onItemSelected: { item in
+                            navigatedFromMediaBar = true
                             router.navigate(to: .itemDetails(itemId: item.id))
                         },
                         onNavigateDown: {
@@ -66,13 +71,21 @@ struct HomeScreen: View {
         .onAppear {
             viewModel.loadContent()
             router.hideNavbar = false
+            if navigatedFromMediaBar {
+                isMediaBarMode = true
+                navigatedFromMediaBar = false
+            } else if lastFocusedRowId != nil {
+                isMediaBarMode = false
+                isRestoringPosition = true
+                sentinelEnabled = false
+            }
         }
         .onDisappear { viewModel.mediaBarViewModel.cleanup() }
         .onChange(of: viewModel.isMediaBarActive) { active in
-            if active { isMediaBarMode = true }
+            if active && lastFocusedRowId == nil { isMediaBarMode = true }
         }
         .onChange(of: viewModel.hasFocusableContent) { ready in
-            if ready {
+            if ready && !isRestoringPosition {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                     resetFocus(in: mainNamespace)
                 }
@@ -213,8 +226,22 @@ struct HomeScreen: View {
                                 watchedIndicator: viewModel.watchedIndicator,
                                 onRowFocused: {
                                     focusedRowId = row.id
-                                    scrollTrigger += 1
-                                }
+                                    if isRestoringPosition {
+                                        isRestoringPosition = false
+                                        lastFocusedRowId = nil
+                                        lastFocusedItemId = nil
+                                        sentinelEnabled = true
+                                    } else {
+                                        scrollTrigger += 1
+                                    }
+                                },
+                                onItemSelected: { item in
+                                    navigatedFromMediaBar = false
+                                    lastFocusedRowId = row.id
+                                    lastFocusedItemId = item.id
+                                    router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+                                },
+                                restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil
                             )
                             .id(row.id)
                         }
@@ -241,6 +268,15 @@ struct HomeScreen: View {
                     guard let id = focusedRowId else { return }
                     withAnimation(.easeInOut(duration: 0.3)) {
                         proxy.scrollTo(id, anchor: UnitPoint(x: 0, y: 0.05))
+                    }
+                }
+                .onAppear {
+                    if let rowId = lastFocusedRowId {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(rowId, anchor: UnitPoint(x: 0, y: 0.05))
+                            }
+                        }
                     }
                 }
             }
