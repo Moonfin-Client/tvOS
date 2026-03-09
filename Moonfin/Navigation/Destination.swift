@@ -53,7 +53,7 @@ enum Destination: Hashable {
 
     case nowPlaying
     case photoPlayer(itemId: String, autoPlay: Bool, sortBy: String? = nil, sortOrder: String? = nil)
-    case videoPlayer(position: Int = 0)
+    case videoPlayer
     case nextUp(itemId: String)
     case stillWatching(itemId: String)
     case trailerPlayer(videoId: String, startSeconds: Double = 0, segmentsJson: String = "[]")

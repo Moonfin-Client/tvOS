@@ -266,6 +266,16 @@ struct EmbyImageApi: ServerImageApi {
         return params.isEmpty ? path : "\(path)?\(params.joined(separator: "&"))"
     }
 
+    func getChapterImageUrl(itemId: String, chapterIndex: Int, maxWidth: Int?, tag: String?) -> String {
+        guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else { return "" }
+        var params: [String] = []
+        if let w = maxWidth { params.append("maxWidth=\(w)") }
+        if let t = tag { params.append("tag=\(t)") }
+        if let token = client.accessToken { params.append("api_key=\(token)") }
+        let path = "\(base)/Items/\(itemId)/Images/Chapter/\(chapterIndex)"
+        return params.isEmpty ? path : "\(path)?\(params.joined(separator: "&"))"
+    }
+
     func getUserImageUrl(userId: String, imageType: ImageType, tag: String?) -> String {
         guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else { return "" }
         var params: [String] = []

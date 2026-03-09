@@ -88,6 +88,7 @@ protocol ServerPlaybackApi {
 
 protocol ServerImageApi {
     func getItemImageUrl(itemId: String, imageType: ImageType, maxWidth: Int?, maxHeight: Int?, tag: String?) -> String
+    func getChapterImageUrl(itemId: String, chapterIndex: Int, maxWidth: Int?, tag: String?) -> String
     func getUserImageUrl(userId: String, imageType: ImageType, tag: String?) -> String
 }
 

@@ -16,3 +16,9 @@ struct VLCPlayerView: UIViewRepresentable {
 
     static func dismantleUIView(_ uiView: UIView, coordinator: ()) {}
 }
+
+extension VLCPlayerView: Equatable {
+    static func == (lhs: VLCPlayerView, rhs: VLCPlayerView) -> Bool {
+        lhs.player === rhs.player
+    }
+}

@@ -19,8 +19,8 @@ struct TrackSelectionView: View {
     private let speedOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
 
     var body: some View {
-        HStack(spacing: 0) {
-            Spacer()
+        ZStack {
+            Color.clear
             VStack(spacing: 0) {
                 tabBar
                 Divider().background(Color.white.opacity(0.2))
@@ -31,7 +31,10 @@ struct TrackSelectionView: View {
             .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.large))
         }
         .padding(48)
-        .transition(.move(edge: .trailing).combined(with: .opacity))
+        .transition(.opacity)
+        .onExitCommand {
+            viewModel.hideTrackSelection()
+        }
     }
 
     private var tabBar: some View {
@@ -46,7 +49,7 @@ struct TrackSelectionView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, SpaceTokens.spaceMd)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(TrackTabButtonStyle(isActive: selectedTab == tab))
             }
         }
         .padding(.horizontal, SpaceTokens.spaceMd)
@@ -131,7 +134,7 @@ struct TrackSelectionView: View {
                 .padding(.vertical, SpaceTokens.spaceSm)
                 .background(RoundedRectangle(cornerRadius: RadiusTokens.small).fill(Color.white.opacity(0.1)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TrackRowButtonStyle())
     }
 
     private var subtitleDelayLabel: String {
@@ -169,17 +172,45 @@ struct TrackSelectionView: View {
             }
             .padding(.horizontal, SpaceTokens.spaceMd)
             .padding(.vertical, SpaceTokens.spaceSm)
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isSelected ? Color.white.opacity(0.1) : .clear)
-            )
+            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TrackRowButtonStyle(isSelected: isSelected))
     }
 
     private func speedLabel(_ speed: Float) -> String {
         if speed == 1.0 { return "Normal" }
         if speed == floor(speed) { return "\(Int(speed))x" }
         return String(format: "%gx", speed)
+    }
+}
+
+struct TrackTabButtonStyle: ButtonStyle {
+    let isActive: Bool
+    @Environment(\.isFocused) private var isFocused
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(isFocused ? Color.white.opacity(0.3) : (isActive ? Color.white.opacity(0.1) : .clear))
+            )
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: isFocused)
+    }
+}
+
+struct TrackRowButtonStyle: ButtonStyle {
+    var isSelected: Bool = false
+    @Environment(\.isFocused) private var isFocused
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(isFocused ? Color.white.opacity(0.25) : (isSelected ? Color.white.opacity(0.1) : .clear))
+            )
+            .scaleEffect(isFocused ? 1.02 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: isFocused)
     }
 }

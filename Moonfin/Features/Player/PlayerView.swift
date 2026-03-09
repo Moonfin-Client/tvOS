@@ -4,7 +4,9 @@ struct VideoPlayerScreen: View {
     @StateObject private var viewModel: VideoPlayerViewModel
     @ObservedObject private var segmentHandler: MediaSegmentHandler
     @ObservedObject private var nextUpManager: NextUpManager
+    @EnvironmentObject var router: NavigationRouter
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var gestureLayerFocused: Bool
 
     init(playbackManager: PlaybackManager) {
         _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(playbackManager: playbackManager))
@@ -17,16 +19,30 @@ struct VideoPlayerScreen: View {
             Color.black.ignoresSafeArea()
 
             VLCPlayerView(player: viewModel.player)
+                .equatable()
                 .ignoresSafeArea()
+                .allowsHitTesting(false)
 
             gestureLayer
 
             if viewModel.overlayVisible {
                 PlayerOverlayView(viewModel: viewModel)
+                    .focusSection()
             }
 
             if viewModel.trackSelectionVisible {
                 trackSelectionOverlay
+                    .focusSection()
+            }
+
+            if viewModel.chapterSelectionVisible {
+                chapterSelectionOverlay
+                    .focusSection()
+            }
+
+            if viewModel.castListVisible {
+                castListOverlay
+                    .focusSection()
             }
 
             if let action = segmentHandler.activeSkipPrompt {
@@ -66,13 +82,26 @@ struct VideoPlayerScreen: View {
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.3), value: viewModel.overlayVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.trackSelectionVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.chapterSelectionVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.castListVisible)
         .animation(.easeInOut(duration: 0.3), value: segmentHandler.activeSkipPrompt != nil)
         .animation(.easeInOut(duration: 0.3), value: nextUpManager.promptState)
         .onAppear {
             viewModel.showOverlay()
         }
-        .onDisappear {
-            Task { await viewModel.playbackManager.stop() }
+        .onChange(of: viewModel.overlayVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.trackSelectionVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.chapterSelectionVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.castListVisible) { _ in restoreFocusIfNeeded() }
+    }
+
+    private func restoreFocusIfNeeded() {
+        let anyVisible = viewModel.overlayVisible || viewModel.trackSelectionVisible
+            || viewModel.chapterSelectionVisible || viewModel.castListVisible
+        if !anyVisible {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                gestureLayerFocused = true
+            }
         }
     }
 
@@ -80,28 +109,23 @@ struct VideoPlayerScreen: View {
         Color.clear
             .contentShape(Rectangle())
             .focusable()
+            .focused($gestureLayerFocused)
+            .disabled(viewModel.overlayVisible || viewModel.trackSelectionVisible || viewModel.chapterSelectionVisible || viewModel.castListVisible)
             .onPlayPauseCommand {
                 viewModel.togglePlayPause()
                 if !viewModel.overlayVisible { viewModel.showOverlay() }
             }
-            .onMoveCommand { direction in
-                switch direction {
-                case .left:
-                    viewModel.seekBackward()
-                case .right:
-                    viewModel.seekForward()
-                case .down:
-                    viewModel.showTrackSelection()
-                case .up:
-                    if !viewModel.overlayVisible {
-                        viewModel.showOverlay()
-                    }
-                @unknown default:
-                    break
+            .onMoveCommand { _ in
+                if !viewModel.overlayVisible {
+                    viewModel.showOverlay()
                 }
             }
             .onExitCommand {
-                if viewModel.trackSelectionVisible {
+                if viewModel.chapterSelectionVisible {
+                    viewModel.hideChapterSelection()
+                } else if viewModel.castListVisible {
+                    viewModel.hideCastList()
+                } else if viewModel.trackSelectionVisible {
                     viewModel.hideTrackSelection()
                 } else if viewModel.overlayVisible {
                     viewModel.hideOverlay()
@@ -117,6 +141,32 @@ struct VideoPlayerScreen: View {
                 .ignoresSafeArea()
 
             TrackSelectionView(viewModel: viewModel)
+        }
+        .transition(.opacity)
+    }
+
+    private var chapterSelectionOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+
+            ChapterSelectionView(viewModel: viewModel)
+        }
+        .transition(.opacity)
+    }
+
+    private var castListOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+
+            CastListView(viewModel: viewModel) { person in
+                viewModel.hideCastList()
+                guard let personId = person.id else { return }
+                let serverId = viewModel.playbackManager.currentEntry?.item.serverId
+                dismiss()
+                router.navigate(to: .itemDetails(itemId: personId, serverId: serverId))
+            }
         }
         .transition(.opacity)
     }

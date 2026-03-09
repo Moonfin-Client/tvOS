@@ -53,6 +53,16 @@ final class PlaybackManager: ObservableObject {
         return client.imageApi.getItemImageUrl(itemId: item.id, imageType: .primary, maxWidth: maxWidth, maxHeight: maxHeight, tag: tag)
     }
 
+    func chapterImageUrl(for item: ServerItem, tag: String, ticks: Int64) -> String? {
+        guard let chapters = item.chapters else { return nil }
+        guard let index = chapters.firstIndex(where: { $0.startPositionTicks == ticks }) else { return nil }
+        return client.imageApi.getChapterImageUrl(itemId: item.id, chapterIndex: index, maxWidth: 480, tag: tag)
+    }
+
+    func personImageUrl(personId: String, tag: String, maxWidth: Int = 300, maxHeight: Int = 450) -> String {
+        return client.imageApi.getItemImageUrl(itemId: personId, imageType: .primary, maxWidth: maxWidth, maxHeight: maxHeight, tag: tag)
+    }
+
     init(
         player: VLCPlayerWrapper,
         client: MediaServerClient,

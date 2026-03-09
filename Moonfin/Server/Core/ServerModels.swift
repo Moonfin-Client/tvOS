@@ -34,6 +34,19 @@ struct UserItemData: Codable {
     }
 }
 
+struct ServerChapter: Codable, Identifiable {
+    var id: Int64 { startPositionTicks }
+    let startPositionTicks: Int64
+    let name: String?
+    let imageTag: String?
+
+    enum CodingKeys: String, CodingKey {
+        case startPositionTicks = "StartPositionTicks"
+        case name = "Name"
+        case imageTag = "ImageTag"
+    }
+}
+
 struct ServerPerson: Codable {
     let id: String?
     let name: String
@@ -158,6 +171,7 @@ struct ServerItem: Codable, Identifiable {
     let channelName: String?
     let collectionType: String?
     let people: [ServerPerson]?
+    let chapters: [ServerChapter]?
     let genres: [String]?
     let tags: [String]?
     let taglines: [String]?
@@ -209,6 +223,7 @@ struct ServerItem: Codable, Identifiable {
         case channelName = "ChannelName"
         case collectionType = "CollectionType"
         case people = "People"
+        case chapters = "Chapters"
         case genres = "Genres"
         case tags = "Tags"
         case taglines = "Taglines"

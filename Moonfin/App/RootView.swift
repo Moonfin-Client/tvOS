@@ -191,7 +191,7 @@ struct MainNavigationView: View {
         case .itemDetails(let itemId, let serverId):
             ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
         case .nowPlaying:
-            PlaceholderView(title: "Now Playing")
+            audioPlayerDestination
         case .photoPlayer(let itemId, let autoPlay, let sortBy, let sortOrder):
             PhotoPlayerScreen(
                 container: container,
@@ -201,13 +201,40 @@ struct MainNavigationView: View {
                 sortOrder: sortOrder
             )
         case .videoPlayer:
-            PlaceholderView(title: "Video Player")
+            videoPlayerDestination
         case .liveTvGuide:
             PlaceholderView(title: "Live TV Guide")
         case .jellyseerrDiscover:
             PlaceholderView(title: "Discover")
         default:
             PlaceholderView(title: "Screen")
+        }
+    }
+
+    @ViewBuilder
+    private var videoPlayerDestination: some View {
+        if let manager = container.playbackCoordinator.videoPlayerManager {
+            VideoPlayerScreen(playbackManager: manager)
+                .onAppear { router.hideNavbar = true }
+                .onDisappear {
+                    router.hideNavbar = false
+                    Task { await container.playbackCoordinator.stopVideoPlayback() }
+                }
+        } else {
+            PlaceholderView(title: "Video Player")
+        }
+    }
+
+    @ViewBuilder
+    private var audioPlayerDestination: some View {
+        if let audio = container.playbackCoordinator.audioManager,
+           let server = container.serverRepository.currentServer.value {
+            let client = container.serverClientFactory.client(for: server)
+            AudioNowPlayingView(
+                viewModel: AudioNowPlayingViewModel(audioManager: audio, client: client)
+            )
+        } else {
+            PlaceholderView(title: "Now Playing")
         }
     }
 }

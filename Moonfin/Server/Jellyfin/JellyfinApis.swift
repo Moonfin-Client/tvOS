@@ -278,6 +278,16 @@ struct JellyfinImageApi: ServerImageApi {
         return url
     }
 
+    func getChapterImageUrl(itemId: String, chapterIndex: Int, maxWidth: Int?, tag: String?) -> String {
+        guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else { return "" }
+        var url = "\(base)/Items/\(itemId)/Images/Chapter/\(chapterIndex)"
+        var params: [String] = []
+        if let w = maxWidth { params.append("maxWidth=\(w)") }
+        if let t = tag { params.append("tag=\(t)") }
+        if !params.isEmpty { url += "?" + params.joined(separator: "&") }
+        return url
+    }
+
     func getUserImageUrl(userId: String, imageType: ImageType, tag: String?) -> String {
         guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else { return "" }
         var url = "\(base)/Users/\(userId)/Images/\(imageType.rawValue)"

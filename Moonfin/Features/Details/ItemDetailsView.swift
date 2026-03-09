@@ -424,10 +424,10 @@ struct ItemDetailsView: View {
                 canResume: viewModel.canResume,
                 resumePositionText: viewModel.resumePositionText,
                 focusedButton: $focusedButton,
-                onPlay: { router.navigate(to: .videoPlayer(position: 0)) },
+                onPlay: { playVideo(item: item, positionTicks: 0) },
                 onResume: {
-                    let pos = Int(item.userData?.playbackPositionTicks ?? 0)
-                    router.navigate(to: .videoPlayer(position: pos))
+                    let ticks = item.userData?.playbackPositionTicks ?? 0
+                    playVideo(item: item, positionTicks: ticks)
                 },
                 onToggleWatched: { viewModel.toggleWatched() },
                 onToggleFavorite: { viewModel.toggleFavorite() },
@@ -442,12 +442,12 @@ struct ItemDetailsView: View {
                     }
                 } : nil,
                 onShuffle: isMusicType ? {
-                    router.navigate(to: .videoPlayer(position: 0))
+                    playAudio(items: viewModel.state.tracks, shuffle: true)
                 } : nil,
                 onInstantMix: isMusicType ? {
                     Task {
                         await viewModel.loadInstantMix()
-                        router.navigate(to: .videoPlayer(position: 0))
+                        playAudio(items: viewModel.state.instantMixItems)
                     }
                 } : nil,
                 onAudioTrack: hasAudioStreams ? {
@@ -460,6 +460,50 @@ struct ItemDetailsView: View {
                     showAddToPlaylist = true
                 } : nil
             )
+        }
+    }
+
+    private func playVideo(item: ServerItem, positionTicks: Int64) {
+        let items: [ServerItem]
+        var startIndex = 0
+        let startPosition = TimeInterval(positionTicks) / 10_000_000
+
+        switch item.type {
+        case .episode:
+            let episodes = viewModel.state.episodes
+            if episodes.isEmpty {
+                items = [item]
+            } else {
+                items = episodes
+                startIndex = episodes.firstIndex(where: { $0.id == item.id }) ?? 0
+            }
+        case .series, .season:
+            let episodes = viewModel.state.episodes
+            guard !episodes.isEmpty else { return }
+            items = episodes
+        default:
+            items = [item]
+        }
+
+        Task {
+            await container.playbackCoordinator.startVideoPlayback(
+                items: items,
+                startIndex: startIndex,
+                startPosition: startPosition
+            )
+            router.navigate(to: .videoPlayer)
+        }
+    }
+
+    private func playAudio(items: [ServerItem], startIndex: Int = 0, shuffle: Bool = false) {
+        guard !items.isEmpty else { return }
+        Task {
+            await container.playbackCoordinator.startAudioPlayback(
+                items: items,
+                startIndex: startIndex,
+                shuffle: shuffle
+            )
+            router.navigate(to: .nowPlaying)
         }
     }
 
@@ -844,11 +888,11 @@ struct ItemDetailsView: View {
 
     private func interactiveTrackList(items: [ServerItem]) -> some View {
         VStack(spacing: 0) {
-            ForEach(items) { track in
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, track in
                 FocusableTrackRow(
                     track: track,
                     onSelect: {
-                        router.navigate(to: .videoPlayer(position: 0))
+                        playAudio(items: items, startIndex: index)
                     }
                 )
             }

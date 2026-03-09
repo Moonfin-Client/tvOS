@@ -14,6 +14,26 @@ enum VLCPlayerState: Equatable {
     case error
 }
 
+enum ZoomMode: String, CaseIterable {
+    case fit = "Fit"
+    case autoCrop = "Auto Crop"
+    case stretch = "Stretch"
+
+    var next: ZoomMode {
+        let all = ZoomMode.allCases
+        let idx = all.firstIndex(of: self)!
+        return all[(idx + 1) % all.count]
+    }
+
+    var iconName: String {
+        switch self {
+        case .fit: return "arrow.down.right.and.arrow.up.left"
+        case .autoCrop: return "arrow.up.left.and.arrow.down.right"
+        case .stretch: return "arrow.left.and.right"
+        }
+    }
+}
+
 struct VLCTrack: Identifiable, Equatable {
     let id: Int32
     let name: String
@@ -31,10 +51,13 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     @Published private(set) var currentAudioTrackIndex: Int32 = -1
     @Published private(set) var currentSubtitleTrackIndex: Int32 = -1
     @Published private(set) var rate: Float = 1.0
+    @Published private(set) var zoomMode: ZoomMode = .fit
 
     private(set) var mediaPlayer: VLCMediaPlayer?
     private(set) var videoView: UIView?
     private var subtitleOptions: [String: Any] = [:]
+    private var lastTimeUpdate: CFAbsoluteTime = 0
+    private let timeUpdateInterval: CFAbsoluteTime = 0.25
 
     var isPlaying: Bool { state == .playing }
 
@@ -67,8 +90,10 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
 
         let media = VLCMedia(url: url)
         var mediaOpts: [String: Any] = [
-            "network-caching": 3000,
-            "clock-jitter": 0,
+            "network-caching": 2000,
+            "file-caching": 1000,
+            "avcodec-hw": "any",
+            "avcodec-threads": 0,
         ]
         mediaOpts.merge(subtitleOptions) { _, new in new }
         media.addOptions(mediaOpts)
@@ -85,11 +110,15 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     }
 
     func pause() {
-        mediaPlayer?.pause()
+        guard let player = mediaPlayer, state == .playing else { return }
+        player.pause()
+        state = .paused
     }
 
     func resume() {
-        mediaPlayer?.play()
+        guard let player = mediaPlayer else { return }
+        player.play()
+        state = .playing
     }
 
     func stop() {
@@ -149,30 +178,69 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         mediaPlayer?.currentAudioPlaybackDelay = microseconds
     }
 
+    func setZoomMode(_ mode: ZoomMode) {
+        guard let player = mediaPlayer else { return }
+        switch mode {
+        case .fit:
+            player.videoAspectRatio = nil
+            player.videoCropGeometry = nil
+        case .autoCrop:
+            player.videoAspectRatio = nil
+            player.videoCropGeometry = UnsafeMutablePointer<CChar>(mutating: ("16:9" as NSString).utf8String)
+        case .stretch:
+            player.videoAspectRatio = UnsafeMutablePointer<CChar>(mutating: ("16:9" as NSString).utf8String)
+            player.videoCropGeometry = nil
+        }
+        zoomMode = mode
+    }
+
+    func cycleZoomMode() {
+        setZoomMode(zoomMode.next)
+    }
+
     private func refreshTracks() {
         guard let player = mediaPlayer else { return }
 
         if let names = player.audioTrackNames as? [String],
            let indexes = player.audioTrackIndexes as? [NSNumber] {
-            audioTracks = zip(indexes, names).map { VLCTrack(id: $0.0.int32Value, name: $0.1) }
+            audioTracks = zip(indexes, names)
+                .filter { $0.0.int32Value != -1 }
+                .map { VLCTrack(id: $0.0.int32Value, name: $0.1) }
         }
 
         if let names = player.videoSubTitlesNames as? [String],
            let indexes = player.videoSubTitlesIndexes as? [NSNumber] {
-            subtitleTracks = zip(indexes, names).map { VLCTrack(id: $0.0.int32Value, name: $0.1) }
+            subtitleTracks = zip(indexes, names)
+                .filter { $0.0.int32Value != -1 }
+                .map { VLCTrack(id: $0.0.int32Value, name: $0.1) }
         }
 
         currentAudioTrackIndex = player.currentAudioTrackIndex
         currentSubtitleTrackIndex = player.currentVideoSubTitleIndex
     }
 
-    private func updateTime() {
+    private func updateTime(force: Bool = false) {
+        let now = CFAbsoluteTimeGetCurrent()
+        guard force || (now - lastTimeUpdate) >= timeUpdateInterval else { return }
+        lastTimeUpdate = now
+
         guard let player = mediaPlayer else { return }
-        let currentMs = player.time.intValue
-        let totalMs = abs(player.media?.length.intValue ?? 0)
-        currentTime = TimeInterval(currentMs) / 1000.0
-        duration = TimeInterval(totalMs) / 1000.0
-        position = player.position
+
+        if player.isPlaying && state != .playing {
+            state = .playing
+            refreshTracks()
+        }
+
+        let newTime = TimeInterval(player.time.intValue) / 1000.0
+        let newDuration = TimeInterval(abs(player.media?.length.intValue ?? 0)) / 1000.0
+        let newPosition = player.position
+
+        let changed = newTime != currentTime || newDuration != duration || newPosition != position
+        guard changed else { return }
+
+        currentTime = newTime
+        duration = newDuration
+        position = newPosition
     }
 }
 
@@ -208,6 +276,7 @@ extension VLCPlayerWrapper: VLCMediaPlayerDelegate {
 
             isSeekable = player.isSeekable
             state = newState
+            updateTime(force: true)
         }
     }
 

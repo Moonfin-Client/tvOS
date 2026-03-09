@@ -28,6 +28,10 @@ final class AppContainer: ObservableObject {
     let pluginSyncService: PluginSyncService
     let itemMutationService: ItemMutationService
 
+    // MARK: - Playback
+
+    let playbackCoordinator: PlaybackCoordinator
+
     // MARK: - Repositories
 
     let userRepository: UserRepositoryProtocol
@@ -81,6 +85,11 @@ final class AppContainer: ObservableObject {
         self.serverUserRepository = serverUserRepo
         self.authenticationRepository = authRepo
         self.itemMutationService = ItemMutationService(serverClientFactory: factory, serverRepository: serverRepo)
+        self.playbackCoordinator = PlaybackCoordinator(
+            serverClientFactory: factory,
+            serverRepository: serverRepo,
+            preferences: self.userPreferences
+        )
 
         let resolveClient: () -> HttpClient? = { [weak serverRepo] in
             guard let server = serverRepo?.currentServer.value else { return nil }

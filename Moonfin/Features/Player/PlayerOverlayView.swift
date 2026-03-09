@@ -6,13 +6,18 @@ struct PlayerOverlayView: View {
     @FocusState private var focusedControl: ControlFocus?
 
     enum ControlFocus: Hashable {
+        case seekbar
         case playPause
         case rewind
         case fastForward
+        case closedCaptions
+        case audioTrack
         case previous
         case next
-        case tracks
+        case chapters
+        case cast
         case speed
+        case zoom
     }
 
     var body: some View {
@@ -21,18 +26,30 @@ struct PlayerOverlayView: View {
             Spacer()
             controlsSection
         }
-        .padding(.horizontal, 48)
-        .padding(.vertical, 27)
-        .transition(.opacity.combined(with: .move(edge: .bottom)))
-        .onChange(of: viewModel.overlayVisible) { visible in
-            if visible {
-                focusedControl = .playPause
+        .padding(.horizontal, 80)
+        .padding(.vertical, 60)
+        .transition(.opacity)
+        .onAppear { focusedControl = .playPause }
+        .defaultFocus($focusedControl, .playPause)
+        .onExitCommand {
+            if viewModel.isScrubbing {
+                viewModel.cancelScrub()
+            } else {
+                viewModel.hideOverlay()
+            }
+        }
+        .onChange(of: focusedControl) { newFocus in
+            viewModel.resetHideTimer()
+            if newFocus != .seekbar && viewModel.isScrubbing {
+                viewModel.commitScrub()
             }
         }
     }
 
+    // MARK: - Header
+
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(viewModel.title)
                 .font(.title2xl)
                 .foregroundColor(.white)
@@ -46,122 +63,185 @@ struct PlayerOverlayView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, SpaceTokens.spaceMd)
         .background(
             LinearGradient(
                 colors: [.black.opacity(0.8), .clear],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .padding(.horizontal, -48)
-            .padding(.top, -27)
+            .padding(.horizontal, -80)
+            .padding(.top, -60)
+            .frame(height: 200)
         )
     }
 
-    private var controlsSection: some View {
-        VStack(spacing: SpaceTokens.spaceMd) {
-            PlayerSeekBar(
-                progress: viewModel.player.position,
-                bufferProgress: 0,
-                isFocused: false
-            )
+    // MARK: - Controls
 
-            HStack(spacing: SpaceTokens.spaceLg) {
-                controlButtonRow
-                Spacer()
-                Text(viewModel.positionText)
-                    .font(.bodySm)
-                    .foregroundColor(.white.opacity(0.8))
-                    .monospacedDigit()
-            }
+    private var controlsSection: some View {
+        VStack(spacing: 12) {
+            primaryControlRow
+            seekbarRow
+            secondaryControlRow
         }
-        .padding(.top, SpaceTokens.spaceMd)
         .background(
             LinearGradient(
-                colors: [.clear, .black.opacity(0.8)],
+                colors: [.clear, .black.opacity(0.85)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .padding(.horizontal, -48)
-            .padding(.bottom, -27)
+            .padding(.horizontal, -80)
+            .padding(.bottom, -60)
+            .frame(height: 340)
+            .offset(y: 60),
+            alignment: .bottom
         )
     }
 
-    private var controlButtonRow: some View {
-        HStack(spacing: SpaceTokens.spaceMd) {
+    private var primaryControlRow: some View {
+        HStack(spacing: 12) {
+            overlayButton(icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill",
+                          focus: .playPause) {
+                viewModel.togglePlayPause()
+            }
+
+            overlayButton(icon: "backward.fill", focus: .rewind) {
+                viewModel.seekBackward()
+            }
+
+            overlayButton(icon: "forward.fill", focus: .fastForward) {
+                viewModel.seekForward()
+            }
+
+            if !viewModel.player.subtitleTracks.isEmpty {
+                overlayButton(icon: "captions.bubble", focus: .closedCaptions) {
+                    viewModel.showTrackSelection(tab: .subtitles)
+                }
+            }
+
+            if viewModel.player.audioTracks.count > 1 {
+                overlayButton(icon: "speaker.wave.2", focus: .audioTrack) {
+                    viewModel.showTrackSelection(tab: .audio)
+                }
+            }
+
+            Spacer()
+
+            if !viewModel.endTimeText.isEmpty {
+                Text(viewModel.endTimeText)
+                    .font(.bodySm)
+                    .foregroundColor(.white.opacity(0.7))
+                    .monospacedDigit()
+            }
+        }
+    }
+
+    private var seekbarRow: some View {
+        PlayerSeekBar(
+            progress: viewModel.isScrubbing ? viewModel.scrubPosition : viewModel.player.position,
+            bufferProgress: 0,
+            isFocused: focusedControl == .seekbar
+        )
+        .focusable()
+        .focused($focusedControl, equals: .seekbar)
+        .onMoveCommand { direction in
+            switch direction {
+            case .left:
+                if !viewModel.isScrubbing { viewModel.beginScrub() }
+                viewModel.updateScrub(by: -0.02)
+                viewModel.resetHideTimer()
+            case .right:
+                if !viewModel.isScrubbing { viewModel.beginScrub() }
+                viewModel.updateScrub(by: 0.02)
+                viewModel.resetHideTimer()
+            default:
+                break
+            }
+        }
+        .onPlayPauseCommand {
+            if viewModel.isScrubbing {
+                viewModel.commitScrub()
+            } else {
+                viewModel.togglePlayPause()
+            }
+        }
+    }
+
+    private var secondaryControlRow: some View {
+        HStack(spacing: 12) {
             if viewModel.playbackManager.hasPrevious {
-                overlayButton(
-                    icon: "backward.end.fill",
-                    focus: .previous
-                ) {
+                overlayButton(icon: "backward.end.fill", focus: .previous) {
                     Task { await viewModel.playbackManager.playPrevious() }
                 }
             }
 
-            overlayButton(
-                icon: "gobackward.15",
-                focus: .rewind
-            ) {
-                viewModel.seekBackward()
-            }
-
-            overlayButton(
-                icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill",
-                focus: .playPause,
-                size: 44
-            ) {
-                viewModel.togglePlayPause()
-            }
-
-            overlayButton(
-                icon: "goforward.15",
-                focus: .fastForward
-            ) {
-                viewModel.seekForward()
-            }
-
             if viewModel.playbackManager.hasNext {
-                overlayButton(
-                    icon: "forward.end.fill",
-                    focus: .next
-                ) {
+                overlayButton(icon: "forward.end.fill", focus: .next) {
                     Task { await viewModel.playbackManager.playNext() }
                 }
             }
 
-            Spacer().frame(width: SpaceTokens.spaceSm)
-
-            overlayButton(
-                icon: "textformat.subscript",
-                focus: .tracks
-            ) {
-                viewModel.showTrackSelection(tab: .audio)
+            if viewModel.hasChapters {
+                overlayButton(icon: "list.bullet", focus: .chapters) {
+                    viewModel.showChapterSelection()
+                }
             }
 
-            overlayButton(
-                icon: "gauge.with.dots.needle.67percent",
-                focus: .speed
-            ) {
+            if viewModel.hasCast {
+                overlayButton(icon: "person.2", focus: .cast) {
+                    viewModel.showCastList()
+                }
+            }
+
+            overlayButton(icon: "gauge.with.dots.needle.67percent", focus: .speed) {
                 viewModel.showTrackSelection(tab: .speed)
             }
+
+            overlayButton(icon: viewModel.player.zoomMode.iconName, focus: .zoom) {
+                viewModel.cycleZoom()
+            }
+
+            Spacer()
+
+            Text(viewModel.positionText)
+                .font(.bodySm)
+                .foregroundColor(.white.opacity(0.7))
+                .monospacedDigit()
         }
     }
 
     private func overlayButton(
         icon: String,
         focus: ControlFocus,
-        size: CGFloat = 32,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        Button(action: {
+            action()
+            viewModel.resetHideTimer()
+        }) {
             Image(systemName: icon)
-                .font(.system(size: size))
-                .foregroundColor(.white)
-                .frame(width: size + 24, height: size + 24)
-                .contentShape(Rectangle())
+                .font(.system(size: 20, weight: .medium))
+                .frame(width: 40, height: 40)
+                .contentShape(Circle())
         }
-        .buttonStyle(OverlayButtonStyle(isFocused: focusedControl == focus))
+        .buttonStyle(PlayerButtonStyle())
         .focused($focusedControl, equals: focus)
+    }
+}
+
+struct PlayerButtonStyle: ButtonStyle {
+    @Environment(\.isFocused) private var isFocused
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundColor(isFocused ? Color(white: 0.27) : .white)
+            .padding(10)
+            .background(
+                Circle()
+                    .fill(isFocused ? Color(white: 0.8, opacity: 0.9) : Color.clear)
+            )
+            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: isFocused)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
@@ -175,3 +255,5 @@ struct OverlayButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }
+
+
