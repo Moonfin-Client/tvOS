@@ -21,6 +21,7 @@ final class PlaybackManager: ObservableObject {
     var autoAdvanceOnEnd = true
 
     let player: VLCPlayerWrapper
+    let segmentHandler: MediaSegmentHandler
 
     private let client: MediaServerClient
     private let preferences: UserPreferences
@@ -28,6 +29,7 @@ final class PlaybackManager: ObservableObject {
     private let subtitleConfigurator: SubtitleConfigurator
     private var reportingTask: Task<Void, Never>?
     private var stateObserver: AnyCancellable?
+    private var positionObserver: AnyCancellable?
 
     var currentEntry: QueueEntry? {
         guard currentIndex >= 0 && currentIndex < queue.count else { return nil }
@@ -47,8 +49,17 @@ final class PlaybackManager: ObservableObject {
         self.preferences = preferences
         self.streamResolver = ServerStreamResolver(client: client)
         self.subtitleConfigurator = SubtitleConfigurator(preferences: preferences)
+
+        let segmentRepo = MediaSegmentRepositoryImpl(preferences: preferences, client: client)
+        self.segmentHandler = MediaSegmentHandler(repository: segmentRepo)
+
         player.configureSubtitleAppearance(subtitleConfigurator.mediaOptions())
         observePlayerState()
+        observePosition()
+
+        segmentHandler.skipTo = { [weak self] position in
+            self?.seek(to: position)
+        }
     }
 
     func play(items: [ServerItem], startIndex: Int = 0, startPosition: TimeInterval = 0) async {
@@ -140,6 +151,10 @@ final class PlaybackManager: ObservableObject {
         let subtitleIndex: Int? = subtitleConfigurator.shouldDefaultToNone ? -1 : nil
 
         do {
+            if client.serverType.supports(.mediaSegments) {
+                await segmentHandler.loadSegments(for: entry.item.id)
+            }
+
             let stream = try await streamResolver.resolve(
                 item: entry.item,
                 mediaSourceId: entry.mediaSourceId,
@@ -201,6 +216,7 @@ final class PlaybackManager: ObservableObject {
     private func stopAndReport(failed: Bool) async {
         reportingTask?.cancel()
         reportingTask = nil
+        segmentHandler.reset()
         await reportPlaybackStopped(failed: failed)
         currentStreamInfo = nil
         player.stop()
@@ -250,6 +266,14 @@ final class PlaybackManager: ObservableObject {
             volumeLevel: 100
         )
         try? await client.playbackApi.reportPlaybackProgress(info: report)
+    }
+
+    private func observePosition() {
+        positionObserver = player.$currentTime
+            .receive(on: RunLoop.main)
+            .sink { [weak self] time in
+                self?.segmentHandler.onPositionUpdate(time)
+            }
     }
 
     private func reportPlaybackStopped(failed: Bool) async {

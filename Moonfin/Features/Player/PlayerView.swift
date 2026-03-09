@@ -2,10 +2,12 @@ import SwiftUI
 
 struct VideoPlayerScreen: View {
     @StateObject private var viewModel: VideoPlayerViewModel
+    @ObservedObject private var segmentHandler: MediaSegmentHandler
     @Environment(\.dismiss) private var dismiss
 
     init(playbackManager: PlaybackManager) {
         _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(playbackManager: playbackManager))
+        _segmentHandler = ObservedObject(wrappedValue: playbackManager.segmentHandler)
     }
 
     var body: some View {
@@ -24,10 +26,18 @@ struct VideoPlayerScreen: View {
             if viewModel.trackSelectionVisible {
                 trackSelectionOverlay
             }
+
+            if let action = segmentHandler.activeSkipPrompt {
+                SkipSegmentOverlay(
+                    action: action,
+                    onSkip: { segmentHandler.confirmSkip() }
+                )
+            }
         }
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.3), value: viewModel.overlayVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.trackSelectionVisible)
+        .animation(.easeInOut(duration: 0.3), value: segmentHandler.activeSkipPrompt != nil)
         .onAppear {
             viewModel.showOverlay()
         }

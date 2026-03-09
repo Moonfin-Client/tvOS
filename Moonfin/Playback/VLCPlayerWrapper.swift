@@ -168,7 +168,7 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
 
     private func updateTime() {
         guard let player = mediaPlayer else { return }
-        let currentMs = player.time?.intValue ?? 0
+        let currentMs = player.time.intValue
         let totalMs = abs(player.media?.length.intValue ?? 0)
         currentTime = TimeInterval(currentMs) / 1000.0
         duration = TimeInterval(totalMs) / 1000.0

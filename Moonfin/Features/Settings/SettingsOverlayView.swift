@@ -133,6 +133,14 @@ struct SettingsOverlayView: View {
             SettingsMediaBarOpacityScreen()
         case .playback:
             SettingsPlaybackScreen()
+        case .playbackMediaSegments:
+            SettingsMediaSegmentsScreen()
+        case .playbackMediaSegment(let segmentType):
+            if let type = MediaSegmentType(rawValue: segmentType) {
+                SettingsMediaSegmentScreen(segmentType: type)
+            } else {
+                SettingsPlaceholderScreen()
+            }
         case .playbackNextUpBehavior:
             SettingsPickerScreen(
                 title: "Next Up Behavior",

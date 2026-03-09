@@ -166,6 +166,25 @@
 		FAA9362203F394F8C16A88E0 /* MusicBrowseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7539F7F9B1DF246DC2B1D54D /* MusicBrowseScreen.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
 		FFABA2B2BC6EC0D3195DAC4A /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE3E8F8CABA5427FC08934FD /* Pods_Moonfin.framework */; };
+		1A2B3C4D5E6F7A8B9C0D1E2F /* MediaSegmentModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* MediaSegmentModels.swift */; };
+		2B3C4D5E6F7A8B9C0D1E2F3A /* MediaSegmentRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* MediaSegmentRepository.swift */; };
+		3C4D5E6F7A8B9C0D1E2F3A4B /* MediaSegmentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* MediaSegmentHandler.swift */; };
+		4D5E6F7A8B9C0D1E2F3A4B5C /* SkipSegmentOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* SkipSegmentOverlay.swift */; };
+		5E6F7A8B9C0D1E2F3A4B5C6D /* SettingsMediaSegmentsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* SettingsMediaSegmentsScreen.swift */; };
+		6F7A8B9C0D1E2F3A4B5C6D7E /* SettingsMediaSegmentScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* SettingsMediaSegmentScreen.swift */; };
+		AA11BB22CC33DD44EE55FF01 /* VLCPlayerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA01 /* VLCPlayerWrapper.swift */; };
+		AA11BB22CC33DD44EE55FF02 /* VLCPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA02 /* VLCPlayerView.swift */; };
+		AA11BB22CC33DD44EE55FF03 /* StreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA03 /* StreamResolver.swift */; };
+		AA11BB22CC33DD44EE55FF04 /* ServerStreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA04 /* ServerStreamResolver.swift */; };
+		AA11BB22CC33DD44EE55FF05 /* SubtitleConfigurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA05 /* SubtitleConfigurator.swift */; };
+		AA11BB22CC33DD44EE55FF06 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA06 /* AudioManager.swift */; };
+		AA11BB22CC33DD44EE55FF07 /* VideoPlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA07 /* VideoPlayerViewModel.swift */; };
+		AA11BB22CC33DD44EE55FF08 /* PlayerOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA08 /* PlayerOverlayView.swift */; };
+		AA11BB22CC33DD44EE55FF09 /* PlayerSeekBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA09 /* PlayerSeekBar.swift */; };
+		AA11BB22CC33DD44EE55FF0A /* TrackSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA0A /* TrackSelectionView.swift */; };
+		AA11BB22CC33DD44EE55FF0B /* AudioNowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA0B /* AudioNowPlayingView.swift */; };
+		AA11BB22CC33DD44EE55FF0C /* AudioNowPlayingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA0C /* AudioNowPlayingViewModel.swift */; };
+		AA11BB22CC33DD44EE55FF0D /* LyricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA0D /* LyricsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -355,6 +374,25 @@
 		FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaybackScreen.swift; sourceTree = "<group>"; };
 		FCFD36E7AB44A85691E2CCA1 /* MediaBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarView.swift; sourceTree = "<group>"; };
 		FDDF43F4829FD7991896EA32 /* MoonfinTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinTheme.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* MediaSegmentModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentModels.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* MediaSegmentRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentRepository.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* MediaSegmentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentHandler.swift; sourceTree = "<group>"; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* SkipSegmentOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkipSegmentOverlay.swift; sourceTree = "<group>"; };
+		E5F6A7B8C9D0E1F2A3B4C5D6 /* SettingsMediaSegmentsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaSegmentsScreen.swift; sourceTree = "<group>"; };
+		F6A7B8C9D0E1F2A3B4C5D6E7 /* SettingsMediaSegmentScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaSegmentScreen.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA01 /* VLCPlayerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLCPlayerWrapper.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA02 /* VLCPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLCPlayerView.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA03 /* StreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamResolver.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA04 /* ServerStreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStreamResolver.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA05 /* SubtitleConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleConfigurator.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA06 /* AudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA07 /* VideoPlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerViewModel.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA08 /* PlayerOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerOverlayView.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA09 /* PlayerSeekBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSeekBar.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA0A /* TrackSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSelectionView.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA0B /* AudioNowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioNowPlayingView.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA0C /* AudioNowPlayingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioNowPlayingViewModel.swift; sourceTree = "<group>"; };
+		BB11CC22DD33EE44FF55AA0D /* LyricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -394,7 +432,15 @@
 		02214FA3C6ACFBFFAEEAB5D0 /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				BB11CC22DD33EE44FF55AA0B /* AudioNowPlayingView.swift */,
+				BB11CC22DD33EE44FF55AA0C /* AudioNowPlayingViewModel.swift */,
+				BB11CC22DD33EE44FF55AA0D /* LyricsView.swift */,
+				BB11CC22DD33EE44FF55AA08 /* PlayerOverlayView.swift */,
+				BB11CC22DD33EE44FF55AA09 /* PlayerSeekBar.swift */,
 				8B0571DEA564D22C56A0E7C6 /* PlayerView.swift */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* SkipSegmentOverlay.swift */,
+				BB11CC22DD33EE44FF55AA0A /* TrackSelectionView.swift */,
+				BB11CC22DD33EE44FF55AA07 /* VideoPlayerViewModel.swift */,
 			);
 			path = Player;
 			sourceTree = "<group>";
@@ -569,10 +615,27 @@
 		5B58FAF0381AA203C988A9A7 /* Playback */ = {
 			isa = PBXGroup;
 			children = (
+				7A8B9C0D1E2F3A4B5C6D7E8F /* MediaSegments */,
+				BB11CC22DD33EE44FF55AA06 /* AudioManager.swift */,
 				84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */,
+				BB11CC22DD33EE44FF55AA04 /* ServerStreamResolver.swift */,
+				BB11CC22DD33EE44FF55AA03 /* StreamResolver.swift */,
+				BB11CC22DD33EE44FF55AA05 /* SubtitleConfigurator.swift */,
 				029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */,
+				BB11CC22DD33EE44FF55AA02 /* VLCPlayerView.swift */,
+				BB11CC22DD33EE44FF55AA01 /* VLCPlayerWrapper.swift */,
 			);
 			path = Playback;
+			sourceTree = "<group>";
+		};
+		7A8B9C0D1E2F3A4B5C6D7E8F /* MediaSegments */ = {
+			isa = PBXGroup;
+			children = (
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* MediaSegmentHandler.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* MediaSegmentModels.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* MediaSegmentRepository.swift */,
+			);
+			path = MediaSegments;
 			sourceTree = "<group>";
 		};
 		60812E71B10FDA9F69300E94 /* Details */ = {
@@ -597,6 +660,8 @@
 				6E52B4DEA949C89B86A017B2 /* SettingsMainScreen.swift */,
 				2D7DAD20426F96F052F9D238 /* SettingsMediaBarOpacityScreen.swift */,
 				F95BEDEB81DA59E7BD971A55 /* SettingsMoonfinScreen.swift */,
+				F6A7B8C9D0E1F2A3B4C5D6E7 /* SettingsMediaSegmentScreen.swift */,
+				E5F6A7B8C9D0E1F2A3B4C5D6 /* SettingsMediaSegmentsScreen.swift */,
 				FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */,
 				8AC153185AA86A0600FF5D61 /* SettingsScreensaverScreen.swift */,
 				BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */,
@@ -1096,6 +1161,9 @@
 				33DB333A3FF91465569C910D /* MediaBarRatingsViewModel.swift in Sources */,
 				649E00A5609B7BBD44570631 /* MediaBarView.swift in Sources */,
 				9B00EB8569A9A8EEEBEB93EC /* MediaBarViewModel.swift in Sources */,
+				1A2B3C4D5E6F7A8B9C0D1E2F /* MediaSegmentModels.swift in Sources */,
+				3C4D5E6F7A8B9C0D1E2F3A4B /* MediaSegmentHandler.swift in Sources */,
+				2B3C4D5E6F7A8B9C0D1E2F3A /* MediaSegmentRepository.swift in Sources */,
 				87CC28D4B3586526C0E231E0 /* MediaServerClient.swift in Sources */,
 				D93E1952BE5AC80F49540141 /* MediaServerClientFactory.swift in Sources */,
 				D602B6D04FC80CE04DCD3A48 /* Migration.swift in Sources */,
@@ -1112,6 +1180,7 @@
 				92928E8EA23CBED3CFD11BFE /* PinEntryView.swift in Sources */,
 				8BF09E744242E20B4C19DABC /* PlaybackManager.swift in Sources */,
 				127223D3B2F8CE2B6B03280B /* PlayerView.swift in Sources */,
+				4D5E6F7A8B9C0D1E2F3A4B5C /* SkipSegmentOverlay.swift in Sources */,
 				D00BF3EB70D5C5BB65903977 /* PluginSyncConstants.swift in Sources */,
 				9CE2FF82B95D20AB2C9B0F9F /* PluginSyncService.swift in Sources */,
 				A38E580FEA09E92D9FADFA4F /* PreferenceBinding.swift in Sources */,
@@ -1158,6 +1227,8 @@
 				D56E3F5FB626810283B26437 /* SettingsMoonfinScreen.swift in Sources */,
 				ECB007532A15853573FD30B7 /* SettingsOverlayView.swift in Sources */,
 				180127D423D36F0B0B80EA63 /* SettingsPickerScreen.swift in Sources */,
+				5E6F7A8B9C0D1E2F3A4B5C6D /* SettingsMediaSegmentsScreen.swift in Sources */,
+				6F7A8B9C0D1E2F3A4B5C6D7E /* SettingsMediaSegmentScreen.swift in Sources */,
 				9006CF4B49C0AB9122AA14BA /* SettingsPlaybackScreen.swift in Sources */,
 				96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */,
 				80900C437ABC1187B6828BEE /* SettingsScreenLayout.swift in Sources */,
@@ -1181,6 +1252,19 @@
 				34645416232B328D42B8F6A6 /* UserLoginViewModel.swift in Sources */,
 				EB6655AECBFD44AAAE5AD818 /* UserPreferences.swift in Sources */,
 				DB33FADDE630D729F2D525BA /* UserRepository.swift in Sources */,
+				AA11BB22CC33DD44EE55FF01 /* VLCPlayerWrapper.swift in Sources */,
+				AA11BB22CC33DD44EE55FF02 /* VLCPlayerView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF03 /* StreamResolver.swift in Sources */,
+				AA11BB22CC33DD44EE55FF04 /* ServerStreamResolver.swift in Sources */,
+				AA11BB22CC33DD44EE55FF05 /* SubtitleConfigurator.swift in Sources */,
+				AA11BB22CC33DD44EE55FF06 /* AudioManager.swift in Sources */,
+				AA11BB22CC33DD44EE55FF07 /* VideoPlayerViewModel.swift in Sources */,
+				AA11BB22CC33DD44EE55FF08 /* PlayerOverlayView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF09 /* PlayerSeekBar.swift in Sources */,
+				AA11BB22CC33DD44EE55FF0A /* TrackSelectionView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF0B /* AudioNowPlayingView.swift in Sources */,
+				AA11BB22CC33DD44EE55FF0C /* AudioNowPlayingViewModel.swift in Sources */,
+				AA11BB22CC33DD44EE55FF0D /* LyricsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

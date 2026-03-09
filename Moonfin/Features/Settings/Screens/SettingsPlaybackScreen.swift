@@ -6,6 +6,10 @@ struct SettingsPlaybackScreen: View {
 
     private var prefs: UserPreferences { container.userPreferences }
 
+    private var supportsMediaSegments: Bool {
+        container.serverRepository.currentServer.value?.serverType.supports(.mediaSegments) == true
+    }
+
     var body: some View {
         SettingsScreenLayout(title: "Playback") {
             SettingsListButton(
@@ -30,6 +34,15 @@ struct SettingsPlaybackScreen: View {
                 caption: "Limit streaming quality",
                 action: { settingsRouter.navigate(to: .playbackMaxBitrate) }
             )
+
+            if supportsMediaSegments {
+                SettingsListButton(
+                    icon: "scissors",
+                    heading: "Media Segments",
+                    caption: "Skip intros, outros, and more",
+                    action: { settingsRouter.navigate(to: .playbackMediaSegments) }
+                )
+            }
         }
     }
 }
