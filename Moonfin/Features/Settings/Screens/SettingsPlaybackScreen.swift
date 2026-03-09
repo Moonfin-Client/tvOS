@@ -6,6 +6,11 @@ struct SettingsPlaybackScreen: View {
 
     private var prefs: UserPreferences { container.userPreferences }
 
+    private var stillWatchingLabel: String {
+        let val = prefs[UserPreferences.stillWatchingThreshold]
+        return val > 0 ? "\(val) episodes" : "Disabled"
+    }
+
     private var supportsMediaSegments: Bool {
         container.serverRepository.currentServer.value?.serverType.supports(.mediaSegments) == true
     }
@@ -18,6 +23,14 @@ struct SettingsPlaybackScreen: View {
                 caption: "How next up is displayed",
                 trailingText: prefs[UserPreferences.nextUpBehavior].displayName,
                 action: { settingsRouter.navigate(to: .playbackNextUpBehavior) }
+            )
+
+            SettingsListButton(
+                icon: "pause.circle",
+                heading: "Still Watching Prompt",
+                caption: "Ask after N episodes",
+                trailingText: stillWatchingLabel,
+                action: { settingsRouter.navigate(to: .playbackInactivityPrompt) }
             )
 
             SettingsListButton(

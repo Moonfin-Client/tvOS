@@ -31,6 +31,15 @@ final class VideoPlayerViewModel: ObservableObject {
         return ""
     }
 
+    var nextQueueItem: ServerItem? {
+        playbackManager.nextEntry?.item
+    }
+
+    var nextItemImageUrl: String? {
+        guard let item = nextQueueItem else { return nil }
+        return playbackManager.imageUrl(for: item, type: .backdrop)
+    }
+
     var positionText: String {
         "\(formatTime(player.currentTime)) / \(formatTime(player.duration))"
     }

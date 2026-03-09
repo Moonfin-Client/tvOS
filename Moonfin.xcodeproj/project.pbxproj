@@ -172,6 +172,10 @@
 		4D5E6F7A8B9C0D1E2F3A4B5C /* SkipSegmentOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* SkipSegmentOverlay.swift */; };
 		5E6F7A8B9C0D1E2F3A4B5C6D /* SettingsMediaSegmentsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* SettingsMediaSegmentsScreen.swift */; };
 		6F7A8B9C0D1E2F3A4B5C6D7E /* SettingsMediaSegmentScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A7B8C9D0E1F2A3B4C5D6E7 /* SettingsMediaSegmentScreen.swift */; };
+		7A8B9C0D1E2F3A4B5C6D8E9F /* NextUpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0E1F2A3B4C5D6E7F8 /* NextUpManager.swift */; };
+		8B9C0D1E2F3A4B5C6D8E9FA0 /* NextUpOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8C9D0E1F2A3B4C5D6E7F8A9 /* NextUpOverlay.swift */; };
+		9C0D1E2F3A4B5C6D8E9FA0B1 /* StillWatchingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D0E1F2A3B4C5D6E7F8A9BA /* StillWatchingOverlay.swift */; };
+		0D1E2F3A4B5C6D8E9FA0B1C2 /* StillWatchingSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1F2A3B4C5D6E7F8A9BACB /* StillWatchingSettingsScreen.swift */; };
 		AA11BB22CC33DD44EE55FF01 /* VLCPlayerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA01 /* VLCPlayerWrapper.swift */; };
 		AA11BB22CC33DD44EE55FF02 /* VLCPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA02 /* VLCPlayerView.swift */; };
 		AA11BB22CC33DD44EE55FF03 /* StreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB11CC22DD33EE44FF55AA03 /* StreamResolver.swift */; };
@@ -379,6 +383,10 @@
 		C3D4E5F6A7B8C9D0E1F2A3B4 /* MediaSegmentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentHandler.swift; sourceTree = "<group>"; };
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* SkipSegmentOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkipSegmentOverlay.swift; sourceTree = "<group>"; };
 		E5F6A7B8C9D0E1F2A3B4C5D6 /* SettingsMediaSegmentsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaSegmentsScreen.swift; sourceTree = "<group>"; };
+		A7B8C9D0E1F2A3B4C5D6E7F8 /* NextUpManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextUpManager.swift; sourceTree = "<group>"; };
+		B8C9D0E1F2A3B4C5D6E7F8A9 /* NextUpOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextUpOverlay.swift; sourceTree = "<group>"; };
+		C9D0E1F2A3B4C5D6E7F8A9BA /* StillWatchingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StillWatchingOverlay.swift; sourceTree = "<group>"; };
+		D0E1F2A3B4C5D6E7F8A9BACB /* StillWatchingSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StillWatchingSettingsScreen.swift; sourceTree = "<group>"; };
 		F6A7B8C9D0E1F2A3B4C5D6E7 /* SettingsMediaSegmentScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaSegmentScreen.swift; sourceTree = "<group>"; };
 		BB11CC22DD33EE44FF55AA01 /* VLCPlayerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLCPlayerWrapper.swift; sourceTree = "<group>"; };
 		BB11CC22DD33EE44FF55AA02 /* VLCPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLCPlayerView.swift; sourceTree = "<group>"; };
@@ -438,7 +446,9 @@
 				BB11CC22DD33EE44FF55AA08 /* PlayerOverlayView.swift */,
 				BB11CC22DD33EE44FF55AA09 /* PlayerSeekBar.swift */,
 				8B0571DEA564D22C56A0E7C6 /* PlayerView.swift */,
+				B8C9D0E1F2A3B4C5D6E7F8A9 /* NextUpOverlay.swift */,
 				D4E5F6A7B8C9D0E1F2A3B4C5 /* SkipSegmentOverlay.swift */,
+				C9D0E1F2A3B4C5D6E7F8A9BA /* StillWatchingOverlay.swift */,
 				BB11CC22DD33EE44FF55AA0A /* TrackSelectionView.swift */,
 				BB11CC22DD33EE44FF55AA07 /* VideoPlayerViewModel.swift */,
 			);
@@ -617,6 +627,7 @@
 			children = (
 				7A8B9C0D1E2F3A4B5C6D7E8F /* MediaSegments */,
 				BB11CC22DD33EE44FF55AA06 /* AudioManager.swift */,
+				A7B8C9D0E1F2A3B4C5D6E7F8 /* NextUpManager.swift */,
 				84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */,
 				BB11CC22DD33EE44FF55AA04 /* ServerStreamResolver.swift */,
 				BB11CC22DD33EE44FF55AA03 /* StreamResolver.swift */,
@@ -662,6 +673,7 @@
 				F95BEDEB81DA59E7BD971A55 /* SettingsMoonfinScreen.swift */,
 				F6A7B8C9D0E1F2A3B4C5D6E7 /* SettingsMediaSegmentScreen.swift */,
 				E5F6A7B8C9D0E1F2A3B4C5D6 /* SettingsMediaSegmentsScreen.swift */,
+				D0E1F2A3B4C5D6E7F8A9BACB /* StillWatchingSettingsScreen.swift */,
 				FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */,
 				8AC153185AA86A0600FF5D61 /* SettingsScreensaverScreen.swift */,
 				BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */,
@@ -1229,6 +1241,10 @@
 				180127D423D36F0B0B80EA63 /* SettingsPickerScreen.swift in Sources */,
 				5E6F7A8B9C0D1E2F3A4B5C6D /* SettingsMediaSegmentsScreen.swift in Sources */,
 				6F7A8B9C0D1E2F3A4B5C6D7E /* SettingsMediaSegmentScreen.swift in Sources */,
+				7A8B9C0D1E2F3A4B5C6D8E9F /* NextUpManager.swift in Sources */,
+				8B9C0D1E2F3A4B5C6D8E9FA0 /* NextUpOverlay.swift in Sources */,
+				9C0D1E2F3A4B5C6D8E9FA0B1 /* StillWatchingOverlay.swift in Sources */,
+				0D1E2F3A4B5C6D8E9FA0B1C2 /* StillWatchingSettingsScreen.swift in Sources */,
 				9006CF4B49C0AB9122AA14BA /* SettingsPlaybackScreen.swift in Sources */,
 				96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */,
 				80900C437ABC1187B6828BEE /* SettingsScreenLayout.swift in Sources */,

@@ -147,6 +147,8 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.nextUpBehavior),
                 displayName: \.displayName
             )
+        case .playbackInactivityPrompt:
+            StillWatchingSettingsScreen()
         case .playbackAudioBehavior:
             SettingsPickerScreen(
                 title: "Audio Behavior",

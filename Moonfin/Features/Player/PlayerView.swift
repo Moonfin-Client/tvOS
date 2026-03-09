@@ -3,11 +3,13 @@ import SwiftUI
 struct VideoPlayerScreen: View {
     @StateObject private var viewModel: VideoPlayerViewModel
     @ObservedObject private var segmentHandler: MediaSegmentHandler
+    @ObservedObject private var nextUpManager: NextUpManager
     @Environment(\.dismiss) private var dismiss
 
     init(playbackManager: PlaybackManager) {
         _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(playbackManager: playbackManager))
         _segmentHandler = ObservedObject(wrappedValue: playbackManager.segmentHandler)
+        _nextUpManager = ObservedObject(wrappedValue: playbackManager.nextUpManager)
     }
 
     var body: some View {
@@ -33,11 +35,39 @@ struct VideoPlayerScreen: View {
                     onSkip: { segmentHandler.confirmSkip() }
                 )
             }
+
+            switch nextUpManager.promptState {
+            case .nextUp(let remaining):
+                if let nextItem = viewModel.nextQueueItem {
+                    NextUpOverlay(
+                        nextItem: nextItem,
+                        countdown: remaining,
+                        imageUrl: viewModel.nextItemImageUrl,
+                        onPlayNext: { nextUpManager.confirmPlayNext() },
+                        onClose: { nextUpManager.dismiss() }
+                    )
+                }
+            case .stillWatching:
+                StillWatchingOverlay(
+                    onContinue: {
+                        nextUpManager.confirmStillWatching()
+                        viewModel.playbackManager.resume()
+                    },
+                    onStop: {
+                        nextUpManager.dismiss()
+                        Task { await viewModel.playbackManager.stop() }
+                        dismiss()
+                    }
+                )
+            case .hidden:
+                EmptyView()
+            }
         }
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.3), value: viewModel.overlayVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.trackSelectionVisible)
         .animation(.easeInOut(duration: 0.3), value: segmentHandler.activeSkipPrompt != nil)
+        .animation(.easeInOut(duration: 0.3), value: nextUpManager.promptState)
         .onAppear {
             viewModel.showOverlay()
         }

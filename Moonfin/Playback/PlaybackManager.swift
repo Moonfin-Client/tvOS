@@ -22,6 +22,7 @@ final class PlaybackManager: ObservableObject {
 
     let player: VLCPlayerWrapper
     let segmentHandler: MediaSegmentHandler
+    let nextUpManager: NextUpManager
 
     private let client: MediaServerClient
     private let preferences: UserPreferences
@@ -39,6 +40,19 @@ final class PlaybackManager: ObservableObject {
     var hasNext: Bool { currentIndex < queue.count - 1 }
     var hasPrevious: Bool { currentIndex > 0 }
 
+    var nextEntry: QueueEntry? {
+        guard hasNext else { return nil }
+        return queue[currentIndex + 1]
+    }
+
+    func imageUrl(for item: ServerItem, type: ImageType = .primary, maxWidth: Int = 960, maxHeight: Int = 540) -> String? {
+        if type == .backdrop, let tag = item.backdropImageTags?.first {
+            return client.imageApi.getItemImageUrl(itemId: item.id, imageType: .backdrop, maxWidth: maxWidth, maxHeight: maxHeight, tag: tag)
+        }
+        guard let tag = item.imageTags?["Primary"] else { return nil }
+        return client.imageApi.getItemImageUrl(itemId: item.id, imageType: .primary, maxWidth: maxWidth, maxHeight: maxHeight, tag: tag)
+    }
+
     init(
         player: VLCPlayerWrapper,
         client: MediaServerClient,
@@ -52,6 +66,7 @@ final class PlaybackManager: ObservableObject {
 
         let segmentRepo = MediaSegmentRepositoryImpl(preferences: preferences, client: client)
         self.segmentHandler = MediaSegmentHandler(repository: segmentRepo)
+        self.nextUpManager = NextUpManager(preferences: preferences)
 
         player.configureSubtitleAppearance(subtitleConfigurator.mediaOptions())
         observePlayerState()
@@ -59,6 +74,14 @@ final class PlaybackManager: ObservableObject {
 
         segmentHandler.skipTo = { [weak self] position in
             self?.seek(to: position)
+        }
+
+        nextUpManager.onPlayNext = { [weak self] in
+            await self?.playNext()
+        }
+
+        nextUpManager.onDismiss = { [weak self] in
+            self?.autoAdvanceOnEnd = false
         }
     }
 
@@ -73,6 +96,7 @@ final class PlaybackManager: ObservableObject {
         }
         currentIndex = startIndex
         episodesPlayed = 0
+        nextUpManager.resetForNewQueue()
         await playCurrentEntry()
     }
 
@@ -217,6 +241,7 @@ final class PlaybackManager: ObservableObject {
         reportingTask?.cancel()
         reportingTask = nil
         segmentHandler.reset()
+        nextUpManager.reset()
         await reportPlaybackStopped(failed: failed)
         currentStreamInfo = nil
         player.stop()
@@ -272,7 +297,17 @@ final class PlaybackManager: ObservableObject {
         positionObserver = player.$currentTime
             .receive(on: RunLoop.main)
             .sink { [weak self] time in
-                self?.segmentHandler.onPositionUpdate(time)
+                guard let self else { return }
+                self.segmentHandler.onPositionUpdate(time)
+                self.nextUpManager.evaluateEndOfPlayback(
+                    currentTime: time,
+                    duration: self.player.duration,
+                    hasNext: self.hasNext,
+                    episodesPlayed: self.episodesPlayed
+                )
+                if self.nextUpManager.promptState == .stillWatching {
+                    self.pause()
+                }
             }
     }
 

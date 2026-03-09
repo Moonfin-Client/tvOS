@@ -50,6 +50,8 @@ final class UserPreferences {
     static let subtitlesOffsetPosition = Preference(key: "subtitles_offset_position", defaultValue: 8)
     static let subtitlesDefaultToNone = Preference(key: "subtitles_default_to_none", defaultValue: false)
 
+    static let stillWatchingThreshold = Preference(key: "still_watching_threshold", defaultValue: 3)
+
     static let mediaSegmentActions = Preference(
         key: "media_segment_actions",
         defaultValue: "Intro=askToSkip,Outro=askToSkip"
