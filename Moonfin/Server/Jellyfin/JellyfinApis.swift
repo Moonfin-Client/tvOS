@@ -461,3 +461,11 @@ struct JellyfinDisplayPreferencesApi: ServerDisplayPreferencesApi {
         try await client.requestVoid("/DisplayPreferences/\(id)", method: "POST", queryItems: query, body: prefs)
     }
 }
+
+struct JellyfinLyricsApi: ServerLyricsApi {
+    let client: HttpClient
+
+    func getLyrics(itemId: String) async throws -> LyricResult {
+        try await client.request("/Audio/\(itemId)/Lyrics")
+    }
+}

@@ -22,6 +22,7 @@ protocol MediaServerClient: AnyObject {
     var instantMixApi: ServerInstantMixApi { get }
     var playlistApi: ServerPlaylistApi { get }
     var displayPreferencesApi: ServerDisplayPreferencesApi { get }
+    var lyricsApi: ServerLyricsApi { get }
 }
 
 extension MediaServerClient {
@@ -145,6 +146,30 @@ protocol ServerPlaylistApi {
 protocol ServerDisplayPreferencesApi {
     func getDisplayPreferences(id: String, userId: String, client: String) async throws -> DisplayPreferences
     func saveDisplayPreferences(id: String, userId: String, prefs: DisplayPreferences) async throws
+}
+
+// MARK: - Lyrics
+
+struct LyricLine: Codable {
+    let text: String
+    let start: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case text = "Text"
+        case start = "Start"
+    }
+}
+
+struct LyricResult: Codable {
+    let lyrics: [LyricLine]
+
+    enum CodingKeys: String, CodingKey {
+        case lyrics = "Lyrics"
+    }
+}
+
+protocol ServerLyricsApi {
+    func getLyrics(itemId: String) async throws -> LyricResult
 }
 
 // MARK: - WebSocket

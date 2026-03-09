@@ -28,4 +28,5 @@ final class JellyfinServerClient: MediaServerClient {
     var instantMixApi: ServerInstantMixApi { JellyfinInstantMixApi(client: httpClient) }
     var playlistApi: ServerPlaylistApi { JellyfinPlaylistApi(client: httpClient) }
     var displayPreferencesApi: ServerDisplayPreferencesApi { JellyfinDisplayPreferencesApi(client: httpClient) }
+    var lyricsApi: ServerLyricsApi { JellyfinLyricsApi(client: httpClient) }
 }

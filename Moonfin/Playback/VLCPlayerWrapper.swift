@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import AVFoundation
 import TVVLCKit
 
 enum VLCPlayerState: Equatable {
@@ -46,8 +47,17 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         subtitleOptions = options
     }
 
+    func configureAudioSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playback, mode: .default)
+            try session.setActive(true)
+        } catch {}
+    }
+
     func play(url: URL) async {
         stop()
+        configureAudioSession()
 
         let player = VLCMediaPlayer()
         player.delegate = self

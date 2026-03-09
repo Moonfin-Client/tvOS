@@ -28,4 +28,5 @@ final class EmbyServerClient: MediaServerClient {
     var instantMixApi: ServerInstantMixApi { EmbyInstantMixApi(client: httpClient) }
     var playlistApi: ServerPlaylistApi { EmbyPlaylistApi(client: httpClient) }
     var displayPreferencesApi: ServerDisplayPreferencesApi { EmbyDisplayPreferencesApi(client: httpClient) }
+    var lyricsApi: ServerLyricsApi { UnsupportedLyricsApi() }
 }

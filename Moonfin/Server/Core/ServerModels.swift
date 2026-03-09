@@ -170,8 +170,10 @@ struct ServerItem: Codable, Identifiable {
     let albumArtist: String?
     let albumId: String?
     let albumPrimaryImageTag: String?
+    let album: String?
     let childCount: Int?
     let albumCount: Int?
+    let hasLyrics: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -219,8 +221,10 @@ struct ServerItem: Codable, Identifiable {
         case albumArtist = "AlbumArtist"
         case albumId = "AlbumId"
         case albumPrimaryImageTag = "AlbumPrimaryImageTag"
+        case album = "Album"
         case childCount = "ChildCount"
         case albumCount = "AlbumCount"
+        case hasLyrics = "HasLyrics"
     }
 }
 

@@ -18,6 +18,8 @@ final class PlaybackManager: ObservableObject {
     @Published private(set) var currentStreamInfo: StreamInfo?
     @Published private(set) var episodesPlayed: Int = 0
 
+    var autoAdvanceOnEnd = true
+
     let player: VLCPlayerWrapper
 
     private let client: MediaServerClient
@@ -121,6 +123,13 @@ final class PlaybackManager: ObservableObject {
         player.addSubtitle(url: url)
     }
 
+    func replaceQueue(_ newQueue: [QueueEntry]) {
+        queue = newQueue
+        if currentIndex >= newQueue.count {
+            currentIndex = max(newQueue.count - 1, 0)
+        }
+    }
+
     private func playCurrentEntry() async {
         guard let entry = currentEntry else { return }
 
@@ -179,6 +188,7 @@ final class PlaybackManager: ObservableObject {
 
     private func handlePlaybackEnded() async {
         await stopAndReport(failed: false)
+        guard autoAdvanceOnEnd else { return }
         if hasNext {
             currentIndex += 1
             episodesPlayed += 1
@@ -192,6 +202,7 @@ final class PlaybackManager: ObservableObject {
         reportingTask?.cancel()
         reportingTask = nil
         await reportPlaybackStopped(failed: failed)
+        currentStreamInfo = nil
         player.stop()
     }
 

@@ -449,3 +449,9 @@ struct EmbyDisplayPreferencesApi: ServerDisplayPreferencesApi {
         try await client.requestVoid("/DisplayPreferences/\(id)", method: "POST", queryItems: query, body: prefs)
     }
 }
+
+struct UnsupportedLyricsApi: ServerLyricsApi {
+    func getLyrics(itemId: String) async throws -> LyricResult {
+        LyricResult(lyrics: [])
+    }
+}
