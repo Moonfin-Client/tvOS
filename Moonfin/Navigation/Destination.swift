@@ -48,6 +48,7 @@ enum Destination: Hashable {
     case liveTvSchedule
     case liveTvRecordings
     case liveTvSeriesRecordings
+    case liveTvPlayer(channelId: String)
 
     // MARK: - Playback
 

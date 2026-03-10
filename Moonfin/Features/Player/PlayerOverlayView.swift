@@ -84,7 +84,9 @@ struct PlayerOverlayView: View {
     private var controlsSection: some View {
         VStack(spacing: 12) {
             primaryControlRow
-            seekbarRow
+            if !viewModel.isLiveTV {
+                seekbarRow
+            }
             secondaryControlRow
         }
         .background(
@@ -108,29 +110,31 @@ struct PlayerOverlayView: View {
                 viewModel.togglePlayPause()
             }
 
-            overlayButton(icon: "backward.fill", focus: .rewind) {
-                viewModel.seekBackward()
-            }
-
-            overlayButton(icon: "forward.fill", focus: .fastForward) {
-                viewModel.seekForward()
-            }
-
-            if !viewModel.player.subtitleTracks.isEmpty {
-                overlayButton(icon: "captions.bubble", focus: .closedCaptions) {
-                    viewModel.showTrackSelection(tab: .subtitles)
+            if !viewModel.isLiveTV {
+                overlayButton(icon: "backward.fill", focus: .rewind) {
+                    viewModel.seekBackward()
                 }
-            }
 
-            if viewModel.player.audioTracks.count > 1 {
-                overlayButton(icon: "speaker.wave.2", focus: .audioTrack) {
-                    viewModel.showTrackSelection(tab: .audio)
+                overlayButton(icon: "forward.fill", focus: .fastForward) {
+                    viewModel.seekForward()
+                }
+
+                if !viewModel.player.subtitleTracks.isEmpty {
+                    overlayButton(icon: "captions.bubble", focus: .closedCaptions) {
+                        viewModel.showTrackSelection(tab: .subtitles)
+                    }
+                }
+
+                if viewModel.player.audioTracks.count > 1 {
+                    overlayButton(icon: "speaker.wave.2", focus: .audioTrack) {
+                        viewModel.showTrackSelection(tab: .audio)
+                    }
                 }
             }
 
             Spacer()
 
-            if !viewModel.endTimeText.isEmpty {
+            if !viewModel.isLiveTV && !viewModel.endTimeText.isEmpty {
                 Text(viewModel.endTimeText)
                     .font(.bodySm)
                     .foregroundColor(.white.opacity(0.7))
@@ -172,27 +176,29 @@ struct PlayerOverlayView: View {
 
     private var secondaryControlRow: some View {
         HStack(spacing: 12) {
-            if viewModel.playbackManager.hasPrevious {
-                overlayButton(icon: "backward.end.fill", focus: .previous) {
-                    Task { await viewModel.playbackManager.playPrevious() }
+            if !viewModel.isLiveTV {
+                if viewModel.playbackManager.hasPrevious {
+                    overlayButton(icon: "backward.end.fill", focus: .previous) {
+                        Task { await viewModel.playbackManager.playPrevious() }
+                    }
                 }
-            }
 
-            if viewModel.playbackManager.hasNext {
-                overlayButton(icon: "forward.end.fill", focus: .next) {
-                    Task { await viewModel.playbackManager.playNext() }
+                if viewModel.playbackManager.hasNext {
+                    overlayButton(icon: "forward.end.fill", focus: .next) {
+                        Task { await viewModel.playbackManager.playNext() }
+                    }
                 }
-            }
 
-            if viewModel.hasChapters {
-                overlayButton(icon: "list.bullet", focus: .chapters) {
-                    viewModel.showChapterSelection()
+                if viewModel.hasChapters {
+                    overlayButton(icon: "list.bullet", focus: .chapters) {
+                        viewModel.showChapterSelection()
+                    }
                 }
-            }
 
-            if viewModel.hasCast {
-                overlayButton(icon: "person.2", focus: .cast) {
-                    viewModel.showCastList()
+                if viewModel.hasCast {
+                    overlayButton(icon: "person.2", focus: .cast) {
+                        viewModel.showCastList()
+                    }
                 }
             }
 
@@ -210,10 +216,12 @@ struct PlayerOverlayView: View {
 
             Spacer()
 
-            Text(viewModel.positionText)
-                .font(.bodySm)
-                .foregroundColor(.white.opacity(0.7))
-                .monospacedDigit()
+            if !viewModel.isLiveTV {
+                Text(viewModel.positionText)
+                    .font(.bodySm)
+                    .foregroundColor(.white.opacity(0.7))
+                    .monospacedDigit()
+            }
         }
     }
 

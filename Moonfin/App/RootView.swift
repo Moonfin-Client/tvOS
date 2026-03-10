@@ -204,7 +204,11 @@ struct MainNavigationView: View {
         case .videoPlayer:
             videoPlayerDestination
         case .liveTvGuide:
-            PlaceholderView(title: "Live TV Guide")
+            LiveTvGuideView(container: container)
+        case .liveTvRecordings:
+            RecordingsView(container: container)
+        case .liveTvPlayer(let channelId):
+            liveTvPlayerDestination(channelId: channelId)
         case .jellyseerrDiscover:
             PlaceholderView(title: "Discover")
         default:
@@ -236,6 +240,19 @@ struct MainNavigationView: View {
             )
         } else {
             PlaceholderView(title: "Now Playing")
+        }
+    }
+
+    @ViewBuilder
+    private func liveTvPlayerDestination(channelId: String) -> some View {
+        if let manager = container.playbackCoordinator.videoPlayerManager {
+            VideoPlayerScreen(playbackManager: manager, isLiveTV: true)
+                .onAppear { router.hideNavbar = true }
+                .onDisappear {
+                    Task { await container.playbackCoordinator.stopVideoPlayback() }
+                }
+        } else {
+            PlaceholderView(title: "Live TV Player")
         }
     }
 }

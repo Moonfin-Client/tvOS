@@ -32,6 +32,17 @@ final class NavigationRouter: ObservableObject {
         if let destination { path.append(destination) }
     }
 
+    func navigateToLibrary(_ item: ServerItem) {
+        switch item.collectionType?.lowercased() {
+        case "music":
+            navigate(to: .musicBrowser(itemId: item.id))
+        case "livetv":
+            navigate(to: .liveTvGuide)
+        default:
+            navigate(to: .libraryBrowser(itemId: item.id))
+        }
+    }
+
     func switchFlow(to flow: AppFlow) {
         self.flow = flow
         path = NavigationPath()

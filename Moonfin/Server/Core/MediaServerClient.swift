@@ -108,14 +108,15 @@ protocol ServerUserViewsApi {
 // MARK: - Live TV
 
 protocol ServerLiveTvApi {
-    func getChannels(userId: String?, startIndex: Int?, limit: Int?) async throws -> ItemsResult
-    func getPrograms(channelIds: [String]?, userId: String?, startIndex: Int?, limit: Int?) async throws -> ItemsResult
+    func getChannels(userId: String?, startIndex: Int?, limit: Int?, sortBy: String?, sortOrder: String?, isFavorite: Bool?, addCurrentProgram: Bool?) async throws -> ItemsResult
+    func getPrograms(channelIds: [String]?, userId: String?, startIndex: Int?, limit: Int?, minStartDate: Date?, maxStartDate: Date?, minEndDate: Date?, sortBy: String?) async throws -> ItemsResult
     func getRecordings(channelId: String?, seriesTimerId: String?, startIndex: Int?, limit: Int?) async throws -> ItemsResult
     func getTimers(channelId: String?, seriesTimerId: String?) async throws -> [LiveTvTimerInfo]
     func getSeriesTimers(sortBy: String?, startIndex: Int?, limit: Int?) async throws -> [LiveTvSeriesTimerInfo]
     func createTimer(_ timer: LiveTvTimerInfo) async throws
     func cancelTimer(timerId: String) async throws
-    func getRecommendedPrograms(userId: String?, limit: Int?) async throws -> ItemsResult
+    func deleteRecording(recordingId: String) async throws
+    func getRecommendedPrograms(userId: String?, limit: Int?, isAiring: Bool?, hasAired: Bool?) async throws -> ItemsResult
     func getGuideInfo() async throws -> LiveTvGuideInfo
 }
 

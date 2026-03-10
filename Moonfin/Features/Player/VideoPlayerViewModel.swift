@@ -15,6 +15,7 @@ final class VideoPlayerViewModel: ObservableObject {
     @Published var scrubPosition: Float = 0
 
     let playbackManager: PlaybackManager
+    let isLiveTV: Bool
 
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
@@ -65,8 +66,9 @@ final class VideoPlayerViewModel: ObservableObject {
         return "Ends at \(endTimeFormatter.string(from: endDate))"
     }
 
-    init(playbackManager: PlaybackManager) {
+    init(playbackManager: PlaybackManager, isLiveTV: Bool = false) {
         self.playbackManager = playbackManager
+        self.isLiveTV = isLiveTV
 
         playbackManager.player.$state
             .removeDuplicates()

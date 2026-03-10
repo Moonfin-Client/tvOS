@@ -109,7 +109,11 @@
 		80900C437ABC1187B6828BEE /* SettingsScreenLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8429DA7A55F0D2A8C8589B /* SettingsScreenLayout.swift */; };
 		80E643A14C0A03AE4D6D162A /* StreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D9DC6E3197C8498F141404 /* StreamResolver.swift */; };
 		811F295116CF98F76797DFC5 /* SettingsToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68D4848242EED9AD876A7730 /* SettingsToggleButton.swift */; };
-		8157B4F57970E887ACE3FBE6 /* LiveTVView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41FA95C5AC76D45F53A84698 /* LiveTVView.swift */; };
+		B1C2D3E4F5A6B7C8D9E0F1A2 /* LiveTvGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* LiveTvGuideView.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* LiveTvGuideViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7A8B9C0D1E2F3 /* LiveTvGuideViewModel.swift */; };
+
+		C6D7E8F9A0B1C2D3E4F5A6B7 /* RecordingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C7D8E9F0A1B2C3D4E5F6A7 /* RecordingsView.swift */; };
+		C7D8E9F0A1B2C3D4E5F6A7B8 /* RecordingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C8D9E0F1A2B3C4D5E6F7A8 /* RecordingsViewModel.swift */; };
 		815AB68C2743C895FA808388 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07C8A91EC4A411E6D508CF41 /* ColorTokens.swift */; };
 		82451D7208563267D1B9CDD1 /* SettingsListButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87B60A668EFA251CA87BE91 /* SettingsListButton.swift */; };
 		85CEB5E1711C8F7D6FF7C932 /* ActionButtonsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82EC437968B9AE166138987 /* ActionButtonsRow.swift */; };
@@ -251,7 +255,11 @@
 		3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeftSidebar.swift; sourceTree = "<group>"; };
 		3FEE041FE9698B6ECB704A5E /* AudioNowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioNowPlayingView.swift; sourceTree = "<group>"; };
 		41A3039D72FC265C3A86801E /* ServerEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerEnums.swift; sourceTree = "<group>"; };
-		41FA95C5AC76D45F53A84698 /* LiveTVView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTVView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* LiveTvGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTvGuideView.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F7A8B9C0D1E2F3 /* LiveTvGuideViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTvGuideViewModel.swift; sourceTree = "<group>"; };
+
+		B6C7D8E9F0A1B2C3D4E5F6A7 /* RecordingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsView.swift; sourceTree = "<group>"; };
+		B7C8D9E0F1A2B3C4D5E6F7A8 /* RecordingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsViewModel.swift; sourceTree = "<group>"; };
 		43EADFDCA2B9073D7A47E0C6 /* ContentRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentRow.swift; sourceTree = "<group>"; };
 		443241810250EC1AB21DA8F9 /* LoginCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginCard.swift; sourceTree = "<group>"; };
 		474A9D6EC7CE650E681495B6 /* ItemMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemMutationService.swift; sourceTree = "<group>"; };
@@ -744,7 +752,11 @@
 		B0493131A53B9BA1616E3DF2 /* LiveTV */ = {
 			isa = PBXGroup;
 			children = (
-				41FA95C5AC76D45F53A84698 /* LiveTVView.swift */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* LiveTvGuideView.swift */,
+				A2B3C4D5E6F7A8B9C0D1E2F3 /* LiveTvGuideViewModel.swift */,
+
+				B6C7D8E9F0A1B2C3D4E5F6A7 /* RecordingsView.swift */,
+				B7C8D9E0F1A2B3C4D5E6F7A8 /* RecordingsViewModel.swift */,
 			);
 			path = LiveTV;
 			sourceTree = "<group>";
@@ -1113,7 +1125,11 @@
 				D4E8126047B60894A04B8B77 /* LibraryBrowseViewModel.swift in Sources */,
 				627CDA9D73B185C8AAA0DF1E /* LibraryCard.swift in Sources */,
 				9F5AA6FA91AE617FEA2F936E /* LibraryPreferences.swift in Sources */,
-				8157B4F57970E887ACE3FBE6 /* LiveTVView.swift in Sources */,
+				B1C2D3E4F5A6B7C8D9E0F1A2 /* LiveTvGuideView.swift in Sources */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* LiveTvGuideViewModel.swift in Sources */,
+
+				C6D7E8F9A0B1C2D3E4F5A6B7 /* RecordingsView.swift in Sources */,
+				C7D8E9F0A1B2C3D4E5F6A7B8 /* RecordingsViewModel.swift in Sources */,
 				1F2FFBF1011EF3FE14B2DB0C /* LocalServerDiscovery.swift in Sources */,
 				8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */,
 				AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */,

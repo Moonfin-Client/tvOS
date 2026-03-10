@@ -8,8 +8,8 @@ struct VideoPlayerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var gestureLayerFocused: Bool
 
-    init(playbackManager: PlaybackManager) {
-        _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(playbackManager: playbackManager))
+    init(playbackManager: PlaybackManager, isLiveTV: Bool = false) {
+        _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(playbackManager: playbackManager, isLiveTV: isLiveTV))
         _segmentHandler = ObservedObject(wrappedValue: playbackManager.segmentHandler)
         _nextUpManager = ObservedObject(wrappedValue: playbackManager.nextUpManager)
     }
@@ -64,38 +64,40 @@ struct VideoPlayerScreen: View {
                 }
             }
 
-            if let action = segmentHandler.activeSkipPrompt {
+            if !viewModel.isLiveTV, let action = segmentHandler.activeSkipPrompt {
                 SkipSegmentOverlay(
                     action: action,
                     onSkip: { segmentHandler.confirmSkip() }
                 )
             }
 
-            switch nextUpManager.promptState {
-            case .nextUp(let remaining):
-                if let nextItem = viewModel.nextQueueItem {
-                    NextUpOverlay(
-                        nextItem: nextItem,
-                        countdown: remaining,
-                        imageUrl: viewModel.nextItemImageUrl,
-                        onPlayNext: { nextUpManager.confirmPlayNext() },
-                        onClose: { nextUpManager.dismiss() }
-                    )
-                }
-            case .stillWatching:
-                StillWatchingOverlay(
-                    onContinue: {
-                        nextUpManager.confirmStillWatching()
-                        viewModel.playbackManager.resume()
-                    },
-                    onStop: {
-                        nextUpManager.dismiss()
-                        Task { await viewModel.playbackManager.stop() }
-                        dismiss()
+            if !viewModel.isLiveTV {
+                switch nextUpManager.promptState {
+                case .nextUp(let remaining):
+                    if let nextItem = viewModel.nextQueueItem {
+                        NextUpOverlay(
+                            nextItem: nextItem,
+                            countdown: remaining,
+                            imageUrl: viewModel.nextItemImageUrl,
+                            onPlayNext: { nextUpManager.confirmPlayNext() },
+                            onClose: { nextUpManager.dismiss() }
+                        )
                     }
-                )
-            case .hidden:
-                EmptyView()
+                case .stillWatching:
+                    StillWatchingOverlay(
+                        onContinue: {
+                            nextUpManager.confirmStillWatching()
+                            viewModel.playbackManager.resume()
+                        },
+                        onStop: {
+                            nextUpManager.dismiss()
+                            Task { await viewModel.playbackManager.stop() }
+                            dismiss()
+                        }
+                    )
+                case .hidden:
+                    EmptyView()
+                }
             }
         }
         .ignoresSafeArea()

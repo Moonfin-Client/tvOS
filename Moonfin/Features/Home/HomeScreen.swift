@@ -229,7 +229,11 @@ struct HomeScreen: View {
                                         navigatedFromMediaBar = false
                                         lastFocusedRowId = row.id
                                         lastFocusedItemId = item.id
-                                        router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+                                        if row.rowType == .libraryTiles {
+                                            navigateToLibrary(item)
+                                        } else {
+                                            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+                                        }
                                     },
                                     restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil
                                 )
@@ -273,6 +277,10 @@ struct HomeScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private func navigateToLibrary(_ item: ServerItem) {
+        router.navigateToLibrary(item)
     }
 }
 

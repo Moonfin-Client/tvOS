@@ -32,23 +32,40 @@ final class ServerStreamResolver: StreamResolver {
             throw StreamResolverError.missingUserId
         }
 
+        let isLiveTv = item.type == .liveTvChannel
+
         let request = PlaybackInfoRequest(
             userId: userId,
             mediaSourceId: mediaSourceId,
             audioStreamIndex: audioStreamIndex,
             subtitleStreamIndex: subtitleStreamIndex,
             maxStreamingBitrate: maxBitrate,
-            startTimeTicks: startTimeTicks
+            startTimeTicks: startTimeTicks,
+            autoOpenLiveStream: isLiveTv
         )
 
-        let result = try await client.playbackApi.getPlaybackInfo(itemId: item.id, request: request)
+        let result: PlaybackInfoResult
+        do {
+            result = try await client.playbackApi.getPlaybackInfo(itemId: item.id, request: request)
+        } catch {
+            if isLiveTv {
+                return buildLiveTvFallbackStream(item: item, userId: userId)
+            }
+            throw error
+        }
 
         if let errorCode = result.errorCode {
+            if isLiveTv {
+                return buildLiveTvFallbackStream(item: item, userId: userId)
+            }
             throw StreamResolverError.playbackError(errorCode)
         }
 
         let sources = result.mediaSources
         guard !sources.isEmpty else {
+            if isLiveTv {
+                return buildLiveTvFallbackStream(item: item, userId: userId)
+            }
             throw StreamResolverError.noMediaSources
         }
 
@@ -61,7 +78,7 @@ final class ServerStreamResolver: StreamResolver {
 
         let streamInfo: StreamInfo
 
-        if source.supportsDirectPlay {
+        if source.supportsDirectPlay && !isLiveTv {
             let params = StreamParams(
                 userId: userId,
                 mediaSourceId: source.id,
@@ -91,21 +108,38 @@ final class ServerStreamResolver: StreamResolver {
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex
             )
         } else if let transcodingUrl = source.transcodingUrl {
-            let method: PlayMethod
-            if source.supportsDirectStream {
-                method = .directStream
-            } else if source.supportsTranscoding {
-                method = .transcode
-            } else {
-                throw StreamResolverError.noCompatibleStream
-            }
-
+            let method: PlayMethod = source.supportsDirectStream ? .directStream : .transcode
             let url = buildTranscodingUrl(transcodingUrl)
             streamInfo = StreamInfo(
                 url: url,
                 playSessionId: playSessionId,
                 mediaSourceId: source.id,
                 playMethod: method,
+                container: container,
+                audioStreams: audioStreams,
+                subtitleStreams: subtitleStreams,
+                defaultAudioStreamIndex: source.defaultAudioStreamIndex,
+                defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex
+            )
+        } else if isLiveTv {
+            let params = StreamParams(
+                userId: userId,
+                mediaSourceId: source.id,
+                playSessionId: playSessionId,
+                deviceId: deviceId,
+                container: container,
+                audioStreamIndex: audioStreamIndex ?? source.defaultAudioStreamIndex,
+                subtitleStreamIndex: subtitleStreamIndex ?? source.defaultSubtitleStreamIndex,
+                maxStreamingBitrate: nil,
+                startTimeTicks: nil
+            )
+
+            let url = client.playbackApi.getVideoStreamUrl(itemId: item.id, params: params)
+            streamInfo = StreamInfo(
+                url: url,
+                playSessionId: playSessionId,
+                mediaSourceId: source.id,
+                playMethod: .directPlay,
                 container: container,
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
@@ -127,6 +161,33 @@ final class ServerStreamResolver: StreamResolver {
         lastResolvedItemId = nil
         lastResolvedSourceId = nil
         lastResolvedStream = nil
+    }
+
+    private func buildLiveTvFallbackStream(item: ServerItem, userId: String) -> StreamInfo {
+        let params = StreamParams(
+            userId: userId,
+            mediaSourceId: item.id,
+            playSessionId: "",
+            deviceId: deviceId,
+            container: "ts",
+            audioStreamIndex: nil,
+            subtitleStreamIndex: nil,
+            maxStreamingBitrate: nil,
+            startTimeTicks: nil
+        )
+
+        let url = client.playbackApi.getVideoStreamUrl(itemId: item.id, params: params)
+        return StreamInfo(
+            url: url,
+            playSessionId: "",
+            mediaSourceId: "",
+            playMethod: .directPlay,
+            container: "ts",
+            audioStreams: [],
+            subtitleStreams: [],
+            defaultAudioStreamIndex: nil,
+            defaultSubtitleStreamIndex: nil
+        )
     }
 
     private func buildTranscodingUrl(_ path: String) -> String {

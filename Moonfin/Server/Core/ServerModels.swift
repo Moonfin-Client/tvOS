@@ -1,5 +1,18 @@
 import Foundation
 
+final class Indirect<T: Codable>: Codable {
+    let value: T
+    init(_ value: T) { self.value = value }
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        value = try container.decode(T.self)
+    }
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(value)
+    }
+}
+
 struct NameIdPair: Codable, Hashable {
     let name: String?
     let id: String?
@@ -203,6 +216,21 @@ struct ServerItem: Codable, Identifiable {
     let albumCount: Int?
     let hasLyrics: Bool?
 
+    let startDate: Date?
+    let channelNumber: String?
+    let timerId: String?
+    let seriesTimerId: String?
+    let isMovie: Bool?
+    let isSeries: Bool?
+    let isNews: Bool?
+    let isSports: Bool?
+    let isKids: Bool?
+    let isPremiere: Bool?
+    let isRepeat: Bool?
+    let isLive: Bool?
+    let isHD: Bool?
+    let currentProgram: Indirect<ServerItem>?
+
     enum CodingKeys: String, CodingKey {
         case id = "Id"
         case serverId = "ServerId"
@@ -254,6 +282,20 @@ struct ServerItem: Codable, Identifiable {
         case childCount = "ChildCount"
         case albumCount = "AlbumCount"
         case hasLyrics = "HasLyrics"
+        case startDate = "StartDate"
+        case channelNumber = "ChannelNumber"
+        case timerId = "TimerId"
+        case seriesTimerId = "SeriesTimerId"
+        case isMovie = "IsMovie"
+        case isSeries = "IsSeries"
+        case isNews = "IsNews"
+        case isSports = "IsSports"
+        case isKids = "IsKids"
+        case isPremiere = "IsPremiere"
+        case isRepeat = "IsRepeat"
+        case isLive = "IsLive"
+        case isHD = "IsHD"
+        case currentProgram = "CurrentProgram"
     }
 }
 

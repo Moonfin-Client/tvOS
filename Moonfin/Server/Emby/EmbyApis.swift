@@ -317,21 +317,37 @@ struct EmbyUserViewsApi: ServerUserViewsApi {
 struct EmbyLiveTvApi: ServerLiveTvApi {
     let client: HttpClient
 
-    func getChannels(userId: String?, startIndex: Int?, limit: Int?) async throws -> ItemsResult {
+    private static let dateFormatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    func getChannels(userId: String?, startIndex: Int?, limit: Int?, sortBy: String?, sortOrder: String?, isFavorite: Bool?, addCurrentProgram: Bool?) async throws -> ItemsResult {
         let query = buildQuery([
             ("UserId", userId),
             ("StartIndex", startIndex.map(String.init)),
             ("Limit", limit.map(String.init)),
+            ("SortBy", sortBy),
+            ("SortOrder", sortOrder),
+            ("IsFavorite", isFavorite.map { String($0) }),
+            ("AddCurrentProgram", addCurrentProgram.map { String($0) }),
+            ("EnableFavoriteSorting", "true"),
         ])
         return try await client.request("/LiveTv/Channels", queryItems: query)
     }
 
-    func getPrograms(channelIds: [String]?, userId: String?, startIndex: Int?, limit: Int?) async throws -> ItemsResult {
+    func getPrograms(channelIds: [String]?, userId: String?, startIndex: Int?, limit: Int?, minStartDate: Date?, maxStartDate: Date?, minEndDate: Date?, sortBy: String?) async throws -> ItemsResult {
         let query = buildQuery([
             ("ChannelIds", channelIds?.joined(separator: ",")),
             ("UserId", userId),
             ("StartIndex", startIndex.map(String.init)),
             ("Limit", limit.map(String.init)),
+            ("MinStartDate", minStartDate.map { Self.dateFormatter.string(from: $0) }),
+            ("MaxStartDate", maxStartDate.map { Self.dateFormatter.string(from: $0) }),
+            ("MinEndDate", minEndDate.map { Self.dateFormatter.string(from: $0) }),
+            ("SortBy", sortBy ?? "StartDate"),
+            ("EnableImages", "false"),
         ])
         return try await client.request("/LiveTv/Programs", queryItems: query)
     }
@@ -375,10 +391,16 @@ struct EmbyLiveTvApi: ServerLiveTvApi {
         try await client.requestVoid("/LiveTv/Timers/\(timerId)", method: "DELETE")
     }
 
-    func getRecommendedPrograms(userId: String?, limit: Int?) async throws -> ItemsResult {
+    func deleteRecording(recordingId: String) async throws {
+        try await client.requestVoid("/Items/\(recordingId)", method: "DELETE")
+    }
+
+    func getRecommendedPrograms(userId: String?, limit: Int?, isAiring: Bool?, hasAired: Bool?) async throws -> ItemsResult {
         let query = buildQuery([
             ("UserId", userId),
             ("Limit", limit.map(String.init)),
+            ("IsAiring", isAiring.map { String($0) }),
+            ("HasAired", hasAired.map { String($0) }),
         ])
         return try await client.request("/LiveTv/Programs/Recommended", queryItems: query)
     }

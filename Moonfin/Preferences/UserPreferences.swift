@@ -59,6 +59,14 @@ final class UserPreferences {
 
     static let photoSlideshowInterval = Preference(key: "photo_slideshow_interval", defaultValue: SlideshowInterval.medium)
 
+    static let liveTvChannelOrder = Preference(key: "livetv_channel_order", defaultValue: LiveTvChannelOrder.channelNumber)
+    static let liveTvFavsAtTop = Preference(key: "livetv_favs_at_top", defaultValue: true)
+    static let liveTvColorCodeGuide = Preference(key: "livetv_color_code_guide", defaultValue: false)
+    static let liveTvShowHDIndicator = Preference(key: "livetv_show_hd_indicator", defaultValue: false)
+    static let liveTvShowNewIndicator = Preference(key: "livetv_show_new_indicator", defaultValue: true)
+    static let liveTvShowRepeatIndicator = Preference(key: "livetv_show_repeat_indicator", defaultValue: false)
+    static let liveTvShowLiveIndicator = Preference(key: "livetv_show_live_indicator", defaultValue: false)
+
     init(store: PreferenceStore) {
         self.store = store
     }
@@ -271,6 +279,18 @@ enum SlideshowInterval: String, StringRepresentableEnum, CaseIterable {
         case .medium: return "5 seconds"
         case .long: return "8 seconds"
         case .extraLong: return "10 seconds"
+        }
+    }
+}
+
+enum LiveTvChannelOrder: String, StringRepresentableEnum, CaseIterable {
+    case channelNumber
+    case lastPlayed
+
+    var displayName: String {
+        switch self {
+        case .channelNumber: return "Channel Number"
+        case .lastPlayed: return "Last Played"
         }
     }
 }

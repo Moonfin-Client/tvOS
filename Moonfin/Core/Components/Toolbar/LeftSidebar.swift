@@ -175,11 +175,7 @@ struct LeftSidebar: View {
                 isFocused: focusedItem == .libraries,
                 action: {
                     if let first = viewModel.userViews.first {
-                        if first.collectionType == "music" {
-                            router.navigate(to: .musicBrowser(itemId: first.id))
-                        } else {
-                            router.navigate(to: .libraryBrowser(itemId: first.id))
-                        }
+                        router.navigateToLibrary(first)
                     }
                 }
             )
@@ -193,11 +189,7 @@ struct LeftSidebar: View {
                         label: library.name,
                         isFocused: focusedItem == .library(library.id),
                         action: {
-                            if library.collectionType == "music" {
-                                router.navigate(to: .musicBrowser(itemId: library.id))
-                            } else {
-                                router.navigate(to: .libraryBrowser(itemId: library.id))
-                            }
+                            router.navigateToLibrary(library)
                         }
                     )
                     .focused($focusedItem, equals: .library(library.id))

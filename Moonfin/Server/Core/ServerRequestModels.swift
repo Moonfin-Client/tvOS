@@ -12,6 +12,7 @@ struct PlaybackInfoRequest: Codable {
     let enableTranscoding: Bool
     let allowVideoStreamCopy: Bool
     let allowAudioStreamCopy: Bool
+    let autoOpenLiveStream: Bool
 
     enum CodingKeys: String, CodingKey {
         case userId = "UserId"
@@ -25,6 +26,7 @@ struct PlaybackInfoRequest: Codable {
         case enableTranscoding = "EnableTranscoding"
         case allowVideoStreamCopy = "AllowVideoStreamCopy"
         case allowAudioStreamCopy = "AllowAudioStreamCopy"
+        case autoOpenLiveStream = "AutoOpenLiveStream"
     }
 
     init(
@@ -38,7 +40,8 @@ struct PlaybackInfoRequest: Codable {
         enableDirectStream: Bool = true,
         enableTranscoding: Bool = true,
         allowVideoStreamCopy: Bool = true,
-        allowAudioStreamCopy: Bool = true
+        allowAudioStreamCopy: Bool = true,
+        autoOpenLiveStream: Bool = false
     ) {
         self.userId = userId
         self.mediaSourceId = mediaSourceId
@@ -51,6 +54,7 @@ struct PlaybackInfoRequest: Codable {
         self.enableTranscoding = enableTranscoding
         self.allowVideoStreamCopy = allowVideoStreamCopy
         self.allowAudioStreamCopy = allowAudioStreamCopy
+        self.autoOpenLiveStream = autoOpenLiveStream
     }
 }
 
