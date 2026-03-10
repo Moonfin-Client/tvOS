@@ -8,13 +8,17 @@ struct VLCPlayerView: UIViewRepresentable {
         let view = UIView()
         view.backgroundColor = .black
         view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.isOpaque = true
+        view.layer.isDoubleSided = false
         player.attachVideoView(view)
         return view
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {}
 
-    static func dismantleUIView(_ uiView: UIView, coordinator: ()) {}
+    static func dismantleUIView(_ uiView: UIView, coordinator: ()) {
+        uiView.layer.contents = nil
+    }
 }
 
 extension VLCPlayerView: Equatable {

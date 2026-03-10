@@ -3,6 +3,12 @@ import Foundation
 final class ServerStreamResolver: StreamResolver {
     private let client: MediaServerClient
 
+    private lazy var deviceId: String = AppConstants.deviceId
+
+    private var lastResolvedItemId: String?
+    private var lastResolvedSourceId: String?
+    private var lastResolvedStream: StreamInfo?
+
     init(client: MediaServerClient) {
         self.client = client
     }
@@ -15,6 +21,13 @@ final class ServerStreamResolver: StreamResolver {
         subtitleStreamIndex: Int?,
         startTimeTicks: Int64?
     ) async throws -> StreamInfo {
+        if let cached = lastResolvedStream,
+           lastResolvedItemId == item.id,
+           lastResolvedSourceId == mediaSourceId {
+            clearCache()
+            return cached
+        }
+
         guard let userId = client.userId else {
             throw StreamResolverError.missingUserId
         }
@@ -46,8 +59,9 @@ final class ServerStreamResolver: StreamResolver {
         let subtitleStreams = source.mediaStreams.filter { $0.type == .subtitle }
         let container = source.container ?? "ts"
 
+        let streamInfo: StreamInfo
+
         if source.supportsDirectPlay {
-            let deviceId = AppConstants.deviceId
             let params = StreamParams(
                 userId: userId,
                 mediaSourceId: source.id,
@@ -65,7 +79,7 @@ final class ServerStreamResolver: StreamResolver {
                 ? client.playbackApi.getVideoStreamUrl(itemId: item.id, params: params)
                 : client.playbackApi.getAudioStreamUrl(itemId: item.id, params: params)
 
-            return StreamInfo(
+            streamInfo = StreamInfo(
                 url: url,
                 playSessionId: playSessionId,
                 mediaSourceId: source.id,
@@ -76,9 +90,7 @@ final class ServerStreamResolver: StreamResolver {
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex
             )
-        }
-
-        if let transcodingUrl = source.transcodingUrl {
+        } else if let transcodingUrl = source.transcodingUrl {
             let method: PlayMethod
             if source.supportsDirectStream {
                 method = .directStream
@@ -89,7 +101,7 @@ final class ServerStreamResolver: StreamResolver {
             }
 
             let url = buildTranscodingUrl(transcodingUrl)
-            return StreamInfo(
+            streamInfo = StreamInfo(
                 url: url,
                 playSessionId: playSessionId,
                 mediaSourceId: source.id,
@@ -100,9 +112,21 @@ final class ServerStreamResolver: StreamResolver {
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex
             )
+        } else {
+            throw StreamResolverError.noCompatibleStream
         }
 
-        throw StreamResolverError.noCompatibleStream
+        lastResolvedItemId = item.id
+        lastResolvedSourceId = mediaSourceId
+        lastResolvedStream = streamInfo
+
+        return streamInfo
+    }
+
+    func clearCache() {
+        lastResolvedItemId = nil
+        lastResolvedSourceId = nil
+        lastResolvedStream = nil
     }
 
     private func buildTranscodingUrl(_ path: String) -> String {

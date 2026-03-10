@@ -5,6 +5,9 @@ struct PlayerOverlayView: View {
     @EnvironmentObject private var theme: MoonfinTheme
     @FocusState private var focusedControl: ControlFocus?
 
+    private static let headerGradientColors: [Color] = [.black.opacity(0.8), .clear]
+    private static let controlsGradientColors: [Color] = [.clear, .black.opacity(0.85)]
+
     enum ControlFocus: Hashable {
         case seekbar
         case playPause
@@ -18,6 +21,7 @@ struct PlayerOverlayView: View {
         case cast
         case speed
         case zoom
+        case info
     }
 
     var body: some View {
@@ -65,7 +69,7 @@ struct PlayerOverlayView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
-                colors: [.black.opacity(0.8), .clear],
+                colors: Self.headerGradientColors,
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -85,7 +89,7 @@ struct PlayerOverlayView: View {
         }
         .background(
             LinearGradient(
-                colors: [.clear, .black.opacity(0.85)],
+                colors: Self.controlsGradientColors,
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -138,7 +142,7 @@ struct PlayerOverlayView: View {
     private var seekbarRow: some View {
         PlayerSeekBar(
             progress: viewModel.isScrubbing ? viewModel.scrubPosition : viewModel.player.position,
-            bufferProgress: 0,
+            bufferProgress: viewModel.player.bufferProgress,
             isFocused: focusedControl == .seekbar
         )
         .focusable()
@@ -200,6 +204,10 @@ struct PlayerOverlayView: View {
                 viewModel.cycleZoom()
             }
 
+            overlayButton(icon: "info.circle", focus: .info) {
+                viewModel.showPlaybackInfo()
+            }
+
             Spacer()
 
             Text(viewModel.positionText)
@@ -255,5 +263,4 @@ struct OverlayButtonStyle: ButtonStyle {
             .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }
-
 

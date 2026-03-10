@@ -4,10 +4,12 @@ import Combine
 @MainActor
 final class VideoPlayerViewModel: ObservableObject {
     @Published var overlayVisible = false
-    @Published var trackSelectionVisible = false
-    @Published var trackSelectionTab: TrackSelectionTab = .audio
+    @Published var audioSelectionVisible = false
+    @Published var subtitleSelectionVisible = false
+    @Published var speedSelectionVisible = false
     @Published var chapterSelectionVisible = false
     @Published var castListVisible = false
+    @Published var playbackInfoVisible = false
     @Published var subtitleDelay: TimeInterval = 0
     @Published var isScrubbing = false
     @Published var scrubPosition: Float = 0
@@ -16,7 +18,7 @@ final class VideoPlayerViewModel: ObservableObject {
 
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
-    private var playerCancellable: AnyCancellable?
+    private var cancellables = Set<AnyCancellable>()
     private let overlayTimeout: TimeInterval = 5
     private let endTimeFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -27,36 +29,19 @@ final class VideoPlayerViewModel: ObservableObject {
     let skipBackSeconds: TimeInterval = 10
     let skipForwardSeconds: TimeInterval = 30
 
+    private var _cachedTitle: String = ""
+    private var _cachedSubtitle: String = ""
+    private var _cachedChapters: [ServerChapter] = []
+    private var _cachedCast: [ServerPerson] = []
+    private var _cachedEntryId: String?
+
     var player: VLCPlayerWrapper { playbackManager.player }
 
-    var title: String {
-        guard let item = playbackManager.currentEntry?.item else { return "" }
-        if let series = item.seriesName {
-            var episodeLabel = series
-            if let s = item.parentIndexNumber { episodeLabel += " — S\(s)" }
-            if let e = item.indexNumber { episodeLabel += "E\(e)" }
-            return episodeLabel
-        }
-        return item.name
-    }
-
-    var subtitle: String {
-        guard let item = playbackManager.currentEntry?.item else { return "" }
-        if item.seriesName != nil { return item.name }
-        return ""
-    }
-
-    var chapters: [ServerChapter] {
-        playbackManager.currentEntry?.item.chapters ?? []
-    }
-
+    var title: String { ensureItemCache(); return _cachedTitle }
+    var subtitle: String { ensureItemCache(); return _cachedSubtitle }
+    var chapters: [ServerChapter] { ensureItemCache(); return _cachedChapters }
+    var castMembers: [ServerPerson] { ensureItemCache(); return _cachedCast }
     var hasChapters: Bool { chapters.count > 1 }
-
-    var castMembers: [ServerPerson] {
-        let people = playbackManager.currentEntry?.item.people ?? []
-        return people.filter { $0.type == .actor || $0.type == .guestStar }
-    }
-
     var hasCast: Bool { !castMembers.isEmpty }
 
     var nextQueueItem: ServerItem? {
@@ -82,13 +67,94 @@ final class VideoPlayerViewModel: ObservableObject {
 
     init(playbackManager: PlaybackManager) {
         self.playbackManager = playbackManager
-        // Use .receive (not .throttle) so play/pause icon updates instantly;
-        // time-based updates are already throttled inside VLCPlayerWrapper.
-        playerCancellable = playbackManager.player.objectWillChange
+
+        playbackManager.player.$state
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        playbackManager.player.$audioTracks
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        playbackManager.player.$subtitleTracks
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        playbackManager.player.$currentAudioTrackIndex
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        playbackManager.player.$currentSubtitleTrackIndex
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        playbackManager.player.$rate
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
+        playbackManager.player.$currentTime
+            .throttle(for: .milliseconds(500), scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] _ in
+                guard let self, self.overlayVisible || self.isScrubbing else { return }
+                self.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        playbackManager.$currentIndex
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
+                self?._cachedEntryId = nil
                 self?.objectWillChange.send()
             }
+            .store(in: &cancellables)
+
+        playbackManager.player.$zoomMode
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+    }
+
+    private func ensureItemCache() {
+        let entryId = playbackManager.currentEntry?.id
+        guard entryId != _cachedEntryId else { return }
+        _cachedEntryId = entryId
+
+        guard let item = playbackManager.currentEntry?.item else {
+            _cachedTitle = ""
+            _cachedSubtitle = ""
+            _cachedChapters = []
+            _cachedCast = []
+            return
+        }
+
+        if let series = item.seriesName {
+            var episodeLabel = series
+            if let s = item.parentIndexNumber { episodeLabel += " — S\(s)" }
+            if let e = item.indexNumber { episodeLabel += "E\(e)" }
+            _cachedTitle = episodeLabel
+        } else {
+            _cachedTitle = item.name
+        }
+
+        _cachedSubtitle = item.seriesName != nil ? item.name : ""
+        _cachedChapters = item.chapters ?? []
+
+        let people = item.people ?? []
+        _cachedCast = people.filter { $0.type == .actor || $0.type == .guestStar }
     }
 
     func showOverlay() {
@@ -107,7 +173,7 @@ final class VideoPlayerViewModel: ObservableObject {
         hideTask = Task {
             try? await Task.sleep(nanoseconds: UInt64(overlayTimeout * 1_000_000_000))
             guard !Task.isCancelled else { return }
-            if !trackSelectionVisible && !chapterSelectionVisible && !castListVisible && !isScrubbing {
+            if !trackSelectionVisible && !chapterSelectionVisible && !castListVisible && !playbackInfoVisible && !isScrubbing {
                 overlayVisible = false
             }
         }
@@ -148,7 +214,7 @@ final class VideoPlayerViewModel: ObservableObject {
     private func debouncedSeek() {
         scrubSeekTask?.cancel()
         scrubSeekTask = Task {
-            try? await Task.sleep(nanoseconds: 800_000_000)
+            try? await Task.sleep(nanoseconds: 400_000_000)
             guard !Task.isCancelled, isScrubbing else { return }
             let target = TimeInterval(scrubPosition) * player.duration
             playbackManager.seek(to: target)
@@ -171,16 +237,28 @@ final class VideoPlayerViewModel: ObservableObject {
     }
 
     func showTrackSelection(tab: TrackSelectionTab = .audio) {
-        trackSelectionTab = tab
         overlayVisible = false
-        trackSelectionVisible = true
         hideTask?.cancel()
+        switch tab {
+        case .audio:
+            audioSelectionVisible = true
+        case .subtitles:
+            subtitleSelectionVisible = true
+        case .speed:
+            speedSelectionVisible = true
+        }
     }
 
     func hideTrackSelection() {
-        trackSelectionVisible = false
+        audioSelectionVisible = false
+        subtitleSelectionVisible = false
+        speedSelectionVisible = false
         overlayVisible = true
         resetHideTimer()
+    }
+
+    var trackSelectionVisible: Bool {
+        audioSelectionVisible || subtitleSelectionVisible || speedSelectionVisible
     }
 
     func showChapterSelection() {
@@ -220,6 +298,18 @@ final class VideoPlayerViewModel: ObservableObject {
 
     func hideCastList() {
         castListVisible = false
+        overlayVisible = true
+        resetHideTimer()
+    }
+
+    func showPlaybackInfo() {
+        overlayVisible = false
+        playbackInfoVisible = true
+        hideTask?.cancel()
+    }
+
+    func hidePlaybackInfo() {
+        playbackInfoVisible = false
         overlayVisible = true
         resetHideTimer()
     }

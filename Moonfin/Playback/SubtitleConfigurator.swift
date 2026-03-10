@@ -11,7 +11,10 @@ struct SubtitleConfigurator {
         let strokeColor = preferences[UserPreferences.subtitlesStrokeColor]
         let fontSize = preferences[UserPreferences.subtitlesTextSize]
 
-        options["freetype-fontsize"] = fontSize
+        // Use relative font size (video_height / value) for reliable cross-resolution scaling.
+        // freetype-fontsize must be 0 so VLC uses freetype-rel-fontsize instead.
+        options["freetype-fontsize"] = 0
+        options["freetype-rel-fontsize"] = max(12, 1080 / max(1, fontSize))
         options["freetype-color"] = Int(textColor.argb & 0x00FFFFFF)
 
         if !bgColor.isTransparent {

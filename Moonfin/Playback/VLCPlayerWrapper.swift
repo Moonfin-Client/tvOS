@@ -45,6 +45,7 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     @Published private(set) var position: Float = 0
     @Published private(set) var currentTime: TimeInterval = 0
     @Published private(set) var duration: TimeInterval = 0
+    @Published private(set) var bufferProgress: Float = 0
     @Published private(set) var isSeekable: Bool = false
     @Published private(set) var audioTracks: [VLCTrack] = []
     @Published private(set) var subtitleTracks: [VLCTrack] = []
@@ -59,6 +60,11 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     private var lastTimeUpdate: CFAbsoluteTime = 0
     private let timeUpdateInterval: CFAbsoluteTime = 0.25
 
+    private nonisolated(unsafe) var timeUpdateScheduled = false
+    private var tracksNeedRefresh = true
+    private var audioSessionActive = false
+    private var pendingSeekPosition: TimeInterval?
+
     var isPlaying: Bool { state == .playing }
 
     func attachVideoView(_ view: UIView) {
@@ -71,10 +77,12 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     }
 
     func configureAudioSession() {
+        guard !audioSessionActive else { return }
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playback, mode: .default)
             try session.setActive(true)
+            audioSessionActive = true
         } catch {}
     }
 
@@ -89,34 +97,35 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         }
 
         let media = VLCMedia(url: url)
-        var mediaOpts: [String: Any] = [
-            "network-caching": 2000,
-            "file-caching": 1000,
-            "avcodec-hw": "any",
-            "avcodec-threads": 0,
-        ]
-        mediaOpts.merge(subtitleOptions) { _, new in new }
-        media.addOptions(mediaOpts)
+        if !subtitleOptions.isEmpty {
+            media.addOptions(subtitleOptions)
+        }
         player.media = media
         mediaPlayer = player
+        tracksNeedRefresh = true
         state = .opening
 
         player.play()
     }
 
-    func play(streamUrl: String) async {
+    func play(streamUrl: String, startPosition: TimeInterval = 0) async {
         guard let url = URL(string: streamUrl) else { return }
+        if startPosition > 0 {
+            pendingSeekPosition = startPosition
+        }
         await play(url: url)
     }
 
     func pause() {
-        guard let player = mediaPlayer, state == .playing else { return }
+        guard let player = mediaPlayer else { return }
+        guard state == .playing || player.isPlaying else { return }
         player.pause()
         state = .paused
     }
 
     func resume() {
         guard let player = mediaPlayer else { return }
+        guard !player.isPlaying else { return }
         player.play()
         state = .playing
     }
@@ -130,8 +139,12 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         position = 0
         currentTime = 0
         duration = 0
+        bufferProgress = 0
         audioTracks = []
         subtitleTracks = []
+        tracksNeedRefresh = true
+        audioSessionActive = false
+        pendingSeekPosition = nil
     }
 
     func seek(to seconds: TimeInterval) {
@@ -199,24 +212,37 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     }
 
     private func refreshTracks() {
-        guard let player = mediaPlayer else { return }
+        guard tracksNeedRefresh, let player = mediaPlayer else { return }
 
+        let newAudio: [VLCTrack]
         if let names = player.audioTrackNames as? [String],
            let indexes = player.audioTrackIndexes as? [NSNumber] {
-            audioTracks = zip(indexes, names)
+            newAudio = zip(indexes, names)
                 .filter { $0.0.int32Value != -1 }
                 .map { VLCTrack(id: $0.0.int32Value, name: $0.1) }
+        } else {
+            newAudio = []
         }
 
+        let newSubs: [VLCTrack]
         if let names = player.videoSubTitlesNames as? [String],
            let indexes = player.videoSubTitlesIndexes as? [NSNumber] {
-            subtitleTracks = zip(indexes, names)
+            newSubs = zip(indexes, names)
                 .filter { $0.0.int32Value != -1 }
                 .map { VLCTrack(id: $0.0.int32Value, name: $0.1) }
+        } else {
+            newSubs = []
         }
 
-        currentAudioTrackIndex = player.currentAudioTrackIndex
-        currentSubtitleTrackIndex = player.currentVideoSubTitleIndex
+        if newAudio != audioTracks { audioTracks = newAudio }
+        if newSubs != subtitleTracks { subtitleTracks = newSubs }
+
+        let newAudioIdx = player.currentAudioTrackIndex
+        let newSubIdx = player.currentVideoSubTitleIndex
+        if newAudioIdx != currentAudioTrackIndex { currentAudioTrackIndex = newAudioIdx }
+        if newSubIdx != currentSubtitleTrackIndex { currentSubtitleTrackIndex = newSubIdx }
+
+        if !newAudio.isEmpty { tracksNeedRefresh = false }
     }
 
     private func updateTime(force: Bool = false) {
@@ -228,6 +254,7 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
 
         if player.isPlaying && state != .playing {
             state = .playing
+            tracksNeedRefresh = true
             refreshTracks()
         }
 
@@ -235,12 +262,9 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         let newDuration = TimeInterval(abs(player.media?.length.intValue ?? 0)) / 1000.0
         let newPosition = player.position
 
-        let changed = newTime != currentTime || newDuration != duration || newPosition != position
-        guard changed else { return }
-
-        currentTime = newTime
-        duration = newDuration
-        position = newPosition
+        if abs(newTime - currentTime) > 0.01 { currentTime = newTime }
+        if abs(newDuration - duration) > 0.1 { duration = newDuration }
+        if abs(newPosition - position) > 0.0001 { position = newPosition }
     }
 }
 
@@ -255,10 +279,20 @@ extension VLCPlayerWrapper: VLCMediaPlayerDelegate {
             case .opening:
                 newState = .opening
             case .buffering:
-                newState = .buffering(0)
+                let bufferPct = player.position
+                let pct = max(0, min(1, bufferPct))
+                if abs(pct - bufferProgress) > 0.01 { bufferProgress = pct }
+                newState = .buffering(pct)
             case .playing:
+                bufferProgress = 1.0
                 newState = .playing
+                tracksNeedRefresh = true
                 refreshTracks()
+                if let seekPos = pendingSeekPosition, player.isSeekable {
+                    pendingSeekPosition = nil
+                    let ms = Int32(seekPos * 1000)
+                    player.time = VLCTime(int: ms)
+                }
             case .paused:
                 newState = .paused
             case .stopped:
@@ -268,6 +302,7 @@ extension VLCPlayerWrapper: VLCMediaPlayerDelegate {
             case .error:
                 newState = .error
             case .esAdded:
+                tracksNeedRefresh = true
                 refreshTracks()
                 return
             @unknown default:
@@ -281,8 +316,12 @@ extension VLCPlayerWrapper: VLCMediaPlayerDelegate {
     }
 
     nonisolated func mediaPlayerTimeChanged(_ notification: Notification) {
-        Task { @MainActor in
-            updateTime()
+        guard !timeUpdateScheduled else { return }
+        timeUpdateScheduled = true
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            self.timeUpdateScheduled = false
+            self.updateTime()
         }
     }
 }

@@ -25,13 +25,25 @@ final class PlaybackCoordinator: ObservableObject {
         self.preferences = preferences
     }
 
-    func startVideoPlayback(items: [ServerItem], startIndex: Int = 0, startPosition: TimeInterval = 0) async {
+    func startVideoPlayback(
+        items: [ServerItem],
+        startIndex: Int = 0,
+        startPosition: TimeInterval = 0,
+        audioStreamIndex: Int? = nil,
+        subtitleStreamIndex: Int? = nil
+    ) async {
         await stopVideoPlayback()
         guard let client else { return }
         let player = VLCPlayerWrapper()
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
         videoPlayerManager = manager
-        await manager.play(items: items, startIndex: startIndex, startPosition: startPosition)
+        await manager.play(
+            items: items,
+            startIndex: startIndex,
+            startPosition: startPosition,
+            audioStreamIndex: audioStreamIndex,
+            subtitleStreamIndex: subtitleStreamIndex
+        )
     }
 
     func stopVideoPlayback() async {

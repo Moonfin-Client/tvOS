@@ -15,6 +15,8 @@ final class HttpClient {
 
     private let session: URLSession
     private let encoder = JSONEncoder()
+
+    let userAgent: String
     private static let isoFormatterWithFrac: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -55,6 +57,9 @@ final class HttpClient {
         self.deviceId = deviceId
         self.deviceName = deviceName
         self.session = session
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersion
+        let osVersionString = "\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)"
+        self.userAgent = "\(AppConstants.clientName)/\(AppConstants.clientVersion) (AppleTV; tvOS \(osVersionString))"
     }
 
     func configure(baseURL: URL, accessToken: String? = nil, userId: String? = nil) {
@@ -108,6 +113,7 @@ final class HttpClient {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(authorizationHeader, forHTTPHeaderField: "Authorization")
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
 
         if let body {
             request.httpBody = try encoder.encode(body)

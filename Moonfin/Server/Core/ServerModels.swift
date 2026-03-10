@@ -78,8 +78,15 @@ struct ServerMediaStream: Codable {
     let channels: Int?
     let sampleRate: Int?
     let bitRate: Int?
+    let bitDepth: Int?
     let isTextSubtitleStream: Bool
     let deliveryUrl: String?
+    let profile: String?
+    let level: Double?
+    let realFrameRate: Float?
+    let videoRange: String?
+    let videoRangeType: String?
+    let channelLayout: String?
 
     enum CodingKeys: String, CodingKey {
         case index = "Index"
@@ -96,8 +103,15 @@ struct ServerMediaStream: Codable {
         case channels = "Channels"
         case sampleRate = "SampleRate"
         case bitRate = "BitRate"
+        case bitDepth = "BitDepth"
         case isTextSubtitleStream = "IsTextSubtitleStream"
         case deliveryUrl = "DeliveryUrl"
+        case profile = "Profile"
+        case level = "Level"
+        case realFrameRate = "RealFrameRate"
+        case videoRange = "VideoRange"
+        case videoRangeType = "VideoRangeType"
+        case channelLayout = "ChannelLayout"
     }
 }
 

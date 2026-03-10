@@ -39,7 +39,7 @@ struct TrackSelectorDialog: View {
                             label: "None",
                             detail: nil,
                             isSelected: selectedIndex == nil || selectedIndex == -1,
-                            action: { onSelect(nil) }
+                            action: { onSelect(-1) }
                         )
                         .focused($focusedIndex, equals: -1)
                     }
@@ -90,7 +90,7 @@ struct TrackSelectorDialog: View {
     }
 }
 
-private struct FocusableTrackSelectorRow: View {
+struct FocusableTrackSelectorRow: View {
     let label: String
     let detail: String?
     let isSelected: Bool

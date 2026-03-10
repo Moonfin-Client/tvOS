@@ -5,6 +5,8 @@ struct QueueEntry: Identifiable, Equatable {
     let item: ServerItem
     let mediaSourceId: String?
     var startPositionTicks: Int64
+    var audioStreamIndex: Int?
+    var subtitleStreamIndex: Int?
 
     static func == (lhs: QueueEntry, rhs: QueueEntry) -> Bool {
         lhs.id == rhs.id

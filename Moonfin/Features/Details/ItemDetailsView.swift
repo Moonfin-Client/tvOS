@@ -484,7 +484,9 @@ struct ItemDetailsView: View {
             await container.playbackCoordinator.startVideoPlayback(
                 items: items,
                 startIndex: startIndex,
-                startPosition: startPosition
+                startPosition: startPosition,
+                audioStreamIndex: selectedAudioIndex,
+                subtitleStreamIndex: selectedSubtitleIndex
             )
             router.navigate(to: .videoPlayer)
         }

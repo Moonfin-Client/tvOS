@@ -30,9 +30,22 @@ struct VideoPlayerScreen: View {
                     .focusSection()
             }
 
-            if viewModel.trackSelectionVisible {
-                trackSelectionOverlay
-                    .focusSection()
+            if viewModel.audioSelectionVisible {
+                trackDialogOverlay {
+                    PlayerAudioTrackDialog(viewModel: viewModel)
+                }
+            }
+
+            if viewModel.subtitleSelectionVisible {
+                trackDialogOverlay {
+                    PlayerSubtitleTrackDialog(viewModel: viewModel)
+                }
+            }
+
+            if viewModel.speedSelectionVisible {
+                trackDialogOverlay {
+                    PlayerSpeedDialog(viewModel: viewModel)
+                }
             }
 
             if viewModel.chapterSelectionVisible {
@@ -43,6 +56,12 @@ struct VideoPlayerScreen: View {
             if viewModel.castListVisible {
                 castListOverlay
                     .focusSection()
+            }
+
+            if viewModel.playbackInfoVisible {
+                trackDialogOverlay {
+                    PlaybackInfoDialog(viewModel: viewModel)
+                }
             }
 
             if let action = segmentHandler.activeSkipPrompt {
@@ -81,23 +100,30 @@ struct VideoPlayerScreen: View {
         }
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.3), value: viewModel.overlayVisible)
-        .animation(.easeInOut(duration: 0.25), value: viewModel.trackSelectionVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.audioSelectionVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.subtitleSelectionVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.speedSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.chapterSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.castListVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.playbackInfoVisible)
         .animation(.easeInOut(duration: 0.3), value: segmentHandler.activeSkipPrompt != nil)
         .animation(.easeInOut(duration: 0.3), value: nextUpManager.promptState)
         .onAppear {
             viewModel.showOverlay()
         }
         .onChange(of: viewModel.overlayVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.trackSelectionVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.audioSelectionVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.subtitleSelectionVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.speedSelectionVisible) { _ in restoreFocusIfNeeded() }
         .onChange(of: viewModel.chapterSelectionVisible) { _ in restoreFocusIfNeeded() }
         .onChange(of: viewModel.castListVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.playbackInfoVisible) { _ in restoreFocusIfNeeded() }
     }
 
     private func restoreFocusIfNeeded() {
         let anyVisible = viewModel.overlayVisible || viewModel.trackSelectionVisible
             || viewModel.chapterSelectionVisible || viewModel.castListVisible
+            || viewModel.playbackInfoVisible
         if !anyVisible {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 gestureLayerFocused = true
@@ -110,7 +136,7 @@ struct VideoPlayerScreen: View {
             .contentShape(Rectangle())
             .focusable()
             .focused($gestureLayerFocused)
-            .disabled(viewModel.overlayVisible || viewModel.trackSelectionVisible || viewModel.chapterSelectionVisible || viewModel.castListVisible)
+            .disabled(viewModel.overlayVisible || viewModel.trackSelectionVisible || viewModel.chapterSelectionVisible || viewModel.castListVisible || viewModel.playbackInfoVisible)
             .onPlayPauseCommand {
                 viewModel.togglePlayPause()
                 if !viewModel.overlayVisible { viewModel.showOverlay() }
@@ -125,6 +151,8 @@ struct VideoPlayerScreen: View {
                     viewModel.hideChapterSelection()
                 } else if viewModel.castListVisible {
                     viewModel.hideCastList()
+                } else if viewModel.playbackInfoVisible {
+                    viewModel.hidePlaybackInfo()
                 } else if viewModel.trackSelectionVisible {
                     viewModel.hideTrackSelection()
                 } else if viewModel.overlayVisible {
@@ -135,14 +163,15 @@ struct VideoPlayerScreen: View {
             }
     }
 
-    private var trackSelectionOverlay: some View {
+    private func trackDialogOverlay<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         ZStack {
             Color.black.opacity(0.5)
                 .ignoresSafeArea()
 
-            TrackSelectionView(viewModel: viewModel)
+            content()
         }
         .transition(.opacity)
+        .focusSection()
     }
 
     private var chapterSelectionOverlay: some View {

@@ -1,105 +1,91 @@
 import SwiftUI
 
-enum TrackSelectionTab: String, CaseIterable {
+enum TrackSelectionTab: String {
     case audio = "Audio"
     case subtitles = "Subtitles"
     case speed = "Speed"
 }
 
-struct TrackSelectionView: View {
-    @ObservedObject var viewModel: VideoPlayerViewModel
+// MARK: - Dialog Shell
+
+private struct PlayerDialogShell<Content: View>: View {
+    let title: String
+    let onDismiss: () -> Void
+    @ViewBuilder let content: Content
+
     @EnvironmentObject private var theme: MoonfinTheme
-    @State private var selectedTab: TrackSelectionTab
-
-    init(viewModel: VideoPlayerViewModel) {
-        self._viewModel = ObservedObject(wrappedValue: viewModel)
-        self._selectedTab = State(initialValue: viewModel.trackSelectionTab)
-    }
-
-    private let speedOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
 
     var body: some View {
-        ZStack {
-            Color.clear
-            VStack(spacing: 0) {
-                tabBar
-                Divider().background(Color.white.opacity(0.2))
-                tabContent
-            }
-            .frame(width: 400)
-            .background(theme.colorScheme.surface.opacity(0.95))
-            .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.large))
-        }
-        .padding(48)
-        .transition(.opacity)
-        .onExitCommand {
-            viewModel.hideTrackSelection()
-        }
-    }
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(.title2xl)
+                .foregroundColor(theme.colorScheme.onBackground)
+                .padding(.horizontal, SpaceTokens.spaceLg)
+                .padding(.top, SpaceTokens.spaceLg)
+                .padding(.bottom, SpaceTokens.spaceMd)
 
-    private var tabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(TrackSelectionTab.allCases, id: \.self) { tab in
-                Button {
-                    selectedTab = tab
-                } label: {
-                    Text(tab.rawValue)
-                        .font(.bodyMd)
-                        .foregroundColor(selectedTab == tab ? .white : .white.opacity(0.5))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, SpaceTokens.spaceMd)
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: SpaceTokens.spaceXs) {
+                    content
                 }
-                .buttonStyle(TrackTabButtonStyle(isActive: selectedTab == tab))
+                .padding(.horizontal, SpaceTokens.spaceSm)
+            }
+            .frame(maxHeight: 500)
+
+            HStack {
+                Spacer()
+                FocusableDialogButton(title: "Cancel", action: onDismiss)
+                Spacer()
+            }
+            .padding(.vertical, SpaceTokens.spaceMd)
+        }
+        .frame(width: 600)
+        .background(theme.colorScheme.surface)
+        .cornerRadius(RadiusTokens.large)
+        .onExitCommand(perform: onDismiss)
+    }
+}
+
+// MARK: - Audio Track Dialog
+
+struct PlayerAudioTrackDialog: View {
+    @ObservedObject var viewModel: VideoPlayerViewModel
+
+    var body: some View {
+        PlayerDialogShell(title: "Audio", onDismiss: { viewModel.hideTrackSelection() }) {
+            ForEach(viewModel.player.audioTracks) { track in
+                FocusableTrackSelectorRow(
+                    label: track.name,
+                    detail: nil,
+                    isSelected: track.id == viewModel.player.currentAudioTrackIndex,
+                    action: { viewModel.playbackManager.setAudioTrack(track.id) }
+                )
             }
         }
-        .padding(.horizontal, SpaceTokens.spaceMd)
     }
+}
 
-    @ViewBuilder
-    private var tabContent: some View {
-        ScrollView {
-            VStack(spacing: SpaceTokens.space2xs) {
-                switch selectedTab {
-                case .audio:
-                    audioTrackList
-                case .subtitles:
-                    subtitleTrackList
-                case .speed:
-                    speedList
-                }
-            }
-            .padding(SpaceTokens.spaceMd)
-        }
-        .frame(maxHeight: 500)
-    }
+// MARK: - Subtitle Track Dialog
 
-    private var audioTrackList: some View {
-        ForEach(viewModel.player.audioTracks) { track in
-            trackRow(
-                name: track.name,
-                isSelected: track.id == viewModel.player.currentAudioTrackIndex
-            ) {
-                viewModel.playbackManager.setAudioTrack(track.id)
-            }
-        }
-    }
+struct PlayerSubtitleTrackDialog: View {
+    @ObservedObject var viewModel: VideoPlayerViewModel
 
-    private var subtitleTrackList: some View {
-        Group {
-            trackRow(
-                name: "Off",
-                isSelected: viewModel.player.currentSubtitleTrackIndex == -1
-            ) {
-                viewModel.player.disableSubtitles()
-            }
+    var body: some View {
+        PlayerDialogShell(title: "Subtitles", onDismiss: { viewModel.hideTrackSelection() }) {
+            FocusableTrackSelectorRow(
+                label: "None",
+                detail: nil,
+                isSelected: viewModel.player.currentSubtitleTrackIndex == -1,
+                action: { viewModel.player.disableSubtitles() }
+            )
 
             ForEach(viewModel.player.subtitleTracks) { track in
-                trackRow(
-                    name: track.name,
-                    isSelected: track.id == viewModel.player.currentSubtitleTrackIndex
-                ) {
-                    viewModel.playbackManager.setSubtitleTrack(track.id)
-                }
+                FocusableTrackSelectorRow(
+                    label: track.name,
+                    detail: nil,
+                    isSelected: track.id == viewModel.player.currentSubtitleTrackIndex,
+                    action: { viewModel.playbackManager.setSubtitleTrack(track.id) }
+                )
             }
 
             Divider().background(Color.white.opacity(0.2))
@@ -134,7 +120,7 @@ struct TrackSelectionView: View {
                 .padding(.vertical, SpaceTokens.spaceSm)
                 .background(RoundedRectangle(cornerRadius: RadiusTokens.small).fill(Color.white.opacity(0.1)))
         }
-        .buttonStyle(TrackRowButtonStyle())
+        .buttonStyle(CleanButtonStyle())
     }
 
     private var subtitleDelayLabel: String {
@@ -142,75 +128,31 @@ struct TrackSelectionView: View {
         if abs(delay) < 0.001 { return "0s" }
         return String(format: "%+gs", delay)
     }
+}
 
-    private var speedList: some View {
-        ForEach(speedOptions, id: \.self) { speed in
-            trackRow(
-                name: speedLabel(speed),
-                isSelected: abs(viewModel.player.rate - speed) < 0.01
-            ) {
-                viewModel.setPlaybackSpeed(speed)
+// MARK: - Speed Dialog
+
+struct PlayerSpeedDialog: View {
+    @ObservedObject var viewModel: VideoPlayerViewModel
+
+    private let speedOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+
+    var body: some View {
+        PlayerDialogShell(title: "Speed", onDismiss: { viewModel.hideTrackSelection() }) {
+            ForEach(speedOptions, id: \.self) { speed in
+                FocusableTrackSelectorRow(
+                    label: speedLabel(speed),
+                    detail: nil,
+                    isSelected: abs(viewModel.player.rate - speed) < 0.01,
+                    action: { viewModel.setPlaybackSpeed(speed) }
+                )
             }
         }
-    }
-
-    private func trackRow(
-        name: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack {
-                Text(name)
-                    .font(.bodyMd)
-                    .foregroundColor(.white)
-                Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(theme.accent)
-                }
-            }
-            .padding(.horizontal, SpaceTokens.spaceMd)
-            .padding(.vertical, SpaceTokens.spaceSm)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(TrackRowButtonStyle(isSelected: isSelected))
     }
 
     private func speedLabel(_ speed: Float) -> String {
         if speed == 1.0 { return "Normal" }
         if speed == floor(speed) { return "\(Int(speed))x" }
         return String(format: "%gx", speed)
-    }
-}
-
-struct TrackTabButtonStyle: ButtonStyle {
-    let isActive: Bool
-    @Environment(\.isFocused) private var isFocused
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused ? Color.white.opacity(0.3) : (isActive ? Color.white.opacity(0.1) : .clear))
-            )
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.12), value: isFocused)
-    }
-}
-
-struct TrackRowButtonStyle: ButtonStyle {
-    var isSelected: Bool = false
-    @Environment(\.isFocused) private var isFocused
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused ? Color.white.opacity(0.25) : (isSelected ? Color.white.opacity(0.1) : .clear))
-            )
-            .scaleEffect(isFocused ? 1.02 : 1.0)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
-            .animation(.easeInOut(duration: 0.12), value: isFocused)
     }
 }

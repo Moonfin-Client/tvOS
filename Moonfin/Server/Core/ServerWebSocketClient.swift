@@ -33,6 +33,7 @@ final class ServerWebSocketClient: ServerWebSocketApi {
         if serverType == .jellyfin {
             request.setValue(httpClient.authorizationHeader, forHTTPHeaderField: "Authorization")
         }
+        request.setValue(httpClient.userAgent, forHTTPHeaderField: "User-Agent")
 
         let session = URLSession(configuration: .default)
         let task = session.webSocketTask(with: request)

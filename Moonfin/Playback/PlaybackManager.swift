@@ -31,6 +31,10 @@ final class PlaybackManager: ObservableObject {
     private var reportingTask: Task<Void, Never>?
     private var stateObserver: AnyCancellable?
     private var positionObserver: AnyCancellable?
+    private var prefetchTask: Task<Void, Never>?
+    private var prefetchedStreamInfo: StreamInfo?
+    private var prefetchedItemId: String?
+    private var lastEvaluatedSecond: Int = -1
 
     var currentEntry: QueueEntry? {
         guard currentIndex >= 0 && currentIndex < queue.count else { return nil }
@@ -95,13 +99,21 @@ final class PlaybackManager: ObservableObject {
         }
     }
 
-    func play(items: [ServerItem], startIndex: Int = 0, startPosition: TimeInterval = 0) async {
+    func play(
+        items: [ServerItem],
+        startIndex: Int = 0,
+        startPosition: TimeInterval = 0,
+        audioStreamIndex: Int? = nil,
+        subtitleStreamIndex: Int? = nil
+    ) async {
         queue = items.enumerated().map { index, item in
             QueueEntry(
                 id: item.id,
                 item: item,
                 mediaSourceId: item.mediaSources?.first?.id,
-                startPositionTicks: index == startIndex ? Int64(startPosition * 10_000_000) : 0
+                startPositionTicks: index == startIndex ? Int64(startPosition * 10_000_000) : 0,
+                audioStreamIndex: index == startIndex ? audioStreamIndex : nil,
+                subtitleStreamIndex: index == startIndex ? subtitleStreamIndex : nil
             )
         }
         currentIndex = startIndex
@@ -182,30 +194,84 @@ final class PlaybackManager: ObservableObject {
 
         let pref = preferences[UserPreferences.maxBitrate]
         let maxBitrate: Int64? = pref > 0 ? Int64(pref) : nil
-        let subtitleIndex: Int? = subtitleConfigurator.shouldDefaultToNone ? -1 : nil
+
+        let audioIndex = entry.audioStreamIndex
+        let subtitleIndex = entry.subtitleStreamIndex
+            ?? (subtitleConfigurator.shouldDefaultToNone ? -1 : nil)
 
         do {
-            if client.serverType.supports(.mediaSegments) {
-                await segmentHandler.loadSegments(for: entry.item.id)
+            async let segmentsTask: () = loadSegmentsIfSupported(for: entry.item.id)
+
+            let stream: StreamInfo
+            if let prefetched = prefetchedStreamInfo, prefetchedItemId == entry.item.id {
+                stream = prefetched
+                prefetchedStreamInfo = nil
+                prefetchedItemId = nil
+            } else {
+                stream = try await streamResolver.resolve(
+                    item: entry.item,
+                    mediaSourceId: entry.mediaSourceId,
+                    maxBitrate: maxBitrate,
+                    audioStreamIndex: audioIndex,
+                    subtitleStreamIndex: subtitleIndex,
+                    startTimeTicks: entry.startPositionTicks > 0 ? entry.startPositionTicks : nil
+                )
             }
 
-            let stream = try await streamResolver.resolve(
-                item: entry.item,
-                mediaSourceId: entry.mediaSourceId,
-                maxBitrate: maxBitrate,
-                audioStreamIndex: nil,
-                subtitleStreamIndex: subtitleIndex,
-                startTimeTicks: entry.startPositionTicks > 0 ? entry.startPositionTicks : nil
-            )
+            await segmentsTask
+
             currentStreamInfo = stream
-            await player.play(streamUrl: stream.url)
-            if subtitleConfigurator.shouldDefaultToNone {
-                player.disableSubtitles()
+            lastEvaluatedSecond = -1
+
+            // For non-transcoded streams, VLC receives the full file and must seek
+            // to the resume position. Transcoded streams already start at the right time.
+            let startSeconds: TimeInterval
+            if entry.startPositionTicks > 0 && stream.playMethod != .transcode {
+                startSeconds = TimeInterval(entry.startPositionTicks) / 10_000_000
+            } else {
+                startSeconds = 0
             }
+
+            await player.play(streamUrl: stream.url, startPosition: startSeconds)
             await reportPlaybackStart()
             startProgressReporting()
+            prefetchNextStream()
         } catch {
             playbackState = .error(error.localizedDescription)
+        }
+    }
+
+    private func prefetchNextStream() {
+        prefetchTask?.cancel()
+        guard let nextItem = nextEntry?.item else { return }
+        if prefetchedItemId == nextItem.id { return }
+
+        let pref = preferences[UserPreferences.maxBitrate]
+        let maxBitrate: Int64? = pref > 0 ? Int64(pref) : nil
+        let subtitleIndex: Int? = subtitleConfigurator.shouldDefaultToNone ? -1 : nil
+        let mediaSourceId = nextEntry?.mediaSourceId
+
+        prefetchTask = Task { [weak self, streamResolver] in
+            guard let self else { return }
+            do {
+                let stream = try await streamResolver.resolve(
+                    item: nextItem,
+                    mediaSourceId: mediaSourceId,
+                    maxBitrate: maxBitrate,
+                    audioStreamIndex: nil,
+                    subtitleStreamIndex: subtitleIndex,
+                    startTimeTicks: nil
+                )
+                guard !Task.isCancelled else { return }
+                self.prefetchedStreamInfo = stream
+                self.prefetchedItemId = nextItem.id
+            } catch {}
+        }
+    }
+
+    private func loadSegmentsIfSupported(for itemId: String) async {
+        if client.serverType.supports(.mediaSegments) {
+            await segmentHandler.loadSegments(for: itemId)
         }
     }
 
@@ -250,8 +316,13 @@ final class PlaybackManager: ObservableObject {
     private func stopAndReport(failed: Bool) async {
         reportingTask?.cancel()
         reportingTask = nil
+        prefetchTask?.cancel()
+        prefetchTask = nil
+        prefetchedStreamInfo = nil
+        prefetchedItemId = nil
         segmentHandler.reset()
         nextUpManager.reset()
+        lastEvaluatedSecond = -1
         await reportPlaybackStopped(failed: failed)
         currentStreamInfo = nil
         player.stop()
@@ -308,7 +379,13 @@ final class PlaybackManager: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] time in
                 guard let self else { return }
+
                 self.segmentHandler.onPositionUpdate(time)
+
+                let second = Int(time)
+                guard second != self.lastEvaluatedSecond else { return }
+                self.lastEvaluatedSecond = second
+
                 self.nextUpManager.evaluateEndOfPlayback(
                     currentTime: time,
                     duration: self.player.duration,
