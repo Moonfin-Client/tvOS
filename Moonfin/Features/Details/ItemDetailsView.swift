@@ -1,4 +1,5 @@
 import SwiftUI
+import Nuke
 
 struct ItemDetailsView: View {
     @StateObject private var viewModel: ItemDetailViewModel
@@ -34,9 +35,9 @@ struct ItemDetailsView: View {
                 backdropLayer
                 gradientOverlay
 
-                if viewModel.state.isLoading {
+                if viewModel.isLoading {
                     loadingView
-                } else if let item = viewModel.state.item {
+                } else if let item = viewModel.item {
                     detailContent(item: item, screenHeight: geo.size.height)
                 } else {
                     errorView
@@ -46,8 +47,8 @@ struct ItemDetailsView: View {
         .ignoresSafeArea()
         .onAppear { viewModel.loadItem() }
         .onDisappear { viewModel.cleanup() }
-        .onChange(of: viewModel.state.isLoading) { isLoading in
-            if !isLoading, viewModel.state.item != nil {
+        .onChange(of: viewModel.isLoading) { isLoading in
+            if !isLoading, viewModel.item != nil {
                 DispatchQueue.main.async {
                     focusedButton = viewModel.canResume ? .resume : .play
                 }
@@ -55,7 +56,7 @@ struct ItemDetailsView: View {
             }
         }
         .sheet(item: $showTrackSelector) { mode in
-            if let item = viewModel.state.item {
+            if let item = viewModel.item {
                 TrackSelectorDialog(
                     mode: mode,
                     streams: resolvedStreams(for: item),
@@ -73,7 +74,7 @@ struct ItemDetailsView: View {
             }
         }
         .fullScreenCover(isPresented: $showAddToPlaylist) {
-            if let item = viewModel.state.item {
+            if let item = viewModel.item {
                 AddToPlaylistDialog(
                     itemIds: [item.id],
                     onDismiss: { showAddToPlaylist = false },
@@ -86,7 +87,7 @@ struct ItemDetailsView: View {
     }
 
     private func initializeTrackIndices() {
-        guard let source = viewModel.state.item?.mediaSources?.first else { return }
+        guard let source = viewModel.item?.mediaSources?.first else { return }
         if selectedAudioIndex == nil {
             selectedAudioIndex = source.defaultAudioStreamIndex
         }
@@ -104,21 +105,21 @@ struct ItemDetailsView: View {
             if viewModel.backgroundService.enabled,
                let urlString = viewModel.backgroundService.currentBackdropUrl,
                let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    if case .success(let image) = phase {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .clipped()
-                            .blur(radius: viewModel.backgroundService.blurAmount)
-                            .opacity(0.8)
-                    }
-                }
+                CachedImage(
+                    url: url,
+                    processors: [
+                        ImageProcessors.Resize(size: CGSize(width: geo.size.width, height: geo.size.height), contentMode: .aspectFill),
+                        ImageProcessors.GaussianBlur(radius: Int(viewModel.backgroundService.blurAmount))
+                    ]
+                )
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipped()
+                .opacity(0.8)
                 .transition(.opacity)
                 .id(urlString)
             }
         }
+        .drawingGroup()
         .animation(.easeInOut(duration: BackgroundService.transitionDuration), value: viewModel.backgroundService.currentBackdropUrl)
         .background(theme.colorScheme.background)
     }
@@ -196,16 +197,10 @@ struct ItemDetailsView: View {
             HStack(alignment: .top, spacing: SpaceTokens.spaceXl) {
                 if item.type == .person, let posterUrl = viewModel.posterUrl(for: item),
                    let url = URL(string: posterUrl) {
-                    AsyncImage(url: url) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: 280, maxHeight: 420)
-                                .cornerRadius(RadiusTokens.medium)
-                                .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
-                        }
-                    }
+                    CachedImage(url: url, contentMode: .fit)
+                        .frame(maxWidth: 280, maxHeight: 420)
+                        .cornerRadius(RadiusTokens.medium)
+                        .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                 }
 
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
@@ -218,14 +213,8 @@ struct ItemDetailsView: View {
 
                     if let logoUrl = viewModel.logoUrl(for: item),
                        let url = URL(string: logoUrl) {
-                        AsyncImage(url: url) { phase in
-                            if case .success(let image) = phase {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(maxHeight: 100)
-                            }
-                        }
+                        CachedImage(url: url, contentMode: .fit)
+                            .frame(maxHeight: 100)
                     } else {
                         Text(item.name)
                             .font(.system(size: 44, weight: .bold))
@@ -242,7 +231,7 @@ struct ItemDetailsView: View {
                                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                         }
 
-                        if !viewModel.state.ratings.isEmpty {
+                        if !viewModel.ratings.isEmpty {
                             ratingsRow
                         }
 
@@ -266,16 +255,10 @@ struct ItemDetailsView: View {
 
                 if item.type != .person, let posterUrl = viewModel.posterUrl(for: item),
                    let url = URL(string: posterUrl) {
-                    AsyncImage(url: url) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: 240, maxHeight: 360)
-                                .cornerRadius(RadiusTokens.medium)
-                                .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
-                        }
-                    }
+                    CachedImage(url: url, contentMode: .fit)
+                        .frame(maxWidth: 240, maxHeight: 360)
+                        .cornerRadius(RadiusTokens.medium)
+                        .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                 }
             }
             .padding(.top, 80)
@@ -314,12 +297,12 @@ struct ItemDetailsView: View {
 
             if let rating = item.officialRating, !rating.isEmpty {
                 infoBadge(rating)
-                if !viewModel.state.badges.isEmpty {
+                if !viewModel.badges.isEmpty {
                     infoSeparator
                 }
             }
 
-            ForEach(viewModel.state.badges) { badge in
+            ForEach(viewModel.badges) { badge in
                 infoBadge(badge.label)
             }
         }
@@ -351,7 +334,7 @@ struct ItemDetailsView: View {
 
     private var ratingsRow: some View {
         HStack(spacing: SpaceTokens.spaceSm) {
-            ForEach(viewModel.state.ratings, id: \.0) { source, value in
+            ForEach(viewModel.ratings, id: \.0) { source, value in
                 if source == "stars" {
                     starRatingChip(value: value)
                 } else {
@@ -419,8 +402,8 @@ struct ItemDetailsView: View {
 
         if item.type != .person, canPlay || item.userData != nil {
             ActionButtonsRow(
-                isFavorite: viewModel.state.isFavorite,
-                isPlayed: viewModel.state.isPlayed,
+                isFavorite: viewModel.isFavorite,
+                isPlayed: viewModel.isPlayed,
                 canResume: viewModel.canResume,
                 resumePositionText: viewModel.resumePositionText,
                 focusedButton: $focusedButton,
@@ -442,12 +425,12 @@ struct ItemDetailsView: View {
                     }
                 } : nil,
                 onShuffle: isMusicType ? {
-                    playAudio(items: viewModel.state.tracks, shuffle: true)
+                    playAudio(items: viewModel.tracks, shuffle: true)
                 } : nil,
                 onInstantMix: isMusicType ? {
                     Task {
                         await viewModel.loadInstantMix()
-                        playAudio(items: viewModel.state.instantMixItems)
+                        playAudio(items: viewModel.instantMixItems)
                     }
                 } : nil,
                 onAudioTrack: hasAudioStreams ? {
@@ -466,21 +449,33 @@ struct ItemDetailsView: View {
     private func playVideo(item: ServerItem, positionTicks: Int64) {
         let items: [ServerItem]
         var startIndex = 0
-        let startPosition = TimeInterval(positionTicks) / 10_000_000
+        var startPosition = TimeInterval(positionTicks) / 10_000_000
 
         switch item.type {
         case .episode:
-            let episodes = viewModel.state.episodes
+            let episodes = viewModel.episodes
             if episodes.isEmpty {
                 items = [item]
             } else {
                 items = episodes
                 startIndex = episodes.firstIndex(where: { $0.id == item.id }) ?? 0
             }
-        case .series, .season:
-            let episodes = viewModel.state.episodes
+        case .series:
+            if let nextUpEpisode = viewModel.nextUp.first {
+                items = [nextUpEpisode]
+                startPosition = TimeInterval(nextUpEpisode.userData?.playbackPositionTicks ?? 0) / 10_000_000
+            } else {
+                return
+            }
+        case .season:
+            let episodes = viewModel.episodes
             guard !episodes.isEmpty else { return }
             items = episodes
+            if positionTicks == 0,
+               let firstUnwatched = episodes.firstIndex(where: { !($0.userData?.played ?? false) }) {
+                startIndex = firstUnwatched
+                startPosition = TimeInterval(episodes[firstUnwatched].userData?.playbackPositionTicks ?? 0) / 10_000_000
+            }
         default:
             items = [item]
         }
@@ -510,8 +505,8 @@ struct ItemDetailsView: View {
     private func metadataColumns(for item: ServerItem) -> [(label: String, value: String)] {
         var columns: [(label: String, value: String)] = []
         let genres = item.genres ?? []
-        let directors = viewModel.state.directors
-        let writers = viewModel.state.writers
+        let directors = viewModel.directors
+        let writers = viewModel.writers
         let studios = item.studios ?? []
 
         if !genres.isEmpty {
@@ -573,12 +568,12 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func seriesSections() -> some View {
-        if !viewModel.state.nextUp.isEmpty {
+        if !viewModel.nextUp.isEmpty {
             detailSection(title: "Next Up", id: "nextUp") {
-                episodeList(items: viewModel.state.nextUp)
+                episodeList(items: viewModel.nextUp)
             }
         }
-        if !viewModel.state.seasons.isEmpty {
+        if !viewModel.seasons.isEmpty {
             detailSection(title: "Seasons", id: "seasons") {
                 seasonRow
             }
@@ -589,9 +584,9 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func seasonSections() -> some View {
-        if !viewModel.state.episodes.isEmpty {
+        if !viewModel.episodes.isEmpty {
             detailSection(title: "Episodes", id: "episodes") {
-                episodeList(items: viewModel.state.episodes)
+                episodeList(items: viewModel.episodes)
             }
         }
         castSection
@@ -605,8 +600,8 @@ struct ItemDetailsView: View {
                 episodeList(items: [nextEp])
             }
         }
-        if viewModel.state.episodes.count > 1 {
-            let others = viewModel.state.episodes.filter { $0.id != viewModel.state.item?.id }
+        if viewModel.episodes.count > 1 {
+            let others = viewModel.episodes.filter { $0.id != viewModel.item?.id }
             if !others.isEmpty {
                 detailSection(title: "More from This Season", id: "moreEpisodes") {
                     itemRow(items: others, imageType: .thumb, aspectRatio: 16.0/9.0, cardWidth: 280)
@@ -619,11 +614,11 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func personSections() -> some View {
-        if let item = viewModel.state.item {
+        if let item = viewModel.item {
             personInfoSection(item: item)
         }
-        let movies = viewModel.state.filmography.filter { $0.type == .movie }
-        let series = viewModel.state.filmography.filter { $0.type == .series }
+        let movies = viewModel.filmography.filter { $0.type == .movie }
+        let series = viewModel.filmography.filter { $0.type == .series }
         if !movies.isEmpty {
             detailSection(title: "Movies", id: "movies") {
                 itemRow(items: movies)
@@ -699,9 +694,9 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func musicSections() -> some View {
-        if !viewModel.state.tracks.isEmpty {
+        if !viewModel.tracks.isEmpty {
             detailSection(title: "Tracks", id: "tracks") {
-                interactiveTrackList(items: viewModel.state.tracks)
+                interactiveTrackList(items: viewModel.tracks)
             }
         }
         similarSection
@@ -709,7 +704,7 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func artistSections() -> some View {
-        if let item = viewModel.state.item, let bio = item.overview, !bio.isEmpty {
+        if let item = viewModel.item, let bio = item.overview, !bio.isEmpty {
             detailSection(title: "Biography", id: "artistBio") {
                 ExpandableBioText(
                     text: bio,
@@ -717,9 +712,9 @@ struct ItemDetailsView: View {
                 )
             }
         }
-        if !viewModel.state.albums.isEmpty {
+        if !viewModel.albums.isEmpty {
             detailSection(title: "Discography", id: "albums") {
-                itemRow(items: viewModel.state.albums, aspectRatio: 1.0)
+                itemRow(items: viewModel.albums, aspectRatio: 1.0)
             }
         }
         similarSection
@@ -727,9 +722,9 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func collectionSections() -> some View {
-        let movies = viewModel.state.collectionItems.filter { $0.type == .movie }
-        let series = viewModel.state.collectionItems.filter { $0.type == .series }
-        let other = viewModel.state.collectionItems.filter { $0.type != .movie && $0.type != .series }
+        let movies = viewModel.collectionItems.filter { $0.type == .movie }
+        let series = viewModel.collectionItems.filter { $0.type == .series }
+        let other = viewModel.collectionItems.filter { $0.type != .movie && $0.type != .series }
 
         if !movies.isEmpty {
             detailSection(title: "Movies", id: "collectionMovies") {
@@ -763,7 +758,7 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private var castSection: some View {
-        if !viewModel.state.cast.isEmpty {
+        if !viewModel.cast.isEmpty {
             detailSection(title: "Cast & Crew", id: "cast") {
                 castRow
             }
@@ -772,18 +767,18 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private var similarSection: some View {
-        if !viewModel.state.similar.isEmpty {
+        if !viewModel.similar.isEmpty {
             detailSection(title: "More Like This", id: "similar") {
-                itemRow(items: viewModel.state.similar)
+                itemRow(items: viewModel.similar)
             }
         }
     }
 
     @ViewBuilder
     private var specialFeaturesSection: some View {
-        if !viewModel.state.specialFeatures.isEmpty {
+        if !viewModel.specialFeatures.isEmpty {
             detailSection(title: "Special Features", id: "specials") {
-                itemRow(items: viewModel.state.specialFeatures, imageType: .primary, aspectRatio: 16.0/9.0)
+                itemRow(items: viewModel.specialFeatures, imageType: .primary, aspectRatio: 16.0/9.0)
             }
         }
     }
@@ -837,7 +832,7 @@ struct ItemDetailsView: View {
     private var castRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: SpaceTokens.spaceMd) {
-                ForEach(viewModel.state.cast, id: \.name) { person in
+                ForEach(viewModel.cast, id: \.name) { person in
                     FocusableCastCard(
                         person: person,
                         imageUrl: viewModel.imageUrl(for: person),
@@ -857,7 +852,7 @@ struct ItemDetailsView: View {
     private var seasonRow: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: SpaceTokens.spaceMd) {
-                ForEach(viewModel.state.seasons) { season in
+                ForEach(viewModel.seasons) { season in
                     FocusableSeasonCard(
                         item: season,
                         imageUrl: viewModel.imageUrl(for: season, maxWidth: 320),
@@ -873,7 +868,7 @@ struct ItemDetailsView: View {
     }
 
     private func episodeList(items: [ServerItem]) -> some View {
-        VStack(spacing: SpaceTokens.spaceSm) {
+        LazyVStack(spacing: SpaceTokens.spaceSm) {
             ForEach(items) { episode in
                 FocusableEpisodeCard(
                     item: episode,
@@ -887,7 +882,7 @@ struct ItemDetailsView: View {
     }
 
     private func interactiveTrackList(items: [ServerItem]) -> some View {
-        VStack(spacing: 0) {
+        LazyVStack(spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, track in
                 FocusableTrackRow(
                     track: track,
@@ -897,337 +892,5 @@ struct ItemDetailsView: View {
                 )
             }
         }
-    }
-}
-
-private struct FocusableItemCard: View {
-    let item: ServerItem
-    let imageUrl: String?
-    let cardWidth: CGFloat
-    let cardHeight: CGFloat
-    let onSelect: () -> Void
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                ZStack {
-                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
-                        AsyncImage(url: url) { phase in
-                            if case .success(let image) = phase {
-                                image.resizable().aspectRatio(contentMode: .fill)
-                            } else {
-                                theme.colorScheme.surface
-                            }
-                        }
-                        .frame(width: cardWidth, height: cardHeight)
-                        .clipped()
-                    } else {
-                        theme.colorScheme.surface
-                            .frame(width: cardWidth, height: cardHeight)
-                    }
-
-                    ItemCardOverlays(item: item)
-                }
-                .cornerRadius(RadiusTokens.small)
-                .overlay(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
-                )
-
-                Text(item.name)
-                    .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground)
-                    .lineLimit(1)
-                    .frame(width: cardWidth, alignment: .leading)
-            }
-        }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
-    }
-}
-
-private struct FocusableCastCard: View {
-    let person: ServerPerson
-    let imageUrl: String?
-    let onSelect: () -> Void
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        Button(action: onSelect) {
-            VStack(spacing: SpaceTokens.spaceXs) {
-                ZStack {
-                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
-                        AsyncImage(url: url) { phase in
-                            if case .success(let image) = phase {
-                                image.resizable().aspectRatio(contentMode: .fill)
-                            } else {
-                                theme.colorScheme.surface
-                            }
-                        }
-                        .frame(width: 120, height: 120)
-                        .clipShape(Circle())
-                    } else {
-                        Circle()
-                            .fill(theme.colorScheme.surface)
-                            .frame(width: 120, height: 120)
-                    }
-                }
-                .overlay(
-                    Circle()
-                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
-                )
-
-                Text(person.name)
-                    .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground)
-                    .lineLimit(1)
-
-                if let role = person.role, !role.isEmpty {
-                    Text(role)
-                        .font(.caption2xs)
-                        .foregroundColor(theme.colorScheme.listCaption)
-                        .lineLimit(1)
-                }
-            }
-            .frame(width: 130)
-        }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
-    }
-}
-
-private struct FocusableSeasonCard: View {
-    let item: ServerItem
-    let imageUrl: String?
-    let onSelect: () -> Void
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
-
-    private let cardWidth: CGFloat = 160
-    private var cardHeight: CGFloat { cardWidth / (2.0 / 3.0) }
-
-    var body: some View {
-        Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                ZStack {
-                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
-                        AsyncImage(url: url) { phase in
-                            if case .success(let image) = phase {
-                                image.resizable().aspectRatio(contentMode: .fill)
-                            } else {
-                                theme.colorScheme.surface
-                            }
-                        }
-                        .frame(width: cardWidth, height: cardHeight)
-                        .clipped()
-                    } else {
-                        theme.colorScheme.surface
-                            .frame(width: cardWidth, height: cardHeight)
-                    }
-
-                    ItemCardOverlays(item: item)
-                }
-                .cornerRadius(RadiusTokens.small)
-                .overlay(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
-                )
-
-                Text(item.name)
-                    .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground)
-                    .lineLimit(1)
-                    .frame(width: cardWidth, alignment: .leading)
-            }
-        }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
-    }
-}
-
-private struct FocusableEpisodeCard: View {
-    let item: ServerItem
-    let imageUrl: String?
-    let onSelect: () -> Void
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
-
-    private let thumbWidth: CGFloat = 280
-    private let thumbHeight: CGFloat = 158
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(alignment: .top, spacing: SpaceTokens.spaceMd) {
-                ZStack {
-                    if let urlStr = imageUrl, let url = URL(string: urlStr) {
-                        AsyncImage(url: url) { phase in
-                            if case .success(let image) = phase {
-                                image.resizable().aspectRatio(contentMode: .fill)
-                            } else {
-                                theme.colorScheme.surface
-                            }
-                        }
-                        .frame(width: thumbWidth, height: thumbHeight)
-                        .clipped()
-                    } else {
-                        theme.colorScheme.surface
-                            .frame(width: thumbWidth, height: thumbHeight)
-                    }
-
-                    if let progress = item.userData?.playedPercentage, progress > 0,
-                       !(item.userData?.played ?? false) {
-                        VStack {
-                            Spacer()
-                            GeometryReader { geo in
-                                ZStack(alignment: .leading) {
-                                    Rectangle()
-                                        .fill(Color.black.opacity(0.5))
-                                        .frame(height: 4)
-                                    Rectangle()
-                                        .fill(theme.accent)
-                                        .frame(width: geo.size.width * CGFloat(progress / 100.0), height: 4)
-                                }
-                            }
-                            .frame(height: 4)
-                        }
-                    }
-
-                    if item.userData?.played ?? false {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.colorGreen500)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                            .padding(6)
-                    }
-                }
-                .cornerRadius(RadiusTokens.small)
-                .overlay(
-                    RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
-                )
-
-                VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                    if let num = item.indexNumber {
-                        Text("Episode \(num)")
-                            .font(.captionXs)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
-                    }
-
-                    Text(item.name)
-                        .font(.bodyLg)
-                        .fontWeight(.semibold)
-                        .foregroundColor(theme.colorScheme.onBackground)
-                        .lineLimit(1)
-
-                    if let ticks = item.runTimeTicks, ticks > 0 {
-                        Text(RuntimeFormatter.format(ticks: ticks))
-                            .font(.captionXs)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
-                    }
-
-                    if let overview = item.overview, !overview.isEmpty {
-                        Text(overview)
-                            .font(.bodySm)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-                            .lineLimit(3)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, SpaceTokens.spaceXs)
-            }
-        }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .scaleEffect(isFocused ? 1.02 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
-    }
-}
-
-private struct ExpandableBioText: View {
-    let text: String
-    @Binding var isExpanded: Bool
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        Button {
-            isExpanded.toggle()
-        } label: {
-            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                Text(text)
-                    .font(.bodyLg)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                    .lineLimit(isExpanded ? nil : 6)
-                    .padding(.horizontal, SpaceTokens.spaceSm)
-
-                if !isExpanded {
-                    Text("Press to expand")
-                        .font(.captionXs)
-                        .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.onBackground.opacity(0.4))
-                        .padding(.horizontal, SpaceTokens.spaceSm)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, SpaceTokens.spaceSm)
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused ? Color.white.opacity(0.08) : Color.clear)
-            )
-        }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-    }
-}
-
-private struct FocusableTrackRow: View {
-    let track: ServerItem
-    let onSelect: () -> Void
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: SpaceTokens.spaceSm) {
-                if let num = track.indexNumber {
-                    Text("\(num)")
-                        .font(.bodyMd)
-                        .foregroundColor(isFocused ? .white : theme.colorScheme.listCaption)
-                        .frame(width: 40, alignment: .trailing)
-                }
-                Text(track.name)
-                    .font(.bodyMd)
-                    .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground)
-                    .lineLimit(1)
-                Spacer()
-                if let ticks = track.runTimeTicks {
-                    Text(RuntimeFormatter.format(ticks: ticks))
-                        .font(.bodySm)
-                        .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.listCaption)
-                }
-            }
-            .padding(.horizontal, SpaceTokens.spaceMd)
-            .padding(.vertical, SpaceTokens.spaceSm)
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused ? theme.accent : Color.clear)
-            )
-        }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
     }
 }

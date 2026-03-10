@@ -1,4 +1,5 @@
 import SwiftUI
+import Nuke
 
 struct FolderBrowseScreen: View {
     @StateObject private var viewModel: FolderBrowseViewModel
@@ -211,16 +212,16 @@ struct FolderBrowseScreen: View {
             if viewModel.backgroundService.enabled,
                let urlString = viewModel.backgroundService.currentBackdropUrl,
                let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    if case .success(let image) = phase {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .clipped()
-                            .blur(radius: viewModel.backgroundService.blurAmount)
-                    }
-                }
+                CachedImage(
+                    url: url,
+                    processors: [
+                        ImageProcessors.Resize(size: CGSize(width: geo.size.width, height: geo.size.height), contentMode: .aspectFill),
+                        ImageProcessors.GaussianBlur(radius: Int(viewModel.backgroundService.blurAmount))
+                    ]
+                )
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipped()
+                .drawingGroup()
                 .transition(.opacity)
                 .id(urlString)
             }

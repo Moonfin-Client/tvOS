@@ -194,6 +194,8 @@
 		F6635A47F59537CE23A1B0F7 /* SettingsTelemetryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */; };
 		FAA9362203F394F8C16A88E0 /* MusicBrowseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7539F7F9B1DF246DC2B1D54D /* MusicBrowseScreen.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
+		F2E1D0C9B8A7F6E5D4C3B2A1 /* CachedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* CachedImage.swift */; };
+		F2E1D0C9B8A7F6E5D4C3B2A2 /* DetailCardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7A8B9C0D1E2F /* DetailCardComponents.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -244,6 +246,7 @@
 		18A9F2B2B56FBC679D6866F6 /* MediaBarRatingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarRatingsViewModel.swift; sourceTree = "<group>"; };
 		18DDB37B1DD76A59C18BF602 /* AuthenticationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationStore.swift; sourceTree = "<group>"; };
 		19263A8A3FE6E52F3CC93673 /* DataRefreshService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataRefreshService.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F7A8B9C0D1E2F /* DetailCardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailCardComponents.swift; sourceTree = "<group>"; };
 		1AF479CA491CFC683C309AEC /* GridButtonCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridButtonCard.swift; sourceTree = "<group>"; };
 		1BAE1BB034AC6127CFDBAE45 /* ServerApiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerApiModels.swift; sourceTree = "<group>"; };
 		1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAddViewModel.swift; sourceTree = "<group>"; };
@@ -344,6 +347,7 @@
 		9AAB441B2D93DAF13B529D21 /* JellyfinApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinApis.swift; sourceTree = "<group>"; };
 		9F01563FD7C1AA3617D202D0 /* MediaBarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarViewModel.swift; sourceTree = "<group>"; };
 		9FBDE0DA7AABA47AF63658FE /* SettingsCustomizationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCustomizationScreen.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* CachedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedImage.swift; sourceTree = "<group>"; };
 		A261C64FB9294C4DB482BD24 /* LibraryBrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryBrowseScreen.swift; sourceTree = "<group>"; };
 		A37A5B797B86E6122B645143 /* TrackSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSelectionView.swift; sourceTree = "<group>"; };
 		A671C30D8FBFBADDB8A6654C /* MediaServerClientFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServerClientFactory.swift; sourceTree = "<group>"; };
@@ -554,6 +558,7 @@
 			isa = PBXGroup;
 			children = (
 				508BF5D7E8777F078D1D0EF9 /* Toolbar */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* CachedImage.swift */,
 				2B73FA206F8A4DF144150EDF /* FocusBorderButtonStyle.swift */,
 				1AF479CA491CFC683C309AEC /* GridButtonCard.swift */,
 				EA52CD4F73CDB1FAE8DE7DB8 /* ItemCard.swift */,
@@ -669,6 +674,7 @@
 			children = (
 				D82EC437968B9AE166138987 /* ActionButtonsRow.swift */,
 				018C13D44C3EF94E92CC7381 /* AddToPlaylistDialog.swift */,
+				1A2B3C4D5E6F7A8B9C0D1E2F /* DetailCardComponents.swift */,
 				32BF0285D5448ABF4905FE29 /* ItemCardOverlays.swift */,
 				C88EB3BB9FEABB574E468E4A /* ItemDetailsView.swift */,
 				F60A57D73E27E7F1BBA5E387 /* ItemDetailViewModel.swift */,
@@ -1134,6 +1140,7 @@
 				659117FFF2FEE58885DFDFBB /* AuthenticationRepository.swift in Sources */,
 				7E70B89EE8D18E4DAA719085 /* AuthenticationStore.swift in Sources */,
 				A7F8A2BD741DA24FBE31E4B0 /* BackgroundService.swift in Sources */,
+				F2E1D0C9B8A7F6E5D4C3B2A1 /* CachedImage.swift in Sources */,
 				C78A9F9C05A8245AED3DC0B8 /* CastListView.swift in Sources */,
 				D75DAE85B9B6ADC086484925 /* ChangeTriggerType.swift in Sources */,
 				75B96B19962B29420C381EE6 /* ChapterSelectionView.swift in Sources */,
@@ -1142,6 +1149,7 @@
 				53AEF2773FD2AC9D316199E0 /* ConnectHelpScreen.swift in Sources */,
 				A19CD5CA5D73BAF24E7DBDF1 /* ContentRow.swift in Sources */,
 				69844BC09EF3C81958536EF9 /* DataRefreshService.swift in Sources */,
+				F2E1D0C9B8A7F6E5D4C3B2A2 /* DetailCardComponents.swift in Sources */,
 				7F3328F0F4D0E2622F120707 /* DesignTokens.swift in Sources */,
 				78637B934DF5AC002448C822 /* Destination.swift in Sources */,
 				1B3799F847B730273FABEFC4 /* DeviceInfo.swift in Sources */,

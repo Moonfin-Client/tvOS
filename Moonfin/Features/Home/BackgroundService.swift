@@ -22,7 +22,7 @@ final class BackgroundService: ObservableObject {
     private weak var preferences: UserPreferences?
 
     static let slideshowInterval: TimeInterval = 30
-    static let transitionDuration: TimeInterval = 0.8
+    static let transitionDuration: TimeInterval = 0.4
 
     func configure(preferences: UserPreferences) {
         self.preferences = preferences

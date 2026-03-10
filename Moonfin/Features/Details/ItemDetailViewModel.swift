@@ -1,36 +1,41 @@
 import SwiftUI
 import Combine
 
-struct MediaBadge: Identifiable {
+struct MediaBadge: Identifiable, Equatable {
     let id = UUID()
     let label: String
 }
 
-struct ItemDetailUiState {
-    var isLoading: Bool = true
-    var item: ServerItem?
-    var cast: [ServerPerson] = []
-    var directors: [ServerPerson] = []
-    var writers: [ServerPerson] = []
-    var badges: [MediaBadge] = []
-    var ratings: [(String, Float)] = []
-    var seasons: [ServerItem] = []
-    var episodes: [ServerItem] = []
-    var similar: [ServerItem] = []
-    var nextUp: [ServerItem] = []
-    var collectionItems: [ServerItem] = []
-    var tracks: [ServerItem] = []
-    var albums: [ServerItem] = []
-    var specialFeatures: [ServerItem] = []
-    var filmography: [ServerItem] = []
-    var instantMixItems: [ServerItem] = []
-    var isFavorite: Bool = false
-    var isPlayed: Bool = false
-}
-
 @MainActor
 final class ItemDetailViewModel: ObservableObject {
-    @Published private(set) var state = ItemDetailUiState()
+    // Core
+    @Published private(set) var isLoading: Bool = true
+    @Published private(set) var item: ServerItem?
+
+    // People
+    @Published private(set) var cast: [ServerPerson] = []
+    @Published private(set) var directors: [ServerPerson] = []
+    @Published private(set) var writers: [ServerPerson] = []
+
+    // Metadata
+    @Published private(set) var badges: [MediaBadge] = []
+    @Published private(set) var ratings: [(String, Float)] = []
+
+    // Content lists
+    @Published private(set) var seasons: [ServerItem] = []
+    @Published private(set) var episodes: [ServerItem] = []
+    @Published private(set) var similar: [ServerItem] = []
+    @Published private(set) var nextUp: [ServerItem] = []
+    @Published private(set) var collectionItems: [ServerItem] = []
+    @Published private(set) var tracks: [ServerItem] = []
+    @Published private(set) var albums: [ServerItem] = []
+    @Published private(set) var specialFeatures: [ServerItem] = []
+    @Published private(set) var filmography: [ServerItem] = []
+    @Published private(set) var instantMixItems: [ServerItem] = []
+
+    // User actions
+    @Published private(set) var isFavorite: Bool = false
+    @Published private(set) var isPlayed: Bool = false
 
     let backgroundService = BackgroundService()
     let themeMusicPlayer = ThemeMusicPlayer()
@@ -47,11 +52,14 @@ final class ItemDetailViewModel: ObservableObject {
         self.serverId = serverId
         backgroundService.configure(preferences: container.userPreferences)
 
+        // Throttle background service updates to max 1 per 300ms to avoid
+        // re-rendering the entire view on every backdrop cycle tick.
         backgroundService.objectWillChange
-            .receive(on: RunLoop.main)
+            .throttle(for: .milliseconds(300), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
+        // Theme music changes are infrequent - no throttle needed.
         themeMusicPlayer.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
@@ -64,17 +72,17 @@ final class ItemDetailViewModel: ObservableObject {
     }
 
     var canResume: Bool {
-        (state.item?.userData?.playbackPositionTicks ?? 0) > 0
+        (item?.userData?.playbackPositionTicks ?? 0) > 0
     }
 
     var nextEpisode: ServerItem? {
-        guard let item = state.item,
+        guard let item,
               let currentIndex = item.indexNumber else { return nil }
-        return state.episodes.first { ($0.indexNumber ?? 0) > currentIndex }
+        return episodes.first { ($0.indexNumber ?? 0) > currentIndex }
     }
 
     var resumePositionText: String? {
-        guard let ticks = state.item?.userData?.playbackPositionTicks, ticks > 0 else { return nil }
+        guard let ticks = item?.userData?.playbackPositionTicks, ticks > 0 else { return nil }
         return RuntimeFormatter.format(ticks: ticks)
     }
 
@@ -85,72 +93,82 @@ final class ItemDetailViewModel: ObservableObject {
     }()
 
     var endsAtText: String? {
-        guard let ticks = state.item?.runTimeTicks, ticks > 0 else { return nil }
+        guard let ticks = item?.runTimeTicks, ticks > 0 else { return nil }
         let endDate = Date().addingTimeInterval(TimeInterval(ticks) / 10_000_000.0)
         return "Ends at \(Self.endsAtFormatter.string(from: endDate))"
+    }
+
+    private func resetState() {
+        isLoading = true
+        item = nil
+        cast = []; directors = []; writers = []
+        badges = []; ratings = []
+        seasons = []; episodes = []; similar = []
+        nextUp = []; collectionItems = []; tracks = []
+        albums = []; specialFeatures = []; filmography = []
+        instantMixItems = []
+        isFavorite = false; isPlayed = false
     }
 
     func loadItem() {
         loadTask?.cancel()
         loadTask = Task {
-            state = ItemDetailUiState(isLoading: true)
+            resetState()
 
             guard let client else {
-                state = ItemDetailUiState(isLoading: false)
+                isLoading = false
                 return
             }
 
             do {
-                let item = try await client.userLibraryApi.getItem(itemId: itemId)
+                let fetchedItem = try await client.userLibraryApi.getItem(itemId: itemId)
 
-                let people = item.people ?? []
-                let badges = buildMediaBadges(for: item)
+                let people = fetchedItem.people ?? []
+                let computedBadges = buildMediaBadges(for: fetchedItem)
 
-                state = ItemDetailUiState(
-                    isLoading: false,
-                    item: item,
-                    cast: people.filter { $0.type == .actor || $0.type == .guestStar },
-                    directors: people.filter { $0.type == .director },
-                    writers: people.filter { $0.type == .writer },
-                    badges: badges,
-                    isFavorite: item.userData?.isFavorite ?? false,
-                    isPlayed: item.userData?.played ?? false
-                )
+                self.item = fetchedItem
+                self.cast = people.filter { $0.type == .actor || $0.type == .guestStar }
+                self.directors = people.filter { $0.type == .director }
+                self.writers = people.filter { $0.type == .writer }
+                self.badges = computedBadges
+                self.isFavorite = fetchedItem.userData?.isFavorite ?? false
+                self.isPlayed = fetchedItem.userData?.played ?? false
+                self.isLoading = false
 
-                updateBackdrop(for: item)
-                themeMusicPlayer.playThemeMusic(for: item, client: client, preferences: container.userPreferences)
+                updateBackdrop(for: fetchedItem)
+                themeMusicPlayer.playThemeMusic(for: fetchedItem, client: client, preferences: container.userPreferences)
 
-                async let ratingsTask: () = loadRatings(for: item)
-                async let additionalTask: () = loadAdditionalData(for: item, client: client)
+                async let ratingsTask: () = loadRatings(for: fetchedItem)
+                async let additionalTask: () = loadAdditionalData(for: fetchedItem, client: client)
                 _ = await (ratingsTask, additionalTask)
             } catch {
-                state = ItemDetailUiState(isLoading: false)
+                isLoading = false
             }
         }
     }
 
     func toggleFavorite() {
-        let newValue = !state.isFavorite
-        state.isFavorite = newValue
+        let newValue = !isFavorite
+        isFavorite = newValue
 
         Task {
             do {
                 _ = try await container.itemMutationService.setFavorite(itemId: itemId, isFavorite: newValue)
             } catch {
-                state.isFavorite = !newValue
+                isFavorite = !newValue
             }
         }
     }
 
     func toggleWatched() {
-        let newValue = !state.isPlayed
-        state.isPlayed = newValue
+        let newValue = !isPlayed
+        isPlayed = newValue
 
         Task {
             do {
                 _ = try await container.itemMutationService.setPlayed(itemId: itemId, isPlayed: newValue)
             } catch {
-                state.isPlayed = !newValue
+                isPlayed = !newValue
             }
         }
     }
@@ -325,14 +343,14 @@ final class ItemDetailViewModel: ObservableObject {
     private func loadSeasons(seriesId: String, userId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getSeasons(seriesId: seriesId, userId: userId)
-            state.seasons = result.items
+            seasons = result.items
         } catch { }
     }
 
     private func loadEpisodes(seriesId: String, seasonId: String, userId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getEpisodes(seriesId: seriesId, seasonId: seasonId, userId: userId)
-            state.episodes = result.items
+            episodes = result.items
         } catch { }
     }
 
@@ -341,14 +359,14 @@ final class ItemDetailViewModel: ObservableObject {
             let result = try await client.itemsApi.getNextUp(
                 request: GetNextUpRequest(seriesId: seriesId, fields: [.overview], limit: 1)
             )
-            state.nextUp = result.items
+            nextUp = result.items
         } catch { }
     }
 
     private func loadSimilar(itemId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getSimilarItems(itemId: itemId, limit: 16)
-            state.similar = result.items
+            similar = result.items
         } catch { }
     }
 
@@ -365,7 +383,7 @@ final class ItemDetailViewModel: ObservableObject {
                     enableUserData: true
                 )
             )
-            state.filmography = result.items
+            filmography = result.items
 
             let backdropUrls = result.items.compactMap { item -> String? in
                 guard let tag = item.backdropImageTags?.first else { return nil }
@@ -388,7 +406,7 @@ final class ItemDetailViewModel: ObservableObject {
             let result = try await client.itemsApi.getItems(
                 request: GetItemsRequest(parentId: itemId)
             )
-            state.collectionItems = result.items
+            collectionItems = result.items
         } catch { }
     }
 
@@ -397,7 +415,7 @@ final class ItemDetailViewModel: ObservableObject {
             let result = try await client.itemsApi.getItems(
                 request: GetItemsRequest(parentId: albumId)
             )
-            state.tracks = result.items
+            tracks = result.items
         } catch { }
     }
 
@@ -413,26 +431,26 @@ final class ItemDetailViewModel: ObservableObject {
                     enableUserData: true
                 )
             )
-            state.albums = result.items
+            albums = result.items
         } catch { }
     }
 
     func loadInstantMix() async {
-        guard let item = state.item, let client else { return }
+        guard let item, let client else { return }
         do {
             let result = try await client.instantMixApi.getInstantMix(
                 itemId: item.id,
                 userId: client.userId,
                 limit: 50
             )
-            state.instantMixItems = result.items
+            instantMixItems = result.items
         } catch { }
     }
 
     private func loadSpecialFeatures(itemId: String, client: MediaServerClient) async {
         do {
             let items = try await client.userLibraryApi.getSpecialFeatures(itemId: itemId)
-            state.specialFeatures = items
+            specialFeatures = items
         } catch { }
     }
 
@@ -501,7 +519,7 @@ final class ItemDetailViewModel: ObservableObject {
             result.append(("tomatoes", normalized))
         }
 
-        state.ratings = result
+        ratings = result
     }
 
     private static func audioChannelLabel(channels: Int) -> String {

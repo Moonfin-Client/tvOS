@@ -1,4 +1,5 @@
 import SwiftUI
+import Nuke
 
 struct HomeScreen: View {
     @StateObject private var viewModel: HomeViewModel
@@ -103,23 +104,16 @@ struct HomeScreen: View {
             if viewModel.backgroundService.enabled,
                let urlString = viewModel.backgroundService.currentBackdropUrl,
                let url = URL(string: urlString) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .clipped()
-                            .blur(radius: viewModel.backgroundService.blurAmount)
-                    case .failure:
-                        Color.clear
-                    case .empty:
-                        Color.clear
-                    @unknown default:
-                        Color.clear
-                    }
-                }
+                CachedImage(
+                    url: url,
+                    processors: [
+                        ImageProcessors.Resize(size: CGSize(width: geo.size.width, height: geo.size.height), contentMode: .aspectFill),
+                        ImageProcessors.GaussianBlur(radius: Int(viewModel.backgroundService.blurAmount))
+                    ]
+                )
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipped()
+                .drawingGroup()
                 .transition(.opacity)
                 .id(urlString)
             }

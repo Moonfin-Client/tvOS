@@ -35,20 +35,7 @@ struct ItemCardOverlays: View {
             }
 
             if let progress = item.userData?.playedPercentage, progress > 0 {
-                VStack {
-                    Spacer()
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Rectangle()
-                                .fill(Color.black.opacity(0.5))
-                                .frame(height: 4)
-                            Rectangle()
-                                .fill(theme.accent)
-                                .frame(width: geo.size.width * CGFloat(progress / 100.0), height: 4)
-                        }
-                    }
-                    .frame(height: 4)
-                }
+                ProgressBarOverlay(progress: progress)
             }
         }
     }

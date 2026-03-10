@@ -7,6 +7,10 @@ struct MoonfinApp: App {
     @StateObject private var router = NavigationRouter()
     @StateObject private var settingsRouter = SettingsRouter()
 
+    init() {
+        ImagePipelineConfig.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             AppRootView(container: container)
