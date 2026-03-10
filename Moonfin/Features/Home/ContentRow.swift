@@ -47,11 +47,12 @@ struct ContentRow: View {
             rowTitle
 
             ScrollViewReader { scrollProxy in
-                ScrollView(.horizontal, showsIndicators: false) {
+                FocusFirstRow(firstItemId: row.items.first?.id) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                             cardView(for: item)
                                 .id(item.id)
+                                .focused(focusBinding, equals: item.id)
                                 .onAppear {
                                     viewModel.loadMoreIfNeeded(row: row, currentIndex: index)
                                 }
