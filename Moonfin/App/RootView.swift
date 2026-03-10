@@ -93,6 +93,7 @@ struct MainNavigationView: View {
 
                         mainContent
                             .focusSection()
+                            .prefersDefaultFocus(in: mainNamespace)
                             .offset(y: router.hideNavbar ? 0 : -navbarHeight)
                             .padding(.bottom, router.hideNavbar ? 0 : -navbarHeight)
                     }
@@ -101,6 +102,7 @@ struct MainNavigationView: View {
                     ZStack(alignment: .leading) {
                         mainContent
                             .focusSection()
+                            .prefersDefaultFocus(in: mainNamespace)
                         if !router.hideNavbar {
                             LeftSidebar(container: container, mainNamespace: mainNamespace)
                                 .ignoresSafeArea()
@@ -148,7 +150,6 @@ struct MainNavigationView: View {
                     mainDestinationView(for: destination)
                 }
         }
-        .prefersDefaultFocus(in: mainNamespace)
     }
 
     @ViewBuilder

@@ -45,7 +45,6 @@ final class HomeViewModel: ObservableObject {
         backgroundService.configure(preferences: container.userPreferences)
         observeMediaBar()
 
-        // Nested ObservableObjects don't propagate changes automatically.
         backgroundService.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
@@ -106,8 +105,21 @@ final class HomeViewModel: ObservableObject {
             }
 
             let sections = activeHomeSections()
+            let viewDependent: Set<HomeSectionType> = [.latestMedia, .libraryTiles]
             let needsViews = mediaBarViewModel.isEnabled
-                || sections.contains(where: { $0 == .latestMedia || $0 == .libraryTiles })
+                || sections.contains(where: { viewDependent.contains($0) })
+
+            dataSources = [:]
+            var earlyRows: [HomeRow] = []
+            for section in sections where !viewDependent.contains(section) {
+                earlyRows.append(contentsOf: buildRowDefinitions(for: section))
+            }
+            rows = earlyRows
+            isInitialLoad = false
+
+            let earlyRowIds = Set(dataSources.keys)
+
+            async let earlyLoadTask: Void = loadRows(earlyRowIds, client: client)
 
             if needsViews {
                 do {
@@ -121,15 +133,16 @@ final class HomeViewModel: ObservableObject {
 
             mediaBarViewModel.load(userViews: userViews)
 
-            var builtRows: [HomeRow] = []
-            dataSources = [:]
-            for section in sections {
-                builtRows.append(contentsOf: buildRowDefinitions(for: section))
-            }
-            rows = builtRows
-            isInitialLoad = false
+            await earlyLoadTask
 
-            await loadAllRows(client: client)
+            let lateRows = sections
+                .filter { viewDependent.contains($0) }
+                .flatMap { buildRowDefinitions(for: $0) }
+            if !lateRows.isEmpty {
+                rows.append(contentsOf: lateRows)
+                let lateRowIds = Set(dataSources.keys).subtracting(earlyRowIds)
+                await loadRows(lateRowIds, client: client)
+            }
         }
     }
 
@@ -137,10 +150,17 @@ final class HomeViewModel: ObservableObject {
         Task {
             guard let client else { return }
             let service = container.dataRefreshService
+            let stale = dataSources.filter { $0.value.needsRefresh(service: service) }
+            guard !stale.isEmpty else { return }
 
-            for (rowId, source) in dataSources {
-                if source.needsRefresh(service: service) {
-                    await source.retrieve(client: client)
+            await withTaskGroup(of: String.self) { group in
+                for (rowId, source) in stale {
+                    group.addTask {
+                        await source.retrieve(client: client)
+                        return rowId
+                    }
+                }
+                for await rowId in group {
                     syncRow(rowId)
                 }
             }
@@ -280,9 +300,10 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func loadAllRows(client: MediaServerClient) async {
+    private func loadRows(_ rowIds: Set<String>, client: MediaServerClient) async {
         await withTaskGroup(of: String?.self) { group in
-            for (rowId, source) in dataSources {
+            for rowId in rowIds {
+                guard let source = dataSources[rowId] else { continue }
                 group.addTask {
                     await source.retrieve(client: client)
                     return rowId

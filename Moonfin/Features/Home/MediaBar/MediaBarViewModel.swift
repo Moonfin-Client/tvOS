@@ -115,24 +115,28 @@ final class MediaBarViewModel: ObservableObject {
             ))
             allItems = result.items
         } else {
-            for library in targetLibraries {
-                guard !Task.isCancelled else { return [] }
-                do {
-                    let result = try await client.itemsApi.getItems(request: GetItemsRequest(
-                        parentId: library.id,
-                        recursive: true,
-                        includeItemTypes: contentType.itemTypes,
-                        excludeItemTypes: [.boxSet],
-                        sortBy: [.random],
-                        fields: Self.fetchFields,
-                        limit: fetchLimit,
-                        enableImages: true,
-                        imageTypeLimit: 1
-                    ))
-                    allItems.append(contentsOf: result.items)
-                } catch {
-                    continue
+            allItems = try await withThrowingTaskGroup(of: [ServerItem].self) { group in
+                for library in targetLibraries {
+                    group.addTask {
+                        let result = try await client.itemsApi.getItems(request: GetItemsRequest(
+                            parentId: library.id,
+                            recursive: true,
+                            includeItemTypes: contentType.itemTypes,
+                            excludeItemTypes: [.boxSet],
+                            sortBy: [.random],
+                            fields: Self.fetchFields,
+                            limit: fetchLimit,
+                            enableImages: true,
+                            imageTypeLimit: 1
+                        ))
+                        return result.items
+                    }
                 }
+                var collected: [ServerItem] = []
+                for try await items in group {
+                    collected.append(contentsOf: items)
+                }
+                return collected
             }
         }
 

@@ -32,7 +32,7 @@ struct HomeScreen: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
-                if viewModel.isMediaBarActive && isMediaBarMode {
+                if isMediaBarMode && viewModel.mediaBarViewModel.isEnabled && (viewModel.isMediaBarActive || viewModel.isMediaBarLoading) {
                     MediaBarView(
                         viewModel: viewModel.mediaBarViewModel,
                         ratingsViewModel: viewModel.mediaBarRatingsViewModel,
@@ -58,11 +58,8 @@ struct HomeScreen: View {
                         .allowsHitTesting(false)
                         .zIndex(1)
                     rowsContent(screenHeight: geo.size.height)
+                        .prefersDefaultFocus(in: mainNamespace)
                         .zIndex(0)
-                }
-
-                if !viewModel.hasFocusableContent {
-                    initialFocusLanding
                 }
             }
         }
@@ -78,6 +75,14 @@ struct HomeScreen: View {
                 isMediaBarMode = false
                 isRestoringPosition = true
                 sentinelEnabled = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    guard isRestoringPosition else { return }
+                    isRestoringPosition = false
+                    lastFocusedRowId = nil
+                    lastFocusedItemId = nil
+                    sentinelEnabled = viewModel.isMediaBarActive
+                    resetFocus(in: mainNamespace)
+                }
             }
         }
         .onDisappear { viewModel.mediaBarViewModel.cleanup() }
@@ -91,16 +96,6 @@ struct HomeScreen: View {
                 }
             }
         }
-    }
-
-    private var initialFocusLanding: some View {
-        Button(action: {}) {
-            Color.white.opacity(0.001)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .buttonStyle(CleanButtonStyle())
-        .padding(.leading, navbarIsLeft ? LeftSidebar.sidebarInset : 0)
-        .prefersDefaultFocus(in: mainNamespace)
     }
 
     private var backdropLayer: some View {
@@ -210,40 +205,42 @@ struct HomeScreen: View {
 
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
+                    VStack(alignment: .leading, spacing: 0) {
                         if viewModel.isMediaBarActive && sentinelEnabled {
                             MediaBarReturnSentinel {
                                 isMediaBarMode = true
                             }
-                            .frame(height: 2)
+                            .frame(height: 1)
                         }
 
-                        let visibleRows = viewModel.rows.filter { !$0.isEmpty }
-                        ForEach(visibleRows) { row in
-                            ContentRow(
-                                row: row,
-                                viewModel: viewModel,
-                                watchedIndicator: viewModel.watchedIndicator,
-                                onRowFocused: {
-                                    focusedRowId = row.id
-                                    if isRestoringPosition {
-                                        isRestoringPosition = false
-                                        lastFocusedRowId = nil
-                                        lastFocusedItemId = nil
-                                        sentinelEnabled = true
-                                    } else {
-                                        scrollTrigger += 1
-                                    }
-                                },
-                                onItemSelected: { item in
-                                    navigatedFromMediaBar = false
-                                    lastFocusedRowId = row.id
-                                    lastFocusedItemId = item.id
-                                    router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
-                                },
-                                restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil
-                            )
-                            .id(row.id)
+                        LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
+                            let visibleRows = viewModel.rows.filter { !$0.isEmpty }
+                            ForEach(visibleRows) { row in
+                                ContentRow(
+                                    row: row,
+                                    viewModel: viewModel,
+                                    watchedIndicator: viewModel.watchedIndicator,
+                                    onRowFocused: {
+                                        focusedRowId = row.id
+                                        if isRestoringPosition {
+                                            isRestoringPosition = false
+                                            lastFocusedRowId = nil
+                                            lastFocusedItemId = nil
+                                            sentinelEnabled = true
+                                        } else {
+                                            scrollTrigger += 1
+                                        }
+                                    },
+                                    onItemSelected: { item in
+                                        navigatedFromMediaBar = false
+                                        lastFocusedRowId = row.id
+                                        lastFocusedItemId = item.id
+                                        router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+                                    },
+                                    restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil
+                                )
+                                .id(row.id)
+                            }
                         }
                     }
                     .padding(.leading, contentLeading)
