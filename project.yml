@@ -43,18 +43,3 @@ targets:
         product: NukeUI
       - package: Nuke
       - package: KeychainAccess
-      - target: TopShelfExtension
-
-  TopShelfExtension:
-    type: app-extension
-    platform: tvOS
-    deploymentTarget: "16.0"
-    sources:
-      - path: TopShelfExtension
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.moonfin.tv.TopShelf
-        INFOPLIST_FILE: TopShelfExtension/Info.plist
-        GENERATE_INFOPLIST_FILE: false
-    dependencies:
-      - sdk: TVServices.framework
