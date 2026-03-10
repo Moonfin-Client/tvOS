@@ -59,12 +59,12 @@ enum Destination: Hashable {
     case stillWatching(itemId: String)
     case trailerPlayer(videoId: String, startSeconds: Double = 0, segmentsJson: String = "[]")
 
-    // MARK: - Jellyseerr
+    // MARK: - Seerr
 
-    case jellyseerrDiscover
-    case jellyseerrRequests
-    case jellyseerrSettings
-    case jellyseerrBrowseBy(filterId: Int, filterName: String, mediaType: String, filterType: String = "genre")
-    case jellyseerrMediaDetails(itemJson: String)
-    case jellyseerrPersonDetails(personId: Int)
+    case seerrDiscover
+    case seerrRequests
+    case seerrSettings
+    case seerrBrowseBy(filterId: Int, filterName: String, mediaType: String, filterType: String = "genre")
+    case seerrMediaDetails(itemJson: String)
+    case seerrPersonDetails(personId: Int)
 }

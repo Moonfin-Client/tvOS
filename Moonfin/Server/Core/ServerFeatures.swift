@@ -10,7 +10,7 @@ enum ServerFeature: String, CaseIterable {
     case lyrics
     case clientLog
     case embyConnect
-    case jellyseerr
+    case seerr
 }
 
 protocol ServerFeatureSupport {
@@ -31,7 +31,7 @@ struct JellyfinFeatureSupport: ServerFeatureSupport {
         .trickplay,
         .lyrics,
         .clientLog,
-        .jellyseerr,
+        .seerr,
     ]
 }
 
@@ -40,7 +40,7 @@ struct EmbyFeatureSupport: ServerFeatureSupport {
         .watchParty,
         .bifTrickplay,
         .embyConnect,
-        .jellyseerr,
+        .seerr,
     ]
 }
 

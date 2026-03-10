@@ -57,8 +57,8 @@ enum SettingsRoute: Hashable {
     case playbackAudioBehavior
     case playbackSlideshowInterval
 
-    case jellyseerr
-    case jellyseerrRows
+    case seerr
+    case seerrRows
 
     case plugin
     case moonfinNavbarPosition

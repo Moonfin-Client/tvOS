@@ -213,7 +213,7 @@ struct MainNavigationView: View {
             RecordingsView(container: container, initialTab: .scheduled)
         case .liveTvPlayer(let channelId):
             liveTvPlayerDestination(channelId: channelId)
-        case .jellyseerrDiscover:
+        case .seerrDiscover:
             PlaceholderView(title: "Discover")
         default:
             PlaceholderView(title: "Screen")
