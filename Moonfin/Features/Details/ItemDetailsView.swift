@@ -810,7 +810,7 @@ struct ItemDetailsView: View {
         let cardWidth: CGFloat = overrideWidth ?? (aspectRatio >= 1.0 ? 200 : 160)
         let cardHeight = cardWidth / aspectRatio
 
-        return ScrollView(.horizontal, showsIndicators: false) {
+        return FocusFirstRow(firstItemId: items.first?.id) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(items) { item in
                     FocusableItemCard(
@@ -822,6 +822,7 @@ struct ItemDetailsView: View {
                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
                         }
                     )
+                    .focused(focusBinding, equals: item.id)
                 }
             }
             .padding(.horizontal, SpaceTokens.spaceSm)
@@ -830,7 +831,7 @@ struct ItemDetailsView: View {
     }
 
     private var castRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        FocusFirstRow(firstItemId: viewModel.cast.first?.name) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(viewModel.cast, id: \.name) { person in
                     FocusableCastCard(
@@ -842,6 +843,7 @@ struct ItemDetailsView: View {
                             }
                         }
                     )
+                    .focused(focusBinding, equals: person.name)
                 }
             }
             .padding(.horizontal, SpaceTokens.spaceSm)
@@ -850,7 +852,7 @@ struct ItemDetailsView: View {
     }
 
     private var seasonRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        FocusFirstRow(firstItemId: viewModel.seasons.first?.id) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(viewModel.seasons) { season in
                     FocusableSeasonCard(
@@ -860,6 +862,7 @@ struct ItemDetailsView: View {
                             router.navigate(to: .itemDetails(itemId: season.id, serverId: season.serverId))
                         }
                     )
+                    .focused(focusBinding, equals: season.id)
                 }
             }
             .padding(.horizontal, SpaceTokens.spaceSm)

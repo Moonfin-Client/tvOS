@@ -259,6 +259,37 @@ struct FocusableSeasonCard: View {
     }
 }
 
+// MARK: - Focus-First Scroll Row
+
+struct FocusFirstRow<Content: View>: View {
+    let firstItemId: String?
+    let content: (FocusState<String?>.Binding) -> Content
+
+    @FocusState private var focusedId: String?
+    @State private var hasEnteredFocus = false
+
+    init(firstItemId: String?, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
+        self.firstItemId = firstItemId
+        self.content = content
+    }
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            content($focusedId)
+        }
+        .onChange(of: focusedId) { newValue in
+            if newValue != nil && !hasEnteredFocus {
+                hasEnteredFocus = true
+                if let firstId = firstItemId, newValue != firstId {
+                    focusedId = firstId
+                }
+            } else if newValue == nil {
+                hasEnteredFocus = false
+            }
+        }
+    }
+}
+
 // MARK: - Expandable Bio
 
 struct ExpandableBioText: View {
