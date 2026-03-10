@@ -6,9 +6,11 @@ struct RecordingsView: View {
     @EnvironmentObject var router: NavigationRouter
 
     private let container: AppContainer
+    private let initialTab: RecordingsTab
 
-    init(container: AppContainer) {
+    init(container: AppContainer, initialTab: RecordingsTab = .recordings) {
         self.container = container
+        self.initialTab = initialTab
         _viewModel = StateObject(wrappedValue: RecordingsViewModel(container: container))
     }
 
@@ -16,10 +18,10 @@ struct RecordingsView: View {
         ZStack {
             theme.colorScheme.background.ignoresSafeArea()
 
-            if viewModel.isLoading && viewModel.recordings.isEmpty && viewModel.timers.isEmpty {
+            if viewModel.isLoading && viewModel.recordings.isEmpty && viewModel.timers.isEmpty && viewModel.seriesTimers.isEmpty {
                 loadingView
             } else if let error = viewModel.error,
-                      viewModel.recordings.isEmpty && viewModel.timers.isEmpty {
+                      viewModel.recordings.isEmpty && viewModel.timers.isEmpty && viewModel.seriesTimers.isEmpty {
                 errorView(error)
             } else {
                 VStack(spacing: 0) {
@@ -47,7 +49,19 @@ struct RecordingsView: View {
             .environmentObject(theme)
             .focusSection()
         }
-        .task { await viewModel.loadData() }
+        .sheet(item: $viewModel.selectedSeriesTimer) { seriesTimer in
+            SeriesTimerDetailPopup(
+                seriesTimer: seriesTimer,
+                viewModel: viewModel,
+                onCancel: { Task { await viewModel.cancelSeriesTimer(seriesTimer) } }
+            )
+            .environmentObject(theme)
+            .focusSection()
+        }
+        .task {
+            viewModel.activeTab = initialTab
+            await viewModel.loadData()
+        }
     }
 
     private var header: some View {
@@ -60,7 +74,7 @@ struct RecordingsView: View {
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 Button(action: { viewModel.activeTab = .recordings }) {
-                    Text("Recordings (\(viewModel.recordings.count))")
+                    Text("Recordings (\(viewModel.filteredRecordings.count))")
                 }
                 .buttonStyle(GuideNavButtonStyle(
                     theme: theme,
@@ -73,6 +87,14 @@ struct RecordingsView: View {
                 .buttonStyle(GuideNavButtonStyle(
                     theme: theme,
                     isActive: viewModel.activeTab == .scheduled
+                ))
+
+                Button(action: { viewModel.activeTab = .series }) {
+                    Text("Series (\(viewModel.seriesTimers.count))")
+                }
+                .buttonStyle(GuideNavButtonStyle(
+                    theme: theme,
+                    isActive: viewModel.activeTab == .series
                 ))
 
                 Button(action: { router.navigate(to: .liveTvGuide) }) {
@@ -94,6 +116,8 @@ struct RecordingsView: View {
                     recordingsGrid
                 case .scheduled:
                     scheduledGrid
+                case .series:
+                    seriesGrid
                 }
             }
             .padding(.horizontal, SpaceTokens.space3xl)
@@ -103,14 +127,15 @@ struct RecordingsView: View {
 
     private var recordingsGrid: some View {
         Group {
-            if viewModel.recordings.isEmpty {
+            filterBar
+            if viewModel.filteredRecordings.isEmpty {
                 emptyState("No recordings found")
             } else {
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 250, maximum: 300), spacing: SpaceTokens.spaceLg)],
                     spacing: SpaceTokens.spaceLg
                 ) {
-                    ForEach(viewModel.recordings) { recording in
+                    ForEach(viewModel.filteredRecordings) { recording in
                         RecordingCard(
                             recording: recording,
                             imageUrl: viewModel.recordingImageUrl(recording),
@@ -141,6 +166,42 @@ struct RecordingsView: View {
                             scheduledTime: viewModel.formatScheduledTime(timer.startDate, timer.endDate)
                         ) {
                             viewModel.selectedTimer = timer
+                        }
+                        .environmentObject(theme)
+                    }
+                }
+            }
+        }
+    }
+
+    private var filterBar: some View {
+        HStack(spacing: SpaceTokens.spaceSm) {
+            ForEach(RecordingFilter.allCases, id: \.self) { filter in
+                Button(action: { viewModel.recordingFilter = filter }) {
+                    Text(filter.rawValue)
+                }
+                .buttonStyle(GuideNavButtonStyle(
+                    theme: theme,
+                    isActive: viewModel.recordingFilter == filter
+                ))
+            }
+            Spacer()
+        }
+        .padding(.bottom, SpaceTokens.spaceSm)
+    }
+
+    private var seriesGrid: some View {
+        Group {
+            if viewModel.seriesTimers.isEmpty {
+                emptyState("No series recordings")
+            } else {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 250, maximum: 300), spacing: SpaceTokens.spaceLg)],
+                    spacing: SpaceTokens.spaceLg
+                ) {
+                    ForEach(viewModel.seriesTimers, id: \.id) { seriesTimer in
+                        SeriesTimerCard(seriesTimer: seriesTimer) {
+                            viewModel.selectedSeriesTimer = seriesTimer
                         }
                         .environmentObject(theme)
                     }
@@ -413,6 +474,120 @@ struct TimerDetailPopup: View {
             HStack(spacing: SpaceTokens.spaceMd) {
                 Button(action: { dismiss(); onCancel() }) {
                     Label("Cancel Recording", systemImage: "xmark.circle")
+                }
+                .buttonStyle(RecordingDangerButtonStyle(theme: theme))
+
+                Button("Close") { dismiss() }
+                    .buttonStyle(GuideSecondaryButtonStyle(theme: theme))
+            }
+        }
+        .padding(SpaceTokens.space3xl)
+        .background(theme.colorScheme.surface)
+    }
+}
+
+struct SeriesTimerCard: View {
+    let seriesTimer: LiveTvSeriesTimerInfo
+    let onSelect: () -> Void
+    @EnvironmentObject var theme: MoonfinTheme
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 0) {
+                CardImageSection(url: nil, placeholderIcon: "rectangle.stack")
+                    .environmentObject(theme)
+                infoSection
+            }
+            .background(theme.colorScheme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.medium))
+        }
+        .buttonStyle(RecordingCardButtonStyle(accent: theme.accent))
+    }
+
+    private var infoSection: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+            Text(seriesTimer.name ?? "Series Recording")
+                .font(.bodyMd)
+                .fontWeight(.medium)
+                .foregroundColor(theme.colorScheme.onBackground)
+                .lineLimit(1)
+
+            if let channelName = seriesTimer.channelName {
+                Text(channelName)
+                    .font(.captionXs)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+            }
+
+            HStack(spacing: SpaceTokens.spaceXs) {
+                if seriesTimer.recordNewOnly == true {
+                    Text("New only")
+                        .font(.captionXs)
+                        .foregroundColor(theme.accent)
+                }
+                if seriesTimer.recordAnyTime == true {
+                    Text("Any time")
+                        .font(.captionXs)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+                }
+                if seriesTimer.recordAnyChannel == true {
+                    Text("Any channel")
+                        .font(.captionXs)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+                }
+            }
+        }
+        .padding(SpaceTokens.spaceMd)
+    }
+}
+
+extension LiveTvSeriesTimerInfo: @retroactive Identifiable {}
+
+struct SeriesTimerDetailPopup: View {
+    let seriesTimer: LiveTvSeriesTimerInfo
+    let viewModel: RecordingsViewModel
+    let onCancel: () -> Void
+    @EnvironmentObject var theme: MoonfinTheme
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
+            HStack {
+                VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                    Text(seriesTimer.name ?? "Series Recording")
+                        .font(.title2xl)
+                        .foregroundColor(theme.colorScheme.onBackground)
+
+                    if let channelName = seriesTimer.channelName {
+                        Text(channelName)
+                            .font(.bodyMd)
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    }
+                }
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                if seriesTimer.recordNewOnly == true {
+                    metadataRow("Episodes", "New only", theme: theme)
+                } else {
+                    metadataRow("Episodes", "All", theme: theme)
+                }
+                if seriesTimer.recordAnyTime == true {
+                    metadataRow("Time", "Any time", theme: theme)
+                }
+                if seriesTimer.recordAnyChannel == true {
+                    metadataRow("Channel", "Any channel", theme: theme)
+                } else if let channelName = seriesTimer.channelName {
+                    metadataRow("Channel", channelName, theme: theme)
+                }
+                if let start = seriesTimer.startDate {
+                    metadataRow("From", viewModel.formatScheduledTime(start, seriesTimer.endDate), theme: theme)
+                }
+            }
+
+            HStack(spacing: SpaceTokens.spaceMd) {
+                Button(action: { dismiss(); onCancel() }) {
+                    Label("Cancel Series", systemImage: "xmark.circle")
                 }
                 .buttonStyle(RecordingDangerButtonStyle(theme: theme))
 

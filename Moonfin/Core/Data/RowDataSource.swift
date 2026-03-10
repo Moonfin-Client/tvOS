@@ -117,10 +117,19 @@ final class RowDataSource {
                 items = result.items
                 totalItemCount = result.totalRecordCount
 
-            case .liveTvPrograms:
+            case .liveTvOnNow:
                 let result = try await client.liveTvApi.getRecommendedPrograms(
                     userId: client.userId, limit: chunkSize,
-                    isAiring: nil, hasAired: nil
+                    isAiring: true, hasAired: nil
+                )
+                items = result.items
+                totalItemCount = result.totalRecordCount
+                fullyLoaded = true
+
+            case .liveTvComingUp:
+                let result = try await client.liveTvApi.getRecommendedPrograms(
+                    userId: client.userId, limit: chunkSize,
+                    isAiring: nil, hasAired: false
                 )
                 items = result.items
                 totalItemCount = result.totalRecordCount
@@ -132,9 +141,6 @@ final class RowDataSource {
                 )
                 items = result.items
                 totalItemCount = result.totalRecordCount
-
-            case .liveTvSeriesTimers:
-                fullyLoaded = true
 
             case .staticItems(let staticItems):
                 items = staticItems

@@ -86,6 +86,16 @@ struct ContentRow: View {
                 },
                 onSelect: { onItemSelected?(item) }
             )
+        } else if row.rowType == .liveTvButtons {
+            LiveTvActionCard(
+                item: item,
+                cardWidth: row.rowType.cardWidth,
+                aspectRatio: row.rowType.aspectRatio,
+                onFocused: {
+                    onRowFocused?()
+                },
+                onSelect: { onItemSelected?(item) }
+            )
         } else {
             ItemPreview(
                 item: item,
@@ -104,10 +114,56 @@ struct ContentRow: View {
 
     private func imageUrl(for item: ServerItem) -> String? {
         switch row.rowType {
-        case .continueWatching, .nextUp, .liveTv:
+        case .continueWatching, .nextUp, .liveTvOnNow, .liveTvComingUp:
             return viewModel.thumbImageUrl(for: item)
         default:
             return viewModel.posterImageUrl(for: item)
+        }
+    }
+}
+
+struct LiveTvActionCard: View {
+    let item: ServerItem
+    let cardWidth: CGFloat
+    let aspectRatio: CGFloat
+    let onFocused: () -> Void
+    let onSelect: () -> Void
+    @EnvironmentObject var theme: MoonfinTheme
+    @Environment(\.isFocused) private var isFocused
+
+    private var iconName: String {
+        switch item.id {
+        case "ltv_guide": return "calendar"
+        case "ltv_recordings": return "recordingtape"
+        case "ltv_schedule": return "clock"
+        case "ltv_series": return "rectangle.stack"
+        default: return "tv"
+        }
+    }
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(spacing: SpaceTokens.spaceSm) {
+                Image(systemName: iconName)
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundColor(isFocused ? .white : theme.accent)
+                Text(item.name)
+                    .font(.bodyMd)
+                    .fontWeight(.semibold)
+                    .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground)
+            }
+            .frame(width: cardWidth, height: cardWidth / aspectRatio)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .fill(isFocused ? theme.accent : theme.colorScheme.surface)
+            )
+            .scaleEffect(isFocused ? 1.05 : 1.0)
+            .shadow(color: isFocused ? theme.accent.opacity(0.5) : .clear, radius: 8)
+            .animation(.easeOut(duration: 0.15), value: isFocused)
+        }
+        .buttonStyle(.plain)
+        .onChange(of: isFocused) { focused in
+            if focused { onFocused() }
         }
     }
 }

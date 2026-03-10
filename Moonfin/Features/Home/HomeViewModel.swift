@@ -263,13 +263,35 @@ final class HomeViewModel: ObservableObject {
             )]
 
         case .liveTv:
-            return [makeRow(
-                id: "live_tv",
-                title: "Live TV",
-                rowType: .liveTv,
-                queryType: .liveTvPrograms,
-                triggers: []
-            )]
+            let buttonItems: [ServerItem] = [
+                .placeholder(id: "ltv_guide", name: "Guide"),
+                .placeholder(id: "ltv_recordings", name: "Recordings"),
+                .placeholder(id: "ltv_schedule", name: "Schedule"),
+                .placeholder(id: "ltv_series", name: "Series"),
+            ]
+            return [
+                makeRow(
+                    id: "live_tv_buttons",
+                    title: "Live TV",
+                    rowType: .liveTvButtons,
+                    queryType: .staticItems(buttonItems),
+                    triggers: []
+                ),
+                makeRow(
+                    id: "live_tv_on_now",
+                    title: "On Now",
+                    rowType: .liveTvOnNow,
+                    queryType: .liveTvOnNow,
+                    triggers: []
+                ),
+                makeRow(
+                    id: "live_tv_coming_up",
+                    title: "Coming Up",
+                    rowType: .liveTvComingUp,
+                    queryType: .liveTvComingUp,
+                    triggers: []
+                ),
+            ]
 
         case .none:
             return []

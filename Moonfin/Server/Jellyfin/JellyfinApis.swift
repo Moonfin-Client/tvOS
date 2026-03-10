@@ -403,6 +403,10 @@ struct JellyfinLiveTvApi: ServerLiveTvApi {
         try await client.requestVoid("/LiveTv/Timers/\(timerId)", method: "DELETE")
     }
 
+    func cancelSeriesTimer(timerId: String) async throws {
+        try await client.requestVoid("/LiveTv/SeriesTimers/\(timerId)", method: "DELETE")
+    }
+
     func deleteRecording(recordingId: String) async throws {
         try await client.requestVoid("/Items/\(recordingId)", method: "DELETE")
     }

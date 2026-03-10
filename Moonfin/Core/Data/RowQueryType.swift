@@ -10,8 +10,8 @@ enum RowQueryType {
     case episodes(seriesId: String, seasonId: String, userId: String)
     case userViews(userId: String)
     case liveTvChannels
-    case liveTvPrograms
+    case liveTvOnNow
+    case liveTvComingUp
     case liveTvRecordings
-    case liveTvSeriesTimers
     case staticItems([ServerItem])
 }

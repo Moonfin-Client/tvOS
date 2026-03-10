@@ -115,6 +115,7 @@ protocol ServerLiveTvApi {
     func getSeriesTimers(sortBy: String?, startIndex: Int?, limit: Int?) async throws -> [LiveTvSeriesTimerInfo]
     func createTimer(_ timer: LiveTvTimerInfo) async throws
     func cancelTimer(timerId: String) async throws
+    func cancelSeriesTimer(timerId: String) async throws
     func deleteRecording(recordingId: String) async throws
     func getRecommendedPrograms(userId: String?, limit: Int?, isAiring: Bool?, hasAired: Bool?) async throws -> ItemsResult
     func getGuideInfo() async throws -> LiveTvGuideInfo

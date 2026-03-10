@@ -231,6 +231,12 @@ struct HomeScreen: View {
                                         lastFocusedItemId = item.id
                                         if row.rowType == .libraryTiles {
                                             navigateToLibrary(item)
+                                        } else if row.rowType == .liveTvButtons {
+                                            navigateToLiveTvAction(item)
+                                        } else if row.rowType == .liveTvOnNow || row.rowType == .liveTvComingUp {
+                                            if let channelId = item.channelId {
+                                                router.navigate(to: .liveTvPlayer(channelId: channelId))
+                                            }
                                         } else {
                                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
                                         }
@@ -281,6 +287,21 @@ struct HomeScreen: View {
 
     private func navigateToLibrary(_ item: ServerItem) {
         router.navigateToLibrary(item)
+    }
+
+    private func navigateToLiveTvAction(_ item: ServerItem) {
+        switch item.id {
+        case "ltv_guide":
+            router.navigate(to: .liveTvGuide)
+        case "ltv_recordings":
+            router.navigate(to: .liveTvRecordings)
+        case "ltv_schedule":
+            router.navigate(to: .liveTvSchedule)
+        case "ltv_series":
+            router.navigate(to: .liveTvSeriesRecordings)
+        default:
+            break
+        }
     }
 }
 

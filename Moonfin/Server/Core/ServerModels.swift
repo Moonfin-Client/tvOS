@@ -299,6 +299,29 @@ struct ServerItem: Codable, Identifiable {
     }
 }
 
+extension ServerItem {
+    static func placeholder(id: String, name: String, type: ItemType = .folder) -> ServerItem {
+        ServerItem(
+            id: id, serverId: nil, name: name, originalTitle: nil, type: type, mediaType: nil,
+            overview: nil, runTimeTicks: nil, premiereDate: nil, productionYear: nil,
+            officialRating: nil, communityRating: nil, criticRating: nil, isFolder: nil,
+            parentId: nil, seriesId: nil, seriesName: nil, seasonId: nil, indexNumber: nil,
+            parentIndexNumber: nil, imageTags: nil, backdropImageTags: nil,
+            parentBackdropImageTags: nil, parentBackdropItemId: nil,
+            primaryImageAspectRatio: nil, userData: nil, mediaSources: nil,
+            mediaStreams: nil, container: nil, channelId: nil, channelName: nil,
+            collectionType: nil, people: nil, chapters: nil, genres: nil, tags: nil,
+            taglines: nil, studios: nil, providerIds: nil, endDate: nil,
+            productionLocations: nil, artists: nil, albumArtists: nil, albumArtist: nil,
+            albumId: nil, albumPrimaryImageTag: nil, album: nil, childCount: nil,
+            albumCount: nil, hasLyrics: nil, startDate: nil, channelNumber: nil,
+            timerId: nil, seriesTimerId: nil, isMovie: nil, isSeries: nil, isNews: nil,
+            isSports: nil, isKids: nil, isPremiere: nil, isRepeat: nil, isLive: nil,
+            isHD: nil, currentProgram: nil
+        )
+    }
+}
+
 struct ServerUser: Codable {
     let id: String
     let name: String

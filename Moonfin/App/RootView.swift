@@ -207,6 +207,10 @@ struct MainNavigationView: View {
             LiveTvGuideView(container: container)
         case .liveTvRecordings:
             RecordingsView(container: container)
+        case .liveTvSeriesRecordings:
+            RecordingsView(container: container, initialTab: .series)
+        case .liveTvSchedule:
+            RecordingsView(container: container, initialTab: .scheduled)
         case .liveTvPlayer(let channelId):
             liveTvPlayerDestination(channelId: channelId)
         case .jellyseerrDiscover:

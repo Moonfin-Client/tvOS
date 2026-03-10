@@ -28,12 +28,16 @@ enum HomeRowType: Equatable {
     case libraryTiles
     case resumeAudio
     case playlists
-    case liveTv
+    case liveTvButtons
+    case liveTvOnNow
+    case liveTvComingUp
 
     var aspectRatio: CGFloat {
         switch self {
-        case .continueWatching, .nextUp, .liveTv:
+        case .continueWatching, .nextUp, .liveTvOnNow, .liveTvComingUp:
             return 16.0 / 9.0
+        case .liveTvButtons:
+            return 2.0 / 1.0
         case .resumeAudio:
             return 1.0
         default:
@@ -43,8 +47,10 @@ enum HomeRowType: Equatable {
 
     var cardWidth: CGFloat {
         switch self {
-        case .continueWatching, .nextUp, .liveTv:
+        case .continueWatching, .nextUp, .liveTvOnNow, .liveTvComingUp:
             return 280
+        case .liveTvButtons:
+            return 220
         case .resumeAudio:
             return 180
         default:
