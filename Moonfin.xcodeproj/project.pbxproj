@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -66,6 +66,7 @@
 		4EFD2067E471639216BC6F31 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7FAD9331B478B54CAEE858 /* AppContainer.swift */; };
 		50C05090550D4CBD7B058385 /* UserLoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */; };
 		51CCB39A102F0586CE80BD91 /* RuntimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9041F256EFB635B85F27ED /* RuntimeFormatter.swift */; };
+		52029E88748E5BCA350147B5 /* SeerrMediaDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3C6FE066501478E5203C7A /* SeerrMediaDetailsView.swift */; };
 		523C091BE2752ADC33800E25 /* AuthenticationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8FF3EE89D79751C704B8B0 /* AuthenticationPreferences.swift */; };
 		531794D91B2DAF454CB71AF5 /* UUID+Parsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11ABDCA5F8DCD46037E016B3 /* UUID+Parsing.swift */; };
 		536E7DFD428063335745885D /* SkipSegmentOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DBFEB783BDD106D40D0FC23 /* SkipSegmentOverlay.swift */; };
@@ -84,6 +85,7 @@
 		6382863BD2E5A01AD37F8AC4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 11F9098C62E1011B54DDB936 /* Assets.xcassets */; };
 		649E00A5609B7BBD44570631 /* MediaBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCFD36E7AB44A85691E2CCA1 /* MediaBarView.swift */; };
 		659117FFF2FEE58885DFDFBB /* AuthenticationRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D2E513F01DD8E72DB15C70D /* AuthenticationRepository.swift */; };
+		6710300E2EC07BAC8247E0D9 /* SeerrMediaDetailsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A453813549605AFDFA54913E /* SeerrMediaDetailsViewModel.swift */; };
 		673C558004586A2BFE0289EF /* EmbyConnectViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */; };
 		69103F97C2C4EBD46C06C687 /* SelectedItemState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0FFB47A15FF8BC8041D824 /* SelectedItemState.swift */; };
 		69844BC09EF3C81958536EF9 /* DataRefreshService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19263A8A3FE6E52F3CC93673 /* DataRefreshService.swift */; };
@@ -159,6 +161,7 @@
 		AEF10B94D7C04E71D90E08BA /* TmdbRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A554C71793F4265E794FAD /* TmdbRepository.swift */; };
 		B273DC84F80FBB5876CCD0F8 /* ServerWebSocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D817B3079DB381F66B8EBE6 /* ServerWebSocketMessage.swift */; };
 		B4E1B228F1DF6703825F0403 /* RatingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9474CF2A1C7088470F5E05C4 /* RatingViews.swift */; };
+		B7D66F71910A33A288BE93EB /* SeerrCastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0910B6B47CA2E8AA7E6891C /* SeerrCastCard.swift */; };
 		BB8A8389816DAB9F4A557AA4 /* NavbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBF6559E6FDF03DBF08F2D8 /* NavbarViewModel.swift */; };
 		BF09C05738B1479D39355ABE /* SettingsMainScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E52B4DEA949C89B86A017B2 /* SettingsMainScreen.swift */; };
 		BF435588F9323DB78D072C29 /* LeftSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */; };
@@ -308,7 +311,7 @@
 		7FD6EC7EDCB86BC9F390E211 /* AuthStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStates.swift; sourceTree = "<group>"; };
 		80036105BF71163FC29A172D /* GenreBrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenreBrowseScreen.swift; sourceTree = "<group>"; };
 		828D86CE5B1B0CB5AD4FBE67 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
-		838B6DDE822EEB98311172D6 /* Moonfin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moonfin.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		838B6DDE822EEB98311172D6 /* Moonfin.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Moonfin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		84351FB844308F8CE1733E97 /* JellyfinLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinLogo.swift; sourceTree = "<group>"; };
 		84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackManager.swift; sourceTree = "<group>"; };
 		853E6DEE22DC8A300940D5DF /* EmbyLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyLogo.swift; sourceTree = "<group>"; };
@@ -335,11 +338,13 @@
 		A261C64FB9294C4DB482BD24 /* LibraryBrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryBrowseScreen.swift; sourceTree = "<group>"; };
 		A2AF5E3DFDEC74514265F3FF /* DetailCardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailCardComponents.swift; sourceTree = "<group>"; };
 		A37A5B797B86E6122B645143 /* TrackSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSelectionView.swift; sourceTree = "<group>"; };
+		A453813549605AFDFA54913E /* SeerrMediaDetailsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrMediaDetailsViewModel.swift; sourceTree = "<group>"; };
 		A671C30D8FBFBADDB8A6654C /* MediaServerClientFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServerClientFactory.swift; sourceTree = "<group>"; };
 		A87B60A668EFA251CA87BE91 /* SettingsListButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsListButton.swift; sourceTree = "<group>"; };
 		ABDCA99A0E17C8A882E8EA80 /* LibraryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCard.swift; sourceTree = "<group>"; };
 		ADD2B0ADBDA59B45EBF81A4E /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
 		AE0FFB47A15FF8BC8041D824 /* SelectedItemState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectedItemState.swift; sourceTree = "<group>"; };
+		B0910B6B47CA2E8AA7E6891C /* SeerrCastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrCastCard.swift; sourceTree = "<group>"; };
 		B2532D5B583DB1A74F1810BC /* MediaBarModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarModels.swift; sourceTree = "<group>"; };
 		B26B00488A156C151C0CD62A /* MoonfinApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinApp.swift; sourceTree = "<group>"; };
 		B523A2B54897DD15342C4926 /* FavoritesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesViewModel.swift; sourceTree = "<group>"; };
@@ -399,6 +404,7 @@
 		F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableToolbarButton.swift; sourceTree = "<group>"; };
 		F60A57D73E27E7F1BBA5E387 /* ItemDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailViewModel.swift; sourceTree = "<group>"; };
 		F95BEDEB81DA59E7BD971A55 /* SettingsMoonfinScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMoonfinScreen.swift; sourceTree = "<group>"; };
+		FA3C6FE066501478E5203C7A /* SeerrMediaDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrMediaDetailsView.swift; sourceTree = "<group>"; };
 		FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaybackScreen.swift; sourceTree = "<group>"; };
 		FCFD36E7AB44A85691E2CCA1 /* MediaBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarView.swift; sourceTree = "<group>"; };
 		FDDF43F4829FD7991896EA32 /* MoonfinTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinTheme.swift; sourceTree = "<group>"; };
@@ -692,6 +698,7 @@
 		78EA034A1403B2D90F919362 /* Seerr */ = {
 			isa = PBXGroup;
 			children = (
+				E7B2D1659C1983F5863C448A /* Details */,
 				617A6381880B117D5D189658 /* Discover */,
 				6ED9846443665851400FF0E3 /* SeerrApiModels.swift */,
 				346AD60702A751C6BBA53A49 /* SeerrHttpClient.swift */,
@@ -898,6 +905,16 @@
 			path = Store;
 			sourceTree = "<group>";
 		};
+		E7B2D1659C1983F5863C448A /* Details */ = {
+			isa = PBXGroup;
+			children = (
+				B0910B6B47CA2E8AA7E6891C /* SeerrCastCard.swift */,
+				FA3C6FE066501478E5203C7A /* SeerrMediaDetailsView.swift */,
+				A453813549605AFDFA54913E /* SeerrMediaDetailsViewModel.swift */,
+			);
+			path = Details;
+			sourceTree = "<group>";
+		};
 		EAEC33EE3B884CCBF33BC01C /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -973,6 +990,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1D833D69C33E00EBBB97E86E = {
+						DevelopmentTeam = "";
+					};
+				};
 			};
 			buildConfigurationList = BE273067B4ADFBB28BDFF246 /* Build configuration list for PBXProject "Moonfin" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -988,6 +1010,7 @@
 				55E7A0F98F5A263D18279AF5 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				B2B8E58CA71B599381066E71 /* XCRemoteSwiftPackageReference "Nuke" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -1131,10 +1154,13 @@
 				7B1DED1CA529E49A3E182C3B /* SearchView.swift in Sources */,
 				0B3FB9F0B60C15FF8F75686E /* SearchViewModel.swift in Sources */,
 				92B6A867405C618441CFBB03 /* SeerrApiModels.swift in Sources */,
+				B7D66F71910A33A288BE93EB /* SeerrCastCard.swift in Sources */,
 				1D6D2452D988234F26BEE224 /* SeerrDiscoverRowView.swift in Sources */,
 				920AE7435CFE9AB3EB9ACCB8 /* SeerrDiscoverView.swift in Sources */,
 				D788218E48FA7A99FDBB38B9 /* SeerrDiscoverViewModel.swift in Sources */,
 				F1C0DD535459B37BDE6CD7DD /* SeerrHttpClient.swift in Sources */,
+				52029E88748E5BCA350147B5 /* SeerrMediaDetailsView.swift in Sources */,
+				6710300E2EC07BAC8247E0D9 /* SeerrMediaDetailsViewModel.swift in Sources */,
 				C8A8431E7989A4FBC3536980 /* SeerrPreferences.swift in Sources */,
 				237509D3C8524F1F758FF7B8 /* SeerrRepository.swift in Sources */,
 				8E4238322BDCFF6D65E471B0 /* SeerrView.swift in Sources */,
@@ -1216,7 +1242,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
-				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1236,7 +1261,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
-				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
