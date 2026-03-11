@@ -97,6 +97,10 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.screensaverMode),
                 displayName: \.displayName
             )
+        case .customizationScreensaverTimeout:
+            SettingsScreensaverTimeoutScreen()
+        case .customizationScreensaverDimming:
+            SettingsScreensaverDimmingScreen()
         case .plugin:
             SettingsMoonfinScreen()
         case .moonfinNavbarPosition:

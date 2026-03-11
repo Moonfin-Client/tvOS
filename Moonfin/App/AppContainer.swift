@@ -28,6 +28,7 @@ final class AppContainer: ObservableObject {
     let pluginSyncService: PluginSyncService
     let itemMutationService: ItemMutationService
     let spotlightIndexer: SpotlightIndexer
+    let inactivityTracker: InactivityTracker
 
     // MARK: - Playback
 
@@ -92,6 +93,10 @@ final class AppContainer: ObservableObject {
             serverClientFactory: factory,
             serverRepository: serverRepo,
             preferences: self.userPreferences
+        )
+        self.inactivityTracker = InactivityTracker(
+            userPreferences: self.userPreferences,
+            playbackCoordinator: self.playbackCoordinator
         )
 
         let resolveClient: () -> HttpClient? = { [weak serverRepo] in

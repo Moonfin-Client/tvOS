@@ -131,15 +131,30 @@ struct MainNavigationView: View {
                     .ignoresSafeArea()
                     .transition(.move(edge: .trailing))
             }
+
+            if container.inactivityTracker.isScreensaverVisible {
+                ScreensaverView(container: container) {
+                    container.inactivityTracker.notifyInteraction()
+                }
+                .transition(.opacity)
+            }
         }
         .focusScope(mainNamespace)
         .animation(.easeInOut(duration: 0.4), value: settingsRouter.isPresented)
+        .animation(.easeInOut(duration: 1.0), value: container.inactivityTracker.isScreensaverVisible)
         .onChange(of: settingsRouter.isPresented) { presented in
+            container.inactivityTracker.notifyInteraction()
             if presented {
+                container.inactivityTracker.addLock()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                     resetFocus(in: mainNamespace)
                 }
+            } else {
+                container.inactivityTracker.removeLock()
             }
+        }
+        .onMoveCommand { _ in
+            container.inactivityTracker.notifyInteraction()
         }
     }
 

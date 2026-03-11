@@ -16,8 +16,11 @@ final class UserPreferences {
     static let homePosterSize = Preference(key: "home_poster_size", defaultValue: PosterSize.medium)
     static let homeRowsImageType = Preference(key: "home_rows_image_type", defaultValue: ImageDisplayType.poster)
 
+    static let screensaverEnabled = Preference(key: "screensaver_enabled", defaultValue: true)
     static let screensaverTimeout = Preference(key: "screensaver_timeout", defaultValue: 5)
-    static let screensaverMode = Preference(key: "screensaver_mode", defaultValue: ScreensaverMode.logo)
+    static let screensaverMode = Preference(key: "screensaver_mode", defaultValue: ScreensaverMode.showcase)
+    static let screensaverDimmingLevel = Preference(key: "screensaver_dimming_level", defaultValue: 0)
+    static let screensaverShowClock = Preference(key: "screensaver_show_clock", defaultValue: true)
 
     static let clockBehavior = Preference(key: "clock_behavior", defaultValue: ClockBehavior.always)
     static let watchedIndicator = Preference(key: "watched_indicator", defaultValue: WatchedIndicatorBehavior.always)
@@ -179,7 +182,7 @@ enum ScreensaverMode: String, StringRepresentableEnum, CaseIterable {
     var displayName: String {
         switch self {
         case .logo: return "Logo"
-        case .showcase: return "Showcase"
+        case .showcase: return "Library Showcase"
         case .nowPlaying: return "Now Playing"
         }
     }
