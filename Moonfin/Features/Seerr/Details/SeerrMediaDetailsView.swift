@@ -1,4 +1,5 @@
 import SwiftUI
+import Nuke
 
 struct SeerrMediaDetailsView: View {
     @StateObject private var viewModel: SeerrMediaDetailsViewModel
@@ -241,7 +242,7 @@ struct SeerrMediaDetailsView: View {
                 }
                 .disabled(viewModel.isRequesting)
                 .buttonStyle(.borderedProminent)
-                .tint(theme.colorScheme.accent)
+                .tint(theme.accent)
             }
 
             if viewModel.hasPendingRequests {
@@ -503,7 +504,7 @@ struct SeerrMediaDetailsView: View {
                                 .padding(.vertical, 10)
                                 .background(
                                     viewModel.selectedSeasons.contains(season)
-                                        ? theme.colorScheme.accent.opacity(0.3)
+                                        ? theme.accent.opacity(0.3)
                                         : theme.colorScheme.surface.opacity(0.2)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
@@ -528,7 +529,7 @@ struct SeerrMediaDetailsView: View {
 
                 Button("Confirm") { viewModel.confirmSeasonSelection() }
                     .buttonStyle(.borderedProminent)
-                    .tint(theme.colorScheme.accent)
+                    .tint(theme.accent)
                     .disabled(viewModel.selectedSeasons.isEmpty)
             }
         }
@@ -556,7 +557,7 @@ struct SeerrMediaDetailsView: View {
                                         .padding(.vertical, 8)
                                         .background(
                                             viewModel.advancedOptions.profileId == profile.id
-                                                ? theme.colorScheme.accent.opacity(0.3)
+                                                ? theme.accent.opacity(0.3)
                                                 : theme.colorScheme.surface.opacity(0.2)
                                         )
                                         .foregroundColor(theme.colorScheme.onBackground)
@@ -581,7 +582,7 @@ struct SeerrMediaDetailsView: View {
                                         .padding(.vertical, 8)
                                         .background(
                                             viewModel.advancedOptions.rootFolderId == folder.id
-                                                ? theme.colorScheme.accent.opacity(0.3)
+                                                ? theme.accent.opacity(0.3)
                                                 : theme.colorScheme.surface.opacity(0.2)
                                         )
                                         .foregroundColor(theme.colorScheme.onBackground)
@@ -602,7 +603,7 @@ struct SeerrMediaDetailsView: View {
                     .buttonStyle(.bordered)
                 Button("Confirm") { viewModel.confirmAdvancedOptions() }
                     .buttonStyle(.borderedProminent)
-                    .tint(theme.colorScheme.accent)
+                    .tint(theme.accent)
             }
         }
         .padding(40)

@@ -145,7 +145,7 @@ struct SeerrBrowseByView: View {
                         Spacer()
                         if isSelected(item) {
                             Image(systemName: "checkmark")
-                                .foregroundColor(theme.colorScheme.accent)
+                                .foregroundColor(theme.accent)
                         }
                     }
                     .padding(.horizontal, SpaceTokens.spaceLg)

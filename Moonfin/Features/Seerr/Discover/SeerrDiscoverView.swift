@@ -1,4 +1,5 @@
 import SwiftUI
+import Nuke
 
 struct SeerrDiscoverView: View {
     @StateObject private var viewModel: SeerrDiscoverViewModel

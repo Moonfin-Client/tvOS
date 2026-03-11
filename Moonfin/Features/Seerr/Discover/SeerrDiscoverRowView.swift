@@ -370,7 +370,7 @@ struct SeerrSettingCard: View {
                 HStack(spacing: 8) {
                     Image(systemName: icon)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(theme.colorScheme.accent)
+                        .foregroundColor(theme.accent)
                     Text(title)
                         .font(.captionSm).fontWeight(.medium)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))

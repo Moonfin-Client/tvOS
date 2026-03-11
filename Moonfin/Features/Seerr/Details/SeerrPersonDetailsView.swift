@@ -143,7 +143,7 @@ struct SeerrPersonDetailsView: View {
                 Button(action: { viewModel.isBioExpanded.toggle() }) {
                     Text(viewModel.isBioExpanded ? "Show Less" : "Show More")
                         .font(.bodySm).fontWeight(.semibold)
-                        .foregroundColor(theme.colorScheme.accent)
+                        .foregroundColor(theme.accent)
                 }
                 .buttonStyle(.plain)
             }

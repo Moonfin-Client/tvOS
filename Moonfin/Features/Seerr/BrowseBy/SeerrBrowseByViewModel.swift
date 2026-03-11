@@ -119,24 +119,24 @@ final class SeerrBrowseByViewModel: ObservableObject {
             case "genre":
                 if mediaType == "movie" {
                     result = try await seerrRepository.discoverMovies(
-                        page: page, sortBy: sortOption.rawValue, genre: filterId)
+                        page: page, sortBy: sortOption.rawValue, genre: filterId, studio: nil, keywords: nil, language: "en")
                 } else {
                     result = try await seerrRepository.discoverTv(
-                        page: page, sortBy: sortOption.rawValue, genre: filterId)
+                        page: page, sortBy: sortOption.rawValue, genre: filterId, network: nil, keywords: nil, language: "en")
                 }
             case "network":
                 result = try await seerrRepository.discoverTv(
-                    page: page, sortBy: sortOption.rawValue, network: filterId)
+                    page: page, sortBy: sortOption.rawValue, genre: nil, network: filterId, keywords: nil, language: "en")
             case "studio":
                 result = try await seerrRepository.discoverMovies(
-                    page: page, sortBy: sortOption.rawValue, studio: filterId)
+                    page: page, sortBy: sortOption.rawValue, genre: nil, studio: filterId, keywords: nil, language: "en")
             case "keyword":
                 if mediaType == "movie" {
                     result = try await seerrRepository.discoverMovies(
-                        page: page, sortBy: sortOption.rawValue, keywords: filterId)
+                        page: page, sortBy: sortOption.rawValue, genre: nil, studio: nil, keywords: filterId, language: "en")
                 } else {
                     result = try await seerrRepository.discoverTv(
-                        page: page, sortBy: sortOption.rawValue, keywords: filterId)
+                        page: page, sortBy: sortOption.rawValue, genre: nil, network: nil, keywords: filterId, language: "en")
                 }
             default:
                 logger.error("Unknown filter type: \(self.filterType)")

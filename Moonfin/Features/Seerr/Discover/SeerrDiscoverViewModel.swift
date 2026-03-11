@@ -113,7 +113,7 @@ final class SeerrDiscoverViewModel: ObservableObject {
         do {
             switch type {
             case .recentRequests:
-                let response = try await seerrRepository.getRequests(limit: limit, offset: 0)
+                let response = try await seerrRepository.getRequests(filter: nil, requestedBy: nil, limit: limit, offset: 0)
                 await updateRequestsRow(type, requests: response.results)
             case .trending:
                 let page = try await seerrRepository.getTrending(limit: limit, offset: 0)

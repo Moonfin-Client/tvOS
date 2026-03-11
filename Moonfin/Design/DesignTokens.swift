@@ -36,9 +36,13 @@ enum TypographyTokens {
 extension Font {
     static let caption2xs = Font.system(size: TypographyTokens.fontSize2xs)
     static let captionXs = Font.system(size: TypographyTokens.fontSizeXs)
+    static let captionSm = Font.system(size: 13)
     static let bodySm = Font.system(size: TypographyTokens.fontSizeSm)
     static let bodyMd = Font.system(size: TypographyTokens.fontSizeMd)
     static let bodyLg = Font.system(size: TypographyTokens.fontSizeLg)
+    static let titleSm = Font.system(size: TypographyTokens.fontSizeMd, weight: .semibold)
+    static let titleMd = Font.system(size: TypographyTokens.fontSizeLg, weight: .semibold)
+    static let titleLg = Font.system(size: 22, weight: .semibold)
     static let titleXl = Font.system(size: TypographyTokens.fontSizeXl, weight: .semibold)
     static let title2xl = Font.system(size: TypographyTokens.fontSize2xl, weight: .bold)
     static let title3xl = Font.system(size: TypographyTokens.fontSize3xl, weight: .bold)
