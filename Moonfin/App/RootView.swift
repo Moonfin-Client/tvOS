@@ -217,6 +217,8 @@ struct MainNavigationView: View {
             SeerrDiscoverView(seerrRepository: container.seerrRepository)
         case .seerrMediaDetails(let itemJson):
             SeerrMediaDetailsView(itemJson: itemJson, seerrRepository: container.seerrRepository)
+        case .seerrPersonDetails(let personId):
+            SeerrPersonDetailsView(personId: personId, seerrRepository: container.seerrRepository)
         default:
             PlaceholderView(title: "Screen")
         }

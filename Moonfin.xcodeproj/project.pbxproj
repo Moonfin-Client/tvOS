@@ -32,6 +32,7 @@
 		1D6D2452D988234F26BEE224 /* SeerrDiscoverRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212D6C789279AF967B37CE6B /* SeerrDiscoverRowView.swift */; };
 		1F2FFBF1011EF3FE14B2DB0C /* LocalServerDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3F31279E854ADD3052D8537 /* LocalServerDiscovery.swift */; };
 		1FD9199572EE1EF0ECBD0A34 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23076339C3983744860F03C /* HomeScreen.swift */; };
+		233936CF9C14976FCC20112E /* SeerrPersonDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4896B0E46688AC0BC71C02C2 /* SeerrPersonDetailsView.swift */; };
 		237509D3C8524F1F758FF7B8 /* SeerrRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A919B8C42BF76839B2BED64 /* SeerrRepository.swift */; };
 		23CC21872990F7E4CE746C3D /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADD2B0ADBDA59B45EBF81A4E /* AppConstants.swift */; };
 		263AE010560A226E3E49877A /* ServerApiModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BAE1BB034AC6127CFDBAE45 /* ServerApiModels.swift */; };
@@ -135,6 +136,7 @@
 		95F316DC7B4ABC5D52E5B35F /* JellyfinServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBEE4F3BBDB81FE8A31535C /* JellyfinServerClient.swift */; };
 		96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D4DD05CBC00A79C149DD76 /* SettingsRouter.swift */; };
 		9783E9F46CFB9ACEEB4E0A62 /* MusicBrowseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A3CE49D22EFFCB37C8DB0A /* MusicBrowseViewModel.swift */; };
+		98FEB83FB4D5EDA6265E4C4C /* SeerrPersonDetailsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC3AAD0C1669975EC760AA4 /* SeerrPersonDetailsViewModel.swift */; };
 		99F3A085014B9D7AD3D8ACD8 /* AddToPlaylistDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018C13D44C3EF94E92CC7381 /* AddToPlaylistDialog.swift */; };
 		9A8C636BA1C70FB5D8ADB189 /* ItemMutationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 474A9D6EC7CE650E681495B6 /* ItemMutationService.swift */; };
 		9B00EB8569A9A8EEEBEB93EC /* MediaBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F01563FD7C1AA3617D202D0 /* MediaBarViewModel.swift */; };
@@ -270,6 +272,7 @@
 		443241810250EC1AB21DA8F9 /* LoginCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginCard.swift; sourceTree = "<group>"; };
 		474A9D6EC7CE650E681495B6 /* ItemMutationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemMutationService.swift; sourceTree = "<group>"; };
 		486F52E19F9373BB4464D037 /* TrackSelectorDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSelectorDialog.swift; sourceTree = "<group>"; };
+		4896B0E46688AC0BC71C02C2 /* SeerrPersonDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrPersonDetailsView.swift; sourceTree = "<group>"; };
 		48A554C71793F4265E794FAD /* TmdbRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TmdbRepository.swift; sourceTree = "<group>"; };
 		4B6BF213289C258496451F29 /* PreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceStore.swift; sourceTree = "<group>"; };
 		4F9E7FCE39C15D9BACD3A4B8 /* SSLTrustDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSLTrustDelegate.swift; sourceTree = "<group>"; };
@@ -308,6 +311,7 @@
 		7AA7D041A8EF59843C97A3BD /* SuggestedScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedScreen.swift; sourceTree = "<group>"; };
 		7B9763F38E835095728E9931 /* LibraryPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPreferences.swift; sourceTree = "<group>"; };
 		7C0086B57731786307976A35 /* SettingsItemContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsItemContent.swift; sourceTree = "<group>"; };
+		7CC3AAD0C1669975EC760AA4 /* SeerrPersonDetailsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrPersonDetailsViewModel.swift; sourceTree = "<group>"; };
 		7FD6EC7EDCB86BC9F390E211 /* AuthStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStates.swift; sourceTree = "<group>"; };
 		80036105BF71163FC29A172D /* GenreBrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenreBrowseScreen.swift; sourceTree = "<group>"; };
 		828D86CE5B1B0CB5AD4FBE67 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
@@ -911,6 +915,8 @@
 				B0910B6B47CA2E8AA7E6891C /* SeerrCastCard.swift */,
 				FA3C6FE066501478E5203C7A /* SeerrMediaDetailsView.swift */,
 				A453813549605AFDFA54913E /* SeerrMediaDetailsViewModel.swift */,
+				4896B0E46688AC0BC71C02C2 /* SeerrPersonDetailsView.swift */,
+				7CC3AAD0C1669975EC760AA4 /* SeerrPersonDetailsViewModel.swift */,
 			);
 			path = Details;
 			sourceTree = "<group>";
@@ -1161,6 +1167,8 @@
 				F1C0DD535459B37BDE6CD7DD /* SeerrHttpClient.swift in Sources */,
 				52029E88748E5BCA350147B5 /* SeerrMediaDetailsView.swift in Sources */,
 				6710300E2EC07BAC8247E0D9 /* SeerrMediaDetailsViewModel.swift in Sources */,
+				233936CF9C14976FCC20112E /* SeerrPersonDetailsView.swift in Sources */,
+				98FEB83FB4D5EDA6265E4C4C /* SeerrPersonDetailsViewModel.swift in Sources */,
 				C8A8431E7989A4FBC3536980 /* SeerrPreferences.swift in Sources */,
 				237509D3C8524F1F758FF7B8 /* SeerrRepository.swift in Sources */,
 				8E4238322BDCFF6D65E471B0 /* SeerrView.swift in Sources */,
