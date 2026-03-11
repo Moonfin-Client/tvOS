@@ -82,6 +82,9 @@ final class UserPreferences {
 
     static let enableMultiServerLibraries = Preference(key: "enable_multi_server_libraries", defaultValue: false)
 
+    static let userPinEnabled = Preference(key: "user_pin_enabled", defaultValue: false)
+    static let userPinHash = Preference(key: "user_pin_hash", defaultValue: "")
+
     init(store: PreferenceStore) {
         self.store = store
     }

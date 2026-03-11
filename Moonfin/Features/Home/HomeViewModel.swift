@@ -286,10 +286,11 @@ final class HomeViewModel: ObservableObject {
     private func makeStaticRow(
         id: String, title: String, rowType: HomeRowType, items: [ServerItem]
     ) -> HomeRow {
-        let source = RowDataSource(queryType: .staticItems(items), changeTriggers: [], chunkSize: Self.chunkSize)
-        source.preload(items)
+        let filtered = container.parentalControlsRepository.filterItems(items)
+        let source = RowDataSource(queryType: .staticItems(filtered), changeTriggers: [], chunkSize: Self.chunkSize)
+        source.preload(filtered)
         dataSources[id] = source
-        return HomeRow(id: id, title: title, items: items, rowType: rowType, isLoading: false, totalItemCount: items.count)
+        return HomeRow(id: id, title: title, items: filtered, rowType: rowType, isLoading: false, totalItemCount: filtered.count)
     }
 
     private func activeHomeSections() -> [HomeSectionType] {
@@ -467,7 +468,8 @@ final class HomeViewModel: ObservableObject {
         guard let index = rows.firstIndex(where: { $0.id == rowId }),
               let source = dataSources[rowId]
         else { return }
-        rows[index].items = source.items
+        let filtered = container.parentalControlsRepository.filterItems(source.items)
+        rows[index].items = filtered
         rows[index].isLoading = source.isLoading
         rows[index].totalItemCount = source.totalItemCount
     }

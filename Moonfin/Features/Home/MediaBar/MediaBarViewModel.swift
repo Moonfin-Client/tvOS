@@ -140,7 +140,7 @@ final class MediaBarViewModel: ObservableObject {
             }
         }
 
-        let filtered = allItems.filter { item in
+        let filtered = container.parentalControlsRepository.filterItems(allItems).filter { item in
             item.backdropImageTags?.isEmpty == false
                 || item.parentBackdropImageTags?.isEmpty == false
         }

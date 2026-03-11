@@ -344,7 +344,8 @@ final class LibraryBrowseViewModel: ObservableObject {
             )
 
             let result = try await client.itemsApi.getItems(request: request)
-            let allItems = reset ? result.items : items + result.items
+            let fetchedItems = container.parentalControlsRepository.filterItems(result.items)
+            let allItems = reset ? fetchedItems : items + fetchedItems
             currentPage += 1
 
             self.items = allItems

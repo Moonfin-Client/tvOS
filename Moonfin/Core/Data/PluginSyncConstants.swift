@@ -31,7 +31,7 @@ struct SyncablePreference {
 enum PluginSyncConstants {
     static let snapshotKey = "moonfin_sync_snapshot"
     static let snapshotVersionKey = "_snapshot_version"
-    static let snapshotVersion = 3
+    static let snapshotVersion = 4
     static let clientId = "moonfin-appletv"
     static let pingPath = "/Moonfin/Ping"
     static let settingsPath = "/Moonfin/Settings"
@@ -66,6 +66,9 @@ enum PluginSyncConstants {
         SyncablePreference(key: "screensaver_timeout", type: .int, serverKey: "screensaverTimeout", defaultValue: 5),
 
         SyncablePreference(key: "enable_multi_server_libraries", type: .boolean, serverKey: "enableMultiServerLibraries", defaultValue: false),
+
+        SyncablePreference(key: "user_pin_enabled", type: .boolean, serverKey: "userPinEnabled", defaultValue: false),
+        SyncablePreference(key: "user_pin_hash", type: .string, serverKey: "userPinHash", defaultValue: ""),
 
         SyncablePreference(key: "seerr_enabled", type: .boolean, serverKey: "jellyseerrEnabled", defaultValue: false, source: .seerr),
         SyncablePreference(key: "seerr_api_key", type: .string, serverKey: "jellyseerrApiKey", defaultValue: "", source: .seerr),

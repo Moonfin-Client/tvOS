@@ -171,7 +171,12 @@ final class SearchViewModel: ObservableObject {
             (orderedIds.firstIndex(of: a.id) ?? 0) < (orderedIds.firstIndex(of: b.id) ?? 0)
         }
 
-        resultGroups = sorted.filter { !$0.items.isEmpty }
+        let parental = container.parentalControlsRepository
+        let filtered = sorted.map { group in
+            SearchResultGroup(id: group.id, title: group.title, items: parental.filterItems(group.items))
+        }
+
+        resultGroups = filtered.filter { !$0.items.isEmpty }
         isSearching = false
     }
 

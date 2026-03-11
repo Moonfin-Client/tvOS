@@ -49,6 +49,7 @@ final class AppContainer: ObservableObject {
     let tmdbRepository: TmdbRepository
     let seerrRepository: SeerrRepositoryProtocol
     let multiServerRepository: MultiServerRepositoryProtocol
+    let parentalControlsRepository: ParentalControlsRepository
 
     init(
         preferenceStore: PreferenceStore? = nil,
@@ -128,6 +129,10 @@ final class AppContainer: ObservableObject {
             sessionRepository: sessionRepo,
             authenticationStore: authStore,
             serverClientFactory: factory
+        )
+        self.parentalControlsRepository = ParentalControlsRepository(
+            sessionRepository: sessionRepo,
+            multiServerRepository: self.multiServerRepository
         )
 
         let seerrRepo = self.seerrRepository
