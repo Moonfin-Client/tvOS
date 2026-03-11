@@ -48,6 +48,7 @@ final class AppContainer: ObservableObject {
     let mdbListRepository: MdbListRepository
     let tmdbRepository: TmdbRepository
     let seerrRepository: SeerrRepositoryProtocol
+    let multiServerRepository: MultiServerRepositoryProtocol
 
     init(
         preferenceStore: PreferenceStore? = nil,
@@ -121,6 +122,12 @@ final class AppContainer: ObservableObject {
             serverClientFactory: factory,
             sessionRepository: sessionRepo,
             serverRepository: serverRepo
+        )
+        self.multiServerRepository = MultiServerRepository(
+            serverRepository: serverRepo,
+            sessionRepository: sessionRepo,
+            authenticationStore: authStore,
+            serverClientFactory: factory
         )
         self.pluginSyncService = PluginSyncService(
             preferenceStore: store,

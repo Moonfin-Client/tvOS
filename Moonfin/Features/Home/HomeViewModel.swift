@@ -30,6 +30,7 @@ final class HomeViewModel: ObservableObject {
     private static let backdropDebounceMs: UInt64 = 200_000_000
     private static let chunkSize = 15
     private static let latestMediaLimit = 50
+    private static let multiServerLimit = 30
 
     private static let defaultFields: [ItemField] = [
         .overview, .primaryImageAspectRatio, .genres, .mediaSources, .providerIds
@@ -83,8 +84,22 @@ final class HomeViewModel: ObservableObject {
         container.userPreferences[UserPreferences.watchedIndicator]
     }
 
+    var multiServerActive: Bool {
+        container.userPreferences[UserPreferences.enableMultiServerLibraries]
+            && container.serverRepository.storedServers.value.count > 1
+    }
+
+    func serverName(for item: ServerItem) -> String? {
+        guard multiServerActive,
+              let sid = item.effectiveServerId,
+              let uuid = UUID(uuidString: sid),
+              let server = container.serverRepository.storedServers.value.first(where: { $0.id == uuid })
+        else { return nil }
+        return server.name
+    }
+
     private func imageApi(for item: ServerItem) -> ServerImageApi? {
-        if let serverId = item.serverId,
+        if let serverId = item.effectiveServerId,
            let serverUUID = UUID(uuidString: serverId),
            let server = container.serverRepository.storedServers.value.first(where: { $0.id == serverUUID }) {
             return container.serverClientFactory.client(for: server).imageApi
@@ -105,6 +120,12 @@ final class HomeViewModel: ObservableObject {
             }
 
             let sections = activeHomeSections()
+
+            if multiServerActive {
+                await loadMultiServerContent(sections: sections, client: client)
+                return
+            }
+
             let viewDependent: Set<HomeSectionType> = [.latestMedia, .libraryTiles]
             let needsViews = mediaBarViewModel.isEnabled
                 || sections.contains(where: { viewDependent.contains($0) })
@@ -172,6 +193,103 @@ final class HomeViewModel: ObservableObject {
     private func indexForSpotlight() {
         let allItems = rows.flatMap(\.items)
         container.spotlightIndexer.indexItems(allItems)
+    }
+
+    private func loadMultiServerContent(sections: [HomeSectionType], client: MediaServerClient) async {
+        let multiRepo = container.multiServerRepository
+        let multiServerSections: Set<HomeSectionType> = [.resume, .nextUp, .latestMedia, .libraryTiles]
+
+        dataSources = [:]
+
+        let needsViews = mediaBarViewModel.isEnabled
+            || sections.contains(.latestMedia) || sections.contains(.libraryTiles)
+
+        var aggregatedLibraries: [AggregatedLibrary] = []
+        if needsViews {
+            aggregatedLibraries = await multiRepo.getAggregatedLibraries()
+            userViews = aggregatedLibraries.map(\.library)
+        }
+
+        guard !Task.isCancelled else { return }
+
+        mediaBarViewModel.load(userViews: userViews)
+
+        var resultRows: [HomeRow] = []
+
+        for section in sections {
+            if multiServerSections.contains(section) {
+                switch section {
+                case .resume:
+                    let items = await multiRepo.getAggregatedMergedContinueWatching(limit: Self.multiServerLimit)
+                    resultRows.append(makeStaticRow(
+                        id: "ms_resume_video", title: "Continue Watching",
+                        rowType: .continueWatching, items: items
+                    ))
+
+                case .nextUp:
+                    let items = await multiRepo.getAggregatedNextUpItems(limit: Self.multiServerLimit)
+                    resultRows.append(makeStaticRow(
+                        id: "ms_next_up", title: "Next Up",
+                        rowType: .nextUp, items: items
+                    ))
+
+                case .latestMedia:
+                    let supportedTypes: Set<String> = ["movies", "tvshows", "music", "mixed"]
+                    let filteredLibs = aggregatedLibraries.filter { lib in
+                        guard let ct = lib.library.collectionType?.lowercased() else { return true }
+                        return supportedTypes.contains(ct)
+                    }
+                    for lib in filteredLibs {
+                        let items = await multiRepo.getAggregatedLatestItems(
+                            parentId: lib.library.id,
+                            limit: Self.latestMediaLimit,
+                            serverId: lib.server.id
+                        )
+                        resultRows.append(makeStaticRow(
+                            id: "ms_latest_\(lib.server.id.uuidString)_\(lib.library.id)",
+                            title: "Latest \(lib.displayName)",
+                            rowType: .latestMedia(libraryId: lib.library.id),
+                            items: items
+                        ))
+                    }
+
+                case .libraryTiles:
+                    let items = aggregatedLibraries.map(\.library)
+                    resultRows.append(makeStaticRow(
+                        id: "ms_library_tiles", title: "Libraries",
+                        rowType: .libraryTiles, items: items
+                    ))
+
+                default:
+                    break
+                }
+            } else {
+                resultRows.append(contentsOf: buildRowDefinitions(for: section))
+            }
+
+            guard !Task.isCancelled else { return }
+        }
+
+        rows = resultRows
+        isInitialLoad = false
+
+        let singleRowIds = Set(dataSources.keys).filter { id in
+            !id.hasPrefix("ms_")
+        }
+        if !singleRowIds.isEmpty {
+            await loadRows(singleRowIds, client: client)
+        }
+
+        indexForSpotlight()
+    }
+
+    private func makeStaticRow(
+        id: String, title: String, rowType: HomeRowType, items: [ServerItem]
+    ) -> HomeRow {
+        let source = RowDataSource(queryType: .staticItems(items), changeTriggers: [], chunkSize: Self.chunkSize)
+        source.preload(items)
+        dataSources[id] = source
+        return HomeRow(id: id, title: title, items: items, rowType: rowType, isLoading: false, totalItemCount: items.count)
     }
 
     private func activeHomeSections() -> [HomeSectionType] {
@@ -393,9 +511,9 @@ final class HomeViewModel: ObservableObject {
     }
 
     func posterImageUrl(for item: ServerItem) -> String? {
-        guard let imageApi else { return nil }
+        guard let api = imageApi(for: item) else { return nil }
         let tag = item.imageTags?["Primary"]
-        return imageApi.getItemImageUrl(
+        return api.getItemImageUrl(
             itemId: item.id,
             imageType: .primary,
             maxWidth: 300,
@@ -405,9 +523,9 @@ final class HomeViewModel: ObservableObject {
     }
 
     func thumbImageUrl(for item: ServerItem) -> String? {
-        guard let imageApi else { return nil }
+        guard let api = imageApi(for: item) else { return nil }
         if let tag = item.imageTags?["Thumb"] {
-            return imageApi.getItemImageUrl(
+            return api.getItemImageUrl(
                 itemId: item.id,
                 imageType: .thumb,
                 maxWidth: 480,
@@ -416,7 +534,7 @@ final class HomeViewModel: ObservableObject {
             )
         }
         if let tags = item.backdropImageTags, let tag = tags.first {
-            return imageApi.getItemImageUrl(
+            return api.getItemImageUrl(
                 itemId: item.id,
                 imageType: .backdrop,
                 maxWidth: 480,
@@ -468,14 +586,14 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func logoImageUrl(for item: ServerItem) -> String? {
-        guard let imageApi else { return nil }
+        guard let api = imageApi(for: item) else { return nil }
         if let logoTag = item.imageTags?["Logo"] {
-            return imageApi.getItemImageUrl(
+            return api.getItemImageUrl(
                 itemId: item.id, imageType: .logo, maxWidth: 400, maxHeight: nil, tag: logoTag
             )
         }
         if let seriesId = item.seriesId {
-            return imageApi.getItemImageUrl(
+            return api.getItemImageUrl(
                 itemId: seriesId, imageType: .logo, maxWidth: 400, maxHeight: nil, tag: nil
             )
         }

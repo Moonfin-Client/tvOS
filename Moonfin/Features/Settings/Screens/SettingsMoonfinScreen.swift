@@ -86,6 +86,13 @@ struct SettingsMoonfinScreen: View {
                 action: { settingsRouter.navigate(to: .moonfinSyncPlay) }
             )
 
+            SettingsToggleButton(
+                icon: "server.rack",
+                heading: "Multi-Server",
+                caption: "Aggregate content from all logged-in servers",
+                isOn: prefs.binding(for: UserPreferences.enableMultiServerLibraries)
+            )
+
             if pluginEnabled {
                 SettingsToggleButton(
                     icon: "star.fill",

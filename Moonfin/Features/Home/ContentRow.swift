@@ -103,6 +103,7 @@ struct ContentRow: View {
                 aspectRatio: row.rowType.aspectRatio,
                 cardWidth: row.rowType.cardWidth,
                 watchedIndicator: watchedIndicator,
+                serverName: viewModel.serverName(for: item),
                 onFocused: { item in
                     viewModel.onItemFocused(item)
                     onRowFocused?()

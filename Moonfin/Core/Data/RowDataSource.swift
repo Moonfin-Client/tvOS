@@ -34,6 +34,14 @@ final class RowDataSource {
 
     var isEmpty: Bool { items.isEmpty && !isLoading }
 
+    func preload(_ preloadedItems: [ServerItem]) {
+        items = preloadedItems
+        totalItemCount = preloadedItems.count
+        isLoading = false
+        fullyLoaded = true
+        lastRetrieve = Date()
+    }
+
     // MARK: - Retrieve
 
     func retrieve(client: MediaServerClient) async {

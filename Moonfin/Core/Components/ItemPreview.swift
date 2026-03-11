@@ -7,6 +7,7 @@ struct ItemPreview: View {
     var cardWidth: CGFloat = 150
     var shape: CardShape = .rounded
     var watchedIndicator: WatchedIndicatorBehavior = .always
+    var serverName: String?
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
 
@@ -21,6 +22,7 @@ struct ItemPreview: View {
                 cardWidth: cardWidth,
                 shape: shape,
                 watchedIndicator: watchedIndicator,
+                serverName: serverName,
                 onFocused: onFocused,
                 onSelect: onSelect
             )

@@ -43,7 +43,7 @@ final class SpotlightIndexer {
         activity.isEligibleForSearch = true
         activity.isEligibleForPublicIndexing = false
 
-        let serverId = item.serverId ?? serverRepository.currentServer.value?.id.uuidString ?? ""
+        let serverId = item.effectiveServerId ?? serverRepository.currentServer.value?.id.uuidString ?? ""
         activity.userInfo = [
             Self.itemIdKey: item.id,
             Self.serverIdKey: serverId

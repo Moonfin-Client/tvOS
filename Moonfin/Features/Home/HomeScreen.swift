@@ -238,7 +238,7 @@ struct HomeScreen: View {
                                                 router.navigate(to: .liveTvPlayer(channelId: channelId))
                                             }
                                         } else {
-                                            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+                                            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.effectiveServerId))
                                         }
                                     },
                                     restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil

@@ -167,6 +167,7 @@ struct ServerMediaSource: Codable {
 struct ServerItem: Codable, Identifiable {
     let id: String
     let serverId: String?
+    var overrideServerId: String?
     let name: String
     let originalTitle: String?
     let type: ItemType
@@ -215,6 +216,7 @@ struct ServerItem: Codable, Identifiable {
     let childCount: Int?
     let albumCount: Int?
     let hasLyrics: Bool?
+    let dateCreated: Date?
 
     let startDate: Date?
     let channelNumber: String?
@@ -282,6 +284,7 @@ struct ServerItem: Codable, Identifiable {
         case childCount = "ChildCount"
         case albumCount = "AlbumCount"
         case hasLyrics = "HasLyrics"
+        case dateCreated = "DateCreated"
         case startDate = "StartDate"
         case channelNumber = "ChannelNumber"
         case timerId = "TimerId"
@@ -300,6 +303,8 @@ struct ServerItem: Codable, Identifiable {
 }
 
 extension ServerItem {
+    var effectiveServerId: String? { overrideServerId ?? serverId }
+
     static func placeholder(id: String, name: String, type: ItemType = .folder) -> ServerItem {
         ServerItem(
             id: id, serverId: nil, name: name, originalTitle: nil, type: type, mediaType: nil,
@@ -314,7 +319,7 @@ extension ServerItem {
             taglines: nil, studios: nil, providerIds: nil, endDate: nil,
             productionLocations: nil, artists: nil, albumArtists: nil, albumArtist: nil,
             albumId: nil, albumPrimaryImageTag: nil, album: nil, childCount: nil,
-            albumCount: nil, hasLyrics: nil, startDate: nil, channelNumber: nil,
+            albumCount: nil, hasLyrics: nil, dateCreated: nil, startDate: nil, channelNumber: nil,
             timerId: nil, seriesTimerId: nil, isMovie: nil, isSeries: nil, isNews: nil,
             isSports: nil, isKids: nil, isPremiere: nil, isRepeat: nil, isLive: nil,
             isHD: nil, currentProgram: nil

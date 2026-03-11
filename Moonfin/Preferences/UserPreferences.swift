@@ -80,6 +80,8 @@ final class UserPreferences {
     static let syncPlayMinDelaySkipToSync = Preference(key: "syncplay_min_delay_skip", defaultValue: 2000)
     static let syncPlayExtraTimeOffset = Preference(key: "syncplay_extra_offset", defaultValue: 0)
 
+    static let enableMultiServerLibraries = Preference(key: "enable_multi_server_libraries", defaultValue: false)
+
     init(store: PreferenceStore) {
         self.store = store
     }

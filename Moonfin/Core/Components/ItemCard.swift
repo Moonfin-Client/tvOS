@@ -12,6 +12,7 @@ struct ItemCard: View {
     var cardWidth: CGFloat = 150
     var shape: CardShape = .rounded
     var watchedIndicator: WatchedIndicatorBehavior = .always
+    var serverName: String?
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
 
@@ -76,6 +77,7 @@ struct ItemCard: View {
             progressOverlay
             favoriteOverlay
             watchIndicatorOverlay
+            serverBadgeOverlay
         }
         .frame(width: cardWidth, height: cardHeight)
     }
@@ -141,6 +143,26 @@ struct ItemCard: View {
                     }
                 }
                 Spacer()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var serverBadgeOverlay: some View {
+        if let name = serverName, !name.isEmpty {
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Text(name)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Color.black.opacity(0.7))
+                        .clipShape(Capsule())
+                        .padding(4)
+                }
             }
         }
     }
