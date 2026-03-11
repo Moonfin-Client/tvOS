@@ -70,6 +70,16 @@ final class UserPreferences {
     static let liveTvShowRepeatIndicator = Preference(key: "livetv_show_repeat_indicator", defaultValue: false)
     static let liveTvShowLiveIndicator = Preference(key: "livetv_show_live_indicator", defaultValue: false)
 
+    static let syncPlayEnabled = Preference(key: "syncplay_enabled", defaultValue: false)
+    static let syncPlayEnableSyncCorrection = Preference(key: "syncplay_sync_correction", defaultValue: true)
+    static let syncPlayUseSpeedToSync = Preference(key: "syncplay_speed_to_sync", defaultValue: true)
+    static let syncPlayUseSkipToSync = Preference(key: "syncplay_skip_to_sync", defaultValue: true)
+    static let syncPlayMinDelaySpeedToSync = Preference(key: "syncplay_min_delay_speed", defaultValue: 100)
+    static let syncPlayMaxDelaySpeedToSync = Preference(key: "syncplay_max_delay_speed", defaultValue: 5000)
+    static let syncPlaySpeedToSyncDuration = Preference(key: "syncplay_speed_duration", defaultValue: 1000)
+    static let syncPlayMinDelaySkipToSync = Preference(key: "syncplay_min_delay_skip", defaultValue: 2000)
+    static let syncPlayExtraTimeOffset = Preference(key: "syncplay_extra_offset", defaultValue: 0)
+
     init(store: PreferenceStore) {
         self.store = store
     }

@@ -23,6 +23,7 @@ protocol MediaServerClient: AnyObject {
     var playlistApi: ServerPlaylistApi { get }
     var displayPreferencesApi: ServerDisplayPreferencesApi { get }
     var lyricsApi: ServerLyricsApi { get }
+    var syncPlayApi: ServerSyncPlayApi { get }
 }
 
 extension MediaServerClient {
@@ -173,6 +174,50 @@ struct LyricResult: Codable {
 
 protocol ServerLyricsApi {
     func getLyrics(itemId: String) async throws -> LyricResult
+}
+
+// MARK: - SyncPlay
+
+struct SyncPlayGroupListItem: Codable {
+    let groupId: String
+    let groupName: String
+    let state: String
+    let participants: [String]
+    let lastUpdatedAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case groupId = "GroupId"
+        case groupName = "GroupName"
+        case state = "State"
+        case participants = "Participants"
+        case lastUpdatedAt = "LastUpdatedAt"
+    }
+}
+
+protocol ServerSyncPlayApi {
+    func createGroup(groupName: String) async throws
+    func joinGroup(groupId: String) async throws
+    func leaveGroup() async throws
+    func getGroups() async throws -> [SyncPlayGroupListItem]
+    func sendUnpause() async throws
+    func sendPause() async throws
+    func sendSeek(positionTicks: Int64) async throws
+    func sendStop() async throws
+    func sendBuffering(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws
+    func sendReady(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws
+    func sendPing(ping: Int64) async throws
+    func setNewQueue(itemIds: [String], startIndex: Int, startPositionTicks: Int64) async throws
+    func getUtcTime() async throws -> UtcTimeResponse
+}
+
+struct UtcTimeResponse: Decodable {
+    let requestReceptionTime: String
+    let responseTransmissionTime: String
+
+    enum CodingKeys: String, CodingKey {
+        case requestReceptionTime = "RequestReceptionTime"
+        case responseTransmissionTime = "ResponseTransmissionTime"
+    }
 }
 
 // MARK: - WebSocket

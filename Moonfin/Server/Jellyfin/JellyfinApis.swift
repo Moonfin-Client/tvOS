@@ -505,3 +505,71 @@ struct JellyfinLyricsApi: ServerLyricsApi {
         try await client.request("/Audio/\(itemId)/Lyrics")
     }
 }
+
+struct JellyfinSyncPlayApi: ServerSyncPlayApi {
+    let client: HttpClient
+
+    func createGroup(groupName: String) async throws {
+        struct Body: Encodable { let GroupName: String }
+        try await client.requestVoid("/SyncPlay/New", method: "POST", body: Body(GroupName: groupName))
+    }
+
+    func joinGroup(groupId: String) async throws {
+        struct Body: Encodable { let GroupId: String }
+        try await client.requestVoid("/SyncPlay/Join", method: "POST", body: Body(GroupId: groupId))
+    }
+
+    func leaveGroup() async throws {
+        try await client.requestVoid("/SyncPlay/Leave", method: "POST")
+    }
+
+    func getGroups() async throws -> [SyncPlayGroupListItem] {
+        try await client.request("/SyncPlay/List")
+    }
+
+    func sendUnpause() async throws {
+        try await client.requestVoid("/SyncPlay/Unpause", method: "POST")
+    }
+
+    func sendPause() async throws {
+        try await client.requestVoid("/SyncPlay/Pause", method: "POST")
+    }
+
+    func sendSeek(positionTicks: Int64) async throws {
+        struct Body: Encodable { let PositionTicks: Int64 }
+        try await client.requestVoid("/SyncPlay/Seek", method: "POST", body: Body(PositionTicks: positionTicks))
+    }
+
+    func sendStop() async throws {
+        try await client.requestVoid("/SyncPlay/Stop", method: "POST")
+    }
+
+    func sendBuffering(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {
+        struct Body: Encodable { let When: String; let PositionTicks: Int64; let IsPlaying: Bool; let PlaylistItemId: String }
+        let when = ISO8601DateFormatter().string(from: Date())
+        try await client.requestVoid("/SyncPlay/Buffering", method: "POST",
+            body: Body(When: when, PositionTicks: positionTicks, IsPlaying: isPlaying, PlaylistItemId: itemId))
+    }
+
+    func sendReady(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {
+        struct Body: Encodable { let When: String; let PositionTicks: Int64; let IsPlaying: Bool; let PlaylistItemId: String }
+        let when = ISO8601DateFormatter().string(from: Date())
+        try await client.requestVoid("/SyncPlay/Ready", method: "POST",
+            body: Body(When: when, PositionTicks: positionTicks, IsPlaying: isPlaying, PlaylistItemId: itemId))
+    }
+
+    func sendPing(ping: Int64) async throws {
+        struct Body: Encodable { let Ping: Int64 }
+        try await client.requestVoid("/SyncPlay/Ping", method: "POST", body: Body(Ping: ping))
+    }
+
+    func setNewQueue(itemIds: [String], startIndex: Int, startPositionTicks: Int64) async throws {
+        struct Body: Encodable { let PlayingQueue: [String]; let PlayingItemPosition: Int; let StartPositionTicks: Int64 }
+        try await client.requestVoid("/SyncPlay/SetNewQueue", method: "POST",
+            body: Body(PlayingQueue: itemIds, PlayingItemPosition: startIndex, StartPositionTicks: startPositionTicks))
+    }
+
+    func getUtcTime() async throws -> UtcTimeResponse {
+        try await client.request("/GetUtcTime")
+    }
+}

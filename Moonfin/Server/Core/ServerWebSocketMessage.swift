@@ -10,4 +10,6 @@ enum ServerWebSocketMessage {
     case serverShuttingDown
     case sessionEnded(sessionId: String)
     case scheduledTaskEnded(taskId: String, taskName: String, status: String)
+    case syncPlayCommand(SyncPlayCommand)
+    case syncPlayGroupUpdate(SyncPlayGroupUpdate)
 }

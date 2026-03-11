@@ -491,3 +491,19 @@ struct UnsupportedLyricsApi: ServerLyricsApi {
         LyricResult(lyrics: [])
     }
 }
+
+struct UnsupportedSyncPlayApi: ServerSyncPlayApi {
+    func createGroup(groupName: String) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func joinGroup(groupId: String) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func leaveGroup() async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func getGroups() async throws -> [SyncPlayGroupListItem] { [] }
+    func sendUnpause() async throws {}
+    func sendPause() async throws {}
+    func sendSeek(positionTicks: Int64) async throws {}
+    func sendStop() async throws {}
+    func sendBuffering(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {}
+    func sendReady(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {}
+    func sendPing(ping: Int64) async throws {}
+    func setNewQueue(itemIds: [String], startIndex: Int, startPositionTicks: Int64) async throws {}
+    func getUtcTime() async throws -> UtcTimeResponse { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+}

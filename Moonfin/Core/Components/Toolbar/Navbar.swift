@@ -94,6 +94,14 @@ struct Navbar: View {
                 )
             }
 
+            if viewModel.showSyncPlay {
+                ExpandableToolbarButton(
+                    icon: "person.2.fill",
+                    label: "SyncPlay",
+                    action: { settingsRouter.open(to: .syncPlay) }
+                )
+            }
+
             ExpandableToolbarButton(
                 icon: "gearshape.fill",
                 label: "Settings",

@@ -62,6 +62,12 @@ final class NavbarViewModel: ObservableObject {
         container.sessionRepository.destroyCurrentSession()
     }
 
+    var showSyncPlay: Bool {
+        guard container.userPreferences[UserPreferences.syncPlayEnabled],
+              let client else { return false }
+        return client.serverType.supports(.syncPlay)
+    }
+
     @Published var isShuffling = false
 
     private var client: MediaServerClient? {

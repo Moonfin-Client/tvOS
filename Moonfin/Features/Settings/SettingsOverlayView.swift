@@ -169,6 +169,45 @@ struct SettingsOverlayView: View {
             SettingsTelemetryScreen()
         case .about:
             SettingsAboutScreen()
+        case .syncPlay:
+            SyncPlayScreen()
+        case .moonfinSyncPlay:
+            SettingsSyncPlayScreen()
+        case .moonfinSyncPlayMinDelay:
+            SettingsSyncPlayValueScreen(
+                title: "Min Delay (Speed)",
+                preference: UserPreferences.syncPlayMinDelaySpeedToSync,
+                options: [50, 100, 150, 200, 300, 500, 750, 1000],
+                suffix: " ms"
+            )
+        case .moonfinSyncPlayMaxDelay:
+            SettingsSyncPlayValueScreen(
+                title: "Max Delay (Speed)",
+                preference: UserPreferences.syncPlayMaxDelaySpeedToSync,
+                options: [1000, 2000, 3000, 5000, 7500, 10000],
+                suffix: " ms"
+            )
+        case .moonfinSyncPlayDuration:
+            SettingsSyncPlayValueScreen(
+                title: "Speed Duration",
+                preference: UserPreferences.syncPlaySpeedToSyncDuration,
+                options: [500, 750, 1000, 1500, 2000, 3000],
+                suffix: " ms"
+            )
+        case .moonfinSyncPlayMinDelaySkip:
+            SettingsSyncPlayValueScreen(
+                title: "Min Delay (Skip)",
+                preference: UserPreferences.syncPlayMinDelaySkipToSync,
+                options: [500, 1000, 1500, 2000, 3000, 5000],
+                suffix: " ms"
+            )
+        case .moonfinSyncPlayExtraOffset:
+            SettingsSyncPlayValueScreen(
+                title: "Extra Time Offset",
+                preference: UserPreferences.syncPlayExtraTimeOffset,
+                options: [-5000, -2000, -1000, -500, 0, 500, 1000, 2000, 5000],
+                suffix: " ms"
+            )
         default:
             SettingsPlaceholderScreen()
         }

@@ -106,6 +106,14 @@ final class ServerWebSocketClient: ServerWebSocketApi {
             return
         }
 
+        if messageType == "SyncPlayCommand" || messageType == "SyncPlayGroupUpdate" {
+            if let dataDict = msgData as? [String: Any] {
+                let parsed = parseSyncPlayMessage(type: messageType, data: dataDict)
+                if let parsed { onMessage?(parsed) }
+            }
+            return
+        }
+
         guard let dataDict = msgData as? [String: Any] else {
             switch messageType {
             case "ServerRestarting":
@@ -161,6 +169,30 @@ final class ServerWebSocketClient: ServerWebSocketApi {
             return .scheduledTaskEnded(taskId: taskId, taskName: taskName, status: status)
         default:
             return nil
+        }
+    }
+
+    private func parseSyncPlayMessage(type: String, data: [String: Any]) -> ServerWebSocketMessage? {
+        if type == "SyncPlayCommand" {
+            guard let rawCommand = data["Command"] as? String,
+                  let command = SyncPlayCommandType(rawValue: rawCommand) else { return nil }
+            let positionTicks = (data["PositionTicks"] as? NSNumber)?.int64Value ?? 0
+            let whenStr = data["When"] as? String ?? ""
+            let whenMs = SyncPlayUtils.parseISOToMs(whenStr)
+            let emittedStr = data["EmittedAt"] as? String ?? whenStr
+            let emittedMs = SyncPlayUtils.parseISOToMs(emittedStr)
+            return .syncPlayCommand(SyncPlayCommand(
+                groupId: data["GroupId"] as? String ?? "",
+                command: command,
+                positionTicks: positionTicks,
+                whenUtcMs: whenMs,
+                playlistItemId: data["PlaylistItemId"] as? String,
+                emittedAtUtcMs: emittedMs
+            ))
+        } else {
+            guard let rawType = data["Type"] as? String,
+                  let updateType = SyncPlayGroupUpdateType(rawValue: rawType) else { return nil }
+            return .syncPlayGroupUpdate(SyncPlayGroupUpdate(type: updateType, data: data))
         }
     }
 

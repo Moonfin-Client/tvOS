@@ -34,6 +34,10 @@ final class AppContainer: ObservableObject {
 
     let playbackCoordinator: PlaybackCoordinator
 
+    // MARK: - SyncPlay
+
+    let syncPlayManager: SyncPlayManager
+
     // MARK: - Repositories
 
     let userRepository: UserRepositoryProtocol
@@ -97,6 +101,12 @@ final class AppContainer: ObservableObject {
         self.inactivityTracker = InactivityTracker(
             userPreferences: self.userPreferences,
             playbackCoordinator: self.playbackCoordinator
+        )
+        self.syncPlayManager = SyncPlayManager(
+            serverRepository: serverRepo,
+            serverClientFactory: factory,
+            playbackCoordinator: self.playbackCoordinator,
+            userPreferences: self.userPreferences
         )
 
         let resolveClient: () -> HttpClient? = { [weak serverRepo] in

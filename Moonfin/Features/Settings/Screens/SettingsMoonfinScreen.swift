@@ -78,6 +78,14 @@ struct SettingsMoonfinScreen: View {
                 action: { settingsRouter.navigate(to: .moonfinMediaBarColor) }
             )
 
+            SettingsListButton(
+                icon: "person.2.fill",
+                heading: "SyncPlay",
+                caption: "Synchronized playback settings",
+                trailingText: prefs[UserPreferences.syncPlayEnabled] ? "On" : "Off",
+                action: { settingsRouter.navigate(to: .moonfinSyncPlay) }
+            )
+
             if pluginEnabled {
                 SettingsToggleButton(
                     icon: "star.fill",
