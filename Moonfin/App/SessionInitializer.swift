@@ -60,4 +60,10 @@ final class SessionInitializer: ObservableObject {
             break
         }
     }
+
+    func handleUserActivity(_ activity: NSUserActivity, router: NavigationRouter) {
+        guard container.sessionRepository.isAuthenticated else { return }
+        guard let parsed = SpotlightIndexer.parseUserActivity(activity) else { return }
+        router.navigate(to: .itemDetails(itemId: parsed.itemId, serverId: parsed.serverId))
+    }
 }

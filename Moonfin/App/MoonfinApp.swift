@@ -36,5 +36,8 @@ struct AppRootView: View {
             .onOpenURL { url in
                 sessionInitializer.handleDeepLink(url: url, router: router)
             }
+            .onContinueUserActivity(SpotlightIndexer.activityType) { activity in
+                sessionInitializer.handleUserActivity(activity, router: router)
+            }
     }
 }

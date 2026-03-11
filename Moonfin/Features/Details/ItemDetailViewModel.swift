@@ -137,6 +137,7 @@ final class ItemDetailViewModel: ObservableObject {
 
                 updateBackdrop(for: fetchedItem)
                 themeMusicPlayer.playThemeMusic(for: fetchedItem, client: client, preferences: container.userPreferences)
+                container.spotlightIndexer.indexItems([fetchedItem])
 
                 async let ratingsTask: () = loadRatings(for: fetchedItem)
                 async let additionalTask: () = loadAdditionalData(for: fetchedItem, client: client)

@@ -27,6 +27,7 @@ final class AppContainer: ObservableObject {
     let dataRefreshService: DataRefreshService
     let pluginSyncService: PluginSyncService
     let itemMutationService: ItemMutationService
+    let spotlightIndexer: SpotlightIndexer
 
     // MARK: - Playback
 
@@ -86,6 +87,7 @@ final class AppContainer: ObservableObject {
         self.serverUserRepository = serverUserRepo
         self.authenticationRepository = authRepo
         self.itemMutationService = ItemMutationService(serverClientFactory: factory, serverRepository: serverRepo)
+        self.spotlightIndexer = SpotlightIndexer(serverClientFactory: factory, serverRepository: serverRepo)
         self.playbackCoordinator = PlaybackCoordinator(
             serverClientFactory: factory,
             serverRepository: serverRepo,

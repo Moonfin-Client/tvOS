@@ -143,6 +143,8 @@ final class HomeViewModel: ObservableObject {
                 let lateRowIds = Set(dataSources.keys).subtracting(earlyRowIds)
                 await loadRows(lateRowIds, client: client)
             }
+
+            indexForSpotlight()
         }
     }
 
@@ -165,6 +167,11 @@ final class HomeViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    private func indexForSpotlight() {
+        let allItems = rows.flatMap(\.items)
+        container.spotlightIndexer.indexItems(allItems)
     }
 
     private func activeHomeSections() -> [HomeSectionType] {

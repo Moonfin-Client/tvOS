@@ -31,5 +31,9 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.moonfin.tv.viewItem</string>
+	</array>
 </dict>
 </plist>
