@@ -6,21 +6,22 @@ final class PluginSyncService: ObservableObject {
     @Published private(set) var isPluginAvailable = false
     @Published private(set) var syncCompletedCount = 0
 
-    private let preferenceStore: PreferenceStore
     private let resolveClient: () -> HttpClient?
+    private let resolveSeerrRepository: () -> SeerrRepositoryProtocol?
     private let defaults: UserDefaults
 
     private var serverSchemaVersion = 1
     private var pushTask: Task<Void, Never>?
     private var changeObserver: NSObjectProtocol?
+    private var seerrChangeObserver: NSObjectProtocol?
 
     init(
-        preferenceStore: PreferenceStore,
         resolveClient: @escaping () -> HttpClient?,
+        resolveSeerrRepository: @escaping () -> SeerrRepositoryProtocol? = { nil },
         defaults: UserDefaults = .standard
     ) {
-        self.preferenceStore = preferenceStore
         self.resolveClient = resolveClient
+        self.resolveSeerrRepository = resolveSeerrRepository
         self.defaults = defaults
     }
 
@@ -53,6 +54,7 @@ final class PluginSyncService: ObservableObject {
         }
 
         registerChangeListener()
+        await configureJellyseerrProxy(client: client)
     }
 
     func initialSync() async {
@@ -183,15 +185,16 @@ final class PluginSyncService: ObservableObject {
     }
 
     private func readLocalValue(_ sp: SyncablePreference) -> Any {
-        guard defaults.object(forKey: sp.key) != nil else { return sp.defaultValue }
+        let store = defaultsForPreference(sp)
+        guard store.object(forKey: sp.key) != nil else { return sp.defaultValue }
 
         switch sp.type {
         case .boolean:
-            return defaults.bool(forKey: sp.key)
+            return store.bool(forKey: sp.key)
         case .int:
-            return defaults.integer(forKey: sp.key)
+            return store.integer(forKey: sp.key)
         case .string, .enum:
-            return defaults.string(forKey: sp.key) ?? sp.defaultValue
+            return store.string(forKey: sp.key) ?? sp.defaultValue
         }
     }
 
@@ -205,25 +208,26 @@ final class PluginSyncService: ObservableObject {
     }
 
     private func writeLocalValue(_ sp: SyncablePreference, value: Any) {
+        let store = defaultsForPreference(sp)
         switch sp.type {
         case .boolean:
             if let b = value as? Bool {
-                defaults.set(b, forKey: sp.key)
+                store.set(b, forKey: sp.key)
             } else if let s = value as? String, let b = Bool(s) {
-                defaults.set(b, forKey: sp.key)
+                store.set(b, forKey: sp.key)
             } else if let n = value as? NSNumber {
-                defaults.set(n.boolValue, forKey: sp.key)
+                store.set(n.boolValue, forKey: sp.key)
             }
         case .int:
             if let i = value as? Int {
-                defaults.set(i, forKey: sp.key)
+                store.set(i, forKey: sp.key)
             } else if let n = value as? NSNumber {
-                defaults.set(n.intValue, forKey: sp.key)
+                store.set(n.intValue, forKey: sp.key)
             } else if let s = value as? String, let i = Int(s) {
-                defaults.set(i, forKey: sp.key)
+                store.set(i, forKey: sp.key)
             }
         case .string, .enum:
-            defaults.set("\(value)", forKey: sp.key)
+            store.set("\(value)", forKey: sp.key)
         }
     }
 
@@ -314,12 +318,26 @@ final class PluginSyncService: ObservableObject {
         ) { [weak self] _ in
             self?.handleDefaultsChange()
         }
+
+        if let seerr = seerrDefaults() {
+            seerrChangeObserver = NotificationCenter.default.addObserver(
+                forName: UserDefaults.didChangeNotification,
+                object: seerr,
+                queue: .main
+            ) { [weak self] _ in
+                self?.handleDefaultsChange()
+            }
+        }
     }
 
     func unregisterChangeListener() {
         if let observer = changeObserver {
             NotificationCenter.default.removeObserver(observer)
             changeObserver = nil
+        }
+        if let observer = seerrChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+            seerrChangeObserver = nil
         }
         pushTask?.cancel()
         pushTask = nil
@@ -338,6 +356,80 @@ final class PluginSyncService: ObservableObject {
             let settings = collectLocalSettings()
             await pushSettings(client: client, settings: settings)
             saveSnapshot(settings)
+        }
+    }
+
+    // MARK: - Per-user Seerr defaults
+
+    private func seerrDefaults() -> UserDefaults? {
+        guard let userId = resolveClient()?.userId else { return nil }
+        return UserDefaults(suiteName: "seerr_prefs_\(userId)")
+    }
+
+    private func defaultsForPreference(_ sp: SyncablePreference) -> UserDefaults {
+        switch sp.source {
+        case .user:
+            return defaults
+        case .seerr:
+            return seerrDefaults() ?? defaults
+        }
+    }
+
+    // MARK: - Jellyseerr config
+
+    private func configureJellyseerrProxy(client: HttpClient) async {
+        guard let baseURL = client.baseURL else { return }
+
+        await fetchJellyseerrConfig(client: client)
+
+        guard let seerrRepo = resolveSeerrRepository() else { return }
+        do {
+            _ = try await seerrRepo.configureWithMoonfin(
+                jellyfinBaseUrl: baseURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")),
+                jellyfinToken: client.accessToken ?? ""
+            )
+        } catch {
+            print("[PluginSync] Moonfin proxy auto-configure failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func fetchJellyseerrConfig(client: HttpClient) async {
+        guard let baseURL = client.baseURL else { return }
+
+        let components = URLComponents(
+            url: baseURL.appendingPathComponent(PluginSyncConstants.jellyseerrConfigPath),
+            resolvingAgainstBaseURL: false
+        )
+        guard let url = components?.url else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(client.authorizationHeader, forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return }
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+
+            let camelCased = json.reduce(into: [String: Any]()) { $0[toCamelCase($1.key)] = $1.value }
+
+            let enabled = camelCased["enabled"] as? Bool ?? false
+            let serverUrl = camelCased["url"] as? String
+            let variant = camelCased["variant"] as? String ?? "jellyseerr"
+            let displayName = camelCased["displayName"] as? String
+
+            guard let seerr = seerrDefaults() else { return }
+
+            seerr.set(variant, forKey: SeerrPreferences.moonfinVariant.key)
+            if let displayName, !displayName.isEmpty {
+                seerr.set(displayName, forKey: SeerrPreferences.moonfinDisplayName.key)
+            }
+
+            if enabled, let serverUrl, !serverUrl.isEmpty {
+                seerr.set(serverUrl, forKey: SeerrPreferences.serverUrl.key)
+            }
+        } catch {
+            print("[PluginSync] Jellyseerr config fetch failed: \(error.localizedDescription)")
         }
     }
 

@@ -129,9 +129,11 @@ final class AppContainer: ObservableObject {
             authenticationStore: authStore,
             serverClientFactory: factory
         )
+
+        let seerrRepo = self.seerrRepository
         self.pluginSyncService = PluginSyncService(
-            preferenceStore: store,
-            resolveClient: resolveClient
+            resolveClient: resolveClient,
+            resolveSeerrRepository: { [weak seerrRepo] in seerrRepo }
         )
     }
 }
