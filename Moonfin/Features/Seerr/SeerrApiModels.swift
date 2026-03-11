@@ -166,6 +166,7 @@ struct SeerrDiscoverItemDto: Codable, Identifiable {
     let popularity: Double?
     let adult: Bool
     let mediaInfo: SeerrMediaInfoDto?
+    let requestStatus: Int?
 
     var displayTitle: String { title ?? name ?? "Unknown" }
 
@@ -192,11 +193,13 @@ struct SeerrDiscoverItemDto: Codable, Identifiable {
         popularity = try c.decodeIfPresent(Double.self, forKey: .popularity)
         adult = try c.decodeIfPresent(Bool.self, forKey: .adult) ?? false
         mediaInfo = try c.decodeIfPresent(SeerrMediaInfoDto.self, forKey: .mediaInfo)
+        requestStatus = try c.decodeIfPresent(Int.self, forKey: .requestStatus)
     }
 
     init(id: Int, mediaType: String?, title: String?, name: String?, posterPath: String?,
          backdropPath: String?, overview: String?, releaseDate: String?, firstAirDate: String?,
-         genreIds: [Int] = [], voteAverage: Double? = nil, adult: Bool = false, mediaInfo: SeerrMediaInfoDto? = nil) {
+         genreIds: [Int] = [], voteAverage: Double? = nil, adult: Bool = false,
+         mediaInfo: SeerrMediaInfoDto? = nil, requestStatus: Int? = nil) {
         self.id = id
         self.mediaType = mediaType
         self.title = title
@@ -215,6 +218,7 @@ struct SeerrDiscoverItemDto: Codable, Identifiable {
         self.popularity = nil
         self.adult = adult
         self.mediaInfo = mediaInfo
+        self.requestStatus = requestStatus
     }
 
     static func fromRequest(tmdbId: Int, mediaType: String, request: SeerrRequestDto) -> SeerrDiscoverItemDto {
@@ -225,9 +229,10 @@ struct SeerrDiscoverItemDto: Codable, Identifiable {
             name: mediaType == "tv" ? (request.media?.name ?? request.media?.title ?? "Request #\(request.id)") : nil,
             posterPath: request.media?.posterPath,
             backdropPath: request.media?.backdropPath,
-            overview: nil,
-            releaseDate: nil,
-            firstAirDate: nil
+            overview: request.media?.overview,
+            releaseDate: request.media?.releaseDate,
+            firstAirDate: request.media?.firstAirDate,
+            requestStatus: request.status
         )
     }
 }

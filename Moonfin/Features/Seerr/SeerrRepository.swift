@@ -59,6 +59,8 @@ protocol SeerrRepositoryProtocol: AnyObject {
     func loginWithMoonfin(username: String, password: String, authType: String) async throws -> MoonfinLoginResponse
     func logoutMoonfin() async
     func logout() async
+
+    func getJellyfinSessionInfo() -> (username: String, serverUrl: String)?
 }
 
 final class SeerrRepository: SeerrRepositoryProtocol {
@@ -233,6 +235,12 @@ final class SeerrRepository: SeerrRepositoryProtocol {
         } catch {
             return false
         }
+    }
+
+    func getJellyfinSessionInfo() -> (username: String, serverUrl: String)? {
+        guard let user = userRepository.currentUser.value,
+              let server = serverRepository.currentServer.value else { return nil }
+        return (username: user.name, serverUrl: server.address)
     }
 
     // MARK: - Session Validation

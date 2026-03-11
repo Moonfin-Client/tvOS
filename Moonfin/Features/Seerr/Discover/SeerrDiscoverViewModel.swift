@@ -37,12 +37,24 @@ struct SeerrSelectedItemState: Equatable {
     static let empty = SeerrSelectedItemState(title: "", year: "", overview: "", mediaType: "", voteAverage: 0)
 }
 
+struct SeerrSettingsState {
+    var isEnabled: Bool = false
+    var serverUrl: String = ""
+    var fetchLimit: SeerrFetchLimit = .medium
+    var blockNsfw: Bool = true
+    var isConnected: Bool = false
+    var jellyfinUsername: String = ""
+    var connectionStatus: String = ""
+    var isConnecting: Bool = false
+}
+
 @MainActor
 final class SeerrDiscoverViewModel: ObservableObject {
     @Published var rows: [SeerrDiscoverRow] = []
     @Published var selectedItem = SeerrSelectedItemState.empty
     @Published var currentBackdropUrl: String?
     @Published var isInitialLoad = true
+    @Published var settingsState = SeerrSettingsState()
 
     private let seerrRepository: SeerrRepositoryProtocol
     private let logger = Logger(subsystem: "org.moonfin.appletv", category: "SeerrDiscover")
@@ -74,6 +86,8 @@ final class SeerrDiscoverViewModel: ObservableObject {
             SeerrDiscoverRow(id: type.rawValue, title: type.displayName, rowType: type)
         }
 
+        loadSettings()
+
         Task {
             await withTaskGroup(of: Void.self) { group in
                 for rowType in activeRows {
@@ -83,6 +97,15 @@ final class SeerrDiscoverViewModel: ObservableObject {
                 }
             }
             isInitialLoad = false
+        }
+    }
+
+    func refreshRequests() {
+        guard !isInitialLoad else { return }
+        let prefs = seerrRepository.getPreferences()
+        let fetchLimit = (prefs?[SeerrPreferences.fetchLimit] ?? .medium).limit
+        Task {
+            await loadRow(.recentRequests, limit: fetchLimit)
         }
     }
 
@@ -267,6 +290,84 @@ final class SeerrDiscoverViewModel: ObservableObject {
     func itemJson(_ item: SeerrDiscoverItemDto) -> String? {
         guard let data = try? JSONEncoder().encode(item) else { return nil }
         return String(data: data, encoding: .utf8)
+    }
+
+    // MARK: - Settings
+
+    func loadSettings() {
+        let prefs = seerrRepository.getPreferences()
+        settingsState.isEnabled = prefs?[SeerrPreferences.enabled] ?? false
+        settingsState.serverUrl = prefs?[SeerrPreferences.serverUrl] ?? ""
+        settingsState.fetchLimit = prefs?[SeerrPreferences.fetchLimit] ?? .medium
+        settingsState.blockNsfw = prefs?[SeerrPreferences.blockNsfw] ?? true
+        settingsState.isConnected = seerrRepository.isAvailable.value
+        if let info = seerrRepository.getJellyfinSessionInfo() {
+            settingsState.jellyfinUsername = info.username
+        }
+    }
+
+    func toggleEnabled() {
+        settingsState.isEnabled.toggle()
+        let prefs = seerrRepository.getPreferences()
+        prefs?[SeerrPreferences.enabled] = settingsState.isEnabled
+    }
+
+    func cycleFetchLimit() {
+        let cases = SeerrFetchLimit.allCases
+        let idx = cases.firstIndex(of: settingsState.fetchLimit) ?? 0
+        settingsState.fetchLimit = cases[(idx + 1) % cases.count]
+        let prefs = seerrRepository.getPreferences()
+        prefs?[SeerrPreferences.fetchLimit] = settingsState.fetchLimit
+    }
+
+    func toggleNsfw() {
+        settingsState.blockNsfw.toggle()
+        let prefs = seerrRepository.getPreferences()
+        prefs?[SeerrPreferences.blockNsfw] = settingsState.blockNsfw
+        blockNsfw = settingsState.blockNsfw
+    }
+
+    func updateServerUrl(_ url: String) {
+        settingsState.serverUrl = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prefs = seerrRepository.getPreferences()
+        prefs?[SeerrPreferences.serverUrl] = settingsState.serverUrl
+    }
+
+    func connectWithJellyfin(password: String) {
+        guard let info = seerrRepository.getJellyfinSessionInfo(),
+              !settingsState.serverUrl.isEmpty else {
+            settingsState.connectionStatus = "Enter a server URL first"
+            return
+        }
+
+        settingsState.isConnecting = true
+        settingsState.connectionStatus = "Connecting..."
+
+        Task {
+            do {
+                _ = try await seerrRepository.loginWithJellyfin(
+                    username: info.username,
+                    password: password,
+                    jellyfinUrl: info.serverUrl,
+                    seerrUrl: settingsState.serverUrl
+                )
+                settingsState.isConnected = true
+                settingsState.connectionStatus = "Connected"
+                settingsState.isEnabled = true
+            } catch {
+                settingsState.connectionStatus = "Failed: \(error.localizedDescription)"
+            }
+            settingsState.isConnecting = false
+        }
+    }
+
+    func testConnection() {
+        settingsState.connectionStatus = "Testing..."
+        Task {
+            let success = await seerrRepository.testConnection()
+            settingsState.isConnected = success
+            settingsState.connectionStatus = success ? "Connected" : "Connection failed"
+        }
     }
 }
 
