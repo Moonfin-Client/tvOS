@@ -219,6 +219,9 @@ struct MainNavigationView: View {
             SeerrMediaDetailsView(itemJson: itemJson, seerrRepository: container.seerrRepository)
         case .seerrPersonDetails(let personId):
             SeerrPersonDetailsView(personId: personId, seerrRepository: container.seerrRepository)
+        case .seerrBrowseBy(let filterId, let filterName, let mediaType, let filterType):
+            SeerrBrowseByView(filterId: filterId, filterName: filterName, mediaType: mediaType,
+                              filterType: filterType, seerrRepository: container.seerrRepository)
         default:
             PlaceholderView(title: "Screen")
         }
