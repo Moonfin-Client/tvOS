@@ -204,10 +204,3 @@ final class AuthenticationRepository: AuthenticationRepositoryProtocol {
         )
     }
 }
-
-private extension NetworkError {
-    var isUnavailable: Bool {
-        if case .serverUnavailable = self { return true }
-        return false
-    }
-}

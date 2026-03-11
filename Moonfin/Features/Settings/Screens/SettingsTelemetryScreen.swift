@@ -8,8 +8,22 @@ struct SettingsTelemetryScreen: View {
             SettingsToggleButton(
                 icon: "chart.bar",
                 heading: "Enable Telemetry",
-                caption: "Send anonymous usage data and crash reports",
+                caption: "Send anonymous usage data",
                 isOn: container.userPreferences.binding(for: UserPreferences.telemetryEnabled)
+            )
+
+            SettingsToggleButton(
+                icon: "ladybug",
+                heading: "Send Crash Reports",
+                caption: "Automatically send crash reports to your server",
+                isOn: container.telemetryPreferences.binding(for: TelemetryPreferences.crashReportEnabled)
+            )
+
+            SettingsToggleButton(
+                icon: "doc.text",
+                heading: "Include Logs",
+                caption: "Attach recent app logs to crash reports",
+                isOn: container.telemetryPreferences.binding(for: TelemetryPreferences.crashReportIncludeLogs)
             )
         }
     }

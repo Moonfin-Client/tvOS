@@ -18,6 +18,8 @@ struct MoonfinApp: App {
                 .environmentObject(theme)
                 .environmentObject(router)
                 .environmentObject(settingsRouter)
+                .environmentObject(container.featureDegradationManager)
+                .environmentObject(container.serverConnectionMonitor)
         }
     }
 }

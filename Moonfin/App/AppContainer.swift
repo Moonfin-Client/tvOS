@@ -17,6 +17,7 @@ final class AppContainer: ObservableObject {
 
     let authPreferences: AuthenticationPreferences
     let userPreferences: UserPreferences
+    let telemetryPreferences: TelemetryPreferences
 
     // MARK: - Server
 
@@ -29,6 +30,8 @@ final class AppContainer: ObservableObject {
     let itemMutationService: ItemMutationService
     let spotlightIndexer: SpotlightIndexer
     let inactivityTracker: InactivityTracker
+    let serverConnectionMonitor: ServerConnectionMonitor
+    let featureDegradationManager: FeatureDegradationManager
 
     // MARK: - Playback
 
@@ -68,6 +71,7 @@ final class AppContainer: ObservableObject {
         self.authenticationStore = authStore
         self.authPreferences = authPrefs
         self.userPreferences = UserPreferences(store: store)
+        self.telemetryPreferences = TelemetryPreferences(store: store)
         self.serverClientFactory = factory
         self.dataRefreshService = DataRefreshService()
 
@@ -111,6 +115,12 @@ final class AppContainer: ObservableObject {
             userPreferences: self.userPreferences
         )
 
+        self.serverConnectionMonitor = ServerConnectionMonitor(
+            serverClientFactory: factory,
+            serverRepository: serverRepo
+        )
+        self.featureDegradationManager = FeatureDegradationManager()
+
         let resolveClient: () -> HttpClient? = { [weak serverRepo] in
             guard let server = serverRepo?.currentServer.value else { return nil }
             return factory.client(for: server).httpClient
@@ -140,5 +150,7 @@ final class AppContainer: ObservableObject {
             resolveClient: resolveClient,
             resolveSeerrRepository: { [weak seerrRepo] in seerrRepo }
         )
+
+        CrashReporter.shared.configure(preferences: self.telemetryPreferences)
     }
 }

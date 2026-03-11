@@ -32,6 +32,8 @@ final class SessionInitializer: ObservableObject {
                container.userRepository.currentUser.value != nil {
                 router.switchFlow(to: .main)
                 Task { await container.pluginSyncService.syncOnStartup() }
+                configureCrashReportEndpoint()
+                container.serverConnectionMonitor.startMonitoring()
                 return
             }
 
@@ -65,5 +67,15 @@ final class SessionInitializer: ObservableObject {
         guard container.sessionRepository.isAuthenticated else { return }
         guard let parsed = SpotlightIndexer.parseUserActivity(activity) else { return }
         router.navigate(to: .itemDetails(itemId: parsed.itemId, serverId: parsed.serverId))
+    }
+
+    private func configureCrashReportEndpoint() {
+        guard let server = container.serverRepository.currentServer.value,
+              let baseURL = URL(string: server.address),
+              server.serverType.supports(.clientLog) else { return }
+        let client = container.serverClientFactory.client(for: server)
+        guard let token = client.accessToken else { return }
+        let logUrl = baseURL.appendingPathComponent("/ClientLog/Document").absoluteString
+        CrashReporter.shared.updateServerEndpoint(url: logUrl, token: token)
     }
 }

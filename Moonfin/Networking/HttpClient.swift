@@ -111,6 +111,7 @@ final class HttpClient {
 
         var request = URLRequest(url: url)
         request.httpMethod = method
+        request.timeoutInterval = 30
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(authorizationHeader, forHTTPHeaderField: "Authorization")
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
@@ -119,7 +120,18 @@ final class HttpClient {
             request.httpBody = try encoder.encode(body)
         }
 
-        let (data, response) = try await session.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch let urlError as URLError {
+            switch urlError.code {
+            case .timedOut, .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed:
+                throw NetworkError.serverUnavailable
+            default:
+                throw NetworkError.networkError(urlError)
+            }
+        }
 
         guard let http = response as? HTTPURLResponse else {
             throw NetworkError.serverUnavailable
