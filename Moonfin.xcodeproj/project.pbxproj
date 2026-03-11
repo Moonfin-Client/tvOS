@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -29,6 +29,7 @@
 		1B7D1E19083A8CD14D0AFF94 /* StillWatchingSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10256EC8BACAA177ADD2AC0 /* StillWatchingSettingsScreen.swift */; };
 		1BB8E4C8488CBC311F94C171 /* FocusBorderColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F86DE652255C343D9C29E4D /* FocusBorderColor.swift */; };
 		1D60CF936F911A14E694B204 /* MediaSegmentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F83C07B048B081DF06D65C /* MediaSegmentHandler.swift */; };
+		1D6D2452D988234F26BEE224 /* SeerrDiscoverRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212D6C789279AF967B37CE6B /* SeerrDiscoverRowView.swift */; };
 		1F2FFBF1011EF3FE14B2DB0C /* LocalServerDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3F31279E854ADD3052D8537 /* LocalServerDiscovery.swift */; };
 		1FD9199572EE1EF0ECBD0A34 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23076339C3983744860F03C /* HomeScreen.swift */; };
 		237509D3C8524F1F758FF7B8 /* SeerrRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A919B8C42BF76839B2BED64 /* SeerrRepository.swift */; };
@@ -124,6 +125,7 @@
 		8FD35C90EEFC870588E10181 /* StartupBranding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB17116B5C93DF871B4F946 /* StartupBranding.swift */; };
 		9006CF4B49C0AB9122AA14BA /* SettingsPlaybackScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */; };
 		916B5A1C3A705DF81369700E /* SettingsAboutScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A47538C7C003A0A0368BEF /* SettingsAboutScreen.swift */; };
+		920AE7435CFE9AB3EB9ACCB8 /* SeerrDiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B3037B871C504ECEF3004D /* SeerrDiscoverView.swift */; };
 		924383CEDED012A0162C4770 /* ServerFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94722BC7ADD0914A190024A /* ServerFeatures.swift */; };
 		92928E8EA23CBED3CFD11BFE /* PinEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15CF03F310991555CAFB32A3 /* PinEntryView.swift */; };
 		92B6A867405C618441CFBB03 /* SeerrApiModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED9846443665851400FF0E3 /* SeerrApiModels.swift */; };
@@ -181,6 +183,7 @@
 		D5A758C2F1A8F4C235D3F9CF /* PlaybackInfoDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A0596D38402F7197978552 /* PlaybackInfoDialog.swift */; };
 		D602B6D04FC80CE04DCD3A48 /* Migration.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB155021D30FE0D971566E3C /* Migration.swift */; };
 		D75DAE85B9B6ADC086484925 /* ChangeTriggerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260C3C82CF4ACF0E8629F5DA /* ChangeTriggerType.swift */; };
+		D788218E48FA7A99FDBB38B9 /* SeerrDiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B55924700C5EF2907FC728 /* SeerrDiscoverViewModel.swift */; };
 		D93E1952BE5AC80F49540141 /* MediaServerClientFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A671C30D8FBFBADDB8A6654C /* MediaServerClientFactory.swift */; };
 		D9A2C6B70B1A9A3FC998FE7C /* SettingsAuthenticationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6436C126ED88EEFEDCF93D /* SettingsAuthenticationScreen.swift */; };
 		DA66F6E742DF9E75BCCA75E5 /* RecordingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AF3E420500B080F4E4969A9 /* RecordingsViewModel.swift */; };
@@ -207,6 +210,7 @@
 		029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMusicPlayer.swift; sourceTree = "<group>"; };
 		0491A1B49F0F5B7E4C4256DE /* PluginSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginSyncService.swift; sourceTree = "<group>"; };
 		049723F642FD3A50FFD849EC /* NavigationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationRouter.swift; sourceTree = "<group>"; };
+		05B3037B871C504ECEF3004D /* SeerrDiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrDiscoverView.swift; sourceTree = "<group>"; };
 		074468E8521DA23AB817B560 /* ServerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerError.swift; sourceTree = "<group>"; };
 		07C8A91EC4A411E6D508CF41 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
 		0960BDCAE5D24BD067A35AF1 /* MediaSegmentModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentModels.swift; sourceTree = "<group>"; };
@@ -231,6 +235,7 @@
 		1BAE1BB034AC6127CFDBAE45 /* ServerApiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerApiModels.swift; sourceTree = "<group>"; };
 		1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAddViewModel.swift; sourceTree = "<group>"; };
 		1D8429DA7A55F0D2A8C8589B /* SettingsScreenLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreenLayout.swift; sourceTree = "<group>"; };
+		212D6C789279AF967B37CE6B /* SeerrDiscoverRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrDiscoverRowView.swift; sourceTree = "<group>"; };
 		24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLoginScreen.swift; sourceTree = "<group>"; };
 		2523CF196DD63575C61CB15E /* EmbyServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyServerClient.swift; sourceTree = "<group>"; };
 		260C3C82CF4ACF0E8629F5DA /* ChangeTriggerType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeTriggerType.swift; sourceTree = "<group>"; };
@@ -303,7 +308,7 @@
 		7FD6EC7EDCB86BC9F390E211 /* AuthStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthStates.swift; sourceTree = "<group>"; };
 		80036105BF71163FC29A172D /* GenreBrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenreBrowseScreen.swift; sourceTree = "<group>"; };
 		828D86CE5B1B0CB5AD4FBE67 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
-		838B6DDE822EEB98311172D6 /* Moonfin.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Moonfin.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		838B6DDE822EEB98311172D6 /* Moonfin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moonfin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		84351FB844308F8CE1733E97 /* JellyfinLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinLogo.swift; sourceTree = "<group>"; };
 		84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackManager.swift; sourceTree = "<group>"; };
 		853E6DEE22DC8A300940D5DF /* EmbyLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyLogo.swift; sourceTree = "<group>"; };
@@ -358,6 +363,7 @@
 		C689D206E49488A79F0153A8 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		C7174976F817669A40E47226 /* ResolutionHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolutionHelper.swift; sourceTree = "<group>"; };
 		C73D2F15693134A15639B26D /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		C7B55924700C5EF2907FC728 /* SeerrDiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrDiscoverViewModel.swift; sourceTree = "<group>"; };
 		C877A9EFA2B193E0D44113DB /* LibraryBrowseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryBrowseViewModel.swift; sourceTree = "<group>"; };
 		C88EB3BB9FEABB574E468E4A /* ItemDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailsView.swift; sourceTree = "<group>"; };
 		C8C93AFA31BD221AFA4D0257 /* PlayerSeekBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSeekBar.swift; sourceTree = "<group>"; };
@@ -673,9 +679,20 @@
 			path = Screens;
 			sourceTree = "<group>";
 		};
+		617A6381880B117D5D189658 /* Discover */ = {
+			isa = PBXGroup;
+			children = (
+				212D6C789279AF967B37CE6B /* SeerrDiscoverRowView.swift */,
+				05B3037B871C504ECEF3004D /* SeerrDiscoverView.swift */,
+				C7B55924700C5EF2907FC728 /* SeerrDiscoverViewModel.swift */,
+			);
+			path = Discover;
+			sourceTree = "<group>";
+		};
 		78EA034A1403B2D90F919362 /* Seerr */ = {
 			isa = PBXGroup;
 			children = (
+				617A6381880B117D5D189658 /* Discover */,
 				6ED9846443665851400FF0E3 /* SeerrApiModels.swift */,
 				346AD60702A751C6BBA53A49 /* SeerrHttpClient.swift */,
 				5A919B8C42BF76839B2BED64 /* SeerrRepository.swift */,
@@ -956,11 +973,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
-				TargetAttributes = {
-					1D833D69C33E00EBBB97E86E = {
-						DevelopmentTeam = "";
-					};
-				};
 			};
 			buildConfigurationList = BE273067B4ADFBB28BDFF246 /* Build configuration list for PBXProject "Moonfin" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -976,7 +988,6 @@
 				55E7A0F98F5A263D18279AF5 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				B2B8E58CA71B599381066E71 /* XCRemoteSwiftPackageReference "Nuke" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -1120,6 +1131,9 @@
 				7B1DED1CA529E49A3E182C3B /* SearchView.swift in Sources */,
 				0B3FB9F0B60C15FF8F75686E /* SearchViewModel.swift in Sources */,
 				92B6A867405C618441CFBB03 /* SeerrApiModels.swift in Sources */,
+				1D6D2452D988234F26BEE224 /* SeerrDiscoverRowView.swift in Sources */,
+				920AE7435CFE9AB3EB9ACCB8 /* SeerrDiscoverView.swift in Sources */,
+				D788218E48FA7A99FDBB38B9 /* SeerrDiscoverViewModel.swift in Sources */,
 				F1C0DD535459B37BDE6CD7DD /* SeerrHttpClient.swift in Sources */,
 				C8A8431E7989A4FBC3536980 /* SeerrPreferences.swift in Sources */,
 				237509D3C8524F1F758FF7B8 /* SeerrRepository.swift in Sources */,
@@ -1202,6 +1216,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1221,6 +1236,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

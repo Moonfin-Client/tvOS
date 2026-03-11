@@ -193,6 +193,43 @@ struct SeerrDiscoverItemDto: Codable, Identifiable {
         adult = try c.decodeIfPresent(Bool.self, forKey: .adult) ?? false
         mediaInfo = try c.decodeIfPresent(SeerrMediaInfoDto.self, forKey: .mediaInfo)
     }
+
+    init(id: Int, mediaType: String?, title: String?, name: String?, posterPath: String?,
+         backdropPath: String?, overview: String?, releaseDate: String?, firstAirDate: String?,
+         genreIds: [Int] = [], voteAverage: Double? = nil, adult: Bool = false, mediaInfo: SeerrMediaInfoDto? = nil) {
+        self.id = id
+        self.mediaType = mediaType
+        self.title = title
+        self.name = name
+        self.originalTitle = nil
+        self.originalName = nil
+        self.posterPath = posterPath
+        self.backdropPath = backdropPath
+        self.overview = overview
+        self.releaseDate = releaseDate
+        self.firstAirDate = firstAirDate
+        self.originalLanguage = nil
+        self.genreIds = genreIds
+        self.voteAverage = voteAverage
+        self.voteCount = nil
+        self.popularity = nil
+        self.adult = adult
+        self.mediaInfo = mediaInfo
+    }
+
+    static func fromRequest(tmdbId: Int, mediaType: String, request: SeerrRequestDto) -> SeerrDiscoverItemDto {
+        SeerrDiscoverItemDto(
+            id: tmdbId,
+            mediaType: mediaType,
+            title: mediaType == "movie" ? (request.media?.title ?? request.media?.name ?? "Request #\(request.id)") : nil,
+            name: mediaType == "tv" ? (request.media?.name ?? request.media?.title ?? "Request #\(request.id)") : nil,
+            posterPath: request.media?.posterPath,
+            backdropPath: request.media?.backdropPath,
+            overview: nil,
+            releaseDate: nil,
+            firstAirDate: nil
+        )
+    }
 }
 
 struct SeerrMovieDetailsDto: Codable, Identifiable {

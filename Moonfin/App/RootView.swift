@@ -214,7 +214,7 @@ struct MainNavigationView: View {
         case .liveTvPlayer(let channelId):
             liveTvPlayerDestination(channelId: channelId)
         case .seerrDiscover:
-            PlaceholderView(title: "Discover")
+            SeerrDiscoverView(seerrRepository: container.seerrRepository)
         default:
             PlaceholderView(title: "Screen")
         }

@@ -41,6 +41,7 @@ final class AppContainer: ObservableObject {
     let authenticationRepository: AuthenticationRepositoryProtocol
     let mdbListRepository: MdbListRepository
     let tmdbRepository: TmdbRepository
+    let seerrRepository: SeerrRepositoryProtocol
 
     init(
         preferenceStore: PreferenceStore? = nil,
@@ -98,6 +99,12 @@ final class AppContainer: ObservableObject {
 
         self.mdbListRepository = MdbListRepository(resolveClient: resolveClient)
         self.tmdbRepository = TmdbRepository(resolveClient: resolveClient)
+        self.seerrRepository = SeerrRepository(
+            userRepository: userRepo,
+            serverClientFactory: factory,
+            sessionRepository: sessionRepo,
+            serverRepository: serverRepo
+        )
         self.pluginSyncService = PluginSyncService(
             preferenceStore: store,
             resolveClient: resolveClient
