@@ -540,7 +540,7 @@ struct SeriesTimerCard: View {
     }
 }
 
-extension LiveTvSeriesTimerInfo: @retroactive Identifiable {}
+extension LiveTvSeriesTimerInfo: Identifiable {}
 
 struct SeriesTimerDetailPopup: View {
     let seriesTimer: LiveTvSeriesTimerInfo
@@ -674,4 +674,4 @@ struct RecordingDangerButtonStyle: ButtonStyle {
     }
 }
 
-extension LiveTvTimerInfo: @retroactive Identifiable {}
+extension LiveTvTimerInfo: Identifiable {}

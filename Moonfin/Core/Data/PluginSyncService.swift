@@ -316,7 +316,9 @@ final class PluginSyncService: ObservableObject {
             object: defaults,
             queue: .main
         ) { [weak self] _ in
-            self?.handleDefaultsChange()
+            Task { @MainActor in
+                self?.handleDefaultsChange()
+            }
         }
 
         if let seerr = seerrDefaults() {
@@ -325,7 +327,9 @@ final class PluginSyncService: ObservableObject {
                 object: seerr,
                 queue: .main
             ) { [weak self] _ in
-                self?.handleDefaultsChange()
+                Task { @MainActor in
+                    self?.handleDefaultsChange()
+                }
             }
         }
     }

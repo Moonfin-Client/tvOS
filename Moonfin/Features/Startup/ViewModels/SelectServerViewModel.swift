@@ -25,7 +25,7 @@ final class SelectServerViewModel: ObservableObject {
     }
 
     func deleteServer(_ server: Server) {
-        serverRepository.deleteServer(id: server.id)
+        _ = serverRepository.deleteServer(id: server.id)
     }
 
     var appVersion: String {

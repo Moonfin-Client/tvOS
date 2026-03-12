@@ -95,7 +95,7 @@ final class LocalServerDiscovery: ObservableObject {
 
         for (message, serverType) in queries {
             let bytes = Array(message.utf8)
-            withUnsafePointer(to: &dest) { addrPtr in
+            _ = withUnsafePointer(to: &dest) { addrPtr in
                 addrPtr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockAddr in
                     bytes.withUnsafeBufferPointer { buf in
                         sendto(sock, buf.baseAddress, buf.count, 0, sockAddr, socklen_t(MemoryLayout<sockaddr_in>.size))

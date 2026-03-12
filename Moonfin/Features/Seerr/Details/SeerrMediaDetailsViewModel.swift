@@ -200,8 +200,8 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
 
     private func loadRelatedContent() {
         Task {
-            async let similarTask = loadSimilar()
-            async let recsTask = loadRecommendations()
+            async let similarTask: Void = loadSimilar()
+            async let recsTask: Void = loadRecommendations()
             _ = await (similarTask, recsTask)
         }
     }

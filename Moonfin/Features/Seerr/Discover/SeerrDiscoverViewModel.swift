@@ -114,34 +114,34 @@ final class SeerrDiscoverViewModel: ObservableObject {
             switch type {
             case .recentRequests:
                 let response = try await seerrRepository.getRequests(filter: nil, requestedBy: nil, limit: limit, offset: 0)
-                await updateRequestsRow(type, requests: response.results)
+                updateRequestsRow(type, requests: response.results)
             case .trending:
                 let page = try await seerrRepository.getTrending(limit: limit, offset: 0)
-                await updateRow(type, page: page)
+                updateRow(type, page: page)
             case .popularMovies:
                 let page = try await seerrRepository.getTopMovies(limit: limit, offset: 0)
-                await updateRow(type, page: page)
+                updateRow(type, page: page)
             case .popularSeries:
                 let page = try await seerrRepository.getTopTv(limit: limit, offset: 0)
-                await updateRow(type, page: page)
+                updateRow(type, page: page)
             case .upcomingMovies:
                 let page = try await seerrRepository.getUpcomingMovies()
-                await updateRow(type, page: page)
+                updateRow(type, page: page)
             case .upcomingSeries:
                 let page = try await seerrRepository.getUpcomingTv()
-                await updateRow(type, page: page)
+                updateRow(type, page: page)
             case .movieGenres:
                 let genres = try await seerrRepository.getGenreSliderMovies()
-                await updateGenreRow(type, genres: genres)
+                updateGenreRow(type, genres: genres)
             case .seriesGenres:
                 let genres = try await seerrRepository.getGenreSliderTv()
-                await updateGenreRow(type, genres: genres)
+                updateGenreRow(type, genres: genres)
             case .studios, .networks:
-                await updateRowLoaded(type)
+                updateRowLoaded(type)
             }
         } catch {
             logger.warning("Failed to load \(type.rawValue): \(error.localizedDescription)")
-            await updateRowLoaded(type)
+            updateRowLoaded(type)
         }
     }
 
