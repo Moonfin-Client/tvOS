@@ -15,6 +15,7 @@ struct HomeScreen: View {
     @State private var lastFocusedItemId: String?
     @State private var navigatedFromMediaBar = false
     @State private var isRestoringPosition = false
+    @State private var mediaBarRequestFocus = false
     @Environment(\.resetFocus) private var resetFocus
 
     private var navbarIsLeft: Bool {
@@ -32,8 +33,11 @@ struct HomeScreen: View {
 
     var body: some View {
         GeometryReader { geo in
+            let showMediaBar = viewModel.mediaBarViewModel.isEnabled && (viewModel.isMediaBarActive || viewModel.isMediaBarLoading)
+            let mediaBarPresented = isMediaBarMode && showMediaBar
+
             ZStack(alignment: .topLeading) {
-                if isMediaBarMode && viewModel.mediaBarViewModel.isEnabled && (viewModel.isMediaBarActive || viewModel.isMediaBarLoading) {
+                if showMediaBar {
                     MediaBarView(
                         viewModel: viewModel.mediaBarViewModel,
                         ratingsViewModel: viewModel.mediaBarRatingsViewModel,
@@ -47,18 +51,30 @@ struct HomeScreen: View {
                         onNavigateDown: {
                             sentinelEnabled = false
                             isMediaBarMode = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                resetFocus(in: mainNamespace)
+                            }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                                 sentinelEnabled = true
                             }
-                        }
+                        },
+                        requestFocus: $mediaBarRequestFocus
                     )
-                } else if !viewModel.isInitialLoad {
-                    backdropLayer
-                    gradientOverlay
-                    infoArea
-                        .allowsHitTesting(false)
-                        .zIndex(1)
+                    .disabled(!isMediaBarMode)
+                    .zIndex(isMediaBarMode ? 1 : -1)
+                }
+
+                if !viewModel.isInitialLoad {
+                    if !mediaBarPresented {
+                        backdropLayer
+                        gradientOverlay
+                        infoArea
+                            .allowsHitTesting(false)
+                            .zIndex(1)
+                    }
                     rowsContent(screenHeight: geo.size.height)
+                        .disabled(mediaBarPresented)
+                        .opacity(mediaBarPresented ? 0 : 1)
                         .prefersDefaultFocus(in: mainNamespace)
                         .zIndex(0)
                 }
@@ -203,6 +219,9 @@ struct HomeScreen: View {
                         if viewModel.isMediaBarActive && sentinelEnabled {
                             MediaBarReturnSentinel {
                                 isMediaBarMode = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    mediaBarRequestFocus = true
+                                }
                             }
                             .frame(height: 1)
                         }
@@ -323,25 +342,22 @@ private struct MediaBarReturnSentinel: UIViewRepresentable {
 
 private class SentinelFocusView: UIView {
     var onReturnToMediaBar: (() -> Void)?
-    private var isFocusEnabled = true
 
-    override var canBecomeFocused: Bool { isFocusEnabled }
+    override var canBecomeFocused: Bool { true }
+
+    override func shouldUpdateFocus(in context: UIFocusUpdateContext) -> Bool {
+        guard context.nextFocusedView === self else {
+            return super.shouldUpdateFocus(in: context)
+        }
+        return context.focusHeading.contains(.up)
+    }
 
     override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
         super.didUpdateFocus(in: context, with: coordinator)
         guard isFocused else { return }
 
-        if context.focusHeading.contains(.up) {
-            DispatchQueue.main.async { [weak self] in
-                self?.onReturnToMediaBar?()
-            }
-        } else {
-            isFocusEnabled = false
-            setNeedsFocusUpdate()
-            updateFocusIfNeeded()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.isFocusEnabled = true
-            }
+        DispatchQueue.main.async { [weak self] in
+            self?.onReturnToMediaBar?()
         }
     }
 }

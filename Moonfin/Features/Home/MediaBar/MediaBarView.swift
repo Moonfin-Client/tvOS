@@ -8,6 +8,7 @@ struct MediaBarView: View {
     let focusNamespace: Namespace.ID
     let onItemSelected: (MediaBarSlideItem) -> Void
     let onNavigateDown: () -> Void
+    @Binding var requestFocus: Bool
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
@@ -82,24 +83,36 @@ struct MediaBarView: View {
 
             VStack {
                 Spacer().frame(height: navbarClearance + 20)
-                FocusableMediaBarControl(
-                    isFocused: $isFocused,
-                    navbarIsLeft: navbarIsLeft,
-                    onSelect: {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .frame(maxWidth: .infinity)
+                    .frame(height: screenHeight - navbarClearance - 120)
+                    .focusable()
+                    .focused($isFocused)
+                    .padding(.leading, sidebarInset)
+                    .prefersDefaultFocus(in: focusNamespace)
+                    .onMoveCommand { direction in
+                        switch direction {
+                        case .left:  viewModel.goToPrevious()
+                        case .right: viewModel.goToNext()
+                        case .down:  onNavigateDown()
+                        default:     break
+                        }
+                    }
+                    .onLongPressGesture(minimumDuration: 0.01) {
                         if let item = viewModel.currentItem {
                             onItemSelected(item)
                         }
-                    },
-                    onLeft: { viewModel.goToPrevious() },
-                    onRight: { viewModel.goToNext() },
-                    onDown: onNavigateDown
-                )
-                .frame(height: screenHeight - navbarClearance - 120)
-                .padding(.leading, sidebarInset)
-                .prefersDefaultFocus(in: focusNamespace)
-                .onChange(of: isFocused) { focused in
-                    viewModel.setFocused(focused)
-                }
+                    }
+                    .onChange(of: isFocused) { focused in
+                        viewModel.setFocused(focused)
+                    }
+                    .onChange(of: requestFocus) { shouldFocus in
+                        if shouldFocus {
+                            isFocused = true
+                            requestFocus = false
+                        }
+                    }
                 Spacer()
             }
         }
@@ -290,102 +303,4 @@ private struct MediaBarButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - Focusable Media Bar Control
 
-private struct FocusableMediaBarControl: UIViewRepresentable {
-    var isFocused: FocusState<Bool>.Binding
-    let navbarIsLeft: Bool
-    let onSelect: () -> Void
-    let onLeft: () -> Void
-    let onRight: () -> Void
-    let onDown: () -> Void
-
-    func makeUIView(context: Context) -> FocusablePressView {
-        let view = FocusablePressView()
-        view.coordinator = context.coordinator
-        view.navbarIsLeft = navbarIsLeft
-        return view
-    }
-
-    func updateUIView(_ uiView: FocusablePressView, context: Context) {
-        context.coordinator.onSelect = onSelect
-        context.coordinator.onLeft = onLeft
-        context.coordinator.onRight = onRight
-        context.coordinator.onDown = onDown
-        context.coordinator.isFocused = isFocused
-        uiView.navbarIsLeft = navbarIsLeft
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(isFocused: isFocused, onSelect: onSelect, onLeft: onLeft, onRight: onRight, onDown: onDown)
-    }
-
-    final class Coordinator {
-        var isFocused: FocusState<Bool>.Binding
-        var onSelect: () -> Void
-        var onLeft: () -> Void
-        var onRight: () -> Void
-        var onDown: () -> Void
-
-        init(isFocused: FocusState<Bool>.Binding, onSelect: @escaping () -> Void, onLeft: @escaping () -> Void, onRight: @escaping () -> Void, onDown: @escaping () -> Void) {
-            self.isFocused = isFocused
-            self.onSelect = onSelect
-            self.onLeft = onLeft
-            self.onRight = onRight
-            self.onDown = onDown
-        }
-    }
-}
-
-private class FocusablePressView: UIView {
-    weak var coordinator: FocusableMediaBarControl.Coordinator?
-    var navbarIsLeft = false
-
-    override var canBecomeFocused: Bool { true }
-
-    private var consumedTypes: Set<UIPress.PressType> {
-        var types: Set<UIPress.PressType> = [.rightArrow, .select, .downArrow]
-        if !navbarIsLeft { types.insert(.leftArrow) }
-        return types
-    }
-
-    override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
-        super.didUpdateFocus(in: context, with: coordinator)
-        DispatchQueue.main.async { [weak self] in
-            self?.coordinator?.isFocused.wrappedValue = self?.isFocused ?? false
-        }
-    }
-
-    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        for press in presses {
-            switch press.type {
-            case .leftArrow where !navbarIsLeft:
-                coordinator?.onLeft()
-            case .rightArrow: coordinator?.onRight()
-            case .select:     coordinator?.onSelect()
-            case .downArrow:  coordinator?.onDown()
-            default: break
-            }
-        }
-        if !isConsumedPress(presses) {
-            super.pressesBegan(presses, with: event)
-        }
-    }
-
-    private func isConsumedPress(_ presses: Set<UIPress>) -> Bool {
-        let consumed = consumedTypes
-        return presses.contains { consumed.contains($0.type) }
-    }
-
-    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        if !isConsumedPress(presses) {
-            super.pressesEnded(presses, with: event)
-        }
-    }
-
-    override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        if !isConsumedPress(presses) {
-            super.pressesCancelled(presses, with: event)
-        }
-    }
-}
