@@ -175,6 +175,7 @@ final class CrashReporter {
 
     private func collectLogs() -> String? {
         guard let prefs = preferences, prefs[TelemetryPreferences.crashReportIncludeLogs] else { return nil }
+        #if os(iOS) || os(macOS)
         do {
             let store = try OSLogStore(scope: .currentProcessIdentifier)
             let position = store.position(date: Date().addingTimeInterval(-300))
@@ -187,5 +188,8 @@ final class CrashReporter {
         } catch {
             return nil
         }
+        #else
+        return nil
+        #endif
     }
 }

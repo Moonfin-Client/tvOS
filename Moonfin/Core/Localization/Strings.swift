@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 enum Strings {
     private static var bundle: Bundle { LocalizationManager.shared.bundle }
 

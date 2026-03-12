@@ -20,8 +20,8 @@ struct MoonfinApp: App {
                 .environmentObject(settingsRouter)
                 .environmentObject(container.featureDegradationManager)
                 .environmentObject(container.serverConnectionMonitor)
-                .environmentObject(LocalizationManager.shared)
                 .rtlAware()
+                .environmentObject(LocalizationManager.shared)
         }
     }
 }
