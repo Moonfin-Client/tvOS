@@ -80,6 +80,7 @@ enum SettingsRoute: Hashable {
     case moonfinSyncPlayExtraOffset
 
     case syncPlay
+    case language
     case telemetry
     case developer
     case about

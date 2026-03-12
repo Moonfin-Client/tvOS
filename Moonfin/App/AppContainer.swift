@@ -18,6 +18,7 @@ final class AppContainer: ObservableObject {
     let authPreferences: AuthenticationPreferences
     let userPreferences: UserPreferences
     let telemetryPreferences: TelemetryPreferences
+    let localizationPreferences: LocalizationPreferences
 
     // MARK: - Server
 
@@ -72,6 +73,7 @@ final class AppContainer: ObservableObject {
         self.authPreferences = authPrefs
         self.userPreferences = UserPreferences(store: store)
         self.telemetryPreferences = TelemetryPreferences(store: store)
+        self.localizationPreferences = LocalizationPreferences(store: store)
         self.serverClientFactory = factory
         self.dataRefreshService = DataRefreshService()
 
@@ -152,5 +154,6 @@ final class AppContainer: ObservableObject {
         )
 
         CrashReporter.shared.configure(preferences: self.telemetryPreferences)
+        LocalizationManager.shared.configure(preferences: self.localizationPreferences)
     }
 }

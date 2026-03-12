@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>episodes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ epizoda</string>
+            <key>two</key>
+            <string>%1$@ epizodi</string>
+            <key>few</key>
+            <string>%1$@ epizode</string>
+            <key>other</key>
+            <string>%1$@ epizod</string>
+        </dict>
+    </dict>
+    <key>tracks</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ sled</string>
+            <key>two</key>
+            <string>%1$@ sledi</string>
+            <key>few</key>
+            <string>%1$@ sledi</string>
+            <key>other</key>
+            <string>%1$@ sledi</string>
+        </dict>
+    </dict>
+    <key>seconds</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ sekunda</string>
+            <key>two</key>
+            <string>%1$@ sekundi</string>
+            <key>few</key>
+            <string>%1$@ sekunde</string>
+            <key>other</key>
+            <string>%1$@ sekund</string>
+        </dict>
+    </dict>
+    <key>minutes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ minuta</string>
+            <key>two</key>
+            <string>%1$@ minuti</string>
+            <key>few</key>
+            <string>%1$@ minute</string>
+            <key>other</key>
+            <string>%1$@ minut</string>
+        </dict>
+    </dict>
+    <key>hours</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ ura</string>
+            <key>two</key>
+            <string>%1$@ uri</string>
+            <key>few</key>
+            <string>%1$@ ure</string>
+            <key>other</key>
+            <string>%1$@ ur</string>
+        </dict>
+    </dict>
+    <key>items</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ element</string>
+            <key>two</key>
+            <string>%1$@ elementa</string>
+            <key>few</key>
+            <string>%1$@ elementi</string>
+            <key>other</key>
+            <string>%1$@ elementov</string>
+        </dict>
+    </dict>
+    <key>albums</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ album</string>
+            <key>two</key>
+            <string>%1$@ albuma</string>
+            <key>few</key>
+            <string>%1$@ albumi</string>
+            <key>other</key>
+            <string>%1$@ albumov</string>
+        </dict>
+    </dict>
+    <key>movies</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ film</string>
+            <key>two</key>
+            <string>%1$@ filma</string>
+            <key>few</key>
+            <string>%1$@ filmov</string>
+            <key>other</key>
+            <string>%1$@ filmov</string>
+        </dict>
+    </dict>
+    <key>songs</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ pesem</string>
+            <key>two</key>
+            <string>%1$@ pesmi</string>
+            <key>few</key>
+            <string>%1$@ pesme</string>
+            <key>other</key>
+            <string>%1$@ pesemi</string>
+        </dict>
+    </dict>
+    <key>tv_series</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ TV oddaja</string>
+            <key>two</key>
+            <string>%1$@ TV oddaji</string>
+            <key>few</key>
+            <string>%1$@ TV oddaje</string>
+            <key>other</key>
+            <string>%1$@ TV oddaj</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>hours</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ час</string>
+            <key>few</key>
+            <string>%1$@ часа</string>
+            <key>many</key>
+            <string>%1$@ часов</string>
+            <key>other</key>
+            <string>%1$@ часов</string>
+        </dict>
+    </dict>
+    <key>episodes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ эпизод</string>
+            <key>few</key>
+            <string>%1$@ эпизода</string>
+            <key>many</key>
+            <string>%1$@ эпизодов</string>
+            <key>other</key>
+            <string>%1$@ эпизодов</string>
+        </dict>
+    </dict>
+    <key>tracks</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ дорожка</string>
+            <key>few</key>
+            <string>%1$@ дорожки</string>
+            <key>many</key>
+            <string>%1$@ дорожек</string>
+            <key>other</key>
+            <string>%1$@ дорожек</string>
+        </dict>
+    </dict>
+    <key>seconds</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ секунда</string>
+            <key>few</key>
+            <string>%1$@ секунды</string>
+            <key>many</key>
+            <string>%1$@ секунд</string>
+            <key>other</key>
+            <string>%1$@ секунд</string>
+        </dict>
+    </dict>
+    <key>minutes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ минута</string>
+            <key>few</key>
+            <string>%1$@ минуты</string>
+            <key>many</key>
+            <string>%1$@ минут</string>
+            <key>other</key>
+            <string>%1$@ минут</string>
+        </dict>
+    </dict>
+    <key>movies</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ фильм</string>
+            <key>few</key>
+            <string>%1$@ фильма</string>
+            <key>many</key>
+            <string>%1$@ фильмов</string>
+            <key>other</key>
+            <string>%1$@ фильмов</string>
+        </dict>
+    </dict>
+    <key>tv_series</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ сериал</string>
+            <key>few</key>
+            <string>%1$@ сериала</string>
+            <key>many</key>
+            <string>%1$@ сериалов</string>
+            <key>other</key>
+            <string>%1$@ сериалов</string>
+        </dict>
+    </dict>
+    <key>songs</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ песня</string>
+            <key>few</key>
+            <string>%1$@ песни</string>
+            <key>many</key>
+            <string>%1$@ песней</string>
+            <key>other</key>
+            <string>%1$@ песней</string>
+        </dict>
+    </dict>
+    <key>albums</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ альбом</string>
+            <key>few</key>
+            <string>%1$@ альбома</string>
+            <key>many</key>
+            <string>%1$@ альбомов</string>
+            <key>other</key>
+            <string>%1$@ альбомов</string>
+        </dict>
+    </dict>
+    <key>items</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ предмет</string>
+            <key>few</key>
+            <string>%1$@ предмета</string>
+            <key>many</key>
+            <string>%1$@ предметов</string>
+            <key>other</key>
+            <string>%1$@ предметов</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

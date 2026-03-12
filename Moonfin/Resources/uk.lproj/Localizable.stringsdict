@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>seconds</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ секунда</string>
+            <key>few</key>
+            <string>%1$@ секунди</string>
+            <key>many</key>
+            <string>%1$@ секунд</string>
+            <key>other</key>
+            <string>%1$@ секунд</string>
+        </dict>
+    </dict>
+    <key>minutes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ хвилина</string>
+            <key>few</key>
+            <string>%1$@ хвилини</string>
+            <key>many</key>
+            <string>%1$@ хвилин</string>
+            <key>other</key>
+            <string>%1$@ хвилин</string>
+        </dict>
+    </dict>
+    <key>hours</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ година</string>
+            <key>few</key>
+            <string>%1$@ години</string>
+            <key>many</key>
+            <string>%1$@ годин</string>
+            <key>other</key>
+            <string>%1$@ годин</string>
+        </dict>
+    </dict>
+    <key>episodes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ серія</string>
+            <key>few</key>
+            <string>%1$@ серії</string>
+            <key>many</key>
+            <string>%1$@ серій</string>
+            <key>other</key>
+            <string>%1$@ серій</string>
+        </dict>
+    </dict>
+    <key>tracks</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ доріжка</string>
+            <key>few</key>
+            <string>%1$@ доріжки</string>
+            <key>many</key>
+            <string>%1$@ доріжок</string>
+            <key>other</key>
+            <string>%1$@ доріжок</string>
+        </dict>
+    </dict>
+    <key>items</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ елемент</string>
+            <key>few</key>
+            <string>%1$@ елементи</string>
+            <key>many</key>
+            <string>%1$@ елементів</string>
+            <key>other</key>
+            <string>%1$@ елементів</string>
+        </dict>
+    </dict>
+    <key>movies</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ фільм</string>
+            <key>few</key>
+            <string>%1$@ фільми</string>
+            <key>many</key>
+            <string>%1$@ фільмів</string>
+            <key>other</key>
+            <string>%1$@ фільмів</string>
+        </dict>
+    </dict>
+    <key>tv_series</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ серіал</string>
+            <key>few</key>
+            <string>%1$@ серіали</string>
+            <key>many</key>
+            <string>%1$@ серіалів</string>
+            <key>other</key>
+            <string>%1$@ серіалів</string>
+        </dict>
+    </dict>
+    <key>songs</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ пісня</string>
+            <key>few</key>
+            <string>%1$@ пісні</string>
+            <key>many</key>
+            <string>%1$@ пісень</string>
+            <key>other</key>
+            <string>%1$@ пісень</string>
+        </dict>
+    </dict>
+    <key>albums</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>one</key>
+            <string>%1$@ альбом</string>
+            <key>few</key>
+            <string>%1$@ альбоми</string>
+            <key>many</key>
+            <string>%1$@ альбомів</string>
+            <key>other</key>
+            <string>%1$@ альбомів</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

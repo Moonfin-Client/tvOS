@@ -165,6 +165,8 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.photoSlideshowInterval),
                 displayName: \.displayName
             )
+        case .language:
+            SettingsLanguageScreen()
         case .telemetry:
             SettingsTelemetryScreen()
         case .about:

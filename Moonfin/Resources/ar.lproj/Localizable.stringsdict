@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>seconds</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>%1$@ ثواني</string>
+            <key>one</key>
+            <string>ثانية(%1$@) واحدة</string>
+            <key>two</key>
+            <string>ثانيتان(%1$@)</string>
+            <key>few</key>
+            <string>%1$@ ثواني</string>
+            <key>many</key>
+            <string>%1$@ ثانية</string>
+            <key>other</key>
+            <string>%1$@ ثانية</string>
+        </dict>
+    </dict>
+    <key>minutes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>%1$@ دقيقة</string>
+            <key>one</key>
+            <string>دقيقة (%1$@) واحدة</string>
+            <key>two</key>
+            <string>دقيقتان(%1$@)</string>
+            <key>few</key>
+            <string>%1$@ دقائق</string>
+            <key>many</key>
+            <string>%1$@ دقيقة</string>
+            <key>other</key>
+            <string>%1$@ دقيقة</string>
+        </dict>
+    </dict>
+    <key>hours</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>%1$@ ساعة</string>
+            <key>one</key>
+            <string>ساعة(%1$@) واحدة</string>
+            <key>two</key>
+            <string>ساعتان(%1$@)</string>
+            <key>few</key>
+            <string>%1$@ ساعات</string>
+            <key>many</key>
+            <string>%1$@ ساعة</string>
+            <key>other</key>
+            <string>%1$@ ساعة</string>
+        </dict>
+    </dict>
+    <key>episodes</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>لا يوجد حلقات(%1$@)</string>
+            <key>one</key>
+            <string>حلقة(%1$@) واحدة</string>
+            <key>two</key>
+            <string>حلقتان(%1$@)</string>
+            <key>few</key>
+            <string>%1$@ حلقات</string>
+            <key>many</key>
+            <string>%1$@ حلقة</string>
+            <key>other</key>
+            <string>%1$@ حلقة</string>
+        </dict>
+    </dict>
+    <key>tracks</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>لا يوجد مقاطع(%1$@)</string>
+            <key>one</key>
+            <string>مقطع(%1$@) واحد</string>
+            <key>two</key>
+            <string>مقطعان(%1$@)</string>
+            <key>few</key>
+            <string>%1$@ مقاطع</string>
+            <key>many</key>
+            <string>%1$@ مقطع</string>
+            <key>other</key>
+            <string>%1$@ مقطع</string>
+        </dict>
+    </dict>
+    <key>items</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>صفر %1$@</string>
+            <key>one</key>
+            <string>واحد %1$@</string>
+            <key>two</key>
+            <string>اثنان %1$@</string>
+            <key>few</key>
+            <string>قلة %1$@</string>
+            <key>many</key>
+            <string>متعدد %1$@</string>
+            <key>other</key>
+            <string>اخرى %1$@</string>
+        </dict>
+    </dict>
+    <key>movies</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>صفر %1$@</string>
+            <key>one</key>
+            <string>واحد %1$@</string>
+            <key>two</key>
+            <string>اثنان %1$@</string>
+            <key>few</key>
+            <string>قلة %1$@</string>
+            <key>many</key>
+            <string>متعدد %1$@</string>
+            <key>other</key>
+            <string>اخرى %1$@</string>
+        </dict>
+    </dict>
+    <key>songs</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>صفر %1$@</string>
+            <key>one</key>
+            <string>واحد %1$@</string>
+            <key>two</key>
+            <string>اثنان %1$@</string>
+            <key>few</key>
+            <string>قلة %1$@</string>
+            <key>many</key>
+            <string>متعدد %1$@</string>
+            <key>other</key>
+            <string>اخرى %1$@</string>
+        </dict>
+    </dict>
+    <key>tv_series</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>لا %1$@</string>
+            <key>one</key>
+            <string>%1$@ واحد</string>
+            <key>two</key>
+            <string>%1$@ اثنين</string>
+            <key>few</key>
+            <string>%1$@ قلة</string>
+            <key>many</key>
+            <string>%1$@ متعددة</string>
+            <key>other</key>
+            <string>%1$@ اخرى</string>
+        </dict>
+    </dict>
+    <key>albums</key>
+    <dict>
+        <key>NSStringLocalizedFormatKey</key>
+        <string>%#@count@</string>
+        <key>count</key>
+        <dict>
+            <key>NSStringFormatSpecTypeKey</key>
+            <string>NSStringPluralRuleType</string>
+            <key>NSStringFormatValueTypeKey</key>
+            <string>d</string>
+            <key>zero</key>
+            <string>صفر (0)</string>
+            <key>one</key>
+            <string>واحد (1)</string>
+            <key>two</key>
+            <string>اثنان (2)</string>
+            <key>few</key>
+            <string>قلة (3 4, 5, 6,7, 8, 9,1 0, 103, 104 , ...)</string>
+            <key>many</key>
+            <string>عدة (11, 12, 13, 14, 15, 16, 17, 18, 19, 20, …)</string>
+            <key>other</key>
+            <string>اخرى (100, 101, 102, 200, 201, 202, 300, 301, 302, 400, …)</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

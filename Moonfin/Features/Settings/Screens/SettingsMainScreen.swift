@@ -41,6 +41,13 @@ struct SettingsMainScreen: View {
             )
 
             SettingsListButton(
+                icon: "globe",
+                heading: "Language",
+                caption: "App language & region",
+                action: { settingsRouter.navigate(to: .language) }
+            )
+
+            SettingsListButton(
                 icon: "chart.bar",
                 heading: "Telemetry",
                 caption: "Analytics & crash reporting",
