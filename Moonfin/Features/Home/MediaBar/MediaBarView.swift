@@ -5,7 +5,6 @@ struct MediaBarView: View {
     @ObservedObject var ratingsViewModel: MediaBarRatingsViewModel
     let userPreferences: UserPreferences
     let screenHeight: CGFloat
-    let focusNamespace: Namespace.ID
     let onItemSelected: (MediaBarSlideItem) -> Void
     let onNavigateDown: () -> Void
     @Binding var requestFocus: Bool
@@ -48,7 +47,6 @@ struct MediaBarView: View {
                     .buttonStyle(MediaBarButtonStyle())
                     .focused($isFocused)
                     .padding(.leading, sidebarInset)
-                    .prefersDefaultFocus(in: focusNamespace)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -90,7 +88,6 @@ struct MediaBarView: View {
                     .focusable()
                     .focused($isFocused)
                     .padding(.leading, sidebarInset)
-                    .prefersDefaultFocus(in: focusNamespace)
                     .onMoveCommand { direction in
                         switch direction {
                         case .left:  viewModel.goToPrevious()

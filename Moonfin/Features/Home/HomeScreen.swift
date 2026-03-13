@@ -43,7 +43,6 @@ struct HomeScreen: View {
                         ratingsViewModel: viewModel.mediaBarRatingsViewModel,
                         userPreferences: container.userPreferences,
                         screenHeight: geo.size.height,
-                        focusNamespace: mainNamespace,
                         onItemSelected: { item in
                             navigatedFromMediaBar = true
                             router.navigate(to: .itemDetails(itemId: item.id))
@@ -109,7 +108,11 @@ struct HomeScreen: View {
         .onChange(of: viewModel.hasFocusableContent) { ready in
             if ready && !isRestoringPosition {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    resetFocus(in: mainNamespace)
+                    if isMediaBarMode && viewModel.isMediaBarActive {
+                        mediaBarRequestFocus = true
+                    } else {
+                        resetFocus(in: mainNamespace)
+                    }
                 }
             }
         }
@@ -228,7 +231,7 @@ struct HomeScreen: View {
 
                         LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
                             let visibleRows = viewModel.rows.filter { !$0.isEmpty }
-                            ForEach(visibleRows) { row in
+                            ForEach(Array(visibleRows.enumerated()), id: \.element.id) { index, row in
                                 ContentRow(
                                     row: row,
                                     viewModel: viewModel,
@@ -260,7 +263,8 @@ struct HomeScreen: View {
                                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.effectiveServerId))
                                         }
                                     },
-                                    restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil
+                                    restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil,
+                                    focusNamespace: index == 0 ? mainNamespace : nil
                                 )
                                 .id(row.id)
                             }
@@ -342,22 +346,26 @@ private struct MediaBarReturnSentinel: UIViewRepresentable {
 
 private class SentinelFocusView: UIView {
     var onReturnToMediaBar: (() -> Void)?
+    private var passingThrough = false
 
-    override var canBecomeFocused: Bool { true }
-
-    override func shouldUpdateFocus(in context: UIFocusUpdateContext) -> Bool {
-        guard context.nextFocusedView === self else {
-            return super.shouldUpdateFocus(in: context)
-        }
-        return context.focusHeading.contains(.up)
-    }
+    override var canBecomeFocused: Bool { !passingThrough }
 
     override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
         super.didUpdateFocus(in: context, with: coordinator)
         guard isFocused else { return }
 
-        DispatchQueue.main.async { [weak self] in
-            self?.onReturnToMediaBar?()
+        if context.focusHeading.contains(.up) {
+            DispatchQueue.main.async { [weak self] in
+                self?.onReturnToMediaBar?()
+            }
+        } else {
+            // Focus arrived from above (navbar) - pass through to the rows
+            passingThrough = true
+            setNeedsFocusUpdate()
+            updateFocusIfNeeded()
+            DispatchQueue.main.async { [weak self] in
+                self?.passingThrough = false
+            }
         }
     }
 }

@@ -281,7 +281,9 @@ struct FocusFirstRow<Content: View>: View {
             if newValue != nil && !hasEnteredFocus {
                 hasEnteredFocus = true
                 if let firstId = firstItemId, newValue != firstId {
-                    focusedId = firstId
+                    DispatchQueue.main.async {
+                        focusedId = firstId
+                    }
                 }
             } else if newValue == nil {
                 hasEnteredFocus = false

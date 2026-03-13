@@ -1,5 +1,16 @@
 import SwiftUI
 
+private extension View {
+    @ViewBuilder
+    func preferDefaultFocus(_ namespace: Namespace.ID?) -> some View {
+        if let namespace {
+            prefersDefaultFocus(in: namespace)
+        } else {
+            self
+        }
+    }
+}
+
 struct ContentRow: View {
     let row: HomeRow
     let viewModel: HomeViewModel
@@ -7,6 +18,7 @@ struct ContentRow: View {
     var onRowFocused: (() -> Void)?
     var onItemSelected: ((ServerItem) -> Void)?
     var restoredItemId: String?
+    var focusNamespace: Namespace.ID?
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
@@ -53,6 +65,7 @@ struct ContentRow: View {
                             cardView(for: item)
                                 .id(item.id)
                                 .focused(focusBinding, equals: item.id)
+                                .preferDefaultFocus(index == 0 ? focusNamespace : nil)
                                 .onAppear {
                                     viewModel.loadMoreIfNeeded(row: row, currentIndex: index)
                                 }
