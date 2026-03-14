@@ -106,6 +106,28 @@ struct SettingsMoonfinScreen: View {
                 action: { settingsRouter.navigate(to: .moonfinMediaBarColor) }
             )
 
+            SettingsToggleButton(
+                icon: "music.note",
+                heading: "Theme Music",
+                caption: "Play theme music on detail screens",
+                isOn: prefs.binding(for: UserPreferences.themeMusicEnabled)
+            )
+
+            SettingsToggleButton(
+                icon: "music.note.house",
+                heading: "Theme Music on Home Rows",
+                caption: "Play when browsing home rows",
+                isOn: prefs.binding(for: UserPreferences.themeMusicOnHomeRows)
+            )
+
+            SettingsListButton(
+                icon: "speaker.wave.2",
+                heading: "Theme Music Volume",
+                caption: "Playback volume",
+                trailingText: "\(prefs[UserPreferences.themeMusicVolume])%",
+                action: { settingsRouter.navigate(to: .moonfinThemeMusicVolume) }
+            )
+
             SettingsListButton(
                 icon: "film",
                 heading: "Jellyseerr",

@@ -54,6 +54,7 @@ final class UserPreferences {
 
     static let themeMusicEnabled = Preference(key: "theme_music_enabled", defaultValue: false)
     static let themeMusicVolume = Preference(key: "theme_music_volume", defaultValue: 30)
+    static let themeMusicOnHomeRows = Preference(key: "theme_music_on_home_rows", defaultValue: false)
 
     static let telemetryEnabled = Preference(key: "telemetry_enabled", defaultValue: false)
 

@@ -203,6 +203,13 @@ struct SettingsOverlayView: View {
             )
         case .moonfinMediaBarOpacity:
             SettingsMediaBarOpacityScreen()
+        case .moonfinThemeMusicVolume:
+            SettingsSyncPlayValueScreen(
+                title: "Theme Music Volume",
+                preference: UserPreferences.themeMusicVolume,
+                options: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                suffix: "%"
+            )
         case .playback:
             SettingsPlaybackScreen()
         case .playbackMediaSegments:
