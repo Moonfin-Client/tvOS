@@ -73,6 +73,8 @@ struct SettingsOverlayView: View {
                 ),
                 displayName: \.displayName
             )
+        case .authenticationPinCode:
+            SettingsAuthPinCodeScreen()
         case .authenticationServer(let serverId):
             SettingsAuthServerScreen(serverId: serverId)
         case .authenticationServerUser(let serverId, let userId):
@@ -138,6 +140,33 @@ struct SettingsOverlayView: View {
             SettingsPickerScreen(
                 title: "Image Type",
                 selection: container.userPreferences.binding(for: UserPreferences.homeRowsImageType),
+                displayName: \.displayName
+            )
+        case .libraries:
+            SettingsLibrariesScreen()
+        case .librariesDisplay(let itemId, let displayPreferencesId, let serverId, let userId):
+            SettingsLibraryDisplayScreen(
+                itemId: itemId,
+                displayPreferencesId: displayPreferencesId,
+                serverId: serverId,
+                userId: userId
+            )
+        case .librariesDisplayImageSize(let itemId, _, _, _):
+            SettingsPickerScreen(
+                title: "Image Size",
+                selection: libraryBinding(itemId: itemId, keyPath: \.posterSize),
+                displayName: \.displayName
+            )
+        case .librariesDisplayImageType(let itemId, _, _, _):
+            SettingsPickerScreen(
+                title: "Image Type",
+                selection: libraryBinding(itemId: itemId, keyPath: \.imageType),
+                displayName: \.displayName
+            )
+        case .librariesDisplayGrid(let itemId, _, _, _):
+            SettingsPickerScreen(
+                title: "Grid Direction",
+                selection: libraryBinding(itemId: itemId, keyPath: \.gridDirection),
                 displayName: \.displayName
             )
         case .plugin:
@@ -212,6 +241,48 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.photoSlideshowInterval),
                 displayName: \.displayName
             )
+        case .playbackAdvanced:
+            SettingsPlaybackAdvancedScreen()
+        case .playbackResumeSubtractDuration:
+            SettingsSyncPlayValueScreen(
+                title: "Resume Pre-roll",
+                preference: UserPreferences.resumeSubtractDuration,
+                options: [0, 3, 5, 7, 10, 20, 30, 60, 120, 300],
+                suffix: " sec"
+            )
+        case .playbackSkipForwardLength:
+            SettingsSyncPlayValueScreen(
+                title: "Skip Forward Length",
+                preference: UserPreferences.skipForwardLength,
+                options: [5, 10, 15, 20, 25, 30],
+                suffix: " sec"
+            )
+        case .playbackUnpauseRewind:
+            SettingsSyncPlayValueScreen(
+                title: "Unpause Rewind",
+                preference: UserPreferences.unpauseRewindDuration,
+                options: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                suffix: " sec"
+            )
+        case .playbackVideoStartDelay:
+            SettingsSyncPlayValueScreen(
+                title: "Video Start Delay",
+                preference: UserPreferences.videoStartDelay,
+                options: [0, 250, 500, 1000, 2000, 3000, 5000],
+                suffix: " ms"
+            )
+        case .playbackMaxResolution:
+            SettingsPickerScreen(
+                title: "Max Resolution",
+                selection: container.userPreferences.binding(for: UserPreferences.maxVideoResolution),
+                displayName: \.displayName
+            )
+        case .playbackZoomMode:
+            SettingsPickerScreen(
+                title: "Default Zoom",
+                selection: container.userPreferences.binding(for: UserPreferences.playerZoomMode),
+                displayName: \.displayName
+            )
         case .language:
             SettingsLanguageScreen()
         case .telemetry:
@@ -260,6 +331,14 @@ struct SettingsOverlayView: View {
         default:
             SettingsPlaceholderScreen()
         }
+    }
+
+    private func libraryBinding<T>(itemId: String, keyPath: ReferenceWritableKeyPath<LibraryPreferences, T>) -> Binding<T> {
+        let prefs = LibraryPreferences(store: container.preferenceStore, libraryId: itemId)
+        return Binding(
+            get: { prefs[keyPath: keyPath] },
+            set: { prefs[keyPath: keyPath] = $0 }
+        )
     }
 }
 

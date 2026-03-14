@@ -36,6 +36,13 @@ struct SettingsAuthenticationScreen: View {
                 )
             )
 
+            SettingsListButton(
+                icon: "lock.shield",
+                heading: "PIN Code",
+                caption: "Set a PIN to protect access",
+                action: { settingsRouter.navigate(to: .authenticationPinCode) }
+            )
+
             if !servers.isEmpty {
                 Divider()
                     .background(theme.colorScheme.listCaption.opacity(0.3))

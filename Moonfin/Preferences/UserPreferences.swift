@@ -7,10 +7,18 @@ final class UserPreferences {
     static let maxBitrate = Preference(key: "playback_max_bitrate", defaultValue: 0)
     static let maxResolution = Preference(key: "playback_max_resolution", defaultValue: "")
     static let nextUpBehavior = Preference(key: "playback_next_up_behavior", defaultValue: NextUpBehavior.extended)
-    static let resumeSubtractDuration = Preference(key: "playback_resume_subtract", defaultValue: "")
+    static let resumeSubtractDuration = Preference(key: "playback_resume_subtract", defaultValue: 0)
     static let audioBehavior = Preference(key: "playback_audio_behavior", defaultValue: AudioBehavior.defaultTrack)
     static let audioOutput = Preference(key: "playback_audio_output", defaultValue: AudioOutput.directStream)
     static let lastAudioLanguage = Preference(key: "playback_last_audio_language", defaultValue: "")
+    static let skipForwardLength = Preference(key: "playback_skip_forward", defaultValue: 30)
+    static let unpauseRewindDuration = Preference(key: "playback_unpause_rewind", defaultValue: 0)
+    static let showDescriptionOnPause = Preference(key: "playback_show_description_pause", defaultValue: false)
+    static let maxVideoResolution = Preference(key: "playback_max_resolution_enum", defaultValue: MaxVideoResolution.auto)
+    static let playerZoomMode = Preference(key: "playback_zoom_mode", defaultValue: ZoomMode.fit)
+    static let audioNightMode = Preference(key: "playback_audio_night_mode", defaultValue: false)
+    static let liveTvDirectPlay = Preference(key: "playback_livetv_direct_play", defaultValue: true)
+    static let videoStartDelay = Preference(key: "playback_video_start_delay", defaultValue: 0)
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
     static let shuffleContentType = Preference(key: "shuffle_content_type", defaultValue: ShuffleContentType.both)
@@ -354,6 +362,24 @@ enum LiveTvChannelOrder: String, StringRepresentableEnum, CaseIterable {
         switch self {
         case .channelNumber: return "Channel Number"
         case .lastPlayed: return "Last Played"
+        }
+    }
+}
+
+enum MaxVideoResolution: String, StringRepresentableEnum, CaseIterable {
+    case auto
+    case res480p
+    case res720p
+    case res1080p
+    case res2160p
+
+    var displayName: String {
+        switch self {
+        case .auto: return "Auto"
+        case .res480p: return "480p"
+        case .res720p: return "720p"
+        case .res1080p: return "1080p"
+        case .res2160p: return "4K"
         }
     }
 }

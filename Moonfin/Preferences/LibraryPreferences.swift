@@ -42,6 +42,23 @@ final class LibraryPreferences {
         get { store[Preference(key: scoped("filter_unwatched"), defaultValue: false)] }
         set { store[Preference(key: scoped("filter_unwatched"), defaultValue: false)] = newValue }
     }
+
+    var gridDirection: GridDirection {
+        get { store[Preference(key: scoped("grid_direction"), defaultValue: GridDirection.vertical)] }
+        set { store[Preference(key: scoped("grid_direction"), defaultValue: GridDirection.vertical)] = newValue }
+    }
+}
+
+enum GridDirection: String, StringRepresentableEnum, CaseIterable {
+    case vertical
+    case horizontal
+
+    var displayName: String {
+        switch self {
+        case .vertical: return "Vertical"
+        case .horizontal: return "Horizontal"
+        }
+    }
 }
 
 extension ItemSortBy: StringRepresentableEnum {}

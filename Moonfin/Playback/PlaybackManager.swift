@@ -149,6 +149,11 @@ final class PlaybackManager: ObservableObject {
     }
 
     func resume() {
+        let rewind = TimeInterval(preferences[UserPreferences.unpauseRewindDuration])
+        if rewind > 0 {
+            let target = max(player.currentTime - rewind, 0)
+            player.seek(to: target)
+        }
         player.resume()
     }
 
@@ -197,6 +202,10 @@ final class PlaybackManager: ObservableObject {
         preferences[UserPreferences.audioOutput] == .downmixToStereo ? 2 : nil
     }
 
+    var skipForwardSeconds: TimeInterval {
+        TimeInterval(preferences[UserPreferences.skipForwardLength])
+    }
+
     private func playCurrentEntry() async {
         guard let entry = currentEntry else { return }
 
@@ -233,13 +242,27 @@ final class PlaybackManager: ObservableObject {
 
             let startSeconds: TimeInterval
             if entry.startPositionTicks > 0 && stream.playMethod != .transcode {
-                startSeconds = TimeInterval(entry.startPositionTicks) / 10_000_000
+                let raw = TimeInterval(entry.startPositionTicks) / 10_000_000
+                let preRoll = TimeInterval(preferences[UserPreferences.resumeSubtractDuration])
+                startSeconds = max(raw - preRoll, 0)
             } else {
                 startSeconds = 0
             }
 
             player.configureSubtitleAppearance(subtitleConfigurator.mediaOptions())
+
+            let delay = preferences[UserPreferences.videoStartDelay]
+            if delay > 0 {
+                try await Task.sleep(nanoseconds: UInt64(delay) * 1_000_000)
+            }
+
             await player.play(streamUrl: stream.url, startPosition: startSeconds)
+
+            let defaultZoom = preferences[UserPreferences.playerZoomMode]
+            if defaultZoom != .fit {
+                player.setZoomMode(defaultZoom)
+            }
+
             applyPreferredAudioTrack(stream: stream)
             await reportPlaybackStart()
             startProgressReporting()

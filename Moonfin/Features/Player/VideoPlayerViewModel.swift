@@ -28,7 +28,10 @@ final class VideoPlayerViewModel: ObservableObject {
     }()
 
     let skipBackSeconds: TimeInterval = 10
-    let skipForwardSeconds: TimeInterval = 30
+
+    var skipForwardSeconds: TimeInterval {
+        playbackManager.skipForwardSeconds
+    }
 
     private var _cachedTitle: String = ""
     private var _cachedSubtitle: String = ""

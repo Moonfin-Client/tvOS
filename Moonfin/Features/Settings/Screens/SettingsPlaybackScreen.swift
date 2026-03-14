@@ -15,19 +15,6 @@ struct SettingsPlaybackScreen: View {
         container.serverRepository.currentServer.value?.serverType.supports(.mediaSegments) == true
     }
 
-    private var bitrateLabel: String {
-        let value = prefs[UserPreferences.maxBitrate]
-        if value == 0 { return "Auto" }
-        if value >= 1_000_000 {
-            let mbps = Double(value) / 1_000_000.0
-            return mbps.truncatingRemainder(dividingBy: 1) == 0
-                ? "\(Int(mbps)) Mbps"
-                : String(format: "%.1f Mbps", mbps)
-        }
-        let kbps = Double(value) / 1_000.0
-        return String(format: "%.0f Kbps", kbps)
-    }
-
     var body: some View {
         SettingsScreenLayout(title: "Playback") {
             SettingsListButton(
@@ -55,22 +42,6 @@ struct SettingsPlaybackScreen: View {
             )
 
             SettingsListButton(
-                icon: "speaker.wave.1",
-                heading: "Audio Output",
-                caption: "Surround sound handling",
-                trailingText: prefs[UserPreferences.audioOutput].displayName,
-                action: { settingsRouter.navigate(to: .playbackAudioOutput) }
-            )
-
-            SettingsListButton(
-                icon: "speedometer",
-                heading: "Max Bitrate",
-                caption: "Limit streaming quality",
-                trailingText: bitrateLabel,
-                action: { settingsRouter.navigate(to: .playbackMaxBitrate) }
-            )
-
-            SettingsListButton(
                 icon: "photo.on.rectangle",
                 heading: "Slideshow Interval",
                 caption: "Time between photos",
@@ -86,6 +57,13 @@ struct SettingsPlaybackScreen: View {
                     action: { settingsRouter.navigate(to: .playbackMediaSegments) }
                 )
             }
+
+            SettingsListButton(
+                icon: "gearshape.2",
+                heading: "Advanced",
+                caption: "Resolution, zoom, delays, and more",
+                action: { settingsRouter.navigate(to: .playbackAdvanced) }
+            )
         }
     }
 }

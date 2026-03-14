@@ -14,10 +14,12 @@ enum VLCPlayerState: Equatable {
     case error
 }
 
-enum ZoomMode: String, CaseIterable {
+enum ZoomMode: String, StringRepresentableEnum, CaseIterable {
     case fit = "Fit"
     case autoCrop = "Auto Crop"
     case stretch = "Stretch"
+
+    var displayName: String { rawValue }
 
     var next: ZoomMode {
         let all = ZoomMode.allCases

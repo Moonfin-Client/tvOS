@@ -52,6 +52,9 @@ enum SettingsRoute: Hashable {
     case playbackMediaSegment(segmentType: String)
     case playbackAdvanced
     case playbackResumeSubtractDuration
+    case playbackSkipForwardLength
+    case playbackUnpauseRewind
+    case playbackVideoStartDelay
     case playbackMaxBitrate
     case playbackMaxResolution
     case playbackRefreshRateSwitching

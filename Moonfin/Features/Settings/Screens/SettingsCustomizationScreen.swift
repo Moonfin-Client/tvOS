@@ -39,6 +39,13 @@ struct SettingsCustomizationScreen: View {
                 caption: "Appearance and defaults",
                 action: { settingsRouter.navigate(to: .customizationSubtitles) }
             )
+
+            SettingsListButton(
+                icon: "books.vertical",
+                heading: "Libraries",
+                caption: "Per-library display settings",
+                action: { settingsRouter.navigate(to: .libraries) }
+            )
         }
     }
 }
