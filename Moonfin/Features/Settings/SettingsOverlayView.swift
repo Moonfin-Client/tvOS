@@ -291,6 +291,16 @@ struct SettingsOverlayView: View {
             SettingsAboutScreen()
         case .syncPlay:
             SyncPlayScreen()
+        case .seerr:
+            SettingsSeerrScreen()
+        case .seerrRows:
+            SettingsSeerrRowsScreen()
+        case .seerrFetchLimit:
+            SettingsPickerScreen(
+                title: "Fetch Limit",
+                selection: seerrFetchLimitBinding,
+                displayName: \.displayName
+            )
         case .moonfinParentalControls:
             SettingsParentalControlsScreen()
         case .moonfinSyncPlay:
@@ -333,6 +343,14 @@ struct SettingsOverlayView: View {
         default:
             SettingsPlaceholderScreen()
         }
+    }
+
+    private var seerrFetchLimitBinding: Binding<SeerrFetchLimit> {
+        let prefs = container.seerrRepository.getPreferences()
+        return Binding(
+            get: { prefs?[SeerrPreferences.fetchLimit] ?? .medium },
+            set: { prefs?[SeerrPreferences.fetchLimit] = $0 }
+        )
     }
 
     private func libraryBinding<T>(itemId: String, keyPath: ReferenceWritableKeyPath<LibraryPreferences, T>) -> Binding<T> {

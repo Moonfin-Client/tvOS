@@ -65,6 +65,7 @@ enum SettingsRoute: Hashable {
 
     case seerr
     case seerrRows
+    case seerrFetchLimit
 
     case plugin
     case moonfinNavbarPosition

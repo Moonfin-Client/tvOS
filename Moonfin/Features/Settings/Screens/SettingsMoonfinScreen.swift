@@ -79,6 +79,14 @@ struct SettingsMoonfinScreen: View {
             )
 
             SettingsListButton(
+                icon: "film",
+                heading: "Jellyseerr",
+                caption: "Media request management",
+                trailingText: container.seerrRepository.isAvailable.value ? "On" : "Off",
+                action: { settingsRouter.navigate(to: .seerr) }
+            )
+
+            SettingsListButton(
                 icon: "lock.shield",
                 heading: "Parental Controls",
                 caption: "Block content by rating",
