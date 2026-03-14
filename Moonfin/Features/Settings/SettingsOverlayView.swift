@@ -224,6 +224,12 @@ struct SettingsOverlayView: View {
                 options: [0, 5, 10, 15, 20, 25, 30, 35, 40],
                 suffix: ""
             )
+        case .moonfinSeasonalSurprise:
+            SettingsPickerScreen(
+                title: "Seasonal Surprise",
+                selection: container.userPreferences.binding(for: UserPreferences.seasonalSurprise),
+                displayName: \.displayName
+            )
         case .playback:
             SettingsPlaybackScreen()
         case .playbackMediaSegments:

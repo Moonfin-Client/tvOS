@@ -83,6 +83,14 @@ struct SettingsMoonfinScreen: View {
                 action: { settingsRouter.navigate(to: .moonfinBrowsingBlur) }
             )
 
+            SettingsListButton(
+                icon: "sparkles",
+                heading: "Seasonal Surprise",
+                caption: "Decorative seasonal animations",
+                trailingText: prefs[UserPreferences.seasonalSurprise].displayName,
+                action: { settingsRouter.navigate(to: .moonfinSeasonalSurprise) }
+            )
+
             SettingsToggleButton(
                 icon: "rectangle.inset.filled",
                 heading: "Media Bar",

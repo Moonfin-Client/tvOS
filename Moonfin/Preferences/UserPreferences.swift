@@ -50,6 +50,8 @@ final class UserPreferences {
     static let detailsBackgroundBlur = Preference(key: "details_background_blur", defaultValue: 10)
     static let browsingBackgroundBlur = Preference(key: "browsing_background_blur", defaultValue: 10)
 
+    static let seasonalSurprise = Preference(key: "seasonal_surprise", defaultValue: SeasonalSurprise.none)
+
     static let pluginSyncEnabled = Preference(key: "plugin_sync_enabled", defaultValue: false)
 
     static let themeMusicEnabled = Preference(key: "theme_music_enabled", defaultValue: false)
@@ -386,6 +388,26 @@ enum MaxVideoResolution: String, StringRepresentableEnum, CaseIterable {
         case .res720p: return "720p"
         case .res1080p: return "1080p"
         case .res2160p: return "4K"
+        }
+    }
+}
+
+enum SeasonalSurprise: String, StringRepresentableEnum, CaseIterable {
+    case none
+    case winter
+    case spring
+    case summer
+    case halloween
+    case fall
+
+    var displayName: String {
+        switch self {
+        case .none: return "None"
+        case .winter: return "Winter"
+        case .spring: return "Spring"
+        case .summer: return "Summer"
+        case .halloween: return "Halloween"
+        case .fall: return "Fall"
         }
     }
 }
