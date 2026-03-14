@@ -49,6 +49,7 @@ struct ScreensaverView: View {
         .ignoresSafeArea()
         .onAppear { viewModel.start() }
         .onDisappear { viewModel.stop() }
+        .focusable()
         .onExitCommand { onDismiss() }
         .onMoveCommand { _ in onDismiss() }
         .onPlayPauseCommand { onDismiss() }

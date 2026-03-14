@@ -115,7 +115,7 @@ struct MainNavigationView: View {
                     .ignoresSafeArea()
                 }
             }
-            .disabled(settingsRouter.isPresented)
+            .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
             .overlay(alignment: .topTrailing) {
                 let clock = container.userPreferences[UserPreferences.clockBehavior]
                 if clock == .always
@@ -143,6 +143,7 @@ struct MainNavigationView: View {
                     container.inactivityTracker.notifyInteraction()
                 }
                 .transition(.opacity)
+                .focusSection()
             }
         }
         .focusScope(mainNamespace)
@@ -162,8 +163,17 @@ struct MainNavigationView: View {
                 }
             }
         }
+        .onChange(of: container.inactivityTracker.isScreensaverVisible) { visible in
+            if !visible {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    resetFocus(in: mainNamespace)
+                }
+            }
+        }
         .onMoveCommand { _ in
-            container.inactivityTracker.notifyInteraction()
+            if !container.inactivityTracker.isScreensaverVisible {
+                container.inactivityTracker.notifyInteraction()
+            }
         }
     }
 

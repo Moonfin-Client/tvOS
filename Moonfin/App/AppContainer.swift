@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 @MainActor
 final class AppContainer: ObservableObject {
@@ -31,6 +32,7 @@ final class AppContainer: ObservableObject {
     let itemMutationService: ItemMutationService
     let spotlightIndexer: SpotlightIndexer
     let inactivityTracker: InactivityTracker
+    private var inactivityTrackerCancellable: AnyCancellable?
     let serverConnectionMonitor: ServerConnectionMonitor
     let featureDegradationManager: FeatureDegradationManager
     let userViewsService: UserViewsService
@@ -161,5 +163,8 @@ final class AppContainer: ObservableObject {
 
         CrashReporter.shared.configure(preferences: self.telemetryPreferences)
         LocalizationManager.shared.configure(preferences: self.localizationPreferences)
+
+        self.inactivityTrackerCancellable = self.inactivityTracker.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
     }
 }

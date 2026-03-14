@@ -1,9 +1,14 @@
 import SwiftUI
+import UIKit
 
 @MainActor
 final class InactivityTracker: ObservableObject {
 
-    @Published private(set) var isScreensaverVisible = false
+    @Published private(set) var isScreensaverVisible = false {
+        didSet {
+            UIApplication.shared.isIdleTimerDisabled = isScreensaverVisible
+        }
+    }
 
     private let userPreferences: UserPreferences
     private weak var playbackCoordinator: PlaybackCoordinator?
