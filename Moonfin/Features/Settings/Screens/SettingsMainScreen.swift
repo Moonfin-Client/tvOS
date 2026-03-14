@@ -48,6 +48,13 @@ struct SettingsMainScreen: View {
             )
 
             SettingsListButton(
+                icon: "tv",
+                heading: "Live TV Guide",
+                caption: "Channel order, indicators, filters",
+                action: { settingsRouter.navigate(to: .liveTvGuideOptions) }
+            )
+
+            SettingsListButton(
                 icon: "globe",
                 heading: "Language",
                 caption: "App language & region",

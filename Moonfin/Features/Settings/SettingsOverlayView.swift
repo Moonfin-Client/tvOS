@@ -376,6 +376,16 @@ struct SettingsOverlayView: View {
             )
         case .developer:
             SettingsDeveloperScreen()
+        case .liveTvGuideOptions:
+            SettingsLiveTvGuideOptionsScreen()
+        case .liveTvGuideFilters:
+            SettingsLiveTvGuideFiltersScreen()
+        case .liveTvGuideChannelOrder:
+            SettingsPickerScreen(
+                title: "Channel Order",
+                selection: container.userPreferences.binding(for: UserPreferences.liveTvChannelOrder),
+                displayName: \.displayName
+            )
         default:
             SettingsPlaceholderScreen()
         }

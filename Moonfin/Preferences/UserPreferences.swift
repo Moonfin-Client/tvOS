@@ -95,6 +95,13 @@ final class UserPreferences {
     static let liveTvShowRepeatIndicator = Preference(key: "livetv_show_repeat_indicator", defaultValue: false)
     static let liveTvShowLiveIndicator = Preference(key: "livetv_show_live_indicator", defaultValue: false)
 
+    static let liveTvFilterMovies = Preference(key: "livetv_filter_movies", defaultValue: false)
+    static let liveTvFilterSeries = Preference(key: "livetv_filter_series", defaultValue: false)
+    static let liveTvFilterNews = Preference(key: "livetv_filter_news", defaultValue: false)
+    static let liveTvFilterKids = Preference(key: "livetv_filter_kids", defaultValue: false)
+    static let liveTvFilterSports = Preference(key: "livetv_filter_sports", defaultValue: false)
+    static let liveTvFilterPremiere = Preference(key: "livetv_filter_premiere", defaultValue: false)
+
     static let syncPlayEnabled = Preference(key: "syncplay_enabled", defaultValue: false)
     static let syncPlayEnableSyncCorrection = Preference(key: "syncplay_sync_correction", defaultValue: true)
     static let syncPlayUseSpeedToSync = Preference(key: "syncplay_speed_to_sync", defaultValue: true)
