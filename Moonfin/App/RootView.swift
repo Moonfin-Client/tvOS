@@ -154,6 +154,9 @@ struct MainNavigationView: View {
                 }
             } else {
                 container.inactivityTracker.removeLock()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    resetFocus(in: mainNamespace)
+                }
             }
         }
         .onMoveCommand { _ in

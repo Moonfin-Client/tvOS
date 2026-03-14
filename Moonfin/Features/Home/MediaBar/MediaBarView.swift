@@ -51,6 +51,11 @@ struct MediaBarView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: screenHeight)
+            .onChange(of: viewModel.state) { newState in
+                if case .loading = newState { return }
+                if case .ready = newState { return }
+                onNavigateDown()
+            }
         default:
             EmptyView()
         }

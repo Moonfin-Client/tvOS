@@ -490,3 +490,9 @@ final class PlaybackManager: ObservableObject {
         }
     }
 }
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}
