@@ -108,6 +108,7 @@ struct HomeScreen: View {
             if navigatedFromMediaBar {
                 isMediaBarMode = true
                 navigatedFromMediaBar = false
+                viewModel.mediaBarViewModel.resume()
             } else if lastFocusedRowId != nil {
                 isMediaBarMode = false
                 isRestoringPosition = true

@@ -263,13 +263,15 @@ struct FocusableSeasonCard: View {
 
 struct FocusFirstRow<Content: View>: View {
     let firstItemId: String?
+    let restoredItemId: String?
     let content: (FocusState<String?>.Binding) -> Content
 
     @FocusState private var focusedId: String?
     @Namespace private var rowNamespace
 
-    init(firstItemId: String?, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
+    init(firstItemId: String?, restoredItemId: String? = nil, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
         self.firstItemId = firstItemId
+        self.restoredItemId = restoredItemId
         self.content = content
     }
 
@@ -279,7 +281,7 @@ struct FocusFirstRow<Content: View>: View {
         }
         .focusSection()
         .focusScope(rowNamespace)
-        .defaultFocus($focusedId, firstItemId, priority: .userInitiated)
+        .defaultFocus($focusedId, restoredItemId ?? firstItemId, priority: .userInitiated)
     }
 }
 

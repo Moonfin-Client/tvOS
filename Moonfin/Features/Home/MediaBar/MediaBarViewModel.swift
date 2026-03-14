@@ -82,8 +82,13 @@ final class MediaBarViewModel: ObservableObject {
     }
 
     func cleanup() {
-        loadTask?.cancel()
         stopAutoAdvance()
+    }
+
+    func resume() {
+        guard case .ready(let items) = state, items.count > 1 else { return }
+        isPaused = false
+        startAutoAdvance()
     }
 
     private func fetchItems(userViews: [ServerItem]) async throws -> [MediaBarSlideItem] {
