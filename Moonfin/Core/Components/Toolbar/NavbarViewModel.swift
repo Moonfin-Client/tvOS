@@ -23,14 +23,16 @@ final class NavbarViewModel: ObservableObject {
                 if let user {
                     self.userName = user.name
                     self.loadUserImage(user: user)
-                    self.loadUserViews(userId: user.id)
                 } else {
                     self.userName = ""
                     self.userImageUrl = nil
-                    self.userViews = []
                 }
             }
             .store(in: &cancellables)
+
+        container.userViewsService.$userViews
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$userViews)
     }
 
     private func loadUserImage(user: ServerUser) {
@@ -43,19 +45,6 @@ final class NavbarViewModel: ObservableObject {
         userImageUrl = client.imageApi.getUserImageUrl(
             userId: user.id, imageType: .primary, tag: tag
         )
-    }
-
-    private func loadUserViews(userId: String) {
-        Task {
-            guard let server = container.serverRepository.currentServer.value else { return }
-            let client = container.serverClientFactory.client(for: server)
-            do {
-                let views = try await client.userViewsApi.getUserViews(userId: userId)
-                self.userViews = views
-            } catch {
-                self.userViews = []
-            }
-        }
     }
 
     func switchUser() {

@@ -10,7 +10,6 @@ final class MediaBarViewModel: ObservableObject {
 
     private let container: AppContainer
     private var autoAdvanceTimer: AnyCancellable?
-    private var loadTask: Task<Void, Never>?
 
     static let autoAdvanceInterval: TimeInterval = 7
     static let fetchFields: [ItemField] = [.overview, .genres, .primaryImageAspectRatio, .providerIds]
@@ -33,29 +32,25 @@ final class MediaBarViewModel: ObservableObject {
         return container.serverClientFactory.client(for: server)
     }
 
-    func load(userViews: [ServerItem] = []) {
+    func load(userViews: [ServerItem] = []) async {
         guard isEnabled else {
             state = .disabled
             return
         }
 
-        loadTask?.cancel()
-        loadTask = Task {
-            state = .loading
-            do {
-                let items = try await fetchItems(userViews: userViews)
-                guard !Task.isCancelled else { return }
-                if items.isEmpty {
-                    state = .disabled
-                } else {
-                    state = .ready(items)
-                    currentIndex = 0
-                    startAutoAdvance()
-                }
-            } catch {
-                guard !Task.isCancelled else { return }
-                state = .error(error.localizedDescription)
+        state = .loading
+        do {
+            let items = try await fetchItems(userViews: userViews)
+            guard !Task.isCancelled else { return }
+            if items.isEmpty {
+                state = .disabled
+            } else {
+                state = .ready(items)
+                currentIndex = 0
+                startAutoAdvance()
             }
+        } catch {
+            if !Task.isCancelled { state = .error(error.localizedDescription) }
         }
     }
 

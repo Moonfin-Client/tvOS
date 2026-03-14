@@ -72,9 +72,12 @@ struct MainNavigationView: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
-    @AppStorage("navbar_position") private var navbarPosition: NavbarPosition = .top
     @Namespace private var mainNamespace
     @Environment(\.resetFocus) private var resetFocus
+
+    private var navbarPosition: NavbarPosition {
+        container.userPreferences[UserPreferences.navbarPosition]
+    }
 
     private let navbarHeight: CGFloat = 110
 

@@ -33,6 +33,7 @@ final class AppContainer: ObservableObject {
     let inactivityTracker: InactivityTracker
     let serverConnectionMonitor: ServerConnectionMonitor
     let featureDegradationManager: FeatureDegradationManager
+    let userViewsService: UserViewsService
 
     // MARK: - Playback
 
@@ -122,6 +123,11 @@ final class AppContainer: ObservableObject {
             serverRepository: serverRepo
         )
         self.featureDegradationManager = FeatureDegradationManager()
+        self.userViewsService = UserViewsService(
+            serverRepository: serverRepo,
+            serverClientFactory: factory,
+            userRepository: userRepo
+        )
 
         let resolveClient: () -> HttpClient? = { [weak serverRepo] in
             guard let server = serverRepo?.currentServer.value else { return nil }

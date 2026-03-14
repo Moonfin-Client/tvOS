@@ -115,7 +115,7 @@ final class HomeViewModel: ObservableObject {
         loadTask?.cancel()
         loadTask = Task {
             guard let client else {
-                mediaBarViewModel.load()
+                await mediaBarViewModel.load()
                 return
             }
 
@@ -143,16 +143,12 @@ final class HomeViewModel: ObservableObject {
             async let earlyLoadTask: Void = loadRows(earlyRowIds, client: client)
 
             if needsViews {
-                do {
-                    userViews = try await client.userViewsApi.getUserViews(userId: client.userId ?? "")
-                } catch {
-                    userViews = []
-                }
+                userViews = await container.userViewsService.awaitLoaded()
             }
 
             guard !Task.isCancelled else { return }
 
-            mediaBarViewModel.load(userViews: userViews)
+            await mediaBarViewModel.load(userViews: userViews)
 
             await earlyLoadTask
 
@@ -212,7 +208,7 @@ final class HomeViewModel: ObservableObject {
 
         guard !Task.isCancelled else { return }
 
-        mediaBarViewModel.load(userViews: userViews)
+        await mediaBarViewModel.load(userViews: userViews)
 
         var resultRows: [HomeRow] = []
 
