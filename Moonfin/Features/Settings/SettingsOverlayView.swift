@@ -128,6 +128,8 @@ struct SettingsOverlayView: View {
             SettingsScreensaverTimeoutScreen()
         case .customizationScreensaverDimming:
             SettingsScreensaverDimmingScreen()
+        case .customizationScreensaverAgeRating:
+            SettingsScreensaverAgeRatingScreen()
         case .home:
             SettingsHomeScreen()
         case .homePosterSize:

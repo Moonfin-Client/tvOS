@@ -108,7 +108,8 @@ final class ScreensaverViewModel: ObservableObject {
                 enableImages: true,
                 imageTypeLimit: 1
             ))
-            return result.items.filter { !($0.backdropImageTags ?? []).isEmpty || !($0.parentBackdropImageTags ?? []).isEmpty }
+            let hasBackdrop = result.items.filter { !($0.backdropImageTags ?? []).isEmpty || !($0.parentBackdropImageTags ?? []).isEmpty }
+            return filterByAgeRating(hasBackdrop)
         } catch {
             return []
         }
@@ -136,4 +137,29 @@ final class ScreensaverViewModel: ObservableObject {
 
         return .libraryShowcase(item: item, backdropUrl: url, logoUrl: logoUrl)
     }
+
+    private func filterByAgeRating(_ items: [ServerItem]) -> [ServerItem] {
+        let maxAge = container.userPreferences[UserPreferences.screensaverAgeRatingMax]
+        guard maxAge >= 0 else { return items }
+        let requireRating = container.userPreferences[UserPreferences.screensaverAgeRatingRequired]
+        return items.filter { item in
+            guard let rating = item.officialRating, !rating.isEmpty else {
+                return !requireRating
+            }
+            guard let age = Self.ratingAgeMap[rating] else {
+                return !requireRating
+            }
+            return age <= maxAge
+        }
+    }
+
+    private static let ratingAgeMap: [String: Int] = [
+        "G": 0, "TV-Y": 0, "TV-G": 0,
+        "PG": 10, "TV-Y7": 7, "TV-Y7-FV": 7, "TV-PG": 10,
+        "PG-13": 13, "TV-14": 14,
+        "R": 17, "TV-MA": 17,
+        "NC-17": 18, "NR": 0, "Unrated": 0,
+        "U": 0, "12": 12, "12A": 12, "15": 15, "18": 18, "R18": 18,
+        "All": 0, "6": 6, "9": 9, "10": 10, "16": 16
+    ]
 }

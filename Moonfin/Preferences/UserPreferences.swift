@@ -32,6 +32,8 @@ final class UserPreferences {
     static let screensaverMode = Preference(key: "screensaver_mode", defaultValue: ScreensaverMode.showcase)
     static let screensaverDimmingLevel = Preference(key: "screensaver_dimming_level", defaultValue: 0)
     static let screensaverShowClock = Preference(key: "screensaver_show_clock", defaultValue: true)
+    static let screensaverAgeRatingRequired = Preference(key: "screensaver_age_rating_required", defaultValue: true)
+    static let screensaverAgeRatingMax = Preference(key: "screensaver_age_rating_max", defaultValue: 13)
 
     static let clockBehavior = Preference(key: "clock_behavior", defaultValue: ClockBehavior.always)
     static let watchedIndicator = Preference(key: "watched_indicator", defaultValue: WatchedIndicatorBehavior.always)

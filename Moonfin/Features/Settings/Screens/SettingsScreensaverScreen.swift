@@ -51,12 +51,33 @@ struct SettingsScreensaverScreen: View {
                     set: { prefs[UserPreferences.screensaverShowClock] = $0 }
                 )
             )
+
+            SettingsToggleButton(
+                icon: "person.badge.shield.checkmark",
+                heading: "Require Age Rating",
+                caption: "Only show items with a rating set",
+                isOn: prefs.binding(for: UserPreferences.screensaverAgeRatingRequired)
+            )
+
+            SettingsListButton(
+                icon: "exclamationmark.triangle",
+                heading: "Max Age Rating",
+                caption: ageRatingCaption,
+                action: { settingsRouter.navigate(to: .customizationScreensaverAgeRating) }
+            )
         }
     }
 
     private var dimmingCaption: String {
         let level = prefs[UserPreferences.screensaverDimmingLevel]
         return level == 0 ? "Off" : "\(level)%"
+    }
+
+    private var ageRatingCaption: String {
+        let value = prefs[UserPreferences.screensaverAgeRatingMax]
+        if value < 0 { return "Disabled" }
+        if value == 0 { return "All Ages" }
+        return "Up to age \(value)"
     }
 }
 
@@ -103,6 +124,32 @@ struct SettingsScreensaverDimmingScreen: View {
                         label: value == 0 ? "Off" : "\(value)%",
                         isSelected: current == value
                     )
+                }
+                .buttonStyle(CleanButtonStyle())
+            }
+        }
+    }
+}
+
+struct SettingsScreensaverAgeRatingScreen: View {
+    @EnvironmentObject var container: AppContainer
+    @EnvironmentObject var settingsRouter: SettingsRouter
+
+    private var current: Int { container.userPreferences[UserPreferences.screensaverAgeRatingMax] }
+    private let options: [(Int, String)] = [
+        (0, "All Ages"), (5, "Up to age 5"), (10, "Up to age 10"),
+        (13, "Up to age 13"), (14, "Up to age 14"), (16, "Up to age 16"),
+        (18, "Up to age 18"), (21, "Up to age 21"), (-1, "Disabled"),
+    ]
+
+    var body: some View {
+        SettingsScreenLayout(title: "Max Age Rating") {
+            ForEach(options, id: \.0) { value, label in
+                Button {
+                    container.userPreferences[UserPreferences.screensaverAgeRatingMax] = value
+                    settingsRouter.goBack()
+                } label: {
+                    ScreensaverOptionContent(label: label, isSelected: current == value)
                 }
                 .buttonStyle(CleanButtonStyle())
             }
