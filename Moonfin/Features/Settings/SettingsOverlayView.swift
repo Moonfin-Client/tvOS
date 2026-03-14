@@ -246,6 +246,13 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.nextUpBehavior),
                 displayName: \.displayName
             )
+        case .playbackNextUpTimeout:
+            SettingsSyncPlayValueScreen(
+                title: "Next Up Timeout",
+                preference: UserPreferences.nextUpTimeout,
+                options: [0, 5, 10, 15, 20, 25, 30, 45, 60],
+                suffix: " sec"
+            )
         case .playbackInactivityPrompt:
             StillWatchingSettingsScreen()
         case .playbackMaxBitrate:

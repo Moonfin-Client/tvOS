@@ -46,6 +46,7 @@ enum SettingsRoute: Hashable {
     case playbackPlayer
     case playbackNextUp
     case playbackNextUpBehavior
+    case playbackNextUpTimeout
     case playbackInactivityPrompt
     case playbackPrerolls
     case playbackMediaSegments

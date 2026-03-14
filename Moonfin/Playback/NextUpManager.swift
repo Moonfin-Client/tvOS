@@ -16,7 +16,9 @@ final class NextUpManager: ObservableObject {
     private var countdownRemaining: Int = 0
     private var lastStillWatchingEpisodeCount: Int = -1
 
-    private let countdownDuration = 30
+    private var countdownDuration: Int {
+        preferences[UserPreferences.nextUpTimeout]
+    }
     private let creditsThresholdSeconds: TimeInterval = 120
 
     var onPlayNext: (() async -> Void)?
@@ -49,6 +51,8 @@ final class NextUpManager: ObservableObject {
 
         let remaining = duration - currentTime
         let triggerAt: TimeInterval = behavior == .extended ? creditsThresholdSeconds : 30
+
+        guard countdownDuration > 0 else { return }
 
         if remaining <= triggerAt && remaining > 0 {
             startNextUpCountdown(seconds: min(Int(remaining), countdownDuration))

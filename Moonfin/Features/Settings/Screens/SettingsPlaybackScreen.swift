@@ -11,6 +11,11 @@ struct SettingsPlaybackScreen: View {
         return val > 0 ? "\(val) episodes" : "Disabled"
     }
 
+    private var nextUpTimeoutLabel: String {
+        let val = prefs[UserPreferences.nextUpTimeout]
+        return val > 0 ? "\(val) sec" : "Disabled"
+    }
+
     private var supportsMediaSegments: Bool {
         container.serverRepository.currentServer.value?.serverType.supports(.mediaSegments) == true
     }
@@ -23,6 +28,14 @@ struct SettingsPlaybackScreen: View {
                 caption: "How next up is displayed",
                 trailingText: prefs[UserPreferences.nextUpBehavior].displayName,
                 action: { settingsRouter.navigate(to: .playbackNextUpBehavior) }
+            )
+
+            SettingsListButton(
+                icon: "timer",
+                heading: "Next Up Timeout",
+                caption: "Auto-play countdown duration",
+                trailingText: nextUpTimeoutLabel,
+                action: { settingsRouter.navigate(to: .playbackNextUpTimeout) }
             )
 
             SettingsListButton(

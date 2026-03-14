@@ -52,6 +52,8 @@ final class UserPreferences {
 
     static let seasonalSurprise = Preference(key: "seasonal_surprise", defaultValue: SeasonalSurprise.none)
 
+    static let nextUpTimeout = Preference(key: "playback_next_up_timeout", defaultValue: 30)
+
     static let mergeContinueWatchingNextUp = Preference(key: "merge_continue_next_up", defaultValue: false)
     static let enableFolderView = Preference(key: "enable_folder_view", defaultValue: false)
     static let mediaBarTrailerPreview = Preference(key: "media_bar_trailer_preview", defaultValue: true)
