@@ -120,11 +120,12 @@ struct ItemCard: View {
 
     @ViewBuilder
     private var watchIndicatorOverlay: some View {
-        if watchedIndicator != .never {
+        if watchedIndicator != .never,
+           watchedIndicator != .episodesOnly || item.type == .episode {
             VStack {
                 HStack {
                     Spacer()
-                    if watchedIndicator == .always,
+                    if watchedIndicator == .always || watchedIndicator == .episodesOnly,
                        let played = item.userData?.played, played {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption2xs)

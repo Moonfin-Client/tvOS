@@ -264,12 +264,14 @@ enum ScreensaverMode: String, StringRepresentableEnum, CaseIterable {
 enum ClockBehavior: String, StringRepresentableEnum, CaseIterable {
     case always
     case inNavOnly
+    case inVideo
     case never
 
     var displayName: String {
         switch self {
         case .always: return "Always"
         case .inNavOnly: return "Navigation Only"
+        case .inVideo: return "In Video"
         case .never: return "Never"
         }
     }
@@ -279,12 +281,14 @@ enum WatchedIndicatorBehavior: String, StringRepresentableEnum, CaseIterable {
     case always
     case never
     case hideAfterWatched
+    case episodesOnly
 
     var displayName: String {
         switch self {
         case .always: return "Always"
         case .never: return "Never"
         case .hideAfterWatched: return "Hide After Watched"
+        case .episodesOnly: return "Episodes Only"
         }
     }
 }

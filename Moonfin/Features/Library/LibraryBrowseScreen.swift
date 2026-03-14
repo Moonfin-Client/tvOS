@@ -374,7 +374,8 @@ private struct LibraryPosterCard: View {
         let isPlayed = item.userData?.played == true
         let unplayed = item.userData?.unplayedItemCount
 
-        if watchedIndicator == .never {
+        if watchedIndicator == .never
+            || (watchedIndicator == .episodesOnly && item.type != .episode) {
             EmptyView()
         } else if isPlayed {
             Image(systemName: "checkmark.circle.fill")
