@@ -67,6 +67,22 @@ struct SettingsMoonfinScreen: View {
                 isOn: prefs.binding(for: UserPreferences.backdropEnabled)
             )
 
+            SettingsListButton(
+                icon: "aqi.medium",
+                heading: "Details Background Blur",
+                caption: "Blur amount on detail screens",
+                trailingText: "\(prefs[UserPreferences.detailsBackgroundBlur])",
+                action: { settingsRouter.navigate(to: .moonfinDetailsBlur) }
+            )
+
+            SettingsListButton(
+                icon: "aqi.low",
+                heading: "Browsing Background Blur",
+                caption: "Blur amount when browsing",
+                trailingText: "\(prefs[UserPreferences.browsingBackgroundBlur])",
+                action: { settingsRouter.navigate(to: .moonfinBrowsingBlur) }
+            )
+
             SettingsToggleButton(
                 icon: "rectangle.inset.filled",
                 heading: "Media Bar",

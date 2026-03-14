@@ -210,6 +210,20 @@ struct SettingsOverlayView: View {
                 options: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                 suffix: "%"
             )
+        case .moonfinDetailsBlur:
+            SettingsSyncPlayValueScreen(
+                title: "Details Background Blur",
+                preference: UserPreferences.detailsBackgroundBlur,
+                options: [0, 5, 10, 15, 20, 25, 30, 35, 40],
+                suffix: ""
+            )
+        case .moonfinBrowsingBlur:
+            SettingsSyncPlayValueScreen(
+                title: "Browsing Background Blur",
+                preference: UserPreferences.browsingBackgroundBlur,
+                options: [0, 5, 10, 15, 20, 25, 30, 35, 40],
+                suffix: ""
+            )
         case .playback:
             SettingsPlaybackScreen()
         case .playbackMediaSegments:
