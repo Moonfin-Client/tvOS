@@ -325,6 +325,10 @@ struct SettingsOverlayView: View {
             SettingsTelemetryScreen()
         case .about:
             SettingsAboutScreen()
+        case .licenses:
+            SettingsLicensesScreen()
+        case .license(let artifactId):
+            SettingsLicenseDetailScreen(artifactId: artifactId)
         case .syncPlay:
             SyncPlayScreen()
         case .seerr:
