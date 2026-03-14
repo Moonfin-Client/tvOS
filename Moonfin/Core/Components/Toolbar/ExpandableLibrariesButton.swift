@@ -12,24 +12,35 @@ struct ExpandableLibrariesButton: View {
 
     @FocusState private var focusedItem: FocusedItem?
     @State private var isExpanded = false
-    @State private var collapseTask: Task<Void, Never>?
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
         HStack(spacing: 0) {
-            Button(action: {}) {
-                Image(systemName: "movieclapper.fill")
-                    .font(.system(size: 22))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 10)
-                    .background(
-                        Capsule()
-                            .fill(iconBackground)
-                    )
-                    .foregroundColor(iconForeground)
+            Button(action: { isExpanded.toggle() }) {
+                HStack(spacing: SpaceTokens.spaceSm) {
+                    Image(systemName: "movieclapper.fill")
+                        .font(.system(size: 22))
+
+                    if focusedItem == .icon && !isExpanded {
+                        Text("Libraries")
+                            .font(.bodySm)
+                            .fontWeight(.bold)
+                            .padding(.trailing, 4)
+                            .transition(.opacity.combined(with: .scale(scale: 0.8, anchor: .leading)))
+                    }
+                }
+                .padding(.horizontal, focusedItem == .icon ? 16 : 8)
+                .padding(.vertical, 10)
+                .background(
+                    Capsule()
+                        .fill(iconBackground)
+                )
+                .foregroundColor(iconForeground)
             }
             .buttonStyle(CleanButtonStyle())
             .focused($focusedItem, equals: .icon)
+            .scaleEffect(focusedItem == .icon ? 1.05 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: focusedItem)
 
             if isExpanded {
                 HStack(spacing: 0) {
@@ -71,15 +82,8 @@ struct ExpandableLibrariesButton: View {
         }
         .animation(.easeInOut(duration: 0.25), value: isExpanded)
         .onChange(of: focusedItem) { newValue in
-            collapseTask?.cancel()
-            if newValue != nil {
-                isExpanded = true
-            } else {
-                collapseTask = Task {
-                    try? await Task.sleep(nanoseconds: 150_000_000)
-                    guard !Task.isCancelled else { return }
-                    isExpanded = false
-                }
+            if newValue == nil {
+                isExpanded = false
             }
         }
     }

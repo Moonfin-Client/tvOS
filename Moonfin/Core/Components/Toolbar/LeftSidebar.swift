@@ -11,6 +11,7 @@ struct LeftSidebar: View {
     @EnvironmentObject var settingsRouter: SettingsRouter
 
     @State private var isExpanded = false
+    @State private var isLibraryExpanded = false
     @State private var collapseTask: Task<Void, Never>?
     @FocusState private var focusedItem: SidebarFocusItem?
 
@@ -23,13 +24,6 @@ struct LeftSidebar: View {
     init(container: AppContainer, mainNamespace: Namespace.ID) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
         self.mainNamespace = mainNamespace
-    }
-
-    private var isLibraryFocused: Bool {
-        switch focusedItem {
-        case .libraries, .library: return true
-        default: return false
-        }
     }
 
     var body: some View {
@@ -50,6 +44,7 @@ struct LeftSidebar: View {
                         try? await Task.sleep(nanoseconds: 150_000_000)
                         guard !Task.isCancelled else { return }
                         isExpanded = false
+                        isLibraryExpanded = false
                     }
                 }
             }
@@ -191,18 +186,14 @@ struct LeftSidebar: View {
                     label: "Libraries",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .libraries,
-                    action: {
-                        if let first = viewModel.userViews.first {
-                            router.navigateToLibrary(first)
-                        }
-                    }
+                    action: { isLibraryExpanded.toggle() }
                 )
                 .focused($focusedItem, equals: .libraries)
                 .opacity(viewModel.userViews.isEmpty ? 0 : 1)
                 .disabled(viewModel.userViews.isEmpty)
             }
 
-            if isExpanded && isLibraryFocused {
+            if isExpanded && isLibraryExpanded {
                 ForEach(viewModel.userViews, id: \.id) { library in
                     SidebarTextItem(
                         label: library.name,
