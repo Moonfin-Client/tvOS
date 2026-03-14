@@ -62,6 +62,13 @@ struct SettingsMainScreen: View {
             )
 
             SettingsListButton(
+                icon: "hammer",
+                heading: "Developer",
+                caption: "Debug tools & diagnostics",
+                action: { settingsRouter.navigate(to: .developer) }
+            )
+
+            SettingsListButton(
                 icon: "info.circle",
                 heading: "About",
                 caption: "Version & licenses",

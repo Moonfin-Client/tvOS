@@ -60,6 +60,9 @@ final class UserPreferences {
     static let episodePreviewEnabled = Preference(key: "episode_preview_enabled", defaultValue: true)
     static let previewAudioEnabled = Preference(key: "preview_audio_enabled", defaultValue: true)
 
+    static let debuggingEnabled = Preference(key: "debug_enabled", defaultValue: false)
+    static let trickPlayEnabled = Preference(key: "trickplay_enabled", defaultValue: false)
+
     static let pluginSyncEnabled = Preference(key: "plugin_sync_enabled", defaultValue: false)
 
     static let themeMusicEnabled = Preference(key: "theme_music_enabled", defaultValue: false)
