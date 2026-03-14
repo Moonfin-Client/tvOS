@@ -125,39 +125,45 @@ struct LeftSidebar: View {
             )
             .focused($focusedItem, equals: .search)
 
-            SidebarIconItem(
-                assetIcon: "shuffle",
-                label: "Shuffle",
-                isExpanded: isExpanded,
-                isFocused: focusedItem == .shuffle,
-                action: { viewModel.performQuickShuffle(router: router) }
-            )
-            .focused($focusedItem, equals: .shuffle)
-            .contextMenu {
-                ForEach(ShuffleContentType.allCases, id: \.self) { type in
-                    Button(type.displayName) {
-                        viewModel.performShuffle(contentType: type, router: router)
+            if viewModel.showShuffle {
+                SidebarIconItem(
+                    assetIcon: "shuffle",
+                    label: "Shuffle",
+                    isExpanded: isExpanded,
+                    isFocused: focusedItem == .shuffle,
+                    action: { viewModel.performQuickShuffle(router: router) }
+                )
+                .focused($focusedItem, equals: .shuffle)
+                .contextMenu {
+                    ForEach(ShuffleContentType.allCases, id: \.self) { type in
+                        Button(type.displayName) {
+                            viewModel.performShuffle(contentType: type, router: router)
+                        }
                     }
                 }
             }
 
-            SidebarIconItem(
-                systemIcon: "heart.fill",
-                label: "Favorites",
-                isExpanded: isExpanded,
-                isFocused: focusedItem == .favorites,
-                action: { router.navigate(to: .allFavorites) }
-            )
-            .focused($focusedItem, equals: .favorites)
+            if viewModel.showFavorites {
+                SidebarIconItem(
+                    systemIcon: "heart.fill",
+                    label: "Favorites",
+                    isExpanded: isExpanded,
+                    isFocused: focusedItem == .favorites,
+                    action: { router.navigate(to: .allFavorites) }
+                )
+                .focused($focusedItem, equals: .favorites)
+            }
 
-            SidebarIconItem(
-                systemIcon: "theatermasks",
-                label: "Genres",
-                isExpanded: isExpanded,
-                isFocused: focusedItem == .genres,
-                action: { router.navigate(to: .allGenres) }
-            )
-            .focused($focusedItem, equals: .genres)
+            if viewModel.showGenres {
+                SidebarIconItem(
+                    systemIcon: "theatermasks",
+                    label: "Genres",
+                    isExpanded: isExpanded,
+                    isFocused: focusedItem == .genres,
+                    action: { router.navigate(to: .allGenres) }
+                )
+                .focused($focusedItem, equals: .genres)
+            }
 
             SidebarIconItem(
                 systemIcon: "folder.fill",
@@ -179,20 +185,22 @@ struct LeftSidebar: View {
                 .focused($focusedItem, equals: .syncPlay)
             }
 
-            SidebarIconItem(
-                systemIcon: "movieclapper.fill",
-                label: "Libraries",
-                isExpanded: isExpanded,
-                isFocused: focusedItem == .libraries,
-                action: {
-                    if let first = viewModel.userViews.first {
-                        router.navigateToLibrary(first)
+            if viewModel.showLibraries {
+                SidebarIconItem(
+                    systemIcon: "movieclapper.fill",
+                    label: "Libraries",
+                    isExpanded: isExpanded,
+                    isFocused: focusedItem == .libraries,
+                    action: {
+                        if let first = viewModel.userViews.first {
+                            router.navigateToLibrary(first)
+                        }
                     }
-                }
-            )
-            .focused($focusedItem, equals: .libraries)
-            .opacity(viewModel.userViews.isEmpty ? 0 : 1)
-            .disabled(viewModel.userViews.isEmpty)
+                )
+                .focused($focusedItem, equals: .libraries)
+                .opacity(viewModel.userViews.isEmpty ? 0 : 1)
+                .disabled(viewModel.userViews.isEmpty)
+            }
 
             if isExpanded && isLibraryFocused {
                 ForEach(viewModel.userViews, id: \.id) { library in

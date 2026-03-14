@@ -96,6 +96,11 @@ final class UserPreferences {
     static let userPinEnabled = Preference(key: "user_pin_enabled", defaultValue: false)
     static let userPinHash = Preference(key: "user_pin_hash", defaultValue: "")
 
+    static let showShuffleButton = Preference(key: "navbar_show_shuffle", defaultValue: true)
+    static let showGenresButton = Preference(key: "navbar_show_genres", defaultValue: true)
+    static let showFavoritesButton = Preference(key: "navbar_show_favorites", defaultValue: true)
+    static let showLibrariesInToolbar = Preference(key: "navbar_show_libraries", defaultValue: true)
+
     init(store: PreferenceStore) {
         self.store = store
     }

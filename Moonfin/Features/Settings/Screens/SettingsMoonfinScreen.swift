@@ -33,6 +33,34 @@ struct SettingsMoonfinScreen: View {
             )
 
             SettingsToggleButton(
+                icon: "shuffle",
+                heading: "Show Shuffle Button",
+                caption: "Show shuffle in toolbar",
+                isOn: prefs.binding(for: UserPreferences.showShuffleButton)
+            )
+
+            SettingsToggleButton(
+                icon: "theatermasks",
+                heading: "Show Genres Button",
+                caption: "Show genres in toolbar",
+                isOn: prefs.binding(for: UserPreferences.showGenresButton)
+            )
+
+            SettingsToggleButton(
+                icon: "heart.fill",
+                heading: "Show Favorites Button",
+                caption: "Show favorites in toolbar",
+                isOn: prefs.binding(for: UserPreferences.showFavoritesButton)
+            )
+
+            SettingsToggleButton(
+                icon: "movieclapper.fill",
+                heading: "Show Libraries Button",
+                caption: "Show libraries in toolbar",
+                isOn: prefs.binding(for: UserPreferences.showLibrariesInToolbar)
+            )
+
+            SettingsToggleButton(
                 icon: "photo.artframe",
                 heading: "Backdrop",
                 caption: "Show background images",

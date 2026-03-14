@@ -52,31 +52,37 @@ struct Navbar: View {
                 action: { router.navigate(to: .search()) }
             )
 
-            ExpandableToolbarButton(
-                icon: "shuffle",
-                label: "Shuffle",
-                isAssetIcon: true,
-                action: { viewModel.performQuickShuffle(router: router) }
-            )
-            .contextMenu {
-                ForEach(ShuffleContentType.allCases, id: \.self) { type in
-                    Button(type.displayName) {
-                        viewModel.performShuffle(contentType: type, router: router)
+            if viewModel.showShuffle {
+                ExpandableToolbarButton(
+                    icon: "shuffle",
+                    label: "Shuffle",
+                    isAssetIcon: true,
+                    action: { viewModel.performQuickShuffle(router: router) }
+                )
+                .contextMenu {
+                    ForEach(ShuffleContentType.allCases, id: \.self) { type in
+                        Button(type.displayName) {
+                            viewModel.performShuffle(contentType: type, router: router)
+                        }
                     }
                 }
             }
 
-            ExpandableToolbarButton(
-                icon: "heart.fill",
-                label: "Favorites",
-                action: { router.navigate(to: .allFavorites) }
-            )
+            if viewModel.showFavorites {
+                ExpandableToolbarButton(
+                    icon: "heart.fill",
+                    label: "Favorites",
+                    action: { router.navigate(to: .allFavorites) }
+                )
+            }
 
-            ExpandableToolbarButton(
-                icon: "theatermasks",
-                label: "Genres",
-                action: { router.navigate(to: .allGenres) }
-            )
+            if viewModel.showGenres {
+                ExpandableToolbarButton(
+                    icon: "theatermasks",
+                    label: "Genres",
+                    action: { router.navigate(to: .allGenres) }
+                )
+            }
 
             ExpandableToolbarButton(
                 icon: "folder.fill",
@@ -84,7 +90,7 @@ struct Navbar: View {
                 action: { router.navigate(to: .folderView) }
             )
 
-            if !viewModel.userViews.isEmpty {
+            if viewModel.showLibraries && !viewModel.userViews.isEmpty {
                 ExpandableLibrariesButton(
                     libraries: viewModel.userViews,
                     activeLibraryId: nil,

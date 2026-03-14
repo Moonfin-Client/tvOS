@@ -62,6 +62,11 @@ final class NavbarViewModel: ObservableObject {
         container.sessionRepository.destroyCurrentSession()
     }
 
+    var showShuffle: Bool { container.userPreferences[UserPreferences.showShuffleButton] }
+    var showGenres: Bool { container.userPreferences[UserPreferences.showGenresButton] }
+    var showFavorites: Bool { container.userPreferences[UserPreferences.showFavoritesButton] }
+    var showLibraries: Bool { container.userPreferences[UserPreferences.showLibrariesInToolbar] }
+
     var showSyncPlay: Bool {
         guard container.userPreferences[UserPreferences.syncPlayEnabled],
               let client else { return false }
