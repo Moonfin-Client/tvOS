@@ -168,6 +168,11 @@ final class HomeViewModel: ObservableObject {
     func refreshContent() {
         Task {
             guard let client else { return }
+
+            if mediaBarViewModel.isEnabled && mediaBarViewModel.isStale {
+                await mediaBarViewModel.load(userViews: userViews)
+            }
+
             let service = container.dataRefreshService
             let stale = dataSources.filter { $0.value.needsRefresh(service: service) }
             guard !stale.isEmpty else { return }

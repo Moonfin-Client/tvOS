@@ -1,4 +1,5 @@
 import SwiftUI
+import Nuke
 
 struct MediaBarView: View {
     @ObservedObject var viewModel: MediaBarViewModel
@@ -128,19 +129,17 @@ struct MediaBarView: View {
             let visible = visibleIndices(current: viewModel.currentIndex, total: items.count)
             ForEach(visible, id: \.self) { index in
                 let item = items[index]
-                if let urlString = item.backdropUrl, let url = URL(string: urlString) {
-                    AsyncImage(url: url) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } else {
-                            Color.clear
-                        }
-                    }
-                    .opacity(index == viewModel.currentIndex ? 1 : 0)
-                    .animation(.easeInOut(duration: 0.8), value: viewModel.currentIndex)
-                }
+                CachedImage(
+                    urlString: item.backdropUrl,
+                    processors: [
+                        ImageProcessors.Resize(
+                            size: CGSize(width: 1920, height: 1080),
+                            contentMode: .aspectFill
+                        )
+                    ]
+                )
+                .opacity(index == viewModel.currentIndex ? 1 : 0)
+                .animation(.easeInOut(duration: 0.8), value: viewModel.currentIndex)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -182,16 +181,18 @@ struct MediaBarView: View {
     @ViewBuilder
     private var logoOverlay: some View {
         if let item = viewModel.currentItem,
-           let logoUrl = item.logoUrl,
-           let url = URL(string: logoUrl) {
-            AsyncImage(url: url) { phase in
-                if case .success(let image) = phase {
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: 250, maxHeight: 100)
-                }
-            }
+           let logoUrl = item.logoUrl {
+            CachedImage(
+                urlString: logoUrl,
+                contentMode: .fit,
+                processors: [
+                    ImageProcessors.Resize(
+                        size: CGSize(width: 250, height: 100),
+                        contentMode: .aspectFit
+                    )
+                ]
+            )
+            .frame(maxWidth: 250, maxHeight: 100)
             .padding(.top, 150)
             .padding(.leading, 140)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

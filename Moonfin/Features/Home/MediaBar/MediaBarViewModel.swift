@@ -10,6 +10,13 @@ final class MediaBarViewModel: ObservableObject {
 
     private let container: AppContainer
     private var autoAdvanceTimer: AnyCancellable?
+    private var loadTime: Date?
+    private static let staleThreshold: TimeInterval = 300
+
+    var isStale: Bool {
+        guard let loadTime else { return true }
+        return Date().timeIntervalSince(loadTime) > Self.staleThreshold
+    }
 
     static let autoAdvanceInterval: TimeInterval = 7
     static let fetchFields: [ItemField] = [.overview, .genres, .primaryImageAspectRatio, .providerIds]
@@ -47,6 +54,7 @@ final class MediaBarViewModel: ObservableObject {
             } else {
                 state = .ready(items)
                 currentIndex = 0
+                loadTime = Date()
                 startAutoAdvance()
             }
         } catch {
