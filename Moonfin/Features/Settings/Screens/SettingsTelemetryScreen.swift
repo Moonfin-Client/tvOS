@@ -6,13 +6,6 @@ struct SettingsTelemetryScreen: View {
     var body: some View {
         SettingsScreenLayout(title: "Telemetry") {
             SettingsToggleButton(
-                icon: "chart.bar",
-                heading: "Enable Telemetry",
-                caption: "Send anonymous usage data",
-                isOn: container.userPreferences.binding(for: UserPreferences.telemetryEnabled)
-            )
-
-            SettingsToggleButton(
                 icon: "ladybug",
                 heading: "Send Crash Reports",
                 caption: "Automatically send crash reports to your server",

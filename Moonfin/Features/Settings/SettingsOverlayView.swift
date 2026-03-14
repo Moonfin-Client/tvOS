@@ -73,6 +73,10 @@ struct SettingsOverlayView: View {
                 ),
                 displayName: \.displayName
             )
+        case .authenticationServer(let serverId):
+            SettingsAuthServerScreen(serverId: serverId)
+        case .authenticationServerUser(let serverId, let userId):
+            SettingsAuthServerUserScreen(serverId: serverId, userId: userId)
         case .customization:
             SettingsCustomizationScreen()
         case .customizationTheme:
@@ -89,6 +93,27 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.watchedIndicator),
                 displayName: \.displayName
             )
+        case .customizationSubtitles:
+            SettingsSubtitlesScreen()
+        case .customizationSubtitlesTextColor:
+            SettingsSubtitleColorPickerScreen(
+                title: "Text Color",
+                preference: UserPreferences.subtitlesTextColor
+            )
+        case .customizationSubtitlesBackgroundColor:
+            SettingsSubtitleColorPickerScreen(
+                title: "Background Color",
+                preference: UserPreferences.subtitlesBackgroundColor
+            )
+        case .customizationSubtitlesEdgeColor:
+            SettingsSubtitleColorPickerScreen(
+                title: "Edge Color",
+                preference: UserPreferences.subtitlesStrokeColor
+            )
+        case .customizationSubtitlesTextSize:
+            SettingsSubtitleTextSizeScreen()
+        case .customizationSubtitlesOffset:
+            SettingsSubtitleOffsetScreen()
         case .customizationScreensaver:
             SettingsScreensaverScreen()
         case .customizationScreensaverMode:
@@ -101,6 +126,20 @@ struct SettingsOverlayView: View {
             SettingsScreensaverTimeoutScreen()
         case .customizationScreensaverDimming:
             SettingsScreensaverDimmingScreen()
+        case .home:
+            SettingsHomeScreen()
+        case .homePosterSize:
+            SettingsPickerScreen(
+                title: "Poster Size",
+                selection: container.userPreferences.binding(for: UserPreferences.homePosterSize),
+                displayName: \.displayName
+            )
+        case .homeRowsImageType:
+            SettingsPickerScreen(
+                title: "Image Type",
+                selection: container.userPreferences.binding(for: UserPreferences.homeRowsImageType),
+                displayName: \.displayName
+            )
         case .plugin:
             SettingsMoonfinScreen()
         case .moonfinNavbarPosition:
@@ -153,10 +192,18 @@ struct SettingsOverlayView: View {
             )
         case .playbackInactivityPrompt:
             StillWatchingSettingsScreen()
+        case .playbackMaxBitrate:
+            SettingsMaxBitrateScreen()
         case .playbackAudioBehavior:
             SettingsPickerScreen(
                 title: "Audio Behavior",
                 selection: container.userPreferences.binding(for: UserPreferences.audioBehavior),
+                displayName: \.displayName
+            )
+        case .playbackAudioOutput:
+            SettingsPickerScreen(
+                title: "Audio Output",
+                selection: container.userPreferences.binding(for: UserPreferences.audioOutput),
                 displayName: \.displayName
             )
         case .playbackSlideshowInterval:

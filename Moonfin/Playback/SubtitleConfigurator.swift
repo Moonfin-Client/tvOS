@@ -33,6 +33,11 @@ struct SubtitleConfigurator {
 
         options["freetype-bold"] = false
 
+        let offset = preferences[UserPreferences.subtitlesOffsetPosition]
+        if offset > 0 {
+            options["sub-margin"] = offset * 10
+        }
+
         return options
     }
 

@@ -32,6 +32,13 @@ struct SettingsCustomizationScreen: View {
                 trailingText: prefs[UserPreferences.watchedIndicator].displayName,
                 action: { settingsRouter.navigate(to: .customizationWatchedIndicator) }
             )
+
+            SettingsListButton(
+                icon: "captions.bubble",
+                heading: "Subtitles",
+                caption: "Appearance and defaults",
+                action: { settingsRouter.navigate(to: .customizationSubtitles) }
+            )
         }
     }
 }

@@ -10,6 +10,32 @@ enum HomeSectionType: String, CaseIterable, Codable {
     case liveTv
     case none
 
+    var displayName: String {
+        switch self {
+        case .resume: return "Continue Watching"
+        case .nextUp: return "Next Up"
+        case .latestMedia: return "Latest Media"
+        case .libraryTiles: return "Library Tiles"
+        case .resumeAudio: return "Continue Listening"
+        case .playlists: return "Playlists"
+        case .liveTv: return "Live TV"
+        case .none: return "None"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .resume: return "play.circle"
+        case .nextUp: return "arrow.right.circle"
+        case .latestMedia: return "sparkles"
+        case .libraryTiles: return "square.grid.2x2"
+        case .resumeAudio: return "headphones"
+        case .playlists: return "music.note.list"
+        case .liveTv: return "tv"
+        case .none: return "minus.circle"
+        }
+    }
+
     static let defaults: [(type: HomeSectionType, enabled: Bool)] = [
         (.resume, true),
         (.nextUp, true),

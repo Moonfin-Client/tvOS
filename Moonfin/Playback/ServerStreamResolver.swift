@@ -17,6 +17,7 @@ final class ServerStreamResolver: StreamResolver {
         item: ServerItem,
         mediaSourceId: String?,
         maxBitrate: Int64?,
+        maxAudioChannels: Int?,
         audioStreamIndex: Int?,
         subtitleStreamIndex: Int?,
         startTimeTicks: Int64?
@@ -40,6 +41,7 @@ final class ServerStreamResolver: StreamResolver {
             audioStreamIndex: audioStreamIndex,
             subtitleStreamIndex: subtitleStreamIndex,
             maxStreamingBitrate: maxBitrate,
+            maxAudioChannels: maxAudioChannels,
             startTimeTicks: startTimeTicks,
             autoOpenLiveStream: isLiveTv
         )

@@ -18,6 +18,8 @@ enum SettingsRoute: Hashable {
     case customizationSubtitlesTextColor
     case customizationSubtitlesBackgroundColor
     case customizationSubtitlesEdgeColor
+    case customizationSubtitlesTextSize
+    case customizationSubtitlesOffset
 
     case customizationScreensaver
     case customizationScreensaverTimeout
@@ -55,6 +57,7 @@ enum SettingsRoute: Hashable {
     case playbackRefreshRateSwitching
     case playbackZoomMode
     case playbackAudioBehavior
+    case playbackAudioOutput
     case playbackSlideshowInterval
 
     case seerr

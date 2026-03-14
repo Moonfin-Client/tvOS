@@ -333,12 +333,13 @@ struct ItemDetailsView: View {
     }
 
     private var ratingsRow: some View {
-        HStack(spacing: SpaceTokens.spaceSm) {
+        let showLabels = container.userPreferences[UserPreferences.showRatingLabels]
+        return HStack(spacing: SpaceTokens.spaceSm) {
             ForEach(viewModel.ratings, id: \.0) { source, value in
                 if source == "stars" {
                     starRatingChip(value: value)
                 } else {
-                    RatingChipView(source: source, normalizedValue: value, showLabel: true)
+                    RatingChipView(source: source, normalizedValue: value, showLabel: showLabels)
                 }
             }
         }

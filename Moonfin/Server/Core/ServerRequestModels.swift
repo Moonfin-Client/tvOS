@@ -6,6 +6,7 @@ struct PlaybackInfoRequest: Codable {
     let audioStreamIndex: Int?
     let subtitleStreamIndex: Int?
     let maxStreamingBitrate: Int64?
+    let maxAudioChannels: Int?
     let startTimeTicks: Int64?
     let enableDirectPlay: Bool
     let enableDirectStream: Bool
@@ -20,6 +21,7 @@ struct PlaybackInfoRequest: Codable {
         case audioStreamIndex = "AudioStreamIndex"
         case subtitleStreamIndex = "SubtitleStreamIndex"
         case maxStreamingBitrate = "MaxStreamingBitrate"
+        case maxAudioChannels = "MaxAudioChannels"
         case startTimeTicks = "StartTimeTicks"
         case enableDirectPlay = "EnableDirectPlay"
         case enableDirectStream = "EnableDirectStream"
@@ -35,6 +37,7 @@ struct PlaybackInfoRequest: Codable {
         audioStreamIndex: Int? = nil,
         subtitleStreamIndex: Int? = nil,
         maxStreamingBitrate: Int64? = nil,
+        maxAudioChannels: Int? = nil,
         startTimeTicks: Int64? = nil,
         enableDirectPlay: Bool = true,
         enableDirectStream: Bool = true,
@@ -48,6 +51,7 @@ struct PlaybackInfoRequest: Codable {
         self.audioStreamIndex = audioStreamIndex
         self.subtitleStreamIndex = subtitleStreamIndex
         self.maxStreamingBitrate = maxStreamingBitrate
+        self.maxAudioChannels = maxAudioChannels
         self.startTimeTicks = startTimeTicks
         self.enableDirectPlay = enableDirectPlay
         self.enableDirectStream = enableDirectStream

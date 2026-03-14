@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 final class UserPreferences {
     private var store: PreferenceStore
@@ -8,6 +9,8 @@ final class UserPreferences {
     static let nextUpBehavior = Preference(key: "playback_next_up_behavior", defaultValue: NextUpBehavior.extended)
     static let resumeSubtractDuration = Preference(key: "playback_resume_subtract", defaultValue: "")
     static let audioBehavior = Preference(key: "playback_audio_behavior", defaultValue: AudioBehavior.defaultTrack)
+    static let audioOutput = Preference(key: "playback_audio_output", defaultValue: AudioOutput.directStream)
+    static let lastAudioLanguage = Preference(key: "playback_last_audio_language", defaultValue: "")
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
     static let shuffleContentType = Preference(key: "shuffle_content_type", defaultValue: ShuffleContentType.both)
@@ -121,6 +124,18 @@ enum AudioBehavior: String, StringRepresentableEnum, CaseIterable {
     }
 }
 
+enum AudioOutput: String, StringRepresentableEnum, CaseIterable {
+    case directStream
+    case downmixToStereo
+
+    var displayName: String {
+        switch self {
+        case .directStream: return "Direct Stream"
+        case .downmixToStereo: return "Downmix to Stereo"
+        }
+    }
+}
+
 enum NavbarPosition: String, StringRepresentableEnum, CaseIterable {
     case top
     case left
@@ -171,6 +186,16 @@ enum PosterSize: String, StringRepresentableEnum, CaseIterable {
         case .xLarge: return "X-Large"
         }
     }
+
+    var scaleFactor: CGFloat {
+        switch self {
+        case .smallest: return 0.7
+        case .small: return 0.85
+        case .medium: return 1.0
+        case .large: return 1.2
+        case .xLarge: return 1.4
+        }
+    }
 }
 
 enum ImageDisplayType: String, StringRepresentableEnum, CaseIterable {
@@ -185,6 +210,15 @@ enum ImageDisplayType: String, StringRepresentableEnum, CaseIterable {
         case .thumb: return "Thumbnail"
         case .banner: return "Banner"
         case .square: return "Square"
+        }
+    }
+
+    var aspectRatio: CGFloat {
+        switch self {
+        case .poster: return 2.0 / 3.0
+        case .thumb: return 16.0 / 9.0
+        case .banner: return 16.0 / 3.0
+        case .square: return 1.0
         }
     }
 }
@@ -274,6 +308,17 @@ enum SubtitleColor: String, StringRepresentableEnum, CaseIterable {
     }
 
     var isTransparent: Bool { self == .transparent }
+
+    var swiftUIColor: Color {
+        let rgb = argb & 0x00FFFFFF
+        let alpha = Double((argb >> 24) & 0xFF) / 255.0
+        return Color(
+            red: Double((rgb >> 16) & 0xFF) / 255.0,
+            green: Double((rgb >> 8) & 0xFF) / 255.0,
+            blue: Double(rgb & 0xFF) / 255.0,
+            opacity: alpha
+        )
+    }
 }
 
 enum SlideshowInterval: String, StringRepresentableEnum, CaseIterable {

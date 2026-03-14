@@ -8,6 +8,35 @@ struct ContentRow: View {
     var onItemSelected: ((ServerItem) -> Void)?
     var restoredItemId: String?
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var container: AppContainer
+
+    private var posterSize: PosterSize {
+        container.userPreferences[UserPreferences.homePosterSize]
+    }
+
+    private var imageDisplayType: ImageDisplayType {
+        container.userPreferences[UserPreferences.homeRowsImageType]
+    }
+
+    private var isCustomizableRow: Bool {
+        switch row.rowType {
+        case .continueWatching, .nextUp, .libraryTiles, .liveTvButtons, .liveTvOnNow, .liveTvComingUp:
+            return false
+        default:
+            return true
+        }
+    }
+
+    private var effectiveAspectRatio: CGFloat {
+        isCustomizableRow ? imageDisplayType.aspectRatio : row.rowType.aspectRatio
+    }
+
+    private var effectiveCardWidth: CGFloat {
+        let base: CGFloat = isCustomizableRow
+            ? imageDisplayType.aspectRatio >= 1.0 ? 280 : 150
+            : row.rowType.cardWidth
+        return base * posterSize.scaleFactor
+    }
 
     var body: some View {
         if row.isLoading {
@@ -33,8 +62,8 @@ struct ContentRow: View {
                     ForEach(0..<6, id: \.self) { _ in
                         RoundedRectangle(cornerRadius: RadiusTokens.small)
                             .fill(theme.colorScheme.surface.opacity(0.2))
-                            .aspectRatio(row.rowType.aspectRatio, contentMode: .fit)
-                            .frame(width: row.rowType.cardWidth)
+                            .aspectRatio(effectiveAspectRatio, contentMode: .fit)
+                            .frame(width: effectiveCardWidth)
                             .shimmering()
                     }
                 }
@@ -79,7 +108,7 @@ struct ContentRow: View {
             LibraryCard(
                 item: item,
                 imageUrl: viewModel.thumbImageUrl(for: item),
-                cardWidth: row.rowType.cardWidth,
+                cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
                 onFocused: { item in
                     viewModel.onItemFocused(item)
                     onRowFocused?()
@@ -89,7 +118,7 @@ struct ContentRow: View {
         } else if row.rowType == .liveTvButtons {
             LiveTvActionCard(
                 item: item,
-                cardWidth: row.rowType.cardWidth,
+                cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
                 aspectRatio: row.rowType.aspectRatio,
                 onFocused: {
                     onRowFocused?()
@@ -100,8 +129,8 @@ struct ContentRow: View {
             ItemPreview(
                 item: item,
                 imageUrl: imageUrl(for: item),
-                aspectRatio: row.rowType.aspectRatio,
-                cardWidth: row.rowType.cardWidth,
+                aspectRatio: effectiveAspectRatio,
+                cardWidth: effectiveCardWidth,
                 watchedIndicator: watchedIndicator,
                 serverName: viewModel.serverName(for: item),
                 onFocused: { item in
@@ -118,7 +147,12 @@ struct ContentRow: View {
         case .continueWatching, .nextUp, .liveTvOnNow, .liveTvComingUp:
             return viewModel.thumbImageUrl(for: item)
         default:
-            return viewModel.posterImageUrl(for: item)
+            switch imageDisplayType {
+            case .thumb:
+                return viewModel.thumbImageUrl(for: item)
+            default:
+                return viewModel.posterImageUrl(for: item)
+            }
         }
     }
 }

@@ -37,6 +37,7 @@ protocol StreamResolver {
         item: ServerItem,
         mediaSourceId: String?,
         maxBitrate: Int64?,
+        maxAudioChannels: Int?,
         audioStreamIndex: Int?,
         subtitleStreamIndex: Int?,
         startTimeTicks: Int64?

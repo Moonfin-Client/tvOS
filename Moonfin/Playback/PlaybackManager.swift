@@ -170,6 +170,7 @@ final class PlaybackManager: ObservableObject {
 
     func setAudioTrack(_ index: Int32) {
         player.setAudioTrack(index)
+        saveSelectedAudioLanguage(vlcTrackIndex: index)
     }
 
     func setSubtitleTrack(_ index: Int32) {
@@ -187,13 +188,19 @@ final class PlaybackManager: ObservableObject {
         }
     }
 
+    private var resolvedMaxBitrate: Int64? {
+        let pref = preferences[UserPreferences.maxBitrate]
+        return pref > 0 ? Int64(pref) : nil
+    }
+
+    private var resolvedMaxAudioChannels: Int? {
+        preferences[UserPreferences.audioOutput] == .downmixToStereo ? 2 : nil
+    }
+
     private func playCurrentEntry() async {
         guard let entry = currentEntry else { return }
 
         playbackState = .resolving
-
-        let pref = preferences[UserPreferences.maxBitrate]
-        let maxBitrate: Int64? = pref > 0 ? Int64(pref) : nil
 
         let audioIndex = entry.audioStreamIndex
         let subtitleIndex = entry.subtitleStreamIndex
@@ -211,7 +218,8 @@ final class PlaybackManager: ObservableObject {
                 stream = try await streamResolver.resolve(
                     item: entry.item,
                     mediaSourceId: entry.mediaSourceId,
-                    maxBitrate: maxBitrate,
+                    maxBitrate: resolvedMaxBitrate,
+                    maxAudioChannels: resolvedMaxAudioChannels,
                     audioStreamIndex: audioIndex,
                     subtitleStreamIndex: subtitleIndex,
                     startTimeTicks: entry.startPositionTicks > 0 ? entry.startPositionTicks : nil
@@ -223,8 +231,6 @@ final class PlaybackManager: ObservableObject {
             currentStreamInfo = stream
             lastEvaluatedSecond = -1
 
-            // For non-transcoded streams, VLC receives the full file and must seek
-            // to the resume position. Transcoded streams already start at the right time.
             let startSeconds: TimeInterval
             if entry.startPositionTicks > 0 && stream.playMethod != .transcode {
                 startSeconds = TimeInterval(entry.startPositionTicks) / 10_000_000
@@ -232,7 +238,9 @@ final class PlaybackManager: ObservableObject {
                 startSeconds = 0
             }
 
+            player.configureSubtitleAppearance(subtitleConfigurator.mediaOptions())
             await player.play(streamUrl: stream.url, startPosition: startSeconds)
+            applyPreferredAudioTrack(stream: stream)
             await reportPlaybackStart()
             startProgressReporting()
             prefetchNextStream()
@@ -246,8 +254,6 @@ final class PlaybackManager: ObservableObject {
         guard let nextItem = nextEntry?.item else { return }
         if prefetchedItemId == nextItem.id { return }
 
-        let pref = preferences[UserPreferences.maxBitrate]
-        let maxBitrate: Int64? = pref > 0 ? Int64(pref) : nil
         let subtitleIndex: Int? = subtitleConfigurator.shouldDefaultToNone ? -1 : nil
         let mediaSourceId = nextEntry?.mediaSourceId
 
@@ -257,7 +263,8 @@ final class PlaybackManager: ObservableObject {
                 let stream = try await streamResolver.resolve(
                     item: nextItem,
                     mediaSourceId: mediaSourceId,
-                    maxBitrate: maxBitrate,
+                    maxBitrate: resolvedMaxBitrate,
+                    maxAudioChannels: resolvedMaxAudioChannels,
                     audioStreamIndex: nil,
                     subtitleStreamIndex: subtitleIndex,
                     startTimeTicks: nil
@@ -409,5 +416,31 @@ final class PlaybackManager: ObservableObject {
             failed: failed
         )
         try? await client.playbackApi.reportPlaybackStopped(info: report)
+    }
+
+    private func saveSelectedAudioLanguage(vlcTrackIndex: Int32) {
+        guard let stream = currentStreamInfo else { return }
+        let vlcTracks = player.audioTracks
+        guard let trackPosition = vlcTracks.firstIndex(where: { $0.id == vlcTrackIndex }) else { return }
+        let audioStreams = stream.audioStreams
+        guard trackPosition < audioStreams.count else { return }
+        if let language = audioStreams[trackPosition].language, !language.isEmpty {
+            preferences[UserPreferences.lastAudioLanguage] = language
+        }
+    }
+
+    private func applyPreferredAudioTrack(stream: StreamInfo) {
+        let behavior = preferences[UserPreferences.audioBehavior]
+        guard behavior == .previouslySelected else { return }
+        let savedLanguage = preferences[UserPreferences.lastAudioLanguage]
+        guard !savedLanguage.isEmpty else { return }
+
+        if let matchIndex = stream.audioStreams.firstIndex(where: { $0.language == savedLanguage }) {
+            let vlcTracks = player.audioTracks
+            if matchIndex < vlcTracks.count {
+                let vlcId = vlcTracks[matchIndex].id
+                player.setAudioTrack(vlcId)
+            }
+        }
     }
 }

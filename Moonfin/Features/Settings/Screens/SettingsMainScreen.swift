@@ -20,6 +20,13 @@ struct SettingsMainScreen: View {
             )
 
             SettingsListButton(
+                icon: "house",
+                heading: "Home",
+                caption: "Sections, poster size, image type",
+                action: { settingsRouter.navigate(to: .home) }
+            )
+
+            SettingsListButton(
                 icon: "gear",
                 heading: "Moonfin",
                 caption: "Navbar, shuffle, media bar",
