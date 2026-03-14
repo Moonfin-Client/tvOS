@@ -229,9 +229,9 @@ struct HomeScreen: View {
                             .frame(height: 1)
                         }
 
-                        LazyVStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
+                        VStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
                             let visibleRows = viewModel.rows.filter { !$0.isEmpty }
-                            ForEach(Array(visibleRows.enumerated()), id: \.element.id) { index, row in
+                            ForEach(visibleRows) { row in
                                 ContentRow(
                                     row: row,
                                     viewModel: viewModel,
@@ -263,8 +263,7 @@ struct HomeScreen: View {
                                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.effectiveServerId))
                                         }
                                     },
-                                    restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil,
-                                    focusNamespace: index == 0 ? mainNamespace : nil
+                                    restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil
                                 )
                                 .id(row.id)
                             }

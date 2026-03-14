@@ -266,7 +266,7 @@ struct FocusFirstRow<Content: View>: View {
     let content: (FocusState<String?>.Binding) -> Content
 
     @FocusState private var focusedId: String?
-    @State private var hasEnteredFocus = false
+    @Namespace private var rowNamespace
 
     init(firstItemId: String?, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
         self.firstItemId = firstItemId
@@ -277,18 +277,9 @@ struct FocusFirstRow<Content: View>: View {
         ScrollView(.horizontal, showsIndicators: false) {
             content($focusedId)
         }
-        .onChange(of: focusedId) { newValue in
-            if newValue != nil && !hasEnteredFocus {
-                hasEnteredFocus = true
-                if let firstId = firstItemId, newValue != firstId {
-                    DispatchQueue.main.async {
-                        focusedId = firstId
-                    }
-                }
-            } else if newValue == nil {
-                hasEnteredFocus = false
-            }
-        }
+        .focusSection()
+        .focusScope(rowNamespace)
+        .defaultFocus($focusedId, firstItemId, priority: .userInitiated)
     }
 }
 
