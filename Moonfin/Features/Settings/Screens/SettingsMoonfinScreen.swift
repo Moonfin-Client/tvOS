@@ -79,6 +79,14 @@ struct SettingsMoonfinScreen: View {
             )
 
             SettingsListButton(
+                icon: "lock.shield",
+                heading: "Parental Controls",
+                caption: "Block content by rating",
+                trailingText: container.parentalControlsRepository.isEnabled ? "On" : "Off",
+                action: { settingsRouter.navigate(to: .moonfinParentalControls) }
+            )
+
+            SettingsListButton(
                 icon: "person.2.fill",
                 heading: "SyncPlay",
                 caption: "Synchronized playback settings",

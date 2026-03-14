@@ -291,6 +291,8 @@ struct SettingsOverlayView: View {
             SettingsAboutScreen()
         case .syncPlay:
             SyncPlayScreen()
+        case .moonfinParentalControls:
+            SettingsParentalControlsScreen()
         case .moonfinSyncPlay:
             SettingsSyncPlayScreen()
         case .moonfinSyncPlayMinDelay:
