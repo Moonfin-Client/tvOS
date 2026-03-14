@@ -187,6 +187,12 @@ struct EmbyUserLibraryApi: ServerUserLibraryApi {
         return try await client.request("/Items/\(itemId)/ThemeMedia", queryItems: query)
     }
 
+    func getIntros(itemId: String) async throws -> [ServerItem] {
+        let userId = client.userId ?? ""
+        let result: ItemsResult = try await client.request("/Users/\(userId)/Items/\(itemId)/Intros")
+        return result.items
+    }
+
     func markFavorite(itemId: String, userId: String) async throws -> UserItemData {
         try await client.request("/Users/\(userId)/FavoriteItems/\(itemId)", method: "POST")
     }

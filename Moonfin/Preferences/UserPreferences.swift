@@ -19,6 +19,7 @@ final class UserPreferences {
     static let audioNightMode = Preference(key: "playback_audio_night_mode", defaultValue: false)
     static let liveTvDirectPlay = Preference(key: "playback_livetv_direct_play", defaultValue: true)
     static let videoStartDelay = Preference(key: "playback_video_start_delay", defaultValue: 0)
+    static let cinemaModeEnabled = Preference(key: "cinema_mode_enabled", defaultValue: true)
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
     static let shuffleContentType = Preference(key: "shuffle_content_type", defaultValue: ShuffleContentType.both)

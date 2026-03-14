@@ -119,6 +119,13 @@ final class PlaybackManager: ObservableObject {
         currentIndex = startIndex
         episodesPlayed = 0
         nextUpManager.resetForNewQueue()
+
+        if preferences[UserPreferences.cinemaModeEnabled],
+           let item = queue[safe: startIndex]?.item,
+           item.type == .movie {
+            await prependIntros(for: item)
+        }
+
         await playCurrentEntry()
     }
 
@@ -204,6 +211,22 @@ final class PlaybackManager: ObservableObject {
 
     var skipForwardSeconds: TimeInterval {
         TimeInterval(preferences[UserPreferences.skipForwardLength])
+    }
+
+    private func prependIntros(for item: ServerItem) async {
+        do {
+            let intros = try await client.userLibraryApi.getIntros(itemId: item.id)
+            guard !intros.isEmpty else { return }
+            let introEntries = intros.map { intro in
+                QueueEntry(
+                    id: "intro_\(intro.id)",
+                    item: intro,
+                    mediaSourceId: intro.mediaSources?.first?.id,
+                    startPositionTicks: 0
+                )
+            }
+            queue.insert(contentsOf: introEntries, at: currentIndex)
+        } catch { }
     }
 
     private func playCurrentEntry() async {

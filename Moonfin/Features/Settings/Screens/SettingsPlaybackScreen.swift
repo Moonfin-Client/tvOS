@@ -62,6 +62,13 @@ struct SettingsPlaybackScreen: View {
                 action: { settingsRouter.navigate(to: .playbackSlideshowInterval) }
             )
 
+            SettingsToggleButton(
+                icon: "film.stack",
+                heading: NSLocalizedString("pref_prerolls_enabled", comment: ""),
+                caption: NSLocalizedString("pref_prerolls_enabled_description", comment: ""),
+                isOn: prefs.binding(for: UserPreferences.cinemaModeEnabled)
+            )
+
             if supportsMediaSegments {
                 SettingsListButton(
                     icon: "scissors",

@@ -68,6 +68,7 @@ protocol ServerUserLibraryApi {
     func getItem(itemId: String) async throws -> ServerItem
     func getSpecialFeatures(itemId: String) async throws -> [ServerItem]
     func getThemeMedia(itemId: String, userId: String, inheritFromParent: Bool) async throws -> AllThemeMediaResult
+    func getIntros(itemId: String) async throws -> [ServerItem]
     func markFavorite(itemId: String, userId: String) async throws -> UserItemData
     func unmarkFavorite(itemId: String, userId: String) async throws -> UserItemData
     func markPlayed(itemId: String, userId: String) async throws -> UserItemData
