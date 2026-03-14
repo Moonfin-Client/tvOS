@@ -4,6 +4,7 @@ enum RowQueryType {
     case items(GetItemsRequest)
     case resume(GetResumeItemsRequest)
     case nextUp(GetNextUpRequest)
+    case mergedContinueWatching(resume: GetResumeItemsRequest, nextUp: GetNextUpRequest)
     case latestMedia(GetLatestMediaRequest)
     case similar(itemId: String, limit: Int?)
     case seasons(seriesId: String, userId: String)

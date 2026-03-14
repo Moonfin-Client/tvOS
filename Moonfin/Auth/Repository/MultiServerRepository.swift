@@ -237,9 +237,24 @@ final class MultiServerRepository: MultiServerRepositoryProtocol {
     }
 
     private func sortByLastPlayed(_ items: [ServerItem], limit: Int) -> [ServerItem] {
+        var seriesLastPlayed: [String: Date] = [:]
+        for item in items {
+            if let sid = item.seriesId, let date = item.userData?.lastPlayedDate {
+                if let existing = seriesLastPlayed[sid] {
+                    if date > existing { seriesLastPlayed[sid] = date }
+                } else {
+                    seriesLastPlayed[sid] = date
+                }
+            }
+        }
+
         let sorted = items.sorted { a, b in
-            let dateA = a.userData?.lastPlayedDate ?? Date.distantPast
-            let dateB = b.userData?.lastPlayedDate ?? Date.distantPast
+            let dateA = a.userData?.lastPlayedDate
+                ?? a.seriesId.flatMap { seriesLastPlayed[$0] }
+                ?? Date.distantPast
+            let dateB = b.userData?.lastPlayedDate
+                ?? b.seriesId.flatMap { seriesLastPlayed[$0] }
+                ?? Date.distantPast
             return dateA > dateB
         }
         return Array(sorted.prefix(limit))

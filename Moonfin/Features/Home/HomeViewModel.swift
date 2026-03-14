@@ -220,13 +220,23 @@ final class HomeViewModel: ObservableObject {
             if multiServerSections.contains(section) {
                 switch section {
                 case .resume:
-                    let items = await multiRepo.getAggregatedMergedContinueWatching(limit: Self.multiServerLimit)
+                    let mergeEnabled = container.userPreferences[UserPreferences.mergeContinueWatchingNextUp]
+                    let items: [ServerItem]
+                    if mergeEnabled {
+                        items = await multiRepo.getAggregatedMergedContinueWatching(limit: Self.multiServerLimit)
+                    } else {
+                        items = await multiRepo.getAggregatedResumeItems(mediaTypes: [.video], limit: Self.multiServerLimit)
+                    }
                     resultRows.append(makeStaticRow(
                         id: "ms_resume_video", title: "Continue Watching",
                         rowType: .continueWatching, items: items
                     ))
+                    if mergeEnabled { continue }
 
                 case .nextUp:
+                    if container.userPreferences[UserPreferences.mergeContinueWatchingNextUp] {
+                        continue
+                    }
                     let items = await multiRepo.getAggregatedNextUpItems(limit: Self.multiServerLimit)
                     resultRows.append(makeStaticRow(
                         id: "ms_next_up", title: "Next Up",
@@ -305,6 +315,28 @@ final class HomeViewModel: ObservableObject {
     private func buildRowDefinitions(for section: HomeSectionType) -> [HomeRow] {
         switch section {
         case .resume:
+            let mergeEnabled = container.userPreferences[UserPreferences.mergeContinueWatchingNextUp]
+            if mergeEnabled {
+                return [makeRow(
+                    id: "merged_continue_watching",
+                    title: "Continue Watching",
+                    rowType: .continueWatching,
+                    queryType: .mergedContinueWatching(
+                        resume: GetResumeItemsRequest(
+                            mediaTypes: [.video],
+                            fields: Self.defaultFields,
+                            enableImages: true,
+                            imageTypeLimit: 1
+                        ),
+                        nextUp: GetNextUpRequest(
+                            fields: Self.defaultFields,
+                            enableImages: true,
+                            imageTypeLimit: 1
+                        )
+                    ),
+                    triggers: [.moviePlayback, .tvPlayback]
+                )]
+            }
             return [makeRow(
                 id: "resume_video",
                 title: "Continue Watching",
@@ -319,6 +351,9 @@ final class HomeViewModel: ObservableObject {
             )]
 
         case .nextUp:
+            if container.userPreferences[UserPreferences.mergeContinueWatchingNextUp] {
+                return []
+            }
             return [makeRow(
                 id: "next_up",
                 title: "Next Up",

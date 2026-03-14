@@ -61,6 +61,20 @@ struct SettingsMoonfinScreen: View {
             )
 
             SettingsToggleButton(
+                icon: "arrow.triangle.merge",
+                heading: "Merge Continue Watching & Next Up",
+                caption: "Combine into a single row",
+                isOn: prefs.binding(for: UserPreferences.mergeContinueWatchingNextUp)
+            )
+
+            SettingsToggleButton(
+                icon: "folder",
+                heading: "Enable Folder View",
+                caption: "Show folders button in toolbar",
+                isOn: prefs.binding(for: UserPreferences.enableFolderView)
+            )
+
+            SettingsToggleButton(
                 icon: "photo.artframe",
                 heading: "Backdrop",
                 caption: "Show background images",
@@ -128,6 +142,27 @@ struct SettingsMoonfinScreen: View {
                 caption: "Overlay color",
                 trailingText: prefs[UserPreferences.mediaBarOverlayColor].displayName,
                 action: { settingsRouter.navigate(to: .moonfinMediaBarColor) }
+            )
+
+            SettingsToggleButton(
+                icon: "play.rectangle",
+                heading: "Trailer Preview",
+                caption: "Play trailers in media bar",
+                isOn: prefs.binding(for: UserPreferences.mediaBarTrailerPreview)
+            )
+
+            SettingsToggleButton(
+                icon: "tv",
+                heading: "Episode Preview",
+                caption: "Show episode previews on detail screens",
+                isOn: prefs.binding(for: UserPreferences.episodePreviewEnabled)
+            )
+
+            SettingsToggleButton(
+                icon: "speaker.wave.1",
+                heading: "Preview Audio",
+                caption: "Play audio during previews",
+                isOn: prefs.binding(for: UserPreferences.previewAudioEnabled)
             )
 
             SettingsToggleButton(

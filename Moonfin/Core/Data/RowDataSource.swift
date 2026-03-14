@@ -74,6 +74,64 @@ final class RowDataSource {
                 items = result.items
                 totalItemCount = result.totalRecordCount
 
+            case .mergedContinueWatching(let resumeRequest, let nextUpRequest):
+                async let resumeTask = client.itemsApi.getResumeItems(
+                    request: GetResumeItemsRequest(
+                        userId: resumeRequest.userId,
+                        parentId: resumeRequest.parentId,
+                        includeItemTypes: resumeRequest.includeItemTypes,
+                        excludeItemTypes: resumeRequest.excludeItemTypes,
+                        mediaTypes: resumeRequest.mediaTypes,
+                        fields: resumeRequest.fields,
+                        limit: Self.maxItems,
+                        startIndex: 0,
+                        enableImages: resumeRequest.enableImages,
+                        imageTypeLimit: resumeRequest.imageTypeLimit
+                    )
+                )
+                async let nextUpTask = client.itemsApi.getNextUp(
+                    request: GetNextUpRequest(
+                        userId: nextUpRequest.userId,
+                        seriesId: nextUpRequest.seriesId,
+                        fields: nextUpRequest.fields,
+                        limit: Self.maxItems,
+                        startIndex: 0,
+                        enableImages: nextUpRequest.enableImages,
+                        imageTypeLimit: nextUpRequest.imageTypeLimit
+                    )
+                )
+
+                let resumeResult = try await resumeTask
+                let nextUpResult = try await nextUpTask
+
+                let resumeIds = Set(resumeResult.items.map(\.id))
+
+                var seriesLastPlayed: [String: Date] = [:]
+                for item in resumeResult.items {
+                    if let sid = item.seriesId, let date = item.userData?.lastPlayedDate {
+                        if let existing = seriesLastPlayed[sid] {
+                            if date > existing { seriesLastPlayed[sid] = date }
+                        } else {
+                            seriesLastPlayed[sid] = date
+                        }
+                    }
+                }
+
+                let dedupedNextUp = nextUpResult.items.filter { !resumeIds.contains($0.id) }
+                let combined = resumeResult.items + dedupedNextUp
+
+                items = combined.sorted { a, b in
+                    let dateA = a.userData?.lastPlayedDate
+                        ?? a.seriesId.flatMap { seriesLastPlayed[$0] }
+                        ?? Date.distantPast
+                    let dateB = b.userData?.lastPlayedDate
+                        ?? b.seriesId.flatMap { seriesLastPlayed[$0] }
+                        ?? Date.distantPast
+                    return dateA > dateB
+                }
+                totalItemCount = items.count
+                fullyLoaded = true
+
             case .latestMedia(let request):
                 let allItems = try await client.itemsApi.getLatestMedia(request: request)
                 cachedItems = allItems
