@@ -39,6 +39,8 @@ struct ServerScreen: View {
             switch state {
             case .authenticated:
                 router.switchFlow(to: .main)
+                Task { await container.pluginSyncService.syncOnStartup() }
+                container.serverConnectionMonitor.startMonitoring()
             case .requireSignIn:
                 if let server = viewModel.server {
                     let username = viewModel.authenticatingUser?.name ?? viewModel.pinUser?.name

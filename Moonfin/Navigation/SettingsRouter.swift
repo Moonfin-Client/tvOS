@@ -80,6 +80,11 @@ enum SettingsRoute: Hashable {
     case moonfinDetailsBlur
     case moonfinBrowsingBlur
     case moonfinParentalControls
+    case pluginToolbar
+    case pluginMediaBar
+    case pluginBackgrounds
+    case pluginPreviewsMusic
+    case pluginIntegrations
     case moonfinSyncPlay
     case moonfinSyncPlayMinDelay
     case moonfinSyncPlayMaxDelay
@@ -100,6 +105,7 @@ enum SettingsRoute: Hashable {
 final class SettingsRouter: ObservableObject {
     @Published var isPresented = false
     @Published var path: [SettingsRoute] = []
+    @Published var lastPoppedRoute: SettingsRoute?
     var navigationDirection: NavigationDirection = .forward
 
     enum NavigationDirection {
@@ -123,12 +129,37 @@ final class SettingsRouter: ObservableObject {
             return
         }
         navigationDirection = .backward
-        path.removeLast()
+        lastPoppedRoute = path.removeLast()
         if path.isEmpty { dismiss() }
     }
 
     func dismiss() {
         isPresented = false
         path = []
+    }
+}
+
+struct SettingsFocusRestorationModifier: ViewModifier {
+    @EnvironmentObject var settingsRouter: SettingsRouter
+    var focusedRoute: FocusState<SettingsRoute?>.Binding
+
+    func body(content: Content) -> some View {
+        content.onAppear {
+            guard let route = settingsRouter.lastPoppedRoute else { return }
+            settingsRouter.lastPoppedRoute = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    focusedRoute.wrappedValue = route
+                }
+            }
+        }
+    }
+}
+
+extension View {
+    func restoresFocus(_ focusedRoute: FocusState<SettingsRoute?>.Binding) -> some View {
+        modifier(SettingsFocusRestorationModifier(focusedRoute: focusedRoute))
     }
 }

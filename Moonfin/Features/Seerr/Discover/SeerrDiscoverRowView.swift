@@ -5,10 +5,14 @@ struct SeerrDiscoverRowView: View {
     let viewModel: SeerrDiscoverViewModel
     var onItemSelected: ((SeerrDiscoverItemDto) -> Void)?
     var onGenreSelected: ((SeerrGenreDto, String) -> Void)?
+    var onStudioSelected: ((SeerrStudioDto) -> Void)?
+    var onNetworkSelected: ((SeerrNetworkDto) -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
 
     private var isGenreRow: Bool { row.rowType == .movieGenres || row.rowType == .seriesGenres }
+    private var isStudioRow: Bool { row.rowType == .studios }
+    private var isNetworkRow: Bool { row.rowType == .networks }
     private var genreMediaType: String { row.rowType == .seriesGenres ? "tv" : "movie" }
 
     var body: some View {
@@ -16,6 +20,10 @@ struct SeerrDiscoverRowView: View {
             loadingRow
         } else if isGenreRow && !row.genres.isEmpty {
             genreRow
+        } else if isStudioRow && !row.studios.isEmpty {
+            studioRow
+        } else if isNetworkRow && !row.networks.isEmpty {
+            networkRow
         } else if !row.items.isEmpty {
             itemRow
         }
@@ -80,6 +88,50 @@ struct SeerrDiscoverRowView: View {
                         )
                         .id(String(genre.id))
                         .focused(focusBinding, equals: String(genre.id))
+                    }
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
+            }
+        }
+    }
+
+    private var studioRow: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+            rowTitle
+            FocusFirstRow(firstItemId: String(row.studios.first?.id ?? 0)) { focusBinding in
+                LazyHStack(spacing: SpaceTokens.spaceMd) {
+                    ForEach(row.studios) { studio in
+                        SeerrNetworkStudioCard(
+                            name: studio.name,
+                            logoUrl: studio.logoPath,
+                            onFocused: {},
+                            onSelect: { onStudioSelected?(studio) }
+                        )
+                        .id(String(studio.id))
+                        .focused(focusBinding, equals: String(studio.id))
+                    }
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
+            }
+        }
+    }
+
+    private var networkRow: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+            rowTitle
+            FocusFirstRow(firstItemId: String(row.networks.first?.id ?? 0)) { focusBinding in
+                LazyHStack(spacing: SpaceTokens.spaceMd) {
+                    ForEach(row.networks) { network in
+                        SeerrNetworkStudioCard(
+                            name: network.name,
+                            logoUrl: network.logoPath,
+                            onFocused: {},
+                            onSelect: { onNetworkSelected?(network) }
+                        )
+                        .id(String(network.id))
+                        .focused(focusBinding, equals: String(network.id))
                     }
                 }
                 .padding(.vertical, 12)
@@ -281,82 +333,11 @@ struct SeerrGenreCard: View {
     }
 }
 
-struct SeerrSettingsRowView: View {
-    @ObservedObject var viewModel: SeerrDiscoverViewModel
-    var onEditServerUrl: () -> Void
-    var onSignIn: () -> Void
-
-    @EnvironmentObject var theme: MoonfinTheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            Text("Settings")
-                .font(.bodyLg).fontWeight(.semibold)
-                .foregroundColor(theme.colorScheme.onBackground)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: SpaceTokens.spaceMd) {
-                    SeerrSettingCard(
-                        icon: "power",
-                        title: "Enabled",
-                        value: viewModel.settingsState.isEnabled ? "On" : "Off",
-                        valueColor: viewModel.settingsState.isEnabled ? .colorGreen500 : .gray,
-                        action: { viewModel.toggleEnabled() }
-                    )
-
-                    SeerrSettingCard(
-                        icon: "globe",
-                        title: "Server URL",
-                        value: viewModel.settingsState.serverUrl.isEmpty ? "Not Set" : truncateUrl(viewModel.settingsState.serverUrl),
-                        action: onEditServerUrl
-                    )
-
-                    SeerrSettingCard(
-                        icon: "person.crop.circle",
-                        title: "Sign In",
-                        value: viewModel.settingsState.isConnected ? "Connected" : "Not Connected",
-                        valueColor: viewModel.settingsState.isConnected ? .colorGreen500 : .orange,
-                        subtitle: viewModel.settingsState.isConnecting ? "Connecting..." : viewModel.settingsState.connectionStatus,
-                        action: onSignIn
-                    )
-
-                    SeerrSettingCard(
-                        icon: "number.circle",
-                        title: "Fetch Limit",
-                        value: viewModel.settingsState.fetchLimit.displayName,
-                        action: { viewModel.cycleFetchLimit() }
-                    )
-
-                    SeerrSettingCard(
-                        icon: "eye.slash",
-                        title: "NSFW Filter",
-                        value: viewModel.settingsState.blockNsfw ? "On" : "Off",
-                        valueColor: viewModel.settingsState.blockNsfw ? .colorGreen500 : .gray,
-                        action: { viewModel.toggleNsfw() }
-                    )
-                }
-                .padding(.vertical, 12)
-                .padding(.horizontal, 12)
-            }
-        }
-    }
-
-    private func truncateUrl(_ url: String) -> String {
-        let cleaned = url
-            .replacingOccurrences(of: "https://", with: "")
-            .replacingOccurrences(of: "http://", with: "")
-        if cleaned.count > 25 { return String(cleaned.prefix(22)) + "..." }
-        return cleaned
-    }
-}
-
-struct SeerrSettingCard: View {
-    let icon: String
-    let title: String
-    let value: String
-    var valueColor: Color = .white
-    var subtitle: String? = nil
-    var action: () -> Void
+struct SeerrNetworkStudioCard: View {
+    let name: String
+    let logoUrl: String?
+    var onFocused: (() -> Void)?
+    var onSelect: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
@@ -365,29 +346,34 @@ struct SeerrSettingCard: View {
     private let cardHeight: CGFloat = 100
 
     var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(theme.accent)
-                    Text(title)
-                        .font(.captionSm).fontWeight(.medium)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+        Button(action: { onSelect?() }) {
+            VStack(spacing: 8) {
+                if let urlString = logoUrl, let url = URL(string: urlString) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: cardWidth - 32, maxHeight: cardHeight - 48)
+                        case .failure:
+                            logoPlaceholder
+                        case .empty:
+                            logoPlaceholder.shimmering()
+                        @unknown default:
+                            logoPlaceholder
+                        }
+                    }
+                } else {
+                    logoPlaceholder
                 }
-                Text(value)
-                    .font(.titleSm).fontWeight(.semibold)
-                    .foregroundColor(valueColor)
+                Text(name)
+                    .font(.captionSm)
+                    .fontWeight(.medium)
+                    .foregroundColor(theme.colorScheme.onBackground)
                     .lineLimit(1)
-                if let subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.captionXs)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
-                        .lineLimit(1)
-                }
             }
-            .frame(width: cardWidth, height: cardHeight, alignment: .topLeading)
-            .padding(12)
+            .frame(width: cardWidth, height: cardHeight)
             .background(theme.colorScheme.surface.opacity(0.3))
             .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
         }
@@ -397,5 +383,14 @@ struct SeerrSettingCard: View {
             focusBorderColor: theme.focusBorder.color
         ))
         .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+            if focused { onFocused?() }
+        }
+    }
+
+    private var logoPlaceholder: some View {
+        Image(systemName: "building.2")
+            .font(.system(size: 24))
+            .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
     }
 }

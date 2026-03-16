@@ -90,6 +90,15 @@ struct Navbar: View {
                 action: { router.navigate(to: .folderView) }
             )
 
+            if viewModel.showSeerrInToolbar {
+                ExpandableToolbarButton(
+                    icon: viewModel.seerrIconName,
+                    label: viewModel.seerrDisplayName,
+                    isAssetIcon: true,
+                    action: { router.navigate(to: .seerrDiscover) }
+                )
+            }
+
             if viewModel.showLibraries && !viewModel.userViews.isEmpty {
                 ExpandableLibrariesButton(
                     libraries: viewModel.userViews,
@@ -116,7 +125,7 @@ struct Navbar: View {
         }
         .background(
             Capsule()
-                .fill(theme.colorScheme.surface.opacity(0.6))
+                .fill(viewModel.overlayColor.opacity(viewModel.overlayOpacity))
         )
         .clipShape(Capsule())
     }

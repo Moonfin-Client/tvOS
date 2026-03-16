@@ -97,6 +97,93 @@ final class MediaBarViewModel: ObservableObject {
     private func fetchItems(userViews: [ServerItem]) async throws -> [MediaBarSlideItem] {
         guard let client else { return [] }
 
+        if container.pluginSyncService.isPluginAvailable,
+           let serverItems = try? await fetchFromPlugin(client: client) {
+            return serverItems
+        }
+
+        return try await fetchFromClient(client: client, userViews: userViews)
+    }
+
+    private func fetchFromPlugin(client: MediaServerClient) async throws -> [MediaBarSlideItem] {
+        let httpClient = client.httpClient
+
+        struct MediaBarResponse: Decodable {
+            let Items: [MediaBarItemDTO]
+        }
+
+        struct MediaBarItemDTO: Decodable {
+            let Id: String
+            let Name: String?
+            let ItemType: String?
+            let ProductionYear: Int?
+            let OfficialRating: String?
+            let RunTimeTicks: Int64?
+            let Genres: [String]?
+            let Overview: String?
+            let CommunityRating: Double?
+            let CriticRating: Double?
+            let ImageTags: [String: String]?
+            let BackdropImageTags: [String]?
+
+            enum CodingKeys: String, CodingKey {
+                case Id, Name, ProductionYear, OfficialRating, RunTimeTicks
+                case Genres, Overview, CommunityRating, CriticRating
+                case ImageTags, BackdropImageTags
+                case ItemType = "Type"
+            }
+        }
+
+        let response: MediaBarResponse = try await httpClient.request(
+            PluginSyncConstants.mediaBarPath,
+            method: "GET",
+            queryItems: [URLQueryItem(name: "profile", value: "tv")]
+        )
+
+        let imageApi = client.imageApi
+        return response.Items.compactMap { dto in
+            let backdropTag = dto.BackdropImageTags?.first
+            guard backdropTag != nil else { return nil }
+
+            let backdropUrl = imageApi.getItemImageUrl(
+                itemId: dto.Id, imageType: .backdrop,
+                maxWidth: 1920, maxHeight: nil, tag: backdropTag
+            )
+            let logoTag = dto.ImageTags?["Logo"]
+            let logoUrl = logoTag.map {
+                imageApi.getItemImageUrl(
+                    itemId: dto.Id, imageType: .logo,
+                    maxWidth: 400, maxHeight: nil, tag: $0
+                )
+            }
+
+            var runtime: String?
+            if let ticks = dto.RunTimeTicks, ticks > 0 {
+                runtime = RuntimeFormatter.format(ticks: ticks)
+            }
+
+            let itemType = ItemType(rawValue: dto.ItemType ?? "") ?? .movie
+
+            return MediaBarSlideItem(
+                id: dto.Id,
+                serverId: nil,
+                title: dto.Name ?? "",
+                overview: dto.Overview,
+                backdropUrl: backdropUrl,
+                logoUrl: logoUrl,
+                year: dto.ProductionYear,
+                genres: dto.Genres ?? [],
+                runtime: runtime,
+                officialRating: dto.OfficialRating,
+                communityRating: dto.CommunityRating,
+                criticRating: dto.CriticRating,
+                itemType: itemType,
+                providerIds: nil
+            )
+        }
+    }
+
+    private func fetchFromClient(client: MediaServerClient, userViews: [ServerItem]) async throws -> [MediaBarSlideItem] {
         let prefs = container.userPreferences
         let contentType = prefs[UserPreferences.mediaBarContentType]
         let maxItems = prefs[UserPreferences.mediaBarItemCount].count

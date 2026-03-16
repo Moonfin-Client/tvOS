@@ -31,10 +31,10 @@ struct SettingsSeerrScreen: View {
     private var repo: SeerrRepositoryProtocol { container.seerrRepository }
 
     var body: some View {
-        SettingsScreenLayout(title: "Jellyseerr") {
+        SettingsScreenLayout(title: "Seerr") {
             SettingsToggleButton(
                 icon: "film",
-                heading: "Enable Jellyseerr",
+                heading: "Enable Seerr",
                 caption: "Media request management",
                 isOn: enabledBinding
             )
@@ -75,14 +75,14 @@ struct SettingsSeerrScreen: View {
             SettingsToggleButton(
                 icon: "sidebar.leading",
                 heading: "Show in Navigation",
-                caption: "Show Jellyseerr in the sidebar",
+                caption: "Show Seerr in the sidebar",
                 isOn: showInNavigationBinding
             )
 
             SettingsToggleButton(
                 icon: "rectangle.topthird.inset.filled",
                 heading: "Show in Toolbar",
-                caption: "Show Jellyseerr button in toolbar",
+                caption: "Show Seerr button in toolbar",
                 isOn: showInToolbarBinding
             )
 
@@ -104,7 +104,7 @@ struct SettingsSeerrScreen: View {
         }
         .task { await loadState() }
         .alert("Server URL", isPresented: $showUrlAlert) {
-            TextField("https://jellyseerr.example.com", text: $urlInput)
+            TextField("https://seerr.example.com", text: $urlInput)
             Button("Save") { saveServerUrl() }
             Button("Cancel", role: .cancel) {}
         }
@@ -132,7 +132,7 @@ struct SettingsSeerrScreen: View {
             Button("Logout", role: .destructive) { performLogout() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Are you sure you want to log out of Jellyseerr?")
+            Text("Are you sure you want to log out of Seerr?")
         }
     }
 

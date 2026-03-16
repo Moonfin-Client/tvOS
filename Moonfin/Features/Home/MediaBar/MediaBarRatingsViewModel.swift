@@ -1,22 +1,36 @@
 import SwiftUI
+import Combine
 
 @MainActor
 final class MediaBarRatingsViewModel: ObservableObject {
     @Published private(set) var ratings: [(String, Float)] = []
     @Published private(set) var isLoading = false
+    @Published private(set) var enableAdditionalRatings: Bool = true
 
     private let mdbListRepository: MdbListRepository
     private let userPreferences: UserPreferences
     private var currentItemId: String?
     private var loadTask: Task<Void, Never>?
-
-    var enableAdditionalRatings: Bool {
-        userPreferences[UserPreferences.enableAdditionalRatings]
-    }
+    private var cancellables = Set<AnyCancellable>()
 
     init(mdbListRepository: MdbListRepository, userPreferences: UserPreferences) {
         self.mdbListRepository = mdbListRepository
         self.userPreferences = userPreferences
+        self.enableAdditionalRatings = userPreferences[UserPreferences.enableAdditionalRatings]
+        observePreferenceChanges()
+    }
+
+    private func observePreferenceChanges() {
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .debounce(for: .milliseconds(50), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.refreshPreferences()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func refreshPreferences() {
+        enableAdditionalRatings = userPreferences[UserPreferences.enableAdditionalRatings]
     }
 
     func loadRatings(for item: MediaBarSlideItem) {

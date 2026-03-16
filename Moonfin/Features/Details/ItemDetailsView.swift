@@ -333,7 +333,7 @@ struct ItemDetailsView: View {
     }
 
     private var ratingsRow: some View {
-        let showLabels = container.userPreferences[UserPreferences.showRatingLabels]
+        let showLabels = viewModel.showRatingLabels
         return HStack(spacing: SpaceTokens.spaceSm) {
             ForEach(viewModel.ratings, id: \.0) { source, value in
                 if source == "stars" {

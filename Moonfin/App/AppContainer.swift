@@ -156,9 +156,11 @@ final class AppContainer: ObservableObject {
         )
 
         let seerrRepo = self.seerrRepository
+        let parentalRepo = self.parentalControlsRepository
         self.pluginSyncService = PluginSyncService(
             resolveClient: resolveClient,
-            resolveSeerrRepository: { [weak seerrRepo] in seerrRepo }
+            resolveSeerrRepository: { [weak seerrRepo] in seerrRepo },
+            resolveParentalRepository: { [weak parentalRepo] in parentalRepo }
         )
 
         CrashReporter.shared.configure(preferences: self.telemetryPreferences)

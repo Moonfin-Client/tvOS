@@ -37,6 +37,9 @@ final class ItemDetailViewModel: ObservableObject {
     @Published private(set) var isFavorite: Bool = false
     @Published private(set) var isPlayed: Bool = false
 
+    @Published private(set) var showRatingLabels: Bool = false
+    @Published private(set) var enableEpisodeRatings: Bool = false
+
     let backgroundService = BackgroundService()
     let themeMusicPlayer = ThemeMusicPlayer()
 
@@ -45,11 +48,15 @@ final class ItemDetailViewModel: ObservableObject {
     private let serverId: String?
     private var loadTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
+    private var lastEnableAdditionalRatings: Bool = true
 
     init(container: AppContainer, itemId: String, serverId: String?) {
         self.container = container
         self.itemId = itemId
         self.serverId = serverId
+        self.showRatingLabels = container.userPreferences[UserPreferences.showRatingLabels]
+        self.enableEpisodeRatings = container.userPreferences[UserPreferences.enableEpisodeRatings]
+        self.lastEnableAdditionalRatings = container.userPreferences[UserPreferences.enableAdditionalRatings]
         backgroundService.configure(preferences: container.userPreferences)
 
         // Throttle background service updates to max 1 per 300ms to avoid
@@ -64,6 +71,31 @@ final class ItemDetailViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        observePreferenceChanges()
+    }
+
+    private func observePreferenceChanges() {
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .debounce(for: .milliseconds(50), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.refreshPreferences()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func refreshPreferences() {
+        let prefs = container.userPreferences
+        showRatingLabels = prefs[UserPreferences.showRatingLabels]
+        enableEpisodeRatings = prefs[UserPreferences.enableEpisodeRatings]
+
+        let newEnableAdditional = prefs[UserPreferences.enableAdditionalRatings]
+        if newEnableAdditional != lastEnableAdditionalRatings {
+            lastEnableAdditionalRatings = newEnableAdditional
+            if let item {
+                Task { await loadRatings(for: item) }
+            }
+        }
     }
 
     private var client: MediaServerClient? {

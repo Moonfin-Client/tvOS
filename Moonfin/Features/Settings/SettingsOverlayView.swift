@@ -28,6 +28,7 @@ struct SettingsOverlayView: View {
                 .fill(theme.colorScheme.surface)
         )
         .animation(.easeInOut(duration: 0.3), value: settingsRouter.path)
+        .focusSection()
         .onExitCommand {
             settingsRouter.goBack()
         }
@@ -173,6 +174,16 @@ struct SettingsOverlayView: View {
             )
         case .plugin:
             SettingsMoonfinScreen()
+        case .pluginToolbar:
+            SettingsPluginToolbarScreen()
+        case .pluginMediaBar:
+            SettingsPluginMediaBarScreen()
+        case .pluginBackgrounds:
+            SettingsPluginBackgroundsScreen()
+        case .pluginPreviewsMusic:
+            SettingsPluginPreviewsMusicScreen()
+        case .pluginIntegrations:
+            SettingsPluginIntegrationsScreen()
         case .moonfinNavbarPosition:
             SettingsPickerScreen(
                 title: "Navbar Position",

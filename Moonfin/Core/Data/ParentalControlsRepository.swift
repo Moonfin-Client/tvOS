@@ -51,6 +51,10 @@ final class ParentalControlsRepository: ObservableObject {
         blockedRatings = ratings
     }
 
+    func reloadBlockedRatings() {
+        loadBlockedRatings()
+    }
+
     func shouldFilterItem(_ item: ServerItem) -> Bool {
         isRatingBlocked(item.officialRating)
     }

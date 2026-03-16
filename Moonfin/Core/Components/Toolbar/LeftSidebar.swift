@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum SidebarFocusItem: Hashable {
-    case user, home, search, shuffle, favorites, genres, folders, syncPlay, libraries, settings
+    case user, home, search, shuffle, favorites, genres, folders, syncPlay, seerr, libraries, settings
     case library(String)
 }
 
@@ -69,9 +69,9 @@ struct LeftSidebar: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color.black.opacity(0.95),
-                            Color.black.opacity(0.85),
-                            Color.black.opacity(0.6),
+                            viewModel.overlayColor.opacity(viewModel.overlayOpacity * 1.9),
+                            viewModel.overlayColor.opacity(viewModel.overlayOpacity * 1.7),
+                            viewModel.overlayColor.opacity(viewModel.overlayOpacity * 1.2),
                             Color.clear
                         ],
                         startPoint: .leading,
@@ -178,6 +178,17 @@ struct LeftSidebar: View {
                     action: { settingsRouter.open(to: .syncPlay) }
                 )
                 .focused($focusedItem, equals: .syncPlay)
+            }
+
+            if viewModel.showSeerrInNavigation {
+                SidebarIconItem(
+                    assetIcon: viewModel.seerrIconName,
+                    label: viewModel.seerrDisplayName,
+                    isExpanded: isExpanded,
+                    isFocused: focusedItem == .seerr,
+                    action: { router.navigate(to: .seerrDiscover) }
+                )
+                .focused($focusedItem, equals: .seerr)
             }
 
             if viewModel.showLibraries {
@@ -336,7 +347,6 @@ private struct SidebarIconItem: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 24, height: 24)
-                .foregroundColor(.white)
         } else {
             Image(systemName: systemIcon ?? "questionmark")
                 .font(.system(size: 24))

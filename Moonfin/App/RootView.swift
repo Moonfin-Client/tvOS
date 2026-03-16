@@ -74,9 +74,11 @@ struct MainNavigationView: View {
     @EnvironmentObject var theme: MoonfinTheme
     @Namespace private var mainNamespace
     @Environment(\.resetFocus) private var resetFocus
+    @State private var refreshTrigger = 0
 
     private var navbarPosition: NavbarPosition {
-        container.userPreferences[UserPreferences.navbarPosition]
+        let _ = refreshTrigger
+        return container.userPreferences[UserPreferences.navbarPosition]
     }
 
     private let navbarHeight: CGFloat = 110
@@ -174,6 +176,9 @@ struct MainNavigationView: View {
             if !container.inactivityTracker.isScreensaverVisible {
                 container.inactivityTracker.notifyInteraction()
             }
+        }
+        .onReceive(container.pluginSyncService.$syncCompletedCount) { _ in
+            refreshTrigger += 1
         }
     }
 

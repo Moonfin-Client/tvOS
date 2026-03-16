@@ -8,26 +8,32 @@ final class PluginSyncService: ObservableObject {
 
     private let resolveClient: () -> HttpClient?
     private let resolveSeerrRepository: () -> SeerrRepositoryProtocol?
+    private let resolveParentalRepository: () -> ParentalControlsRepository?
     private let defaults: UserDefaults
 
     private var serverSchemaVersion = 1
     private var pushTask: Task<Void, Never>?
     private var changeObserver: NSObjectProtocol?
     private var seerrChangeObserver: NSObjectProtocol?
+    private var parentalChangeObserver: NSObjectProtocol?
 
     init(
         resolveClient: @escaping () -> HttpClient?,
         resolveSeerrRepository: @escaping () -> SeerrRepositoryProtocol? = { nil },
+        resolveParentalRepository: @escaping () -> ParentalControlsRepository? = { nil },
         defaults: UserDefaults = .standard
     ) {
         self.resolveClient = resolveClient
         self.resolveSeerrRepository = resolveSeerrRepository
+        self.resolveParentalRepository = resolveParentalRepository
         self.defaults = defaults
     }
 
     func syncOnStartup() async {
         let syncEnabled = defaults.bool(forKey: UserPreferences.pluginSyncEnabled.key)
-        guard syncEnabled else {
+        let autoDetected = defaults.bool(forKey: UserPreferences.pluginSyncAutoDetected.key)
+
+        if !syncEnabled && autoDetected {
             unregisterChangeListener()
             return
         }
@@ -36,6 +42,16 @@ final class PluginSyncService: ObservableObject {
 
         let available = await ping(client: client)
         isPluginAvailable = available
+
+        if !syncEnabled && !autoDetected {
+            defaults.set(true, forKey: UserPreferences.pluginSyncAutoDetected.key)
+            if !available {
+                return
+            }
+            defaults.set(true, forKey: UserPreferences.pluginSyncEnabled.key)
+            clearSnapshot()
+        }
+
         guard available else { return }
 
         let serverSettings = await fetchServerSettings(client: client)
@@ -142,7 +158,7 @@ final class PluginSyncService: ObservableObject {
         let bodyDict: [String: Any]
 
         if serverSchemaVersion >= 2 {
-            path = "\(PluginSyncConstants.settingsPath)/Profile/global"
+            path = "\(PluginSyncConstants.settingsPath)/Profile/tv"
             bodyDict = [
                 "profile": settings,
                 "clientId": PluginSyncConstants.clientId
@@ -195,6 +211,8 @@ final class PluginSyncService: ObservableObject {
             return store.integer(forKey: sp.key)
         case .string, .enum:
             return store.string(forKey: sp.key) ?? sp.defaultValue
+        case .list:
+            return readListValue(sp, store: store)
         }
     }
 
@@ -205,6 +223,7 @@ final class PluginSyncService: ObservableObject {
             guard let sp = PluginSyncConstants.serverToLocal[serverKey] else { continue }
             writeLocalValue(sp, value: value)
         }
+        resolveParentalRepository()?.reloadBlockedRatings()
     }
 
     private func writeLocalValue(_ sp: SyncablePreference, value: Any) {
@@ -228,6 +247,53 @@ final class PluginSyncService: ObservableObject {
             }
         case .string, .enum:
             store.set("\(value)", forKey: sp.key)
+        case .list:
+            writeListValue(sp, value: value, store: store)
+        }
+    }
+
+    // MARK: - List helpers
+
+    private func readListValue(_ sp: SyncablePreference, store: UserDefaults) -> Any {
+        switch sp.source {
+        case .parental:
+            if let data = store.data(forKey: sp.key),
+               let set = try? JSONDecoder().decode(Set<String>.self, from: data) {
+                return Array(set)
+            }
+            return sp.defaultValue
+        default:
+            if sp.key == UserPreferences.homeSections.key {
+                let raw = store.string(forKey: sp.key) ?? ""
+                if raw.isEmpty { return sp.defaultValue }
+                return raw.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
+            }
+            return store.stringArray(forKey: sp.key) ?? sp.defaultValue
+        }
+    }
+
+    private func writeListValue(_ sp: SyncablePreference, value: Any, store: UserDefaults) {
+        let list: [String]
+        if let arr = value as? [String] {
+            list = arr
+        } else if let arr = value as? [Any] {
+            list = arr.map { "\($0)" }
+        } else {
+            return
+        }
+
+        switch sp.source {
+        case .parental:
+            let set = Set(list)
+            if let data = try? JSONEncoder().encode(set) {
+                store.set(data, forKey: sp.key)
+            }
+        default:
+            if sp.key == UserPreferences.homeSections.key {
+                store.set(list.joined(separator: ","), forKey: sp.key)
+            } else {
+                store.set(list, forKey: sp.key)
+            }
         }
     }
 
@@ -261,6 +327,9 @@ final class PluginSyncService: ObservableObject {
 
     private func normalize(_ value: Any?) -> String {
         guard let value else { return "" }
+        if let arr = value as? [Any] {
+            return arr.map { "\($0)" }.joined(separator: ",")
+        }
         return "\(value)"
     }
 
@@ -332,6 +401,18 @@ final class PluginSyncService: ObservableObject {
                 }
             }
         }
+
+        if let parental = parentalDefaults() {
+            parentalChangeObserver = NotificationCenter.default.addObserver(
+                forName: UserDefaults.didChangeNotification,
+                object: parental,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.handleDefaultsChange()
+                }
+            }
+        }
     }
 
     func unregisterChangeListener() {
@@ -342,6 +423,10 @@ final class PluginSyncService: ObservableObject {
         if let observer = seerrChangeObserver {
             NotificationCenter.default.removeObserver(observer)
             seerrChangeObserver = nil
+        }
+        if let observer = parentalChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+            parentalChangeObserver = nil
         }
         pushTask?.cancel()
         pushTask = nil
@@ -370,12 +455,19 @@ final class PluginSyncService: ObservableObject {
         return UserDefaults(suiteName: "seerr_prefs_\(userId)")
     }
 
+    private func parentalDefaults() -> UserDefaults? {
+        guard let userId = resolveClient()?.userId else { return nil }
+        return UserDefaults(suiteName: "parental_controls_\(userId)")
+    }
+
     private func defaultsForPreference(_ sp: SyncablePreference) -> UserDefaults {
         switch sp.source {
         case .user:
             return defaults
         case .seerr:
             return seerrDefaults() ?? defaults
+        case .parental:
+            return parentalDefaults() ?? defaults
         }
     }
 

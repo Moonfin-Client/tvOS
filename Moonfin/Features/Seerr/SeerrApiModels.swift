@@ -355,6 +355,12 @@ struct SeerrNetworkDto: Codable, Identifiable {
     let originCountry: String?
 }
 
+struct SeerrStudioDto: Codable, Identifiable {
+    let id: Int
+    let name: String
+    let logoPath: String?
+}
+
 struct SeerrKeywordDto: Codable, Identifiable {
     let id: Int
     let name: String

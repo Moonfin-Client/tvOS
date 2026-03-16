@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsSyncPlayScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var prefs: UserPreferences { container.userPreferences }
 
@@ -43,6 +44,7 @@ struct SettingsSyncPlayScreen: View {
                 trailingText: "\(prefs[UserPreferences.syncPlayMinDelaySpeedToSync])",
                 action: { settingsRouter.navigate(to: .moonfinSyncPlayMinDelay) }
             )
+            .focused($focusedRoute, equals: .moonfinSyncPlayMinDelay)
 
             SettingsListButton(
                 icon: "timer",
@@ -51,6 +53,7 @@ struct SettingsSyncPlayScreen: View {
                 trailingText: "\(prefs[UserPreferences.syncPlayMaxDelaySpeedToSync])",
                 action: { settingsRouter.navigate(to: .moonfinSyncPlayMaxDelay) }
             )
+            .focused($focusedRoute, equals: .moonfinSyncPlayMaxDelay)
 
             SettingsListButton(
                 icon: "clock.arrow.circlepath",
@@ -59,6 +62,7 @@ struct SettingsSyncPlayScreen: View {
                 trailingText: "\(prefs[UserPreferences.syncPlaySpeedToSyncDuration])",
                 action: { settingsRouter.navigate(to: .moonfinSyncPlayDuration) }
             )
+            .focused($focusedRoute, equals: .moonfinSyncPlayDuration)
 
             SettingsListButton(
                 icon: "forward.end.fill",
@@ -67,6 +71,7 @@ struct SettingsSyncPlayScreen: View {
                 trailingText: "\(prefs[UserPreferences.syncPlayMinDelaySkipToSync])",
                 action: { settingsRouter.navigate(to: .moonfinSyncPlayMinDelaySkip) }
             )
+            .focused($focusedRoute, equals: .moonfinSyncPlayMinDelaySkip)
 
             SettingsListButton(
                 icon: "clock.badge.questionmark",
@@ -75,6 +80,8 @@ struct SettingsSyncPlayScreen: View {
                 trailingText: "\(prefs[UserPreferences.syncPlayExtraTimeOffset])",
                 action: { settingsRouter.navigate(to: .moonfinSyncPlayExtraOffset) }
             )
+            .focused($focusedRoute, equals: .moonfinSyncPlayExtraOffset)
         }
+        .restoresFocus($focusedRoute)
     }
 }

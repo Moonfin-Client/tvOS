@@ -132,3 +132,15 @@ enum MediaBarItemCount: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String { rawValue }
 }
+
+enum MediaBarSourceType: String, StringRepresentableEnum, CaseIterable {
+    case library
+    case collection
+
+    var displayName: String {
+        switch self {
+        case .library:    return "Library"
+        case .collection: return "Collection"
+        }
+    }
+}

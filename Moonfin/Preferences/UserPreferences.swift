@@ -44,6 +44,10 @@ final class UserPreferences {
     static let mediaBarItemCount = Preference(key: "media_bar_item_count", defaultValue: MediaBarItemCount.ten)
     static let mediaBarOverlayOpacity = Preference(key: "media_bar_overlay_opacity", defaultValue: 50)
     static let mediaBarOverlayColor = Preference(key: "media_bar_overlay_color", defaultValue: MediaBarOverlayColor.gray)
+    static let mediaBarSourceType = Preference(key: "media_bar_source_type", defaultValue: MediaBarSourceType.library)
+    static let mediaBarLibraryIds = Preference(key: "media_bar_library_ids", defaultValue: [String]())
+    static let mediaBarCollectionIds = Preference(key: "media_bar_collection_ids", defaultValue: [String]())
+    static let mediaBarExcludedGenres = Preference(key: "media_bar_excluded_genres", defaultValue: [String]())
 
     static let enableAdditionalRatings = Preference(key: "enable_additional_ratings", defaultValue: false)
     static let enableEpisodeRatings = Preference(key: "enable_episode_ratings", defaultValue: false)
@@ -67,6 +71,7 @@ final class UserPreferences {
     static let trickPlayEnabled = Preference(key: "trickplay_enabled", defaultValue: false)
 
     static let pluginSyncEnabled = Preference(key: "plugin_sync_enabled", defaultValue: false)
+    static let pluginSyncAutoDetected = Preference(key: "plugin_sync_auto_detected", defaultValue: false)
 
     static let themeMusicEnabled = Preference(key: "theme_music_enabled", defaultValue: false)
     static let themeMusicVolume = Preference(key: "theme_music_volume", defaultValue: 30)

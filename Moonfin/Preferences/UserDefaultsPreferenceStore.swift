@@ -40,6 +40,8 @@ final class UserDefaultsPreferenceStore: PreferenceStore {
             return defaults.bool(forKey: preference.key) as! T
         case is String:
             return (defaults.string(forKey: preference.key) ?? preference.defaultValue as! String) as! T
+        case is [String]:
+            return (defaults.stringArray(forKey: preference.key) ?? preference.defaultValue as! [String]) as! T
         default:
             return getEnum(preference) ?? preference.defaultValue
         }
@@ -56,6 +58,8 @@ final class UserDefaultsPreferenceStore: PreferenceStore {
         case let v as Bool:
             defaults.set(v, forKey: preference.key)
         case let v as String:
+            defaults.set(v, forKey: preference.key)
+        case let v as [String]:
             defaults.set(v, forKey: preference.key)
         default:
             setEnum(preference, value: value)

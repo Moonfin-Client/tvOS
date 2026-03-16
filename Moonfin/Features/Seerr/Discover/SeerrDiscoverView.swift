@@ -6,11 +6,6 @@ struct SeerrDiscoverView: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
 
-    @State private var showServerUrlAlert = false
-    @State private var showPasswordAlert = false
-    @State private var serverUrlInput = ""
-    @State private var passwordInput = ""
-
     init(seerrRepository: SeerrRepositoryProtocol) {
         _viewModel = StateObject(wrappedValue: SeerrDiscoverViewModel(seerrRepository: seerrRepository))
     }
@@ -31,28 +26,6 @@ struct SeerrDiscoverView: View {
         .onAppear {
             viewModel.loadContent()
             viewModel.refreshRequests()
-        }
-        .alert("Server URL", isPresented: $showServerUrlAlert) {
-            TextField("https://overseerr.example.com", text: $serverUrlInput)
-            Button("Save") {
-                viewModel.updateServerUrl(serverUrlInput)
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .alert("Sign In with Jellyfin", isPresented: $showPasswordAlert) {
-            SecureField("Password", text: $passwordInput)
-            Button("Connect") {
-                viewModel.connectWithJellyfin(password: passwordInput)
-                passwordInput = ""
-            }
-            Button("Test Connection") {
-                viewModel.testConnection()
-            }
-            Button("Cancel", role: .cancel) { passwordInput = "" }
-        } message: {
-            if !viewModel.settingsState.jellyfinUsername.isEmpty {
-                Text("Signing in as \(viewModel.settingsState.jellyfinUsername)")
-            }
         }
     }
 
@@ -172,21 +145,26 @@ struct SeerrDiscoverView: View {
                                     filterName: genre.name,
                                     mediaType: mediaType
                                 ))
+                            },
+                            onStudioSelected: { studio in
+                                router.navigate(to: .seerrBrowseBy(
+                                    filterId: studio.id,
+                                    filterName: studio.name,
+                                    mediaType: "movie",
+                                    filterType: "studio"
+                                ))
+                            },
+                            onNetworkSelected: { network in
+                                router.navigate(to: .seerrBrowseBy(
+                                    filterId: network.id,
+                                    filterName: network.name,
+                                    mediaType: "tv",
+                                    filterType: "network"
+                                ))
                             }
                         )
                         .id(row.id)
                     }
-
-                    SeerrSettingsRowView(
-                        viewModel: viewModel,
-                        onEditServerUrl: {
-                            serverUrlInput = viewModel.settingsState.serverUrl
-                            showServerUrlAlert = true
-                        },
-                        onSignIn: {
-                            showPasswordAlert = true
-                        }
-                    )
                 }
                 .padding(.leading, 50)
                 .padding(.trailing, 50)

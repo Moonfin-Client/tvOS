@@ -8,19 +8,24 @@ struct SeerrDiscoverRow: Identifiable {
     let rowType: SeerrRowType
     var items: [SeerrDiscoverItemDto]
     var genres: [SeerrGenreDto]
+    var studios: [SeerrStudioDto]
+    var networks: [SeerrNetworkDto]
     var isLoading: Bool
     var currentPage: Int
     var totalPages: Int
     var hasMore: Bool { currentPage < totalPages }
-    var isEmpty: Bool { items.isEmpty && genres.isEmpty && !isLoading }
+    var isEmpty: Bool { items.isEmpty && genres.isEmpty && studios.isEmpty && networks.isEmpty && !isLoading }
 
     init(id: String, title: String, rowType: SeerrRowType, items: [SeerrDiscoverItemDto] = [],
-         genres: [SeerrGenreDto] = [], isLoading: Bool = true, currentPage: Int = 1, totalPages: Int = 1) {
+         genres: [SeerrGenreDto] = [], studios: [SeerrStudioDto] = [], networks: [SeerrNetworkDto] = [],
+         isLoading: Bool = true, currentPage: Int = 1, totalPages: Int = 1) {
         self.id = id
         self.title = title
         self.rowType = rowType
         self.items = items
         self.genres = genres
+        self.studios = studios
+        self.networks = networks
         self.isLoading = isLoading
         self.currentPage = currentPage
         self.totalPages = totalPages
@@ -62,6 +67,45 @@ final class SeerrDiscoverViewModel: ObservableObject {
     private var backdropDebounceTask: Task<Void, Never>?
     private var loadingMoreTypes: Set<SeerrRowType> = []
     private var blockNsfw = true
+
+    static let popularNetworks: [SeerrNetworkDto] = [
+        SeerrNetworkDto(id: 213, name: "Netflix", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/wwemzKWzjKYJFfCeiB57q3r4Bcm.png", originCountry: nil),
+        SeerrNetworkDto(id: 2739, name: "Disney+", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/gJ8VX6JSu3ciXHuC2dDGAo2lvwM.png", originCountry: nil),
+        SeerrNetworkDto(id: 1024, name: "Prime Video", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/ifhbNuuVnlwYy5oXA5VIb2YR8AZ.png", originCountry: nil),
+        SeerrNetworkDto(id: 2552, name: "Apple TV+", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/4KAy34EHvRM25Ih8wb82AuGU7zJ.png", originCountry: nil),
+        SeerrNetworkDto(id: 453, name: "Hulu", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/pqUTCleNUiTLAVlelGxUgWn1ELh.png", originCountry: nil),
+        SeerrNetworkDto(id: 49, name: "HBO", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/tuomPhY2UtuPTqqFnKMVHvSb724.png", originCountry: nil),
+        SeerrNetworkDto(id: 4353, name: "Discovery+", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/1D1bS3Dyw4ScYnFWTlBOvJXC3nb.png", originCountry: nil),
+        SeerrNetworkDto(id: 2, name: "ABC", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/ndAvF4JLsliGreX87jAc9GdjmJY.png", originCountry: nil),
+        SeerrNetworkDto(id: 19, name: "FOX", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/1DSpHrWyOORkL9N2QHX7Adt31mQ.png", originCountry: nil),
+        SeerrNetworkDto(id: 359, name: "Cinemax", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/6mSHSquNpfLgDdv6VnOOvC5Uz2h.png", originCountry: nil),
+        SeerrNetworkDto(id: 174, name: "AMC", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/pmvRmATOCaDykE6JrVoeYxlFHw3.png", originCountry: nil),
+        SeerrNetworkDto(id: 67, name: "Showtime", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/Allse9kbjiP6ExaQrnSpIhkurEi.png", originCountry: nil),
+        SeerrNetworkDto(id: 318, name: "Starz", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/8GJjw3HHsAJYwIWKIPBPfqMxlEa.png", originCountry: nil),
+        SeerrNetworkDto(id: 71, name: "The CW", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/ge9hzeaU7nMtQ4PjkFlc68dGAJ9.png", originCountry: nil),
+        SeerrNetworkDto(id: 6, name: "NBC", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/o3OedEP0f9mfZr33jz2BfXOUK5.png", originCountry: nil),
+        SeerrNetworkDto(id: 16, name: "CBS", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/nm8d7P7MJNiBLdgIzUK0gkuEA4r.png", originCountry: nil),
+        SeerrNetworkDto(id: 4330, name: "Paramount+", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/fi83B1oztoS47xxcemFdPMhIzK.png", originCountry: nil),
+        SeerrNetworkDto(id: 4, name: "BBC One", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/mVn7xESaTNmjBUyUtGNvDQd3CT1.png", originCountry: nil),
+        SeerrNetworkDto(id: 56, name: "Cartoon Network", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/c5OC6oVCg6QP4eqzW6XIq17CQjI.png", originCountry: nil),
+        SeerrNetworkDto(id: 80, name: "Adult Swim", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/9AKyspxVzywuaMuZ1Bvilu8sXly.png", originCountry: nil),
+        SeerrNetworkDto(id: 13, name: "Nickelodeon", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/ikZXxg6GnwpzqiZbRPhJGaZapqB.png", originCountry: nil),
+        SeerrNetworkDto(id: 3353, name: "Peacock", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/gIAcGTjKKr0KOHL5s4O36roJ8p7.png", originCountry: nil),
+    ]
+
+    static let popularStudios: [SeerrStudioDto] = [
+        SeerrStudioDto(id: 2, name: "Disney", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/wdrCwmRnLFJhEoH8GSfymY85KHT.png"),
+        SeerrStudioDto(id: 127928, name: "20th Century Studios", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/h0rjX5vjW5r8yEnUBStFarjcLT4.png"),
+        SeerrStudioDto(id: 34, name: "Sony Pictures", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/GagSvqWlyPdkFHMfQ3pNq6ix9P.png"),
+        SeerrStudioDto(id: 174, name: "Warner Bros. Pictures", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/ky0xOc5OrhzkZ1N6KyUxacfQsCk.png"),
+        SeerrStudioDto(id: 33, name: "Universal", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/8lvHyhjr8oUKOOy2dKXoALWKdp0.png"),
+        SeerrStudioDto(id: 4, name: "Paramount", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/fycMZt242LVjagMByZOLUGbCvv3.png"),
+        SeerrStudioDto(id: 3, name: "Pixar", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/1TjvGVDMYsj6JBxOAkUHpPEwLf7.png"),
+        SeerrStudioDto(id: 521, name: "DreamWorks", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/kP7t6RwGz2AvvTkvnI1uteEwHet.png"),
+        SeerrStudioDto(id: 420, name: "Marvel Studios", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/hUzeosd33nzE5MCNsZxCGEKTXaQ.png"),
+        SeerrStudioDto(id: 9993, name: "DC", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/2Tc1P3Ac8M479naPp1kYT3izLS5.png"),
+        SeerrStudioDto(id: 41077, name: "A24", logoPath: "https://image.tmdb.org/t/p/w780_filter(duotone,ffffff,bababa)/1ZXsGaFPgrgS6ZZGS37AqD5uU12.png"),
+    ]
 
     private static let nsfwKeywords = [
         "\\bsex\\b", "sexual", "\\bporn\\b", "erotic", "\\bnude\\b", "nudity",
@@ -136,8 +180,10 @@ final class SeerrDiscoverViewModel: ObservableObject {
             case .seriesGenres:
                 let genres = try await seerrRepository.getGenreSliderTv()
                 updateGenreRow(type, genres: genres)
-            case .studios, .networks:
-                updateRowLoaded(type)
+            case .studios:
+                updateStudiosRow(type)
+            case .networks:
+                updateNetworksRow(type)
             }
         } catch {
             logger.warning("Failed to load \(type.rawValue): \(error.localizedDescription)")
@@ -165,6 +211,18 @@ final class SeerrDiscoverViewModel: ObservableObject {
     private func updateGenreRow(_ type: SeerrRowType, genres: [SeerrGenreDto]) {
         guard let index = rows.firstIndex(where: { $0.rowType == type }) else { return }
         rows[index].genres = genres
+        rows[index].isLoading = false
+    }
+
+    private func updateStudiosRow(_ type: SeerrRowType) {
+        guard let index = rows.firstIndex(where: { $0.rowType == type }) else { return }
+        rows[index].studios = Self.popularStudios
+        rows[index].isLoading = false
+    }
+
+    private func updateNetworksRow(_ type: SeerrRowType) {
+        guard let index = rows.firstIndex(where: { $0.rowType == type }) else { return }
+        rows[index].networks = Self.popularNetworks
         rows[index].isLoading = false
     }
 

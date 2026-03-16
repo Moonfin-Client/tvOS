@@ -88,6 +88,8 @@ struct UserLoginScreen: View {
         .onChange(of: viewModel.loginState) { state in
             if state == .authenticated {
                 router.switchFlow(to: .main)
+                Task { await container.pluginSyncService.syncOnStartup() }
+                container.serverConnectionMonitor.startMonitoring()
             }
         }
         .onChange(of: viewModel.quickConnectState) { state in
