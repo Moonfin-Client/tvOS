@@ -44,6 +44,7 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
     @Published var pendingIs4k = false
     @Published var serverDetails: SeerrServiceServerDetailsDto?
     @Published var advancedOptions = SeerrAdvancedOptions()
+    @Published var jellyfinItemId: String?
 
     let item: SeerrDiscoverItemDto
     let seerrRepository: SeerrRepositoryProtocol
@@ -56,6 +57,22 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
     var displayTitle: String {
         if isMovie { return movieDetails?.title ?? item.displayTitle }
         return tvDetails?.displayTitle ?? item.displayTitle
+    }
+
+    var titleWithYear: String {
+        if let year = year {
+            return "\(displayTitle) (\(year))"
+        }
+        return displayTitle
+    }
+
+    var metadataChips: [String] {
+        var parts: [String] = []
+        if let runtime = runtimeText { parts.append(runtime) }
+        let genreNames = genres.map(\.name)
+        parts.append(contentsOf: genreNames)
+        if parts.isEmpty, let year = year { parts.append(year) }
+        return parts
     }
 
     var tagline: String? {
@@ -96,6 +113,18 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
 
     var networks: [SeerrNetworkDto] {
         tvDetails?.networks ?? []
+    }
+
+    var trailerYouTubeKey: String? {
+        let videos = isMovie ? (movieDetails?.relatedVideos ?? []) : (tvDetails?.relatedVideos ?? [])
+        let ytVideos = videos.filter { $0.site?.lowercased() == "youtube" && $0.key != nil }
+        return ytVideos.first(where: { $0.type?.lowercased() == "trailer" })?.key
+            ?? ytVideos.first?.key
+    }
+
+    private var isAvailable: Bool {
+        let status = mediaInfo?.status ?? SeerrMediaInfoDto.statusUnknown
+        return status == SeerrMediaInfoDto.statusAvailable || status == SeerrMediaInfoDto.statusPartiallyAvailable
     }
 
     var mediaInfo: SeerrMediaInfoDto? {
@@ -164,6 +193,10 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
         mediaInfo?.requests?.contains { $0.status == SeerrRequestDto.statusPending } ?? false
     }
 
+    var showPlayButton: Bool {
+        isAvailable
+    }
+
     var director: String? {
         crew.first(where: { $0.job?.lowercased() == "director" })?.name
     }
@@ -190,6 +223,7 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
                 updateMediaStatus()
                 state = .loaded
 
+                lookupJellyfinItem()
                 loadRelatedContent()
             } catch {
                 logger.error("Failed to load details: \(error.localizedDescription)")
@@ -436,5 +470,37 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
         formatter.currencyCode = "USD"
         formatter.maximumFractionDigits = 0
         return formatter.string(from: NSNumber(value: value)) ?? "$\(value)"
+    }
+
+    private var serverClient: (any MediaServerClient)?
+
+    func setServerClient(_ client: any MediaServerClient) {
+        self.serverClient = client
+    }
+
+    private func lookupJellyfinItem() {
+        guard isAvailable, jellyfinItemId == nil,
+              let client = serverClient, let userId = client.userId else { return }
+        Task {
+            do {
+                let types: [ItemType] = isMovie ? [.movie] : [.series]
+                let result = try await client.itemsApi.getItems(request: GetItemsRequest(
+                    userId: userId,
+                    recursive: true,
+                    includeItemTypes: types,
+                    fields: [.providerIds],
+                    searchTerm: displayTitle,
+                    limit: 10
+                ))
+                let tmdbId = String(item.id)
+                if let match = result.items.first(where: { $0.providerIds?["Tmdb"] == tmdbId }) {
+                    jellyfinItemId = match.id
+                } else if let first = result.items.first {
+                    jellyfinItemId = first.id
+                }
+            } catch {
+                logger.warning("Jellyfin lookup failed: \(error.localizedDescription)")
+            }
+        }
     }
 }

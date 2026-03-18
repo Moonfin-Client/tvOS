@@ -257,6 +257,7 @@ struct SeerrMovieDetailsDto: Codable, Identifiable {
     let externalIds: SeerrExternalIds?
     let mediaInfo: SeerrMediaInfoDto?
     let keywords: [SeerrKeywordDto]
+    let relatedVideos: [SeerrRelatedVideoDto]
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -279,6 +280,8 @@ struct SeerrMovieDetailsDto: Codable, Identifiable {
         externalIds = try c.decodeIfPresent(SeerrExternalIds.self, forKey: .externalIds)
         mediaInfo = try c.decodeIfPresent(SeerrMediaInfoDto.self, forKey: .mediaInfo)
         keywords = try c.decodeIfPresent([SeerrKeywordDto].self, forKey: .keywords) ?? []
+        let videos = try? c.decodeIfPresent(SeerrRelatedVideosDto.self, forKey: .relatedVideos)
+        relatedVideos = videos?.results ?? []
     }
 }
 
@@ -304,6 +307,7 @@ struct SeerrTvDetailsDto: Codable, Identifiable {
     let externalIds: SeerrExternalIds?
     let mediaInfo: SeerrMediaInfoDto?
     let keywords: [SeerrKeywordDto]
+    let relatedVideos: [SeerrRelatedVideoDto]
 
     var displayTitle: String { name ?? title ?? "Unknown" }
 
@@ -330,6 +334,8 @@ struct SeerrTvDetailsDto: Codable, Identifiable {
         externalIds = try c.decodeIfPresent(SeerrExternalIds.self, forKey: .externalIds)
         mediaInfo = try c.decodeIfPresent(SeerrMediaInfoDto.self, forKey: .mediaInfo)
         keywords = try c.decodeIfPresent([SeerrKeywordDto].self, forKey: .keywords) ?? []
+        let videos = try? c.decodeIfPresent(SeerrRelatedVideosDto.self, forKey: .relatedVideos)
+        relatedVideos = videos?.results ?? []
     }
 }
 
@@ -391,6 +397,21 @@ struct SeerrCrewMemberDto: Codable, Identifiable {
     let department: String?
     let job: String?
     let profilePath: String?
+}
+
+struct SeerrRelatedVideoDto: Codable {
+    let key: String?
+    let type: String?
+    let site: String?
+}
+
+struct SeerrRelatedVideosDto: Codable {
+    let results: [SeerrRelatedVideoDto]
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        results = (try? c.decodeIfPresent([SeerrRelatedVideoDto].self, forKey: .results)) ?? []
+    }
 }
 
 struct SeerrMediaInfoDto: Codable {

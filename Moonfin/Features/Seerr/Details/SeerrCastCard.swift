@@ -15,6 +15,13 @@ struct SeerrCastCard: View {
                 profileImage
                     .frame(width: photoSize, height: photoSize)
                     .clipShape(Circle())
+                    .background(
+                        Circle().fill(theme.colorScheme.surface)
+                    )
+                    .overlay(
+                        Circle()
+                            .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                    )
 
                 VStack(spacing: 2) {
                     Text(member.name)
@@ -31,12 +38,10 @@ struct SeerrCastCard: View {
                 .frame(width: photoSize)
             }
         }
-        .buttonStyle(ItemCardButtonStyle(
-            isFocused: isFocused,
-            cornerRadius: photoSize / 2,
-            focusBorderColor: theme.focusBorder.color
-        ))
+        .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 
     @ViewBuilder

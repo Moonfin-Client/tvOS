@@ -5,6 +5,15 @@ struct SeerrMediaDetailsView: View {
     @StateObject private var viewModel: SeerrMediaDetailsViewModel
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var container: AppContainer
+
+    private var navbarIsLeft: Bool {
+        container.userPreferences[UserPreferences.navbarPosition] == .left
+    }
+
+    private var contentLeading: CGFloat {
+        navbarIsLeft ? LeftSidebar.sidebarInset : 50
+    }
 
     init(itemJson: String, seerrRepository: SeerrRepositoryProtocol) {
         let item: SeerrDiscoverItemDto
@@ -35,7 +44,13 @@ struct SeerrMediaDetailsView: View {
             }
         }
         .ignoresSafeArea()
-        .onAppear { viewModel.loadDetails() }
+        .onAppear {
+            viewModel.loadDetails()
+            if let server = container.serverRepository.currentServer.value {
+                let client = container.serverClientFactory.client(for: server)
+                viewModel.setServerClient(client)
+            }
+        }
         .sheet(isPresented: $viewModel.showSeasonPicker) { seasonPickerSheet }
         .sheet(isPresented: $viewModel.showAdvancedOptions) { advancedOptionsSheet }
         .sheet(isPresented: $viewModel.showQualityPicker) { qualityPickerSheet }
@@ -70,12 +85,12 @@ struct SeerrMediaDetailsView: View {
                 CachedImage(
                     url: url,
                     processors: [
-                        ImageProcessors.Resize(size: size, contentMode: .aspectFill),
-                        ImageProcessors.GaussianBlur(radius: 12)
+                        ImageProcessors.Resize(size: size, contentMode: .aspectFill)
                     ]
                 )
                 .frame(width: size.width, height: size.height)
                 .clipped()
+                .opacity(0.7)
                 .drawingGroup()
             }
         }
@@ -86,21 +101,22 @@ struct SeerrMediaDetailsView: View {
         ZStack {
             LinearGradient(
                 stops: [
-                    .init(color: theme.colorScheme.background.opacity(0.7), location: 0),
+                    .init(color: theme.colorScheme.background.opacity(0.85), location: 0),
                     .init(color: theme.colorScheme.background.opacity(0.4), location: 0.3),
-                    .init(color: theme.colorScheme.background.opacity(0.5), location: 0.6),
-                    .init(color: theme.colorScheme.background.opacity(0.9), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            LinearGradient(
-                stops: [
-                    .init(color: theme.colorScheme.background.opacity(0.8), location: 0),
-                    .init(color: .clear, location: 0.5)
+                    .init(color: theme.colorScheme.background.opacity(0.3), location: 0.6),
+                    .init(color: theme.colorScheme.background.opacity(0.85), location: 1.0)
                 ],
                 startPoint: .leading,
                 endPoint: .trailing
+            )
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0),
+                    .init(color: theme.colorScheme.background.opacity(0.5), location: 0.4),
+                    .init(color: theme.colorScheme.background.opacity(0.95), location: 1.0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
             )
         }
         .ignoresSafeArea()
@@ -119,29 +135,26 @@ struct SeerrMediaDetailsView: View {
     private var headerSection: some View {
         HStack(alignment: .top, spacing: SpaceTokens.spaceLg) {
             posterView
-                .padding(.leading, 50)
+                .padding(.leading, contentLeading)
                 .padding(.top, 60)
 
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 statusBadge
 
-                Text(viewModel.displayTitle)
+                Text(viewModel.titleWithYear)
                     .font(.system(size: 44, weight: .bold))
                     .foregroundColor(theme.colorScheme.onBackground)
                     .lineLimit(2)
 
+                metadataRow
+
                 if let tagline = viewModel.tagline, !tagline.isEmpty {
-                    Text(tagline)
+                    Text("\"\(tagline)\"")
                         .font(.titleMd)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                         .italic()
                         .lineLimit(1)
                 }
-
-                metadataRow
-
-                actionButtons
-                    .padding(.top, SpaceTokens.spaceSm)
 
                 if let error = viewModel.requestError {
                     Text(error)
@@ -150,7 +163,7 @@ struct SeerrMediaDetailsView: View {
                         .lineLimit(2)
                 }
             }
-            .padding(.top, 80)
+            .padding(.top, 320)
             .padding(.trailing, 50)
         }
     }
@@ -159,14 +172,15 @@ struct SeerrMediaDetailsView: View {
         Group {
             if let urlString = viewModel.posterUrl, let url = URL(string: urlString) {
                 CachedImage(url: url)
-                    .frame(width: 220, height: 330)
+                    .frame(width: 280, height: 420)
                     .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.medium))
             } else {
                 RoundedRectangle(cornerRadius: RadiusTokens.medium)
                     .fill(theme.colorScheme.surface.opacity(0.3))
-                    .frame(width: 220, height: 330)
+                    .frame(width: 280, height: 420)
             }
         }
+        .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
     }
 
     private var statusBadge: some View {
@@ -195,69 +209,77 @@ struct SeerrMediaDetailsView: View {
     }
 
     private var metadataRow: some View {
-        HStack(spacing: SpaceTokens.spaceMd) {
-            if let year = viewModel.year {
-                metadataChip(year)
-            }
-            if let runtime = viewModel.runtimeText {
-                metadataChip(runtime)
-            }
-            if let vote = viewModel.voteAverage, vote > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.captionXs)
-                        .foregroundColor(.yellow)
-                    Text(String(format: "%.1f", vote))
+        HStack(spacing: 4) {
+            let parts = viewModel.metadataChips
+            ForEach(Array(parts.enumerated()), id: \.offset) { index, part in
+                Text(part)
+                    .font(.titleSm)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+                if index < parts.count - 1 {
+                    Text("•")
                         .font(.titleSm)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+                        .padding(.horizontal, 4)
                 }
-            }
-            if viewModel.isTv, let episodes = viewModel.episodeCount {
-                metadataChip("\(viewModel.seasonCount)S · \(episodes)E")
             }
         }
     }
 
-    private func metadataChip(_ text: String) -> some View {
-        Text(text)
-            .font(.titleSm)
-            .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
-    }
-
     private var actionButtons: some View {
-        HStack(spacing: SpaceTokens.spaceMd) {
-            if viewModel.canRequestHd || viewModel.canRequest4k {
-                Button(action: { viewModel.handleRequestTap() }) {
-                    HStack(spacing: 6) {
-                        if viewModel.isRequesting {
-                            ProgressView().tint(.white)
-                        } else {
-                            Image(systemName: "plus.circle.fill")
-                        }
-                        Text("Request")
-                    }
-                    .font(.titleSm).fontWeight(.semibold)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                }
-                .disabled(viewModel.isRequesting)
-                .buttonStyle(.borderedProminent)
-                .tint(theme.accent)
-            }
+        FocusFirstRow(firstItemId: "request") { focusBinding in
+            HStack(alignment: .top, spacing: 12) {
+                let canRequest = viewModel.canRequestHd || viewModel.canRequest4k
+                SeerrActionButton(
+                    icon: canRequest ? "plus.circle.fill" : viewModel.mediaStatus.icon,
+                    label: canRequest ? "Request" : viewModel.mediaStatus.text,
+                    action: { if canRequest { viewModel.handleRequestTap() } },
+                    isLoading: viewModel.isRequesting
+                )
+                .id("request")
+                .focused(focusBinding, equals: "request")
+                .opacity(canRequest ? 1.0 : 0.5)
 
-            if viewModel.hasPendingRequests {
-                Button(action: { viewModel.cancelPendingRequests() }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "xmark.circle")
-                        Text("Cancel Request")
-                    }
-                    .font(.titleSm)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
+                if viewModel.hasPendingRequests {
+                    SeerrActionButton(
+                        icon: "trash",
+                        label: "Cancel",
+                        action: { viewModel.cancelPendingRequests() },
+                        isLoading: viewModel.isRequesting
+                    )
+                    .id("cancel")
+                    .focused(focusBinding, equals: "cancel")
                 }
-                .disabled(viewModel.isRequesting)
-                .buttonStyle(.bordered)
+
+                SeerrActionButton(
+                    icon: "film",
+                    label: "Trailer",
+                    action: {
+                        if let key = viewModel.trailerYouTubeKey,
+                           let url = URL(string: "https://www.youtube.com/watch?v=\(key)") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                )
+                .id("trailer")
+                .focused(focusBinding, equals: "trailer")
+
+                if viewModel.showPlayButton {
+                    SeerrActionButton(
+                        icon: "play.fill",
+                        label: "Play",
+                        action: {
+                            if let jellyfinId = viewModel.jellyfinItemId {
+                                router.navigate(to: .itemDetails(itemId: jellyfinId))
+                            }
+                        }
+                    )
+                    .id("play")
+                    .focused(focusBinding, equals: "play")
+                    .opacity(viewModel.jellyfinItemId != nil ? 1.0 : 0.5)
+                }
             }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4)
         }
     }
 
@@ -270,81 +292,105 @@ struct SeerrMediaDetailsView: View {
             similarSection
             keywordsSection
         }
-        .padding(.horizontal, 50)
+        .padding(.leading, contentLeading)
+        .padding(.trailing, 50)
         .padding(.bottom, 80)
     }
 
     private var overviewAndFacts: some View {
         HStack(alignment: .top, spacing: SpaceTokens.spaceLg) {
-            if let overview = viewModel.overview, !overview.isEmpty {
-                Text(overview)
-                    .font(.titleMd)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.85))
-                    .lineLimit(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
+                if let overview = viewModel.overview, !overview.isEmpty {
+                    Text(overview)
+                        .font(.titleMd)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.85))
+                        .lineLimit(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
-            mediaFactsSidebar
-                .frame(width: 300)
+                actionButtons
+            }
+            .frame(maxWidth: .infinity)
+
+            mediaFactsTable
+                .frame(width: 340)
         }
     }
 
-    private var mediaFactsSidebar: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            if let vote = viewModel.voteAverage, vote > 0 {
-                factRow(label: "TMDB Score", value: String(format: "%.1f / 10", vote))
-            }
-            if let status = viewModel.statusText {
-                factRow(label: "Status", value: status)
-            }
-            if viewModel.isMovie {
-                if let date = viewModel.movieDetails?.releaseDate {
-                    factRow(label: "Release Date", value: formatDate(date))
+    @ViewBuilder
+    private var mediaFactsTable: some View {
+        let facts = buildFactRows()
+        VStack(spacing: 0) {
+            ForEach(Array(facts.enumerated()), id: \.offset) { index, fact in
+                HStack {
+                    Text(fact.label)
+                        .font(.captionSm).fontWeight(.semibold)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(fact.value)
+                        .font(.captionSm)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.55))
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .lineLimit(1)
                 }
-                if let runtime = viewModel.runtimeText {
-                    factRow(label: "Runtime", value: runtime)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+
+                if index < facts.count - 1 {
+                    Divider()
+                        .background(theme.colorScheme.onBackground.opacity(0.15))
                 }
-                if let budget = viewModel.budgetText {
-                    factRow(label: "Budget", value: budget)
-                }
-                if let revenue = viewModel.revenueText {
-                    factRow(label: "Revenue", value: revenue)
-                }
-            } else {
-                if let date = viewModel.tvDetails?.firstAirDate {
-                    factRow(label: "First Aired", value: formatDate(date))
-                }
-                if let date = viewModel.tvDetails?.lastAirDate {
-                    factRow(label: "Last Aired", value: formatDate(date))
-                }
-                if viewModel.seasonCount > 0 {
-                    factRow(label: "Seasons", value: "\(viewModel.seasonCount)")
-                }
-                if let eps = viewModel.episodeCount {
-                    factRow(label: "Episodes", value: "\(eps)")
-                }
-                if !viewModel.networks.isEmpty {
-                    factRow(label: "Networks", value: viewModel.networks.map(\.name).joined(separator: ", "))
-                }
-            }
-            if let director = viewModel.director {
-                factRow(label: "Director", value: director)
             }
         }
-        .padding(SpaceTokens.spaceMd)
-        .background(theme.colorScheme.surface.opacity(0.2))
-        .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(theme.colorScheme.onBackground.opacity(0.25), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    private func factRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label)
-                .font(.captionXs).fontWeight(.semibold)
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
-            Text(value)
-                .font(.bodyMd)
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.85))
+    private func buildFactRows() -> [(label: String, value: String)] {
+        var rows: [(label: String, value: String)] = []
+        if let vote = viewModel.voteAverage, vote > 0 {
+            rows.append(("TMDB Score", String(format: "%.0f%%", vote * 10)))
         }
+        if let status = viewModel.statusText {
+            rows.append(("Status", status))
+        }
+        if viewModel.isMovie {
+            if let date = viewModel.movieDetails?.releaseDate {
+                rows.append(("Release Date", formatDate(date)))
+            }
+            if let revenue = viewModel.revenueText {
+                rows.append(("Revenue", revenue))
+            }
+            if let runtime = viewModel.runtimeText {
+                rows.append(("Runtime", runtime))
+            }
+            if let budget = viewModel.budgetText {
+                rows.append(("Budget", budget))
+            }
+        } else {
+            if let date = viewModel.tvDetails?.firstAirDate {
+                rows.append(("First Aired", formatDate(date)))
+            }
+            if let date = viewModel.tvDetails?.lastAirDate {
+                rows.append(("Last Aired", formatDate(date)))
+            }
+            if viewModel.seasonCount > 0 {
+                rows.append(("Seasons", "\(viewModel.seasonCount)"))
+            }
+            if let eps = viewModel.episodeCount {
+                rows.append(("Episodes", "\(eps)"))
+            }
+            if !viewModel.networks.isEmpty {
+                rows.append(("Networks", viewModel.networks.map(\.name).joined(separator: ", ")))
+            }
+        }
+        if let director = viewModel.director {
+            rows.append(("Director", director))
+        }
+        return rows
     }
 
     @ViewBuilder
@@ -353,27 +399,22 @@ struct SeerrMediaDetailsView: View {
         if !genres.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 sectionTitle("Genres")
-                ScrollView(.horizontal, showsIndicators: false) {
+                FocusFirstRow(firstItemId: String(genres.first?.id ?? 0)) { focusBinding in
                     HStack(spacing: SpaceTokens.spaceSm) {
                         ForEach(genres) { genre in
-                            Button(action: {
+                            SeerrGenrePill(genre: genre) {
                                 router.navigate(to: .seerrBrowseBy(
                                     filterId: genre.id,
                                     filterName: genre.name,
                                     mediaType: viewModel.isMovie ? "movie" : "tv"
                                 ))
-                            }) {
-                                Text(genre.name)
-                                    .font(.bodySm)
-                                    .foregroundColor(theme.colorScheme.onBackground)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(theme.colorScheme.surface.opacity(0.3))
-                                    .clipShape(Capsule())
                             }
-                            .buttonStyle(.plain)
+                            .id(String(genre.id))
+                            .focused(focusBinding, equals: String(genre.id))
                         }
                     }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
                 }
             }
         }
@@ -385,12 +426,14 @@ struct SeerrMediaDetailsView: View {
         if !cast.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 sectionTitle("Cast")
-                ScrollView(.horizontal, showsIndicators: false) {
+                FocusFirstRow(firstItemId: String(cast.first?.id ?? 0)) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(cast) { member in
                             SeerrCastCard(member: member) {
                                 router.navigate(to: .seerrPersonDetails(personId: member.id))
                             }
+                            .id(String(member.id))
+                            .focused(focusBinding, equals: String(member.id))
                         }
                     }
                     .padding(.vertical, 12)
@@ -421,7 +464,7 @@ struct SeerrMediaDetailsView: View {
     }
 
     private func relatedItemsRow(_ items: [SeerrDiscoverItemDto]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        FocusFirstRow(firstItemId: String(items.first?.id ?? 0)) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(items) { relatedItem in
                     SeerrItemCard(
@@ -433,6 +476,8 @@ struct SeerrMediaDetailsView: View {
                             }
                         }
                     )
+                    .id(String(relatedItem.id))
+                    .focused(focusBinding, equals: String(relatedItem.id))
                 }
             }
             .padding(.vertical, 12)
@@ -446,28 +491,23 @@ struct SeerrMediaDetailsView: View {
         if !keywords.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 sectionTitle("Keywords")
-                ScrollView(.horizontal, showsIndicators: false) {
+                FocusFirstRow(firstItemId: String(keywords.first?.id ?? 0)) { focusBinding in
                     HStack(spacing: SpaceTokens.spaceSm) {
                         ForEach(keywords) { keyword in
-                            Button(action: {
+                            SeerrKeywordPill(keyword: keyword) {
                                 router.navigate(to: .seerrBrowseBy(
                                     filterId: keyword.id,
                                     filterName: keyword.name,
                                     mediaType: viewModel.isMovie ? "movie" : "tv",
                                     filterType: "keyword"
                                 ))
-                            }) {
-                                Text(keyword.name)
-                                    .font(.captionXs)
-                                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(theme.colorScheme.surface.opacity(0.2))
-                                    .clipShape(Capsule())
                             }
-                            .buttonStyle(.plain)
+                            .id(String(keyword.id))
+                            .focused(focusBinding, equals: String(keyword.id))
                         }
                     }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
                 }
             }
         }
@@ -654,5 +694,106 @@ struct SeerrMediaDetailsView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+}
+
+private struct SeerrKeywordPill: View {
+    let keyword: SeerrKeywordDto
+    let onSelect: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: onSelect) {
+            Text(keyword.name)
+                .font(.captionXs)
+                .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(theme.colorScheme.surface.opacity(0.2))
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct SeerrGenrePill: View {
+    let genre: SeerrGenreDto
+    let onSelect: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: onSelect) {
+            Text(genre.name)
+                .font(.bodySm)
+                .foregroundColor(theme.colorScheme.onBackground)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(theme.colorScheme.surface.opacity(0.3))
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct SeerrActionButton: View {
+    let icon: String
+    let label: String
+    let action: () -> Void
+    var isLoading: Bool = false
+
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(isFocused ? Color.white : Color.white.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                        .frame(width: 80, height: 80)
+
+                    if isLoading {
+                        ProgressView().tint(isFocused ? .black : .white)
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 28))
+                            .foregroundColor(isFocused ? .black : .white)
+                    }
+                }
+
+                Text(label)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white.opacity(isFocused ? 1.0 : 0.8))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .frame(height: 36, alignment: .top)
+            }
+            .frame(width: 90, alignment: .top)
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .scaleEffect(isFocused ? 1.08 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }

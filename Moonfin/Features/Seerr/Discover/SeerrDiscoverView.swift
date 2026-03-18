@@ -5,6 +5,15 @@ struct SeerrDiscoverView: View {
     @StateObject private var viewModel: SeerrDiscoverViewModel
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var container: AppContainer
+
+    private var navbarIsLeft: Bool {
+        container.userPreferences[UserPreferences.navbarPosition] == .left
+    }
+
+    private var contentLeading: CGFloat {
+        navbarIsLeft ? LeftSidebar.sidebarInset : 50
+    }
 
     init(seerrRepository: SeerrRepositoryProtocol) {
         _viewModel = StateObject(wrappedValue: SeerrDiscoverViewModel(seerrRepository: seerrRepository))
@@ -116,7 +125,7 @@ struct SeerrDiscoverView: View {
                     .lineLimit(3)
             }
         }
-        .padding(.leading, 50)
+        .padding(.leading, contentLeading)
         .padding(.trailing, 50)
         .padding(.top, 80)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -166,9 +175,10 @@ struct SeerrDiscoverView: View {
                         .id(row.id)
                     }
                 }
-                .padding(.leading, 50)
+                .padding(.leading, contentLeading)
                 .padding(.trailing, 50)
             }
+            .focusSection()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }

@@ -4,6 +4,15 @@ struct SeerrBrowseByView: View {
     @StateObject private var viewModel: SeerrBrowseByViewModel
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var container: AppContainer
+
+    private var navbarIsLeft: Bool {
+        container.userPreferences[UserPreferences.navbarPosition] == .left
+    }
+
+    private var contentLeading: CGFloat {
+        navbarIsLeft ? LeftSidebar.sidebarInset : 50
+    }
 
     private let columns = Array(repeating: GridItem(.fixed(150), spacing: SpaceTokens.spaceMd), count: 7)
 
@@ -48,7 +57,8 @@ struct SeerrBrowseByView: View {
     private var contentView: some View {
         VStack(alignment: .leading, spacing: 0) {
             headerBar
-                .padding(.horizontal, 50)
+                .padding(.leading, contentLeading)
+                .padding(.trailing, 50)
                 .padding(.top, 40)
 
             ScrollView(.vertical, showsIndicators: false) {
@@ -70,7 +80,8 @@ struct SeerrBrowseByView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 50)
+                .padding(.leading, contentLeading)
+                .padding(.trailing, 50)
                 .padding(.top, SpaceTokens.spaceLg)
                 .padding(.bottom, 80)
 
