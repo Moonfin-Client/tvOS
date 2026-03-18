@@ -121,6 +121,10 @@ struct HomeScreen: View {
             sentinelTask?.cancel()
             viewModel.mediaBarViewModel.cleanup()
         }
+        .onReceive(container.pluginSyncService.$syncCompletedCount) { count in
+            guard count > 0 else { return }
+            viewModel.loadContent(forceReload: true)
+        }
         .onChange(of: viewModel.isMediaBarActive) { active in
             if active && lastFocusedRowId == nil { isMediaBarMode = true }
         }
@@ -267,7 +271,7 @@ struct HomeScreen: View {
                                         navigatedFromMediaBar = false
                                         lastFocusedRowId = row.id
                                         lastFocusedItemId = item.id
-                                        if row.rowType == .libraryTiles {
+                                        if row.rowType == .myMedia || row.rowType == .myMediaSmall {
                                             navigateToLibrary(item)
                                         } else if row.rowType == .liveTvButtons {
                                             navigateToLiveTvAction(item)

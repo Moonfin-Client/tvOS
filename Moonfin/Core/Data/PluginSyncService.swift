@@ -141,6 +141,11 @@ final class PluginSyncService: ObservableObject {
                 if value is NSNull { continue }
                 let camelKey = toCamelCase(key)
                 if PluginSyncConstants.allServerKeys.contains(camelKey) {
+                    if camelKey == "homeRowOrder", let tvRows = value as? [Any] {
+                        // Skip if written by old Apple TV code using Swift rawValues ("nextUp") instead of server names ("nextup").
+                        let hasCamelCase = tvRows.contains { ($0 as? String)?.contains(where: \.isUppercase) ?? false }
+                        if hasCamelCase { continue }
+                    }
                     resolved[camelKey] = value
                 }
             }
@@ -266,7 +271,14 @@ final class PluginSyncService: ObservableObject {
             if sp.key == UserPreferences.homeSections.key {
                 let raw = store.string(forKey: sp.key) ?? ""
                 if raw.isEmpty { return sp.defaultValue }
-                return raw.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
+                // Handle both rawValue format (new: "nextUp") and server-name format
+                // (old: "nextup") that may be stored from previous versions.
+                return raw.split(separator: ",")
+                    .compactMap { rawStr -> HomeSectionType? in
+                        let s = String(rawStr).trimmingCharacters(in: .whitespaces)
+                        return HomeSectionType(rawValue: s) ?? HomeSectionType.from(serverName: s)
+                    }
+                    .map { $0.serverName }
             }
             return store.stringArray(forKey: sp.key) ?? sp.defaultValue
         }
@@ -290,7 +302,8 @@ final class PluginSyncService: ObservableObject {
             }
         default:
             if sp.key == UserPreferences.homeSections.key {
-                store.set(list.joined(separator: ","), forKey: sp.key)
+                let rawValues = list.compactMap { HomeSectionType.from(serverName: $0)?.rawValue }
+                store.set(rawValues.joined(separator: ","), forKey: sp.key)
             } else {
                 store.set(list, forKey: sp.key)
             }

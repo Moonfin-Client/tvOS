@@ -4,7 +4,8 @@ enum HomeSectionType: String, CaseIterable, Codable {
     case resume
     case nextUp
     case latestMedia
-    case libraryTiles
+    case myMedia
+    case myMediaSmall
     case resumeAudio
     case playlists
     case liveTv
@@ -15,7 +16,8 @@ enum HomeSectionType: String, CaseIterable, Codable {
         case .resume: return "Continue Watching"
         case .nextUp: return "Next Up"
         case .latestMedia: return "Latest Media"
-        case .libraryTiles: return "Library Tiles"
+        case .myMedia: return "My Media"
+        case .myMediaSmall: return "My Media (small)"
         case .resumeAudio: return "Continue Listening"
         case .playlists: return "Playlists"
         case .liveTv: return "Live TV"
@@ -28,7 +30,8 @@ enum HomeSectionType: String, CaseIterable, Codable {
         case .resume: return "play.circle"
         case .nextUp: return "arrow.right.circle"
         case .latestMedia: return "sparkles"
-        case .libraryTiles: return "square.grid.2x2"
+        case .myMedia: return "rectangle.grid.1x2"
+        case .myMediaSmall: return "list.bullet.rectangle"
         case .resumeAudio: return "headphones"
         case .playlists: return "music.note.list"
         case .liveTv: return "tv"
@@ -36,12 +39,33 @@ enum HomeSectionType: String, CaseIterable, Codable {
         }
     }
 
+    /// The serialized name used by the Moonfin plugin server (matches AndroidTV convention).
+    var serverName: String {
+        switch self {
+        case .resume: return "resume"
+        case .nextUp: return "nextup"
+        case .latestMedia: return "latestmedia"
+        case .myMedia: return "smalllibrarytiles"
+        case .myMediaSmall: return "librarybuttons"
+        case .resumeAudio: return "resumeaudio"
+        case .playlists: return "playlists"
+        case .liveTv: return "livetv"
+        case .none: return "none"
+        }
+    }
+
+    static func from(serverName: String) -> HomeSectionType? {
+        HomeSectionType.allCases.first { $0.serverName == serverName.lowercased() }
+            ?? HomeSectionType(rawValue: serverName)
+    }
+
     static let defaults: [(type: HomeSectionType, enabled: Bool)] = [
         (.resume, true),
         (.nextUp, true),
         (.liveTv, true),
         (.latestMedia, true),
-        (.libraryTiles, false),
+        (.myMedia, false),
+        (.myMediaSmall, false),
         (.resumeAudio, false),
         (.playlists, false),
     ]
@@ -51,7 +75,8 @@ enum HomeRowType: Equatable {
     case continueWatching
     case nextUp
     case latestMedia(libraryId: String)
-    case libraryTiles
+    case myMedia
+    case myMediaSmall
     case resumeAudio
     case playlists
     case liveTvButtons
@@ -64,7 +89,7 @@ enum HomeRowType: Equatable {
             return 16.0 / 9.0
         case .liveTvButtons:
             return 2.0 / 1.0
-        case .resumeAudio:
+        case .resumeAudio, .myMediaSmall:
             return 1.0
         default:
             return 2.0 / 3.0
@@ -75,10 +100,14 @@ enum HomeRowType: Equatable {
         switch self {
         case .continueWatching, .nextUp, .liveTvOnNow, .liveTvComingUp:
             return 280
+        case .myMedia:
+            return 240
         case .liveTvButtons:
             return 220
         case .resumeAudio:
             return 180
+        case .myMediaSmall:
+            return 120
         default:
             return 150
         }

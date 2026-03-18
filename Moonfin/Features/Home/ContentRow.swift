@@ -20,7 +20,7 @@ struct ContentRow: View {
 
     private var isCustomizableRow: Bool {
         switch row.rowType {
-        case .continueWatching, .nextUp, .libraryTiles, .liveTvButtons, .liveTvOnNow, .liveTvComingUp:
+        case .continueWatching, .nextUp, .liveTvButtons, .liveTvOnNow, .liveTvComingUp:
             return false
         default:
             return true
@@ -104,12 +104,22 @@ struct ContentRow: View {
 
     @ViewBuilder
     private func cardView(for item: ServerItem) -> some View {
-        if row.rowType == .libraryTiles {
+        if row.rowType == .myMedia {
             LibraryCard(
                 item: item,
                 imageUrl: viewModel.thumbImageUrl(for: item),
                 cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
                 onFocused: { item in
+                    viewModel.onItemFocused(item)
+                    onRowFocused?()
+                },
+                onSelect: { onItemSelected?(item) }
+            )
+        } else if row.rowType == .myMediaSmall {
+            LibraryActionCard(
+                item: item,
+                cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
+                onFocused: {
                     viewModel.onItemFocused(item)
                     onRowFocused?()
                 },
@@ -157,6 +167,64 @@ struct ContentRow: View {
     }
 }
 
+struct LibraryActionCard: View {
+    let item: ServerItem
+    let cardWidth: CGFloat
+    let onFocused: () -> Void
+    let onSelect: () -> Void
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    private var iconName: String {
+        guard let ct = item.collectionType?.lowercased() else { return "folder" }
+        switch ct {
+        case "movies": return "film"
+        case "tvshows": return "tv"
+        case "music": return "music.note"
+        case "books": return "book"
+        case "photos": return "photo"
+        case "homevideos": return "video"
+        case "boxsets": return "square.stack"
+        case "playlists": return "list.bullet"
+        case "livetv": return "antenna.radiowaves.left.and.right"
+        default: return "folder"
+        }
+    }
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(spacing: SpaceTokens.spaceSm) {
+                Image(systemName: iconName)
+                    .font(.system(size: 28, weight: .medium))
+                    .foregroundColor(isFocused ? .white : theme.accent)
+                Text(item.name)
+                    .font(.bodyMd)
+                    .fontWeight(.semibold)
+                    .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(SpaceTokens.spaceSm)
+            .frame(width: cardWidth, height: cardWidth)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .fill(isFocused ? theme.accent : theme.colorScheme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 3)
+            )
+            .scaleEffect(isFocused ? 1.05 : 1.0)
+            .animation(.easeOut(duration: 0.15), value: isFocused)
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+            if focused { onFocused() }
+        }
+    }
+}
+
 struct LiveTvActionCard: View {
     let item: ServerItem
     let cardWidth: CGFloat
@@ -164,7 +232,7 @@ struct LiveTvActionCard: View {
     let onFocused: () -> Void
     let onSelect: () -> Void
     @EnvironmentObject var theme: MoonfinTheme
-    @Environment(\.isFocused) private var isFocused
+    @FocusState private var isFocused: Bool
 
     private var iconName: String {
         switch item.id {
@@ -192,11 +260,16 @@ struct LiveTvActionCard: View {
                 RoundedRectangle(cornerRadius: RadiusTokens.medium)
                     .fill(isFocused ? theme.accent : theme.colorScheme.surface)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 3)
+            )
             .scaleEffect(isFocused ? 1.05 : 1.0)
             .shadow(color: isFocused ? theme.accent.opacity(0.5) : .clear, radius: 8)
             .animation(.easeOut(duration: 0.15), value: isFocused)
         }
         .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
         .onChange(of: isFocused) { focused in
             if focused { onFocused() }
         }

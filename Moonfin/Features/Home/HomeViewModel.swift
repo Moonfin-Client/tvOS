@@ -126,7 +126,7 @@ final class HomeViewModel: ObservableObject {
                 return
             }
 
-            let viewDependent: Set<HomeSectionType> = [.latestMedia, .libraryTiles]
+            let viewDependent: Set<HomeSectionType> = [.latestMedia, .myMedia, .myMediaSmall]
             let needsViews = mediaBarViewModel.isEnabled
                 || sections.contains(where: { viewDependent.contains($0) })
 
@@ -151,6 +151,8 @@ final class HomeViewModel: ObservableObject {
             await mediaBarViewModel.load(userViews: userViews)
 
             await earlyLoadTask
+
+            guard !Task.isCancelled else { return }
 
             let lateRows = sections
                 .filter { viewDependent.contains($0) }
@@ -198,13 +200,12 @@ final class HomeViewModel: ObservableObject {
 
     private func loadMultiServerContent(sections: [HomeSectionType], client: MediaServerClient) async {
         let multiRepo = container.multiServerRepository
-        let multiServerSections: Set<HomeSectionType> = [.resume, .nextUp, .latestMedia, .libraryTiles]
+        let multiServerSections: Set<HomeSectionType> = [.resume, .nextUp, .latestMedia, .myMedia, .myMediaSmall]
 
         dataSources = [:]
 
         let needsViews = mediaBarViewModel.isEnabled
-            || sections.contains(.latestMedia) || sections.contains(.libraryTiles)
-
+            || sections.contains(.latestMedia) || sections.contains(.myMedia) || sections.contains(.myMediaSmall)
         var aggregatedLibraries: [AggregatedLibrary] = []
         if needsViews {
             aggregatedLibraries = await multiRepo.getAggregatedLibraries()
@@ -264,11 +265,18 @@ final class HomeViewModel: ObservableObject {
                         ))
                     }
 
-                case .libraryTiles:
+                case .myMedia:
                     let items = aggregatedLibraries.map(\.library)
                     resultRows.append(makeStaticRow(
-                        id: "ms_library_tiles", title: "Libraries",
-                        rowType: .libraryTiles, items: items
+                        id: "ms_my_media", title: "My Media",
+                        rowType: .myMedia, items: items
+                    ))
+
+                case .myMediaSmall:
+                    let items = aggregatedLibraries.map(\.library)
+                    resultRows.append(makeStaticRow(
+                        id: "ms_my_media_small", title: "My Media",
+                        rowType: .myMediaSmall, items: items
                     ))
 
                 default:
@@ -384,14 +392,11 @@ final class HomeViewModel: ObservableObject {
                 )
             }
 
-        case .libraryTiles:
-            return [makeRow(
-                id: "library_tiles",
-                title: "Libraries",
-                rowType: .libraryTiles,
-                queryType: .staticItems(userViews),
-                triggers: []
-            )]
+        case .myMedia:
+            return [makeStaticRow(id: "my_media", title: "My Media", rowType: .myMedia, items: userViews)]
+
+        case .myMediaSmall:
+            return [makeStaticRow(id: "my_media_small", title: "My Media", rowType: .myMediaSmall, items: userViews)]
 
         case .resumeAudio:
             return [makeRow(
