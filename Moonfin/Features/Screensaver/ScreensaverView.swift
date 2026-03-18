@@ -45,12 +45,17 @@ struct ScreensaverView: View {
             if showClock {
                 BouncingClockView(dimmingLevel: dimmingLevel)
             }
+
+            Button(action: onDismiss) {
+                Color.clear
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(CleanButtonStyle())
         }
         .ignoresSafeArea()
         .onAppear { viewModel.start() }
         .onDisappear { viewModel.stop() }
-        .focusable()
-        .onExitCommand { onDismiss() }
         .onMoveCommand { _ in onDismiss() }
         .onPlayPauseCommand { onDismiss() }
     }

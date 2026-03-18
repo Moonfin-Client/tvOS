@@ -146,6 +146,7 @@ struct MainNavigationView: View {
                 }
                 .transition(.opacity)
                 .focusSection()
+                .onExitCommand { container.inactivityTracker.notifyInteraction() }
             }
         }
         .focusScope(mainNamespace)
