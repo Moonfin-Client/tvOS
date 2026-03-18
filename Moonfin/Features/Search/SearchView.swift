@@ -26,7 +26,6 @@ struct SearchScreen: View {
                 searchResults
             }
         }
-        .ignoresSafeArea()
         .onAppear {
             router.hideNavbar = true
             if !viewModel.query.isEmpty {
@@ -55,46 +54,16 @@ struct SearchScreen: View {
     }
 
     private var searchField: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 22))
-                .foregroundColor(.white.opacity(0.5))
-
-            TextField("Search...", text: $viewModel.query)
-                .font(.system(size: 22, weight: .regular))
-                .foregroundColor(.white)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
-                .onChange(of: viewModel.query) { _ in
-                    viewModel.searchDebounced()
-                }
-                .onSubmit {
-                    viewModel.searchImmediately()
-                }
-
-            if !viewModel.query.isEmpty {
-                Button {
-                    viewModel.query = ""
-                    viewModel.searchDebounced()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.white.opacity(0.4))
-                }
-                .buttonStyle(CleanButtonStyle())
+        SearchTextField(
+            text: $viewModel.query,
+            isLoading: viewModel.isSearching,
+            theme: theme,
+            onChanged: { viewModel.searchDebounced() },
+            onSubmit: { viewModel.searchImmediately() },
+            onClear: {
+                viewModel.query = ""
+                viewModel.searchDebounced()
             }
-
-            if viewModel.isSearching {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .scaleEffect(0.7)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: RadiusTokens.medium)
-                .fill(Color.white.opacity(0.08))
         )
     }
 
@@ -126,7 +95,7 @@ struct SearchScreen: View {
         return Group {
             if trimmedQuery.isEmpty {
                 emptyState
-            } else if !viewModel.isSearching && viewModel.resultGroups.isEmpty {
+            } else if !viewModel.isSearching && viewModel.resultGroups.isEmpty && viewModel.seerrResults.isEmpty {
                 noResults
             } else {
                 resultRows
@@ -168,10 +137,42 @@ struct SearchScreen: View {
                 ForEach(viewModel.resultGroups) { group in
                     searchResultRow(group: group)
                 }
+                if !viewModel.seerrResults.isEmpty {
+                    seerrResultRow
+                }
             }
             .padding(.horizontal, 60)
             .padding(.top, 12)
             .padding(.bottom, 24)
+        }
+    }
+
+    private var seerrResultRow: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+            HStack(spacing: 6) {
+                Text("Jellyseerr")
+                    .font(.bodyLg)
+                    .fontWeight(.semibold)
+                    .foregroundColor(theme.colorScheme.onBackground)
+
+                Text("(\(viewModel.seerrResults.count))")
+                    .font(.bodySm)
+                    .foregroundColor(.white.opacity(0.4))
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: SpaceTokens.spaceMd) {
+                    ForEach(viewModel.seerrResults) { item in
+                        SeerrSearchCard(item: item, onTap: {
+                            guard let data = try? JSONEncoder().encode(item),
+                                  let json = String(data: data, encoding: .utf8) else { return }
+                            router.navigate(to: .seerrMediaDetails(itemJson: json))
+                        })
+                    }
+                }
+                .padding(.vertical, 10)
+                .padding(.leading, 6)
+            }
         }
     }
 
@@ -236,6 +237,7 @@ struct SearchScreen: View {
                 .id(urlString)
             }
         }
+        .ignoresSafeArea()
         .animation(.easeInOut(duration: BackgroundService.transitionDuration), value: viewModel.backgroundService.currentBackdropUrl)
         .background(theme.colorScheme.background)
     }
@@ -276,6 +278,11 @@ private struct SearchResultCard: View {
                 .frame(width: cardWidth, height: cardHeight)
                 .clipShape(
                     RoundedRectangle(cornerRadius: isCircle ? cardWidth / 2 : RadiusTokens.small)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: isCircle ? cardWidth / 2 : RadiusTokens.small)
+                        .stroke(Color.white, lineWidth: isFocused ? 3 : 0)
+                        .animation(.easeInOut(duration: 0.15), value: isFocused)
                 )
 
                 Text(item.name)
@@ -387,5 +394,128 @@ private struct SearchCardButtonStyle: ButtonStyle {
             .scaleEffect(isFocused ? 1.05 : 1.0)
             .opacity(isFocused ? 1.0 : 0.75)
             .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct SearchTextField: View {
+    @Binding var text: String
+    let isLoading: Bool
+    let theme: MoonfinTheme
+    let onChanged: () -> Void
+    let onSubmit: () -> Void
+    let onClear: () -> Void
+
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 26, weight: .medium))
+                .foregroundColor(isFocused ? theme.colorScheme.onInputFocused : .white.opacity(0.4))
+
+            TextField("Search movies, shows, music...", text: $text)
+                .font(.system(size: 28, weight: .regular))
+                .foregroundColor(isFocused ? theme.colorScheme.onInputFocused : theme.colorScheme.onInput)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .onChange(of: text) { _ in onChanged() }
+                .onSubmit { onSubmit() }
+
+            if isLoading {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .scaleEffect(0.8)
+            }
+
+            if !text.isEmpty {
+                Button(action: onClear) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(isFocused ? .white.opacity(0.6) : .white.opacity(0.3))
+                }
+                .buttonStyle(CleanButtonStyle())
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .fill(isFocused ? theme.colorScheme.inputFocused.opacity(0.15) : theme.colorScheme.input.opacity(0.12))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .stroke(
+                    isFocused ? theme.accent.opacity(0.8) : Color.white.opacity(0.06),
+                    lineWidth: isFocused ? 2.5 : 1
+                )
+        )
+        .focused($isFocused)
+        .animation(.easeInOut(duration: 0.2), value: isFocused)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isFocused = true
+            }
+        }
+    }
+}
+
+private struct SeerrSearchCard: View {
+    let item: SeerrDiscoverItemDto
+    let onTap: () -> Void
+
+    @FocusState private var isFocused: Bool
+
+    private let cardWidth: CGFloat = 150
+    private let cardHeight: CGFloat = 225
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 6) {
+                Group {
+                    if let path = item.posterPath, let url = URL(string: SeerrImageUrl.poster(path)) {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image): image.resizable().aspectRatio(contentMode: .fill)
+                            case .failure: placeholder
+                            default: placeholder.shimmering()
+                            }
+                        }
+                    } else {
+                        placeholder
+                    }
+                }
+                .frame(width: cardWidth, height: cardHeight)
+                .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .stroke(Color.white, lineWidth: isFocused ? 3 : 0)
+                        .animation(.easeInOut(duration: 0.15), value: isFocused)
+                )
+
+                Text(item.displayTitle)
+                    .font(.captionXs)
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+
+                Text(item.mediaType == "tv" ? "TV Show" : "Movie")
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(1)
+            }
+            .frame(width: cardWidth)
+        }
+        .buttonStyle(SearchCardButtonStyle(isFocused: isFocused))
+        .focused($isFocused)
+    }
+
+    private var placeholder: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.06))
+            .frame(width: cardWidth, height: cardHeight)
+            .overlay(
+                Image(systemName: item.mediaType == "tv" ? "tv" : "film")
+                    .font(.system(size: 28))
+                    .foregroundColor(.white.opacity(0.2))
+            )
     }
 }

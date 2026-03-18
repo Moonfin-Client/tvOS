@@ -42,6 +42,7 @@ final class SpotlightIndexer {
         activity.title = displayTitle(for: item)
         activity.isEligibleForSearch = true
         activity.isEligibleForPublicIndexing = false
+        activity.targetContentIdentifier = "moonfin://item?id=\(item.id)"
 
         let serverId = item.effectiveServerId ?? serverRepository.currentServer.value?.id.uuidString ?? ""
         activity.userInfo = [

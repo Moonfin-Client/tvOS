@@ -10,6 +10,7 @@ struct SearchResultGroup: Identifiable {
 @MainActor
 final class SearchViewModel: ObservableObject {
     @Published private(set) var resultGroups: [SearchResultGroup] = []
+    @Published private(set) var seerrResults: [SeerrDiscoverItemDto] = []
     @Published private(set) var isSearching = false
     @Published private(set) var focusedItem: ServerItem?
     @Published var query = ""
@@ -70,6 +71,7 @@ final class SearchViewModel: ObservableObject {
 
         guard !trimmed.isEmpty else {
             resultGroups = []
+            seerrResults = []
             isSearching = false
             backgroundService.clearBackground()
             return
@@ -178,6 +180,12 @@ final class SearchViewModel: ObservableObject {
 
         resultGroups = filtered.filter { !$0.items.isEmpty }
         isSearching = false
+
+        if container.seerrRepository.isAvailable.value {
+            if let page = try? await container.seerrRepository.search(query: query, mediaType: nil, limit: 20, offset: 0) {
+                seerrResults = page.results.filter { !$0.isBlacklisted }
+            }
+        }
     }
 
     private func searchItemTypes(

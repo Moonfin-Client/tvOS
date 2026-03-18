@@ -35,5 +35,16 @@
 	<array>
 		<string>com.moonfin.tv.viewItem</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.moonfin.tv</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>moonfin</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
