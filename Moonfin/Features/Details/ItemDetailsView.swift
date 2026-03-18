@@ -378,7 +378,7 @@ struct ItemDetailsView: View {
         return HStack(spacing: SpaceTokens.spaceSm) {
             ForEach(viewModel.ratings, id: \.0) { source, value in
                 if source == "stars" {
-                    starRatingChip(value: value)
+                    starRatingChip(value: value, showLabel: showLabels)
                 } else {
                     RatingChipView(source: source, normalizedValue: value, showLabel: showLabels)
                 }
@@ -386,7 +386,7 @@ struct ItemDetailsView: View {
         }
     }
 
-    private func starRatingChip(value: Float) -> some View {
+    private func starRatingChip(value: Float, showLabel: Bool) -> some View {
         HStack(spacing: 6) {
             Image(systemName: "star.fill")
                 .font(.system(size: 18))
@@ -395,9 +395,11 @@ struct ItemDetailsView: View {
                 Text(String(format: "%.1f", value))
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
-                Text("Community rating")
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.5))
+                if showLabel {
+                    Text("Community rating")
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.5))
+                }
             }
         }
         .padding(.horizontal, 10)
