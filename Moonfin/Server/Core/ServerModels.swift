@@ -231,6 +231,7 @@ struct ServerItem: Codable, Identifiable {
     let isRepeat: Bool?
     let isLive: Bool?
     let isHD: Bool?
+    let status: String?
     let currentProgram: Indirect<ServerItem>?
 
     enum CodingKeys: String, CodingKey {
@@ -298,6 +299,7 @@ struct ServerItem: Codable, Identifiable {
         case isRepeat = "IsRepeat"
         case isLive = "IsLive"
         case isHD = "IsHD"
+        case status = "Status"
         case currentProgram = "CurrentProgram"
     }
 }
@@ -322,7 +324,7 @@ extension ServerItem {
             albumCount: nil, hasLyrics: nil, dateCreated: nil, startDate: nil, channelNumber: nil,
             timerId: nil, seriesTimerId: nil, isMovie: nil, isSeries: nil, isNews: nil,
             isSports: nil, isKids: nil, isPremiere: nil, isRepeat: nil, isLive: nil,
-            isHD: nil, currentProgram: nil
+            isHD: nil, status: nil, currentProgram: nil
         )
     }
 }

@@ -253,12 +253,28 @@ struct ItemDetailsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                if item.type != .person, let posterUrl = viewModel.posterUrl(for: item),
-                   let url = URL(string: posterUrl) {
-                    CachedImage(url: url, contentMode: .fit)
-                        .frame(maxWidth: 240, maxHeight: 360)
-                        .cornerRadius(RadiusTokens.medium)
-                        .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
+                if item.type != .person {
+                    let isEpisode = item.type == .episode
+                    let isMusic = [ItemType.musicAlbum, .musicArtist, .playlist].contains(item.type)
+                    let imageUrlString: String? = isEpisode
+                        ? viewModel.imageUrl(for: item, imageType: .thumb)
+                        : viewModel.posterUrl(for: item)
+
+                    if let imageUrlString, let url = URL(string: imageUrlString) {
+                        if isEpisode {
+                            CachedImage(url: url, contentMode: .fill)
+                                .frame(maxWidth: 320, maxHeight: 180)
+                                .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                                .clipped()
+                                .cornerRadius(RadiusTokens.medium)
+                                .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
+                        } else {
+                            CachedImage(url: url, contentMode: .fit)
+                                .frame(maxWidth: 240, maxHeight: isMusic ? 240 : 360)
+                                .cornerRadius(RadiusTokens.medium)
+                                .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
+                        }
+                    }
                 }
             }
             .padding(.top, 80)
@@ -293,6 +309,19 @@ struct ItemDetailsView: View {
             if let endsAt = viewModel.endsAtText {
                 infoText(endsAt)
                 infoSeparator
+            }
+
+            if item.type == .series, let seasonCount = item.childCount, seasonCount > 0 {
+                infoText(seasonCount == 1 ? "1 Season" : "\(seasonCount) Seasons")
+                infoSeparator
+            }
+
+            if item.type == .series, let status = item.status?.lowercased(),
+               status == "continuing" || status == "ended" {
+                seriesStatusBadge(status)
+                if item.officialRating != nil || !viewModel.badges.isEmpty {
+                    infoSeparator
+                }
             }
 
             if let rating = item.officialRating, !rating.isEmpty {
@@ -330,6 +359,18 @@ struct ItemDetailsView: View {
                 RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
                     .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
             )
+    }
+
+    private func seriesStatusBadge(_ status: String) -> some View {
+        let isContinuing = status == "continuing"
+        let label = isContinuing ? "Continuing" : "Ended"
+        let badgeColor = isContinuing ? Color.green : Color.red
+        return Text(label)
+            .font(.bodySm)
+            .foregroundColor(.white)
+            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, 2)
+            .background(badgeColor.opacity(0.8), in: RoundedRectangle(cornerRadius: RadiusTokens.extraSmall))
     }
 
     private var ratingsRow: some View {
