@@ -264,13 +264,15 @@ struct FocusableSeasonCard: View {
 struct FocusFirstRow<Content: View>: View {
     let firstItemId: String?
     let restoredItemId: String?
+    var focusTrigger: Int = 0
     let content: (FocusState<String?>.Binding) -> Content
 
     @FocusState private var focusedId: String?
 
-    init(firstItemId: String?, restoredItemId: String? = nil, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
+    init(firstItemId: String?, restoredItemId: String? = nil, focusTrigger: Int = 0, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
         self.firstItemId = firstItemId
         self.restoredItemId = restoredItemId
+        self.focusTrigger = focusTrigger
         self.content = content
     }
 
@@ -280,6 +282,10 @@ struct FocusFirstRow<Content: View>: View {
         }
         .focusSection()
         .defaultFocus($focusedId, restoredItemId ?? firstItemId, priority: .userInitiated)
+        .onChange(of: focusTrigger) { newValue in
+            guard newValue > 0, let target = restoredItemId ?? firstItemId else { return }
+            focusedId = target
+        }
     }
 }
 

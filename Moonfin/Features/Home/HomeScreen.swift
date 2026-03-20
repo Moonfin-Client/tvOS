@@ -8,6 +8,7 @@ struct HomeScreen: View {
     @EnvironmentObject var router: NavigationRouter
     let mainNamespace: Namespace.ID
     @Binding var contentReady: Bool
+    @Binding var suppressTopNavbarInRows: Bool
     let sidebarHandoffToken: Int
     @State private var isMediaBarMode = true
     @State private var sentinelEnabled = false
@@ -21,6 +22,7 @@ struct HomeScreen: View {
     @State private var focusTask: Task<Void, Never>?
     @State private var sentinelTask: Task<Void, Never>?
     @Environment(\.resetFocus) private var resetFocus
+    @State private var focusFirstRowTrigger: Int = 0
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -34,12 +36,14 @@ struct HomeScreen: View {
         container: AppContainer,
         mainNamespace: Namespace.ID,
         contentReady: Binding<Bool> = .constant(true),
-        sidebarHandoffToken: Int = 0
+        sidebarHandoffToken: Int = 0,
+        suppressTopNavbarInRows: Binding<Bool> = .constant(false)
     ) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
         self.mainNamespace = mainNamespace
         self._contentReady = contentReady
         self.sidebarHandoffToken = sidebarHandoffToken
+        self._suppressTopNavbarInRows = suppressTopNavbarInRows
     }
 
     private func resolveFocus(delay: UInt64 = 50_000_000) {
@@ -113,7 +117,7 @@ struct HomeScreen: View {
         .environmentObject(viewModel.backgroundService)
         .onAppear {
             viewModel.loadContent()
-            router.hideNavbar = false
+            suppressTopNavbarInRows = viewModel.mediaBarViewModel.isEnabled && !isMediaBarMode
             if navigatedFromMediaBar {
                 isMediaBarMode = true
                 navigatedFromMediaBar = false
@@ -129,14 +133,22 @@ struct HomeScreen: View {
             focusTask?.cancel()
             sentinelTask?.cancel()
             viewModel.mediaBarViewModel.cleanup()
+            suppressTopNavbarInRows = false
         }
         .onChange(of: viewModel.isMediaBarActive) { active in
             if active && lastFocusedRowId == nil { isMediaBarMode = true }
         }
+        .onChange(of: isMediaBarMode) { mode in
+            suppressTopNavbarInRows = viewModel.mediaBarViewModel.isEnabled && !mode
+        }
         .onChange(of: viewModel.hasFocusableContent) { ready in
             if ready {
                 if !contentReady { contentReady = true }
-                if !isRestoringPosition { resolveFocus() }
+                if !isRestoringPosition {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        focusFirstRowTrigger += 1
+                    }
+                }
             }
         }
         .onChange(of: sidebarHandoffToken) { _ in
@@ -247,7 +259,7 @@ struct HomeScreen: View {
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
-                        if viewModel.isMediaBarActive && sentinelEnabled {
+                        if viewModel.mediaBarViewModel.isEnabled && viewModel.isMediaBarActive && sentinelEnabled {
                             MediaBarReturnSentinel(
                                 hasContent: viewModel.rows.contains(where: { !$0.isEmpty }),
                                 onReturn: {
@@ -294,7 +306,8 @@ struct HomeScreen: View {
                                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.effectiveServerId))
                                         }
                                     },
-                                    restoredItemId: nil
+                                    restoredItemId: nil,
+                                    focusTrigger: visibleRows.first?.id == row.id ? focusFirstRowTrigger : 0
                                 )
                                 .id(row.id)
                             }

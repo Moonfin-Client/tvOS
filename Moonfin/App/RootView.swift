@@ -82,6 +82,7 @@ struct MainNavigationView: View {
     @Environment(\.resetFocus) private var resetFocus
     @State private var contentReady = false
     @State private var sidebarHandoffToken = 0
+    @State private var suppressTopNavbarInRows = false
 
     private var navbarPosition: NavbarPosition {
         container.userPreferences[UserPreferences.navbarPosition]
@@ -180,7 +181,8 @@ struct MainNavigationView: View {
                 container: container,
                 mainNamespace: mainNamespace,
                 contentReady: $contentReady,
-                sidebarHandoffToken: sidebarHandoffToken
+                sidebarHandoffToken: sidebarHandoffToken,
+                suppressTopNavbarInRows: $suppressTopNavbarInRows
             )
                 .navigationDestination(for: Destination.self) { destination in
                     mainDestinationView(for: destination)
@@ -194,7 +196,7 @@ struct MainNavigationView: View {
     private var navigationOverlay: some View {
         switch navbarPosition {
         case .top:
-            if !router.hideNavbar {
+            if !router.hideNavbar && !suppressTopNavbarInRows {
                 VStack(spacing: 0) {
                     Navbar(container: container, onMoveToContent: handoffSidebarFocusToContent)
                         .frame(height: navbarHeight)
@@ -245,7 +247,8 @@ struct MainNavigationView: View {
             HomeScreen(
                 container: container,
                 mainNamespace: mainNamespace,
-                sidebarHandoffToken: sidebarHandoffToken
+                sidebarHandoffToken: sidebarHandoffToken,
+                suppressTopNavbarInRows: $suppressTopNavbarInRows
             )
         case .search(let query):
             SearchScreen(container: container, query: query)

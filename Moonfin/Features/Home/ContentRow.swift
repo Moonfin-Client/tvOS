@@ -7,6 +7,7 @@ struct ContentRow: View {
     var onRowFocused: (() -> Void)?
     var onItemSelected: ((ServerItem) -> Void)?
     var restoredItemId: String?
+    var focusTrigger: Int = 0
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var container: AppContainer
 
@@ -76,7 +77,7 @@ struct ContentRow: View {
             rowTitle
 
             ScrollViewReader { scrollProxy in
-                FocusFirstRow(firstItemId: row.items.first?.id) { focusBinding in
+                FocusFirstRow(firstItemId: row.items.first?.id, focusTrigger: focusTrigger) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                             cardView(for: item)

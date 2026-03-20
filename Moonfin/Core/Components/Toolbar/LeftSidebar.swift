@@ -18,7 +18,6 @@ struct LeftSidebar: View {
 
     let mainNamespace: Namespace.ID
     let onMoveToContent: (() -> Void)?
-    @Environment(\.resetFocus) private var resetFocus
 
     static let sidebarInset: CGFloat = 90
     private static let expandedWidth: CGFloat = 280
@@ -37,17 +36,20 @@ struct LeftSidebar: View {
         onMoveToContent?()
     }
 
+    private func handoffFocusToContent() {
+        focusedItem = nil
+        isExpanded = false
+        isLibraryExpanded = false
+        onMoveToContent?()
+    }
+
     var body: some View {
         sidebarColumn
             .ignoresSafeArea()
             .defaultFocus($focusedItem, .home)
-            .onAppear {
-                focusedItem = .home
-            }
             .onMoveCommand { direction in
                 if direction == .right {
-                    onMoveToContent?()
-                    resetFocus(in: mainNamespace)
+                    handoffFocusToContent()
                 }
             }
             .onChange(of: focusedItem) { newValue in
