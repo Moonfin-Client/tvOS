@@ -286,7 +286,8 @@ final class HomeViewModel: ObservableObject {
                             id: "ms_latest_\(lib.server.id.uuidString)_\(lib.library.id)",
                             title: "Latest \(lib.displayName)",
                             rowType: .latestMedia(libraryId: lib.library.id),
-                            items: items
+                            items: items,
+                            isMusicLibraryRow: lib.library.collectionType?.lowercased() == "music"
                         ))
                     }
 
@@ -328,13 +329,13 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func makeStaticRow(
-        id: String, title: String, rowType: HomeRowType, items: [ServerItem]
+        id: String, title: String, rowType: HomeRowType, items: [ServerItem], isMusicLibraryRow: Bool = false
     ) -> HomeRow {
         let filtered = container.parentalControlsRepository.filterItems(items)
         let source = RowDataSource(queryType: .staticItems(filtered), changeTriggers: [], chunkSize: Self.chunkSize)
         source.preload(filtered)
         dataSources[id] = source
-        return HomeRow(id: id, title: title, items: filtered, rowType: rowType, isLoading: false, totalItemCount: filtered.count)
+        return HomeRow(id: id, title: title, items: filtered, rowType: rowType, isMusicLibraryRow: isMusicLibraryRow, isLoading: false, totalItemCount: filtered.count)
     }
 
     private func activeHomeSections() -> [HomeSectionType] {
@@ -406,6 +407,7 @@ final class HomeViewModel: ObservableObject {
                     id: "latest_\(view.id)",
                     title: "Latest \(view.name)",
                     rowType: .latestMedia(libraryId: view.id),
+                    isMusicLibraryRow: view.collectionType?.lowercased() == "music",
                     queryType: .latestMedia(GetLatestMediaRequest(
                         parentId: view.id,
                         fields: Self.defaultFields,
@@ -494,6 +496,7 @@ final class HomeViewModel: ObservableObject {
         id: String,
         title: String,
         rowType: HomeRowType,
+        isMusicLibraryRow: Bool = false,
         queryType: RowQueryType,
         triggers: Set<ChangeTriggerType>
     ) -> HomeRow {
@@ -503,7 +506,7 @@ final class HomeViewModel: ObservableObject {
             chunkSize: Self.chunkSize
         )
         dataSources[id] = source
-        return HomeRow(id: id, title: title, rowType: rowType)
+        return HomeRow(id: id, title: title, rowType: rowType, isMusicLibraryRow: isMusicLibraryRow)
     }
 
     private var latestMediaViewTypes: [ServerItem] {

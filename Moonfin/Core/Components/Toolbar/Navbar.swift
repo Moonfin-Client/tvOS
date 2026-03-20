@@ -6,6 +6,7 @@ struct Navbar: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
     @FocusState private var navFocusItem: NavbarItem?
+    @State private var navbarHadFocus = false
     let onMoveToContent: (() -> Void)?
 
     init(container: AppContainer, onMoveToContent: (() -> Void)? = nil) {
@@ -31,7 +32,22 @@ struct Navbar: View {
         .padding(.top, 12)
         .padding(.bottom, 16)
         .frame(height: 110)
-        .defaultFocus($navFocusItem, .home, priority: .userInitiated)
+        .defaultFocus($navFocusItem, .home)
+        .onChange(of: navFocusItem) { newValue in
+            if newValue != nil {
+                if !navbarHadFocus {
+                    navbarHadFocus = true
+                    if newValue != .home {
+                        DispatchQueue.main.async {
+                            navFocusItem = .home
+                        }
+                        return
+                    }
+                }
+            } else {
+                navbarHadFocus = false
+            }
+        }
         .onMoveCommand { direction in
             if direction == .down {
                 onMoveToContent?()
@@ -42,11 +58,13 @@ struct Navbar: View {
     private var startSection: some View {
         UserAvatarToolbarButton(
             imageUrl: viewModel.userImageUrl,
+            isFocused: navFocusItem == .user,
             onTap: {
                 viewModel.switchUser()
                 router.switchFlow(to: .startup)
             }
         )
+        .focused($navFocusItem, equals: .user)
     }
 
     private var centerSection: some View {
@@ -63,6 +81,7 @@ struct Navbar: View {
                 label: "Search",
                 action: { router.navigate(to: .search()) }
             )
+            .focused($navFocusItem, equals: .search)
 
             if viewModel.showShuffle {
                 ExpandableToolbarButton(
@@ -71,6 +90,7 @@ struct Navbar: View {
                     isAssetIcon: true,
                     action: { viewModel.performQuickShuffle(router: router) }
                 )
+                .focused($navFocusItem, equals: .shuffle)
                 .contextMenu {
                     ForEach(ShuffleContentType.allCases, id: \.self) { type in
                         Button(type.displayName) {
@@ -86,6 +106,7 @@ struct Navbar: View {
                     label: "Favorites",
                     action: { router.navigate(to: .allFavorites) }
                 )
+                .focused($navFocusItem, equals: .favorites)
             }
 
             if viewModel.showGenres {
@@ -94,6 +115,7 @@ struct Navbar: View {
                     label: "Genres",
                     action: { router.navigate(to: .allGenres) }
                 )
+                .focused($navFocusItem, equals: .genres)
             }
 
             ExpandableToolbarButton(
@@ -101,6 +123,7 @@ struct Navbar: View {
                 label: "Folders",
                 action: { router.navigate(to: .folderView) }
             )
+            .focused($navFocusItem, equals: .folders)
 
             if viewModel.showSeerrInToolbar {
                 ExpandableToolbarButton(
@@ -109,6 +132,7 @@ struct Navbar: View {
                     isAssetIcon: true,
                     action: { router.navigate(to: .seerrDiscover) }
                 )
+                .focused($navFocusItem, equals: .seerr)
             }
 
             if viewModel.showLibraries && !viewModel.userViews.isEmpty {
@@ -119,6 +143,7 @@ struct Navbar: View {
                         router.navigateToLibrary(library)
                     }
                 )
+                .focused($navFocusItem, equals: .libraries)
             }
 
             if viewModel.showSyncPlay {
@@ -127,6 +152,7 @@ struct Navbar: View {
                     label: "SyncPlay",
                     action: { settingsRouter.open(to: .syncPlay) }
                 )
+                .focused($navFocusItem, equals: .syncPlay)
             }
 
             ExpandableToolbarButton(
@@ -134,6 +160,7 @@ struct Navbar: View {
                 label: "Settings",
                 action: { settingsRouter.open() }
             )
+            .focused($navFocusItem, equals: .settings)
         }
         .background(
             Capsule()
@@ -144,14 +171,24 @@ struct Navbar: View {
 }
 
 private enum NavbarItem: Hashable {
+    case user
     case home
+    case search
+    case shuffle
+    case favorites
+    case genres
+    case folders
+    case seerr
+    case libraries
+    case syncPlay
+    case settings
 }
 
 private struct UserAvatarToolbarButton: View {
     let imageUrl: String?
+    let isFocused: Bool
     let onTap: () -> Void
 
-    @FocusState private var isFocused: Bool
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
@@ -180,7 +217,6 @@ private struct UserAvatarToolbarButton: View {
             )
         }
         .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
         .scaleEffect(isFocused ? 1.1 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isFocused)
     }

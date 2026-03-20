@@ -23,6 +23,7 @@ struct HomeScreen: View {
     @State private var sentinelTask: Task<Void, Never>?
     @Environment(\.resetFocus) private var resetFocus
     @State private var focusFirstRowTrigger: Int = 0
+    @State private var suppressTopNavbarUntilMediaBarFocus = false
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -63,6 +64,23 @@ struct HomeScreen: View {
                 resetFocus(in: mainNamespace)
             }
         }
+    }
+
+    private func requestMediaBarFocus(after delay: Double = 0.05) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            mediaBarRequestFocus = true
+            if suppressTopNavbarUntilMediaBarFocus {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    suppressTopNavbarUntilMediaBarFocus = false
+                    syncTopNavbarSuppression()
+                }
+            }
+        }
+    }
+
+    private func syncTopNavbarSuppression() {
+        let mediaBarEnabled = viewModel.mediaBarViewModel.isEnabled
+        suppressTopNavbarInRows = mediaBarEnabled && (!isMediaBarMode || suppressTopNavbarUntilMediaBarFocus)
     }
 
     var body: some View {
@@ -117,7 +135,8 @@ struct HomeScreen: View {
         .environmentObject(viewModel.backgroundService)
         .onAppear {
             viewModel.loadContent()
-            suppressTopNavbarInRows = viewModel.mediaBarViewModel.isEnabled && !isMediaBarMode
+            suppressTopNavbarUntilMediaBarFocus = viewModel.mediaBarViewModel.isEnabled && lastFocusedRowId == nil
+            syncTopNavbarSuppression()
             if navigatedFromMediaBar {
                 isMediaBarMode = true
                 navigatedFromMediaBar = false
@@ -133,20 +152,28 @@ struct HomeScreen: View {
             focusTask?.cancel()
             sentinelTask?.cancel()
             viewModel.mediaBarViewModel.cleanup()
+            suppressTopNavbarUntilMediaBarFocus = false
             suppressTopNavbarInRows = false
         }
         .onChange(of: viewModel.isMediaBarActive) { active in
-            if active && lastFocusedRowId == nil { isMediaBarMode = true }
+            if active && lastFocusedRowId == nil {
+                isMediaBarMode = true
+                requestMediaBarFocus()
+            }
         }
         .onChange(of: isMediaBarMode) { mode in
-            suppressTopNavbarInRows = viewModel.mediaBarViewModel.isEnabled && !mode
+            syncTopNavbarSuppression()
         }
         .onChange(of: viewModel.hasFocusableContent) { ready in
             if ready {
                 if !contentReady { contentReady = true }
                 if !isRestoringPosition {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        focusFirstRowTrigger += 1
+                    if isMediaBarMode && viewModel.isMediaBarActive {
+                        requestMediaBarFocus()
+                    } else {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            focusFirstRowTrigger += 1
+                        }
                     }
                 }
             }

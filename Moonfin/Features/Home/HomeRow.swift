@@ -119,15 +119,17 @@ struct HomeRow: Identifiable {
     let title: String
     var items: [ServerItem]
     let rowType: HomeRowType
+    let isMusicLibraryRow: Bool
     var isLoading: Bool
     var totalItemCount: Int
     var isEmpty: Bool { items.isEmpty && !isLoading }
 
-    init(id: String, title: String, items: [ServerItem] = [], rowType: HomeRowType, isLoading: Bool = true, totalItemCount: Int = 0) {
+    init(id: String, title: String, items: [ServerItem] = [], rowType: HomeRowType, isMusicLibraryRow: Bool = false, isLoading: Bool = true, totalItemCount: Int = 0) {
         self.id = id
         self.title = title
         self.items = items
         self.rowType = rowType
+        self.isMusicLibraryRow = isMusicLibraryRow
         self.isLoading = isLoading
         self.totalItemCount = totalItemCount
     }

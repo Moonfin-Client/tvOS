@@ -28,8 +28,22 @@ struct ContentRow: View {
         }
     }
 
+    private var isMusicRow: Bool {
+        switch row.rowType {
+        case .resumeAudio, .playlists:
+            return true
+        case .latestMedia:
+            if row.isMusicLibraryRow { return true }
+            guard let first = row.items.first else { return false }
+            return isMusicItem(first)
+        default:
+            return false
+        }
+    }
+
     private var effectiveAspectRatio: CGFloat {
-        isCustomizableRow ? imageDisplayType.aspectRatio : row.rowType.aspectRatio
+        if isMusicRow { return 1.0 }
+        return isCustomizableRow ? imageDisplayType.aspectRatio : row.rowType.aspectRatio
     }
 
     private var effectiveCardWidth: CGFloat {
@@ -157,6 +171,15 @@ struct ContentRow: View {
             default:
                 return viewModel.posterImageUrl(for: item)
             }
+        }
+    }
+
+    private func isMusicItem(_ item: ServerItem) -> Bool {
+        switch item.type {
+        case .audio, .musicAlbum, .musicArtist, .musicVideo, .musicGenre:
+            return true
+        default:
+            return false
         }
     }
 }

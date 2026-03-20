@@ -201,6 +201,7 @@ struct MainNavigationView: View {
                     Navbar(container: container, onMoveToContent: handoffSidebarFocusToContent)
                         .frame(height: navbarHeight)
                         .focusSection()
+                        .prefersDefaultFocus(false, in: mainNamespace)
                     Spacer()
                 }
                 .zIndex(1)
