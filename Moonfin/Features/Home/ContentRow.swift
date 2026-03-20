@@ -76,7 +76,7 @@ struct ContentRow: View {
             rowTitle
 
             ScrollViewReader { scrollProxy in
-                FocusFirstRow(firstItemId: row.items.first?.id, restoredItemId: restoredItemId) { focusBinding in
+                FocusFirstRow(firstItemId: row.items.first?.id) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                             cardView(for: item)
@@ -91,13 +91,6 @@ struct ContentRow: View {
                     .padding(.horizontal, 12)
                 }
                 .modifier(ScrollClipDisabledModifier())
-                .onAppear {
-                    if let targetId = restoredItemId {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            scrollProxy.scrollTo(targetId, anchor: .leading)
-                        }
-                    }
-                }
             }
         }
     }

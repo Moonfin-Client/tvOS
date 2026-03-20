@@ -267,7 +267,6 @@ struct FocusFirstRow<Content: View>: View {
     let content: (FocusState<String?>.Binding) -> Content
 
     @FocusState private var focusedId: String?
-    @Namespace private var rowNamespace
 
     init(firstItemId: String?, restoredItemId: String? = nil, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
         self.firstItemId = firstItemId
@@ -280,7 +279,6 @@ struct FocusFirstRow<Content: View>: View {
             content($focusedId)
         }
         .focusSection()
-        .focusScope(rowNamespace)
         .defaultFocus($focusedId, restoredItemId ?? firstItemId, priority: .userInitiated)
     }
 }

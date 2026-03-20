@@ -13,33 +13,58 @@ struct LeftSidebar: View {
     @State private var isExpanded = false
     @State private var isLibraryExpanded = false
     @State private var collapseTask: Task<Void, Never>?
+    @State private var sidebarHadFocus = false
     @FocusState private var focusedItem: SidebarFocusItem?
 
     let mainNamespace: Namespace.ID
+    let onMoveToContent: (() -> Void)?
     @Environment(\.resetFocus) private var resetFocus
 
     static let sidebarInset: CGFloat = 90
     private static let expandedWidth: CGFloat = 280
 
-    init(container: AppContainer, mainNamespace: Namespace.ID) {
+    init(container: AppContainer, mainNamespace: Namespace.ID, onMoveToContent: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
         self.mainNamespace = mainNamespace
+        self.onMoveToContent = onMoveToContent
+    }
+
+    private func routeHomeAndHandoffFocus() {
+        router.reset()
+        focusedItem = nil
+        isExpanded = false
+        isLibraryExpanded = false
+        onMoveToContent?()
     }
 
     var body: some View {
         sidebarColumn
             .ignoresSafeArea()
-            .defaultFocus($focusedItem, .home, priority: .userInitiated)
+            .defaultFocus($focusedItem, .home)
+            .onAppear {
+                focusedItem = .home
+            }
             .onMoveCommand { direction in
                 if direction == .right {
+                    onMoveToContent?()
                     resetFocus(in: mainNamespace)
                 }
             }
             .onChange(of: focusedItem) { newValue in
                 collapseTask?.cancel()
                 if newValue != nil {
+                    if !sidebarHadFocus {
+                        sidebarHadFocus = true
+                        if newValue != .home {
+                            DispatchQueue.main.async {
+                                focusedItem = .home
+                            }
+                            return
+                        }
+                    }
                     isExpanded = true
                 } else {
+                    sidebarHadFocus = false
                     collapseTask = Task {
                         try? await Task.sleep(nanoseconds: 150_000_000)
                         guard !Task.isCancelled else { return }
@@ -107,7 +132,7 @@ struct LeftSidebar: View {
                 label: "Home",
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .home,
-                action: { router.reset() }
+                action: { routeHomeAndHandoffFocus() }
             )
             .focused($focusedItem, equals: .home)
 

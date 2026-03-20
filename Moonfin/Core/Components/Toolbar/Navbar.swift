@@ -6,9 +6,16 @@ struct Navbar: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
     @FocusState private var navFocusItem: NavbarItem?
+    let onMoveToContent: (() -> Void)?
 
-    init(container: AppContainer) {
+    init(container: AppContainer, onMoveToContent: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
+        self.onMoveToContent = onMoveToContent
+    }
+
+    private func routeHomeAndHandoffFocus() {
+        router.reset()
+        onMoveToContent?()
     }
 
     var body: some View {
@@ -25,6 +32,11 @@ struct Navbar: View {
         .padding(.bottom, 16)
         .frame(height: 110)
         .defaultFocus($navFocusItem, .home, priority: .userInitiated)
+        .onMoveCommand { direction in
+            if direction == .down {
+                onMoveToContent?()
+            }
+        }
     }
 
     private var startSection: some View {
@@ -42,7 +54,7 @@ struct Navbar: View {
             ExpandableToolbarButton(
                 icon: "house",
                 label: "Home",
-                action: { router.reset() }
+                action: { routeHomeAndHandoffFocus() }
             )
             .focused($navFocusItem, equals: .home)
 

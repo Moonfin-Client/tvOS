@@ -55,6 +55,15 @@ final class HomeViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        container.pluginSyncService.$syncCompletedCount
+            .dropFirst()
+            .filter { $0 > 0 }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.loadContent(forceReload: true)
+            }
+            .store(in: &cancellables)
     }
 
     private func observeMediaBar() {
@@ -107,13 +116,21 @@ final class HomeViewModel: ObservableObject {
         return imageApi
     }
 
+    private var queuedForceReload = false
+
     func loadContent(forceReload: Bool = false) {
+        if forceReload && loadTask != nil {
+            queuedForceReload = true
+            return
+        }
         guard forceReload || isInitialLoad else {
             refreshContent()
             return
         }
+        queuedForceReload = false
         loadTask?.cancel()
         loadTask = Task {
+            defer { finishLoad() }
             guard let client else {
                 await mediaBarViewModel.load()
                 return
@@ -164,6 +181,14 @@ final class HomeViewModel: ObservableObject {
             }
 
             indexForSpotlight()
+        }
+    }
+
+    private func finishLoad() {
+        loadTask = nil
+        if queuedForceReload {
+            queuedForceReload = false
+            loadContent(forceReload: true)
         }
     }
 

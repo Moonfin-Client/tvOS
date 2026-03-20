@@ -7,6 +7,8 @@ struct HomeScreen: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     let mainNamespace: Namespace.ID
+    @Binding var contentReady: Bool
+    let sidebarHandoffToken: Int
     @State private var isMediaBarMode = true
     @State private var sentinelEnabled = false
     @State private var focusedRowId: String?
@@ -28,9 +30,16 @@ struct HomeScreen: View {
         navbarIsLeft ? LeftSidebar.sidebarInset : 50
     }
 
-    init(container: AppContainer, mainNamespace: Namespace.ID) {
+    init(
+        container: AppContainer,
+        mainNamespace: Namespace.ID,
+        contentReady: Binding<Bool> = .constant(true),
+        sidebarHandoffToken: Int = 0
+    ) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
         self.mainNamespace = mainNamespace
+        self._contentReady = contentReady
+        self.sidebarHandoffToken = sidebarHandoffToken
     }
 
     private func resolveFocus(delay: UInt64 = 50_000_000) {
@@ -121,17 +130,19 @@ struct HomeScreen: View {
             sentinelTask?.cancel()
             viewModel.mediaBarViewModel.cleanup()
         }
-        .onReceive(container.pluginSyncService.$syncCompletedCount) { count in
-            guard count > 0 else { return }
-            viewModel.loadContent(forceReload: true)
-        }
         .onChange(of: viewModel.isMediaBarActive) { active in
             if active && lastFocusedRowId == nil { isMediaBarMode = true }
         }
         .onChange(of: viewModel.hasFocusableContent) { ready in
-            if ready && !isRestoringPosition {
-                resolveFocus()
+            if ready {
+                if !contentReady { contentReady = true }
+                if !isRestoringPosition { resolveFocus() }
             }
+        }
+        .onChange(of: sidebarHandoffToken) { _ in
+            guard viewModel.hasFocusableContent else { return }
+            isMediaBarMode = false
+            resolveFocus(delay: 0)
         }
     }
 
@@ -270,7 +281,7 @@ struct HomeScreen: View {
                                     onItemSelected: { item in
                                         navigatedFromMediaBar = false
                                         lastFocusedRowId = row.id
-                                        lastFocusedItemId = item.id
+                                        lastFocusedItemId = nil
                                         if row.rowType == .myMedia || row.rowType == .myMediaSmall {
                                             navigateToLibrary(item)
                                         } else if row.rowType == .liveTvButtons {
@@ -283,7 +294,7 @@ struct HomeScreen: View {
                                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.effectiveServerId))
                                         }
                                     },
-                                    restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil
+                                    restoredItemId: nil
                                 )
                                 .id(row.id)
                             }

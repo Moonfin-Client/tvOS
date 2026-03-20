@@ -15,10 +15,16 @@ struct RootView: View {
                     .transition(.opacity)
             case .startup:
                 StartupNavigationView()
-                    .transition(.opacity)
+                    .transition(.asymmetric(
+                        insertion: .opacity,
+                        removal: .identity
+                    ))
             case .main:
                 MainNavigationView()
-                    .transition(.opacity)
+                    .transition(.asymmetric(
+                        insertion: .opacity,
+                        removal: .identity
+                    ))
             }
         }
         .animation(.easeInOut(duration: 0.5), value: router.flow)
@@ -74,62 +80,39 @@ struct MainNavigationView: View {
     @EnvironmentObject var theme: MoonfinTheme
     @Namespace private var mainNamespace
     @Environment(\.resetFocus) private var resetFocus
-    @State private var refreshTrigger = 0
+    @State private var contentReady = false
+    @State private var sidebarHandoffToken = 0
 
     private var navbarPosition: NavbarPosition {
-        let _ = refreshTrigger
-        return container.userPreferences[UserPreferences.navbarPosition]
+        container.userPreferences[UserPreferences.navbarPosition]
     }
 
     private let navbarHeight: CGFloat = 110
 
+    private func handoffSidebarFocusToContent() {
+        sidebarHandoffToken += 1
+        DispatchQueue.main.async {
+            resetFocus(in: mainNamespace)
+        }
+    }
+
     var body: some View {
         ZStack {
-            Group {
-                switch navbarPosition {
-                case .top:
-                    VStack(spacing: 0) {
-                        if !router.hideNavbar {
-                            Navbar(container: container)
-                                .frame(height: navbarHeight)
-                                .focusSection()
-                                .zIndex(1)
-                        }
+            // --- Main content layer: NavigationStack is ALWAYS here,
+            //     never inside a switch or conditional that could change.
+            mainContent
+                .focusSection()
+                .prefersDefaultFocus(in: mainNamespace)
+                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
 
-                        mainContent
-                            .focusSection()
-                            .prefersDefaultFocus(in: mainNamespace)
-                            .offset(y: router.hideNavbar ? 0 : -navbarHeight)
-                            .padding(.bottom, router.hideNavbar ? 0 : -navbarHeight)
-                    }
-                    .ignoresSafeArea(edges: .top)
-                case .left:
-                    ZStack(alignment: .leading) {
-                        mainContent
-                            .focusSection()
-                            .prefersDefaultFocus(in: mainNamespace)
-                        if !router.hideNavbar {
-                            LeftSidebar(container: container, mainNamespace: mainNamespace)
-                                .ignoresSafeArea()
-                                .zIndex(1)
-                        }
-                    }
-                    .ignoresSafeArea()
-                }
-            }
-            .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
-            .overlay(alignment: .topTrailing) {
-                let clock = container.userPreferences[UserPreferences.clockBehavior]
-                if clock == .always
-                    || (clock == .inNavOnly && !router.hideNavbar)
-                    || (clock == .inVideo && router.hideNavbar) {
-                    ToolbarClock()
-                        .frame(height: navbarHeight)
-                        .padding(.trailing, 8)
-                        .ignoresSafeArea()
-                }
-            }
+            // --- Navigation overlay (navbar or sidebar) rendered on top
+            navigationOverlay
+                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
 
+            // --- Clock overlay
+            clockOverlay
+
+            // --- Settings sheet
             if settingsRouter.isPresented {
                 theme.colorScheme.scrim
                     .ignoresSafeArea()
@@ -140,6 +123,7 @@ struct MainNavigationView: View {
                     .transition(.move(edge: .trailing))
             }
 
+            // --- Screensaver
             if container.inactivityTracker.isScreensaverVisible {
                 ScreensaverView(container: container) {
                     container.inactivityTracker.notifyInteraction()
@@ -149,6 +133,7 @@ struct MainNavigationView: View {
                 .onExitCommand { container.inactivityTracker.notifyInteraction() }
             }
         }
+        .ignoresSafeArea()
         .focusScope(mainNamespace)
         .animation(.easeInOut(duration: 0.4), value: settingsRouter.isPresented)
         .animation(.easeInOut(duration: 1.0), value: container.inactivityTracker.isScreensaverVisible)
@@ -178,17 +163,71 @@ struct MainNavigationView: View {
                 container.inactivityTracker.notifyInteraction()
             }
         }
-        .onReceive(container.pluginSyncService.$syncCompletedCount) { _ in
-            refreshTrigger += 1
-        }
     }
+
+    // MARK: - Stable NavigationStack (never recreated)
 
     private var mainContent: some View {
         NavigationStack(path: $router.path) {
-            HomeScreen(container: container, mainNamespace: mainNamespace)
+            HomeScreen(
+                container: container,
+                mainNamespace: mainNamespace,
+                contentReady: $contentReady,
+                sidebarHandoffToken: sidebarHandoffToken
+            )
                 .navigationDestination(for: Destination.self) { destination in
                     mainDestinationView(for: destination)
                 }
+        }
+    }
+
+    // MARK: - Navigation overlay (changes freely without affecting NavigationStack)
+
+    @ViewBuilder
+    private var navigationOverlay: some View {
+        switch navbarPosition {
+        case .top:
+            if !router.hideNavbar {
+                VStack(spacing: 0) {
+                    Navbar(container: container, onMoveToContent: handoffSidebarFocusToContent)
+                        .frame(height: navbarHeight)
+                        .focusSection()
+                    Spacer()
+                }
+                .zIndex(1)
+            }
+        case .left:
+            if contentReady && !router.hideNavbar {
+                LeftSidebar(
+                    container: container,
+                    mainNamespace: mainNamespace,
+                    onMoveToContent: handoffSidebarFocusToContent
+                )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .ignoresSafeArea()
+                    .zIndex(1)
+            }
+        }
+    }
+
+    // MARK: - Clock overlay
+
+    @ViewBuilder
+    private var clockOverlay: some View {
+        let clock = container.userPreferences[UserPreferences.clockBehavior]
+        if clock == .always
+            || (clock == .inNavOnly && !router.hideNavbar)
+            || (clock == .inVideo && router.hideNavbar) {
+            VStack {
+                HStack {
+                    Spacer()
+                    ToolbarClock()
+                        .frame(height: navbarHeight)
+                        .padding(.trailing, 8)
+                }
+                Spacer()
+            }
+            .allowsHitTesting(false)
         }
     }
 
@@ -196,7 +235,11 @@ struct MainNavigationView: View {
     private func mainDestinationView(for destination: Destination) -> some View {
         switch destination {
         case .home:
-            HomeScreen(container: container, mainNamespace: mainNamespace)
+            HomeScreen(
+                container: container,
+                mainNamespace: mainNamespace,
+                sidebarHandoffToken: sidebarHandoffToken
+            )
         case .search(let query):
             SearchScreen(container: container, query: query)
         case .libraryBrowser(let itemId, _, let serverId, _):
