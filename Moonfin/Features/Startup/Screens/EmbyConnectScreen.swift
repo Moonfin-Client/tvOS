@@ -71,7 +71,7 @@ struct EmbyConnectScreen: View {
     private var credentialsView: some View {
         VStack(spacing: SpaceTokens.spaceMd) {
             LoginTextField(
-                placeholder: "Email",
+                placeholder: "Email or Username",
                 text: $viewModel.username,
                 keyboardType: .emailAddress
             )

@@ -65,50 +65,64 @@ final class EmbyConnectViewModel: ObservableObject {
     }
 
     private func connectToServer(_ server: EmbyConnectServer) async -> UUID? {
-        guard let connectUserId, let address = server.bestAddress else {
+        guard let connectUserId else {
+            phase = .error("No server address available")
+            return nil
+        }
+
+        let addresses = server.candidateAddresses
+        guard !addresses.isEmpty else {
             phase = .error("No server address available")
             return nil
         }
 
         phase = .connectingToServer
-        do {
-            let exchange = try await connectService.exchange(
-                serverAddress: address,
-                connectUserId: connectUserId,
-                accessKey: server.accessKey
-            )
+        var lastError: Error?
 
-            var serverId: UUID?
-            for await update in serverRepository.addServer(address: address) {
-                switch update {
-                case .connected(let id, _):
-                    serverId = id
-                case .unableToConnect:
-                    phase = .error("Unable to connect to \(server.name)")
-                    return nil
-                default:
-                    break
+        for address in addresses {
+            do {
+                let exchange = try await connectService.exchange(
+                    serverAddress: address,
+                    connectUserId: connectUserId,
+                    accessKey: server.accessKey
+                )
+
+                var serverId: UUID?
+                for await update in serverRepository.addServer(address: address) {
+                    switch update {
+                    case .connected(let id, _):
+                        serverId = id
+                    case .unableToConnect:
+                        lastError = EmbyConnectError.networkError("Unable to connect to \(address)")
+                    default:
+                        break
+                    }
                 }
+
+                guard let serverId else {
+                    lastError = EmbyConnectError.networkError("Failed to add server at \(address)")
+                    continue
+                }
+
+                guard let userId = UUID.from(rawId: exchange.localUserId) else {
+                    phase = .error("Server returned an invalid local user id")
+                    return nil
+                }
+                let user = AuthenticationStore.AuthStoreUser(
+                    name: username.trimmingCharacters(in: .whitespacesAndNewlines),
+                    lastUsed: Date(),
+                    accessToken: exchange.accessToken
+                )
+                authenticationStore.putUser(serverId, userId, user)
+
+                return serverId
+            } catch {
+                lastError = error
             }
-
-            guard let serverId else {
-                phase = .error("Failed to add server")
-                return nil
-            }
-
-            let userId = UUID.from(rawId: exchange.localUserId) ?? UUID()
-            let user = AuthenticationStore.AuthStoreUser(
-                name: username,
-                lastUsed: Date(),
-                accessToken: exchange.accessToken
-            )
-            authenticationStore.putUser(serverId, userId, user)
-
-            return serverId
-        } catch {
-            phase = .error(error.localizedDescription)
-            return nil
         }
+
+        phase = .error(lastError?.localizedDescription ?? "Unable to connect to \(server.name)")
+        return nil
     }
 
     func clearError() {

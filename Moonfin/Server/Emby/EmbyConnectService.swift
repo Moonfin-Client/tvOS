@@ -35,6 +35,14 @@ struct EmbyConnectServer: Codable, Identifiable {
         url ?? localAddress
     }
 
+    var candidateAddresses: [String] {
+        var seen = Set<String>()
+        return [url, localAddress]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .filter { seen.insert($0.lowercased()).inserted }
+    }
+
     enum CodingKeys: String, CodingKey {
         case accessKey = "AccessKey"
         case systemId = "SystemId"
@@ -58,6 +66,7 @@ enum EmbyConnectError: LocalizedError {
     case invalidCredentials
     case noServersLinked
     case exchangeFailed
+    case exchangeNotFound
     case networkError(String)
 
     var errorDescription: String? {
@@ -65,6 +74,7 @@ enum EmbyConnectError: LocalizedError {
         case .invalidCredentials: return "Invalid Emby Connect credentials"
         case .noServersLinked: return "No servers linked to this account"
         case .exchangeFailed: return "Failed to connect to server"
+        case .exchangeNotFound: return "Connected server did not expose the Emby Connect exchange endpoint"
         case .networkError(let msg): return msg
         }
     }
@@ -161,7 +171,15 @@ final class EmbyConnectService {
 
         let (data, response) = try await customSession.data(for: request)
 
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        guard let http = response as? HTTPURLResponse else {
+            throw EmbyConnectError.exchangeFailed
+        }
+
+        if http.statusCode == 404 {
+            throw EmbyConnectError.exchangeNotFound
+        }
+
+        guard (200...299).contains(http.statusCode) else {
             throw EmbyConnectError.exchangeFailed
         }
 
