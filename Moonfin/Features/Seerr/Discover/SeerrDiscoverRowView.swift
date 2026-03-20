@@ -156,9 +156,10 @@ struct SeerrItemCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             Button(action: { onSelect?() }) {
-                ZStack(alignment: .bottomTrailing) {
+                ZStack {
                     posterImage
-                    statusBadge
+
+                    SeerrPosterBadgeOverlay(item: item)
                 }
                 .frame(width: cardWidth, height: cardHeight)
                 .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
@@ -261,6 +262,73 @@ struct SeerrItemCard: View {
         let date = item.releaseDate ?? item.firstAirDate
         guard let date, date.count >= 4 else { return nil }
         return String(date.prefix(4))
+    }
+}
+
+struct SeerrPosterBadgeOverlay: View {
+    let item: SeerrDiscoverItemDto
+
+    var body: some View {
+        VStack {
+            HStack(alignment: .top) {
+                mediaTypeBadge
+                Spacer()
+                statusBadge
+            }
+            Spacer()
+        }
+        .padding(6)
+    }
+
+    @ViewBuilder
+    private var mediaTypeBadge: some View {
+        if let mediaType = item.mediaType {
+            let text = mediaType == "tv" ? "SERIES" : "MOVIE"
+            let backgroundColor = mediaType == "tv" ? Color(hex: 0x8B5CF6) : Color(hex: 0x3B82F6)
+
+            Text(text)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.white)
+                .tracking(0.8)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(backgroundColor.opacity(0.85))
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+        }
+    }
+
+    @ViewBuilder
+    private var statusBadge: some View {
+        if item.isAvailable {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.caption2)
+                .foregroundColor(.colorGreen500)
+                .padding(6)
+        } else if let status = item.requestStatus {
+            let (icon, color, text) = seerrRequestStatusStyle(status)
+            HStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .bold))
+                Text(text)
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.85))
+            .clipShape(Capsule())
+            .padding(6)
+        }
+    }
+}
+
+private func seerrRequestStatusStyle(_ status: Int) -> (String, Color, String) {
+    switch status {
+    case SeerrRequestDto.statusPending: return ("clock.fill", .orange, "Pending")
+    case SeerrRequestDto.statusApproved: return ("checkmark.circle.fill", .colorBlue500, "Approved")
+    case SeerrRequestDto.statusDeclined: return ("xmark.circle.fill", .colorRed500, "Declined")
+    case SeerrRequestDto.statusAvailable: return ("checkmark.circle.fill", .colorGreen500, "Available")
+    default: return ("questionmark.circle.fill", .gray, "Unknown")
     }
 }
 

@@ -1,5 +1,4 @@
 import Foundation
-import os
 
 enum SeerrBrowseSortOption: String, CaseIterable {
     case popularity = "popularity.desc"
@@ -38,10 +37,10 @@ final class SeerrBrowseByViewModel: ObservableObject {
     @Published var items: [SeerrDiscoverItemDto] = []
     @Published var isLoading = false
     @Published var isLoadingMore = false
+    @Published var focusedItem: SeerrDiscoverItemDto?
     @Published var sortOption: SeerrBrowseSortOption = .popularity
     @Published var activeFilter: SeerrBrowseFilter = .all
-    @Published var showSortPicker = false
-    @Published var showFilterPicker = false
+    @Published var posterSize: PosterSize = .medium
 
     let filterName: String
 
@@ -49,7 +48,6 @@ final class SeerrBrowseByViewModel: ObservableObject {
     private let mediaType: String
     private let filterType: String
     private let seerrRepository: SeerrRepositoryProtocol
-    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "SeerrBrowseBy")
 
     private var currentPage = 1
     private var totalPages = 1
@@ -60,6 +58,37 @@ final class SeerrBrowseByViewModel: ObservableObject {
 
     var resultCountText: String {
         "\(items.count) of \(totalResults)"
+    }
+
+    var totalItemsCount: Int {
+        totalResults
+    }
+
+    var backdropUrl: String? {
+        guard let path = focusedItem?.backdropPath else { return nil }
+        return SeerrImageUrl.backdrop(path)
+    }
+
+    var cardDimensions: (width: CGFloat, height: CGFloat) {
+        switch posterSize {
+        case .smallest: return (120, 180)
+        case .small: return (150, 225)
+        case .medium: return (180, 270)
+        case .large: return (220, 330)
+        case .xLarge: return (270, 405)
+        }
+    }
+
+    var statusText: String {
+        var parts = ["Showing"]
+        if activeFilter != .all {
+            parts.append(activeFilter.displayName.replacingOccurrences(of: " Only", with: ""))
+        } else {
+            parts.append("All items")
+        }
+        parts.append("from '\(filterName)'")
+        parts.append("sorted by \(sortOption.displayName)")
+        return parts.joined(separator: " ")
     }
 
     init(filterId: Int, filterName: String, mediaType: String, filterType: String,
@@ -111,6 +140,28 @@ final class SeerrBrowseByViewModel: ObservableObject {
         return String(data: data, encoding: .utf8)
     }
 
+    func setFocusedItem(_ item: SeerrDiscoverItemDto) {
+        focusedItem = item
+    }
+
+    func setPosterSize(_ size: PosterSize) {
+        posterSize = size
+    }
+
+    func buildMetadata(for item: SeerrDiscoverItemDto) -> String {
+        var parts: [String] = []
+        if let year = releaseYear(for: item) {
+            parts.append(year)
+        }
+        if let mediaType = item.mediaType {
+            parts.append(mediaType == "tv" ? "Series" : "Movie")
+        }
+        if let voteAverage = item.voteAverage, voteAverage > 0 {
+            parts.append(" \(String(format: "%.1f", voteAverage))")
+        }
+        return parts.joined(separator: "  ")
+    }
+
     private func fetchPage(page: Int) async {
         do {
             let result: SeerrDiscoverPageDto
@@ -139,7 +190,6 @@ final class SeerrBrowseByViewModel: ObservableObject {
                         page: page, sortBy: sortOption.rawValue, genre: nil, network: nil, keywords: filterId, language: "en")
                 }
             default:
-                logger.error("Unknown filter type: \(self.filterType)")
                 return
             }
 
@@ -148,9 +198,7 @@ final class SeerrBrowseByViewModel: ObservableObject {
             totalResults = result.totalResults
             allFetchedItems.append(contentsOf: result.results)
             applyFilter()
-        } catch {
-            logger.error("Failed to fetch browse content: \(error.localizedDescription)")
-        }
+        } catch {}
     }
 
     private func applyFilter() {
@@ -168,5 +216,17 @@ final class SeerrBrowseByViewModel: ObservableObject {
                 $0.mediaInfo?.status == SeerrMediaInfoDto.statusProcessing
             }
         }
+
+        if let focusedItem, items.contains(where: { $0.id == focusedItem.id }) {
+            return
+        }
+
+        focusedItem = items.first
+    }
+
+    private func releaseYear(for item: SeerrDiscoverItemDto) -> String? {
+        let rawDate = item.releaseDate ?? item.firstAirDate
+        guard let rawDate else { return nil }
+        return String(rawDate.prefix(4))
     }
 }

@@ -33,6 +33,7 @@ struct SeerrDiscoverView: View {
         }
         .ignoresSafeArea()
         .onAppear {
+            router.hideNavbar = false
             viewModel.loadContent()
             viewModel.refreshRequests()
         }

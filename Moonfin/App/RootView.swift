@@ -90,6 +90,12 @@ struct MainNavigationView: View {
 
     private let navbarHeight: CGFloat = 110
 
+    private var shouldShowTopNavbar: Bool {
+        guard !router.hideNavbar else { return false }
+        if !router.path.isEmpty { return true }
+        return !suppressTopNavbarInRows
+    }
+
     private func handoffSidebarFocusToContent() {
         sidebarHandoffToken += 1
         DispatchQueue.main.async {
@@ -196,7 +202,7 @@ struct MainNavigationView: View {
     private var navigationOverlay: some View {
         switch navbarPosition {
         case .top:
-            if !router.hideNavbar && !suppressTopNavbarInRows {
+            if shouldShowTopNavbar {
                 VStack(spacing: 0) {
                     Navbar(container: container, onMoveToContent: handoffSidebarFocusToContent)
                         .frame(height: navbarHeight)
