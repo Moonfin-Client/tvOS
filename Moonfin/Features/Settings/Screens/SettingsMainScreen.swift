@@ -116,5 +116,16 @@ struct SettingsMainScreen: View {
             .focused($focusedRoute, equals: .about)
         }
         .restoresFocus($focusedRoute)
+        .defaultFocus($focusedRoute, .authentication)
+        .onAppear {
+            guard settingsRouter.lastPoppedRoute == nil else { return }
+            DispatchQueue.main.async {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    focusedRoute = .authentication
+                }
+            }
+        }
     }
 }

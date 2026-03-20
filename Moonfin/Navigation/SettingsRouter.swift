@@ -114,6 +114,7 @@ final class SettingsRouter: ObservableObject {
 
     func open(to route: SettingsRoute = .main) {
         navigationDirection = .forward
+        lastPoppedRoute = nil
         path = [route]
         isPresented = true
     }

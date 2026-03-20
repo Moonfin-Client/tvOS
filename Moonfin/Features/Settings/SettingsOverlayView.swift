@@ -7,21 +7,23 @@ struct SettingsOverlayView: View {
     let focusNamespace: Namespace.ID
 
     var body: some View {
-        HStack(spacing: 0) {
-            Color.clear
+        GeometryReader { geo in
+            HStack(spacing: 0) {
+                Color.clear
 
-            settingsPanel
+                settingsPanel(width: min(max(geo.size.width * 0.25, 350), 560))
+            }
         }
     }
 
-    private var settingsPanel: some View {
+    private func settingsPanel(width: CGFloat) -> some View {
         ZStack {
             screenView
                 .id(settingsRouter.path.last ?? .main)
                 .transition(screenTransition)
                 .prefersDefaultFocus(in: focusNamespace)
         }
-        .frame(width: 350)
+        .frame(width: width)
         .clipped()
         .background(
             RoundedRectangle(cornerRadius: RadiusTokens.large, style: .continuous)

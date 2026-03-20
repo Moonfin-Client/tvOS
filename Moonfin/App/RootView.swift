@@ -96,6 +96,13 @@ struct MainNavigationView: View {
         }
     }
 
+    private func handoffSettingsFocusToContent() {
+        sidebarHandoffToken += 1
+        DispatchQueue.main.async {
+            resetFocus(in: mainNamespace)
+        }
+    }
+
     var body: some View {
         ZStack {
             // --- Main content layer: NavigationStack is ALWAYS here,
@@ -141,13 +148,13 @@ struct MainNavigationView: View {
             container.inactivityTracker.notifyInteraction()
             if presented {
                 container.inactivityTracker.addLock()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
                     resetFocus(in: mainNamespace)
                 }
             } else {
                 container.inactivityTracker.removeLock()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                    resetFocus(in: mainNamespace)
+                    handoffSettingsFocusToContent()
                 }
             }
         }
