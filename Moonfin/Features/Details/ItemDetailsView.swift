@@ -221,6 +221,10 @@ struct ItemDetailsView: View {
             return AnyView(playlistHeaderSection(item: item))
         }
 
+        if item.type == .musicAlbum {
+            return AnyView(albumHeaderSection(item: item))
+        }
+
         return AnyView(
         VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
             Spacer()
@@ -313,6 +317,64 @@ struct ItemDetailsView: View {
             .padding(.bottom, SpaceTokens.spaceXl)
         }
         )
+    }
+
+    private func albumHeaderSection(item: ServerItem) -> some View {
+        VStack(spacing: SpaceTokens.spaceMd) {
+            Spacer(minLength: 40)
+
+            if let imageUrlString = viewModel.posterUrl(for: item),
+               let url = URL(string: imageUrlString) {
+                CachedImage(url: url, contentMode: .fit)
+                    .frame(width: 280, height: 280)
+                    .cornerRadius(RadiusTokens.medium)
+                    .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
+            }
+
+            VStack(spacing: SpaceTokens.spaceSm) {
+                if let logoUrl = viewModel.logoUrl(for: item),
+                   let url = URL(string: logoUrl) {
+                    CachedImage(url: url, contentMode: .fit)
+                        .frame(maxHeight: 90)
+                } else {
+                    Text(item.name)
+                        .font(.system(size: 44, weight: .bold))
+                        .foregroundColor(theme.colorScheme.onBackground)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+
+                HStack {
+                    Spacer()
+                    detailInfoRow(item: item)
+                    Spacer()
+                }
+
+                if !viewModel.ratings.isEmpty {
+                    HStack {
+                        Spacer()
+                        ratingsRow
+                        Spacer()
+                    }
+                }
+
+                if let overview = item.overview, !overview.isEmpty {
+                    Text(overview)
+                        .font(.titleXl)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(5)
+                        .frame(maxWidth: 900)
+                        .padding(.top, SpaceTokens.spaceXs)
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            Spacer(minLength: 20)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 60)
+        .padding(.bottom, SpaceTokens.spaceMd)
     }
 
     private func playlistHeaderSection(item: ServerItem) -> some View {
