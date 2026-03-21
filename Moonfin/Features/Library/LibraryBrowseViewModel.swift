@@ -41,10 +41,10 @@ final class LibraryBrowseViewModel: ObservableObject {
     var isForcedSquareMode: Bool {
         if let includeTypes, !includeTypes.isEmpty {
             return includeTypes.allSatisfy { type in
-                type == .musicAlbum || type == .musicArtist || type == .albumArtist
+                type == .musicAlbum || type == .musicArtist || type == .albumArtist || type == .playlist
             }
         }
-        return collectionType == "music"
+        return collectionType == "music" || collectionType == "playlists"
     }
 
     private var resolvedImageType: ImageDisplayType {
