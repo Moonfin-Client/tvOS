@@ -54,6 +54,7 @@ protocol ServerSystemApi {
 
 protocol ServerItemsApi {
     func getItems(request: GetItemsRequest) async throws -> ItemsResult
+    func getPlaylistItems(itemId: String, userId: String?) async throws -> ItemsResult
     func getResumeItems(request: GetResumeItemsRequest) async throws -> ItemsResult
     func getLatestMedia(request: GetLatestMediaRequest) async throws -> [ServerItem]
     func getNextUp(request: GetNextUpRequest) async throws -> ItemsResult
@@ -69,6 +70,7 @@ protocol ServerUserLibraryApi {
     func getSpecialFeatures(itemId: String) async throws -> [ServerItem]
     func getThemeMedia(itemId: String, userId: String, inheritFromParent: Bool) async throws -> AllThemeMediaResult
     func getIntros(itemId: String) async throws -> [ServerItem]
+    func deleteItem(itemId: String) async throws
     func markFavorite(itemId: String, userId: String) async throws -> UserItemData
     func unmarkFavorite(itemId: String, userId: String) async throws -> UserItemData
     func markPlayed(itemId: String, userId: String) async throws -> UserItemData
@@ -142,6 +144,7 @@ struct PlaylistCreationResult: Codable {
 protocol ServerPlaylistApi {
     func createPlaylist(name: String, itemIds: [String], mediaType: String?) async throws -> PlaylistCreationResult
     func addToPlaylist(playlistId: String, itemIds: [String], userId: String?) async throws
+    func moveItem(playlistId: String, itemId: String, newIndex: Int) async throws
     func removeFromPlaylist(playlistId: String, entryIds: [String]) async throws
     func getPlaylists(userId: String) async throws -> ItemsResult
 }

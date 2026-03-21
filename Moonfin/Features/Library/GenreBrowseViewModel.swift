@@ -142,7 +142,7 @@ final class GenreBrowseViewModel: ObservableObject {
     private func createGenreItem(genre: ServerItem, client: MediaServerClient) async -> GenreItem? {
         do {
             let resolvedTypes: [ItemType]
-            if let includeType, let t = ItemType(rawValue: includeType) {
+            if let includeType, let t = resolveIncludeType(includeType) {
                 resolvedTypes = [t]
             } else {
                 resolvedTypes = [.movie, .series]
@@ -164,12 +164,18 @@ final class GenreBrowseViewModel: ObservableObject {
             guard count > 0 else { return nil }
 
             var backdropUrl: String?
-            if let item = result.items.first,
-               let tags = item.backdropImageTags, !tags.isEmpty {
-                backdropUrl = client.imageApi.getItemImageUrl(
-                    itemId: item.id, imageType: .backdrop,
-                    maxWidth: 780, maxHeight: nil, tag: tags.first
-                )
+            if let item = result.items.first {
+                if let primaryTag = item.imageTags?["Primary"] {
+                    backdropUrl = client.imageApi.getItemImageUrl(
+                        itemId: item.id, imageType: .primary,
+                        maxWidth: 480, maxHeight: 480, tag: primaryTag
+                    )
+                } else if let backdropTag = item.backdropImageTags?.first {
+                    backdropUrl = client.imageApi.getItemImageUrl(
+                        itemId: item.id, imageType: .backdrop,
+                        maxWidth: 780, maxHeight: 780, tag: backdropTag
+                    )
+                }
             }
 
             return GenreItem(
@@ -182,6 +188,13 @@ final class GenreBrowseViewModel: ObservableObject {
             )
         } catch {
             return nil
+        }
+    }
+
+    private func resolveIncludeType(_ value: String) -> ItemType? {
+        ItemType.allCases.first { candidate in
+            candidate.rawValue.caseInsensitiveCompare(value) == .orderedSame
+                || candidate.apiValue.caseInsensitiveCompare(value) == .orderedSame
         }
     }
 

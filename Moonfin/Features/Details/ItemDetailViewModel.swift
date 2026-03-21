@@ -107,6 +107,10 @@ final class ItemDetailViewModel: ObservableObject {
         (item?.userData?.playbackPositionTicks ?? 0) > 0
     }
 
+    var canManagePlaylistTracks: Bool {
+        item?.type == .playlist && !tracks.isEmpty
+    }
+
     var nextEpisode: ServerItem? {
         guard let item,
               let currentIndex = item.indexNumber else { return nil }
@@ -353,7 +357,7 @@ final class ItemDetailViewModel: ObservableObject {
         case .person:
             await loadFilmography(personId: item.id, client: client)
 
-        case .musicArtist:
+        case .musicArtist, .albumArtist:
             async let albumsTask: () = loadArtistAlbums(artistId: item.id, client: client)
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
             _ = await (albumsTask, similarTask)
@@ -445,11 +449,85 @@ final class ItemDetailViewModel: ObservableObject {
 
     private func loadTracks(albumId: String, client: MediaServerClient) async {
         do {
-            let result = try await client.itemsApi.getItems(
-                request: GetItemsRequest(parentId: albumId)
-            )
-            tracks = result.items
+            let result: ItemsResult
+            if item?.type == .playlist {
+                result = try await client.itemsApi.getPlaylistItems(itemId: albumId, userId: client.userId)
+            } else {
+                result = try await client.itemsApi.getItems(
+                    request: GetItemsRequest(
+                        parentId: albumId,
+                        includeItemTypes: [ItemType.audio],
+                        sortBy: [.indexNumber]
+                    )
+                )
+            }
+            tracks = result.items.filter { $0.type == ItemType.audio }
         } catch { }
+    }
+
+    func removeTrackFromPlaylist(_ track: ServerItem) async {
+        guard let item, item.type == .playlist,
+              let client else { return }
+
+        let entryId = track.playlistItemId ?? track.id
+
+        let previousTracks = tracks
+        tracks = tracks.filter { ($0.playlistItemId ?? $0.id) != entryId }
+
+        do {
+            try await client.playlistApi.removeFromPlaylist(playlistId: item.id, entryIds: [entryId])
+            await loadTracks(albumId: item.id, client: client)
+        } catch {
+            tracks = previousTracks
+        }
+    }
+
+    func movePlaylistItem(fromIndex: Int, toIndex: Int) async {
+        guard let item, item.type == .playlist,
+              fromIndex != toIndex,
+              fromIndex >= 0, fromIndex < tracks.count,
+              toIndex >= 0, toIndex < tracks.count,
+              let client else { return }
+
+        let playlistEntryId = tracks[fromIndex].playlistItemId
+        let itemId = tracks[fromIndex].id
+
+        var reordered = tracks
+        let moved = reordered.remove(at: fromIndex)
+        reordered.insert(moved, at: toIndex)
+        tracks = reordered
+
+        do {
+            if let playlistEntryId {
+                do {
+                    try await client.playlistApi.moveItem(playlistId: item.id, itemId: playlistEntryId, newIndex: toIndex)
+                } catch {
+                    try await client.playlistApi.moveItem(playlistId: item.id, itemId: itemId, newIndex: toIndex)
+                }
+            } else {
+                try await client.playlistApi.moveItem(playlistId: item.id, itemId: itemId, newIndex: toIndex)
+            }
+
+            do {
+                let refreshed = try await client.itemsApi.getPlaylistItems(itemId: item.id, userId: client.userId)
+                let refreshedTracks = refreshed.items.filter { $0.type == ItemType.audio }
+
+                tracks = refreshedTracks
+            } catch { }
+        } catch { }
+    }
+
+    func deleteCurrentPlaylist() async -> Bool {
+        guard let item, item.type == .playlist, (item.canDelete ?? false), let client else {
+            return false
+        }
+
+        do {
+            try await client.userLibraryApi.deleteItem(itemId: item.id)
+            return true
+        } catch {
+            return false
+        }
     }
 
     private func loadArtistAlbums(artistId: String, client: MediaServerClient) async {

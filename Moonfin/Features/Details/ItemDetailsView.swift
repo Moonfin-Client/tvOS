@@ -7,9 +7,12 @@ struct ItemDetailsView: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @FocusState private var focusedButton: ActionButtonID?
+    @FocusState private var focusedTrackId: String?
     @State private var showFullBio = false
     @State private var showTrackSelector: TrackSelectorMode?
     @State private var showAddToPlaylist = false
+    @State private var showDeletePlaylistConfirmation = false
+    @State private var playlistDialogItemIds: [String] = []
     @State private var selectedAudioIndex: Int?
     @State private var selectedSubtitleIndex: Int?
 
@@ -74,15 +77,38 @@ struct ItemDetailsView: View {
             }
         }
         .fullScreenCover(isPresented: $showAddToPlaylist) {
-            if let item = viewModel.item {
+            if !playlistDialogItemIds.isEmpty {
                 AddToPlaylistDialog(
-                    itemIds: [item.id],
-                    onDismiss: { showAddToPlaylist = false },
-                    onAdded: { showAddToPlaylist = false }
+                    itemIds: playlistDialogItemIds,
+                    onDismiss: {
+                        showAddToPlaylist = false
+                        playlistDialogItemIds = []
+                    },
+                    onAdded: {
+                        showAddToPlaylist = false
+                        playlistDialogItemIds = []
+                    }
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color.black.opacity(0.8))
             }
+        }
+        .confirmationDialog(
+            "Delete Playlist?",
+            isPresented: $showDeletePlaylistConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                Task {
+                    let deleted = await viewModel.deleteCurrentPlaylist()
+                    if deleted {
+                        router.goBack()
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This playlist will be permanently deleted.")
         }
     }
 
@@ -191,6 +217,11 @@ struct ItemDetailsView: View {
     }
 
     private func headerSection(item: ServerItem) -> some View {
+        if item.type == .playlist {
+            return AnyView(playlistHeaderSection(item: item))
+        }
+
+        return AnyView(
         VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
             Spacer()
 
@@ -225,7 +256,8 @@ struct ItemDetailsView: View {
                     if item.type != .person {
                         detailInfoRow(item: item)
 
-                        if let genres = item.genres, !genres.isEmpty {
+                        if item.type != .playlist,
+                           let genres = item.genres, !genres.isEmpty {
                             Text(genres.joined(separator: ", "))
                                 .font(.bodyMd)
                                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
@@ -280,6 +312,46 @@ struct ItemDetailsView: View {
             .padding(.top, 80)
             .padding(.bottom, SpaceTokens.spaceXl)
         }
+        )
+    }
+
+    private func playlistHeaderSection(item: ServerItem) -> some View {
+        VStack(spacing: SpaceTokens.spaceMd) {
+            Spacer(minLength: 40)
+
+            if let imageUrlString = viewModel.posterUrl(for: item),
+               let url = URL(string: imageUrlString) {
+                CachedImage(url: url, contentMode: .fit)
+                    .frame(width: 260, height: 260)
+                    .cornerRadius(RadiusTokens.medium)
+                    .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
+            }
+
+            VStack(spacing: SpaceTokens.spaceSm) {
+                if let logoUrl = viewModel.logoUrl(for: item),
+                   let url = URL(string: logoUrl) {
+                    CachedImage(url: url, contentMode: .fit)
+                        .frame(maxHeight: 90)
+                } else {
+                    Text(item.name)
+                        .font(.system(size: 44, weight: .bold))
+                        .foregroundColor(theme.colorScheme.onBackground)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+
+                HStack {
+                    Spacer()
+                    detailInfoRow(item: item)
+                    Spacer()
+                }
+            }
+
+            Spacer(minLength: 20)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 60)
+        .padding(.bottom, SpaceTokens.spaceMd)
     }
 
     private func detailInfoRow(item: ServerItem) -> some View {
@@ -422,7 +494,7 @@ struct ItemDetailsView: View {
                 personSections()
             case .musicAlbum, .playlist:
                 musicSections()
-            case .musicArtist:
+            case .musicArtist, .albumArtist:
                 artistSections()
             case .boxSet:
                 collectionSections()
@@ -437,8 +509,10 @@ struct ItemDetailsView: View {
     @ViewBuilder
     private func actionButtonsSection(item: ServerItem) -> some View {
         let isMusicType = [ItemType.musicAlbum, .musicArtist, .playlist].contains(item.type)
+        let isPlayableMusicCollection = [ItemType.musicAlbum, .playlist].contains(item.type)
         let canPlay = isMusicType || [ItemType.movie, .episode, .video, .series, .season].contains(item.type)
         let showGoToSeries = item.type == .episode && item.seriesId != nil
+        let canDeletePlaylist = item.type == .playlist && (item.canDelete ?? false)
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
         let streams = resolvedStreams(for: item)
         let hasAudioStreams = streams.contains { $0.type == .audio }
@@ -451,10 +525,20 @@ struct ItemDetailsView: View {
                 canResume: viewModel.canResume,
                 resumePositionText: viewModel.resumePositionText,
                 focusedButton: $focusedButton,
-                onPlay: { playVideo(item: item, positionTicks: 0) },
+                onPlay: {
+                    if isPlayableMusicCollection {
+                        playAudio(items: viewModel.tracks)
+                    } else {
+                        playVideo(item: item, positionTicks: 0)
+                    }
+                },
                 onResume: {
-                    let ticks = item.userData?.playbackPositionTicks ?? 0
-                    playVideo(item: item, positionTicks: ticks)
+                    if isPlayableMusicCollection {
+                        playAudio(items: viewModel.tracks)
+                    } else {
+                        let ticks = item.userData?.playbackPositionTicks ?? 0
+                        playVideo(item: item, positionTicks: ticks)
+                    }
                 },
                 onToggleWatched: { viewModel.toggleWatched() },
                 onToggleFavorite: { viewModel.toggleFavorite() },
@@ -484,7 +568,11 @@ struct ItemDetailsView: View {
                     showTrackSelector = .subtitle
                 } : nil,
                 onAddToPlaylist: canPlay ? {
+                    playlistDialogItemIds = [item.id]
                     showAddToPlaylist = true
+                } : nil,
+                onDelete: canDeletePlaylist ? {
+                    showDeletePlaylistConfirmation = true
                 } : nil
             )
         }
@@ -548,6 +636,41 @@ struct ItemDetailsView: View {
         }
     }
 
+    private func playTrackNext(_ track: ServerItem) {
+        if let audio = container.playbackCoordinator.audioManager, audio.hasQueue {
+            let newEntry = QueueEntry(
+                id: track.id,
+                item: track,
+                mediaSourceId: track.mediaSources?.first?.id,
+                startPositionTicks: 0
+            )
+            var queue = audio.queue
+            let insertionIndex = min(max(audio.currentIndex + 1, 0), queue.count)
+            queue.insert(newEntry, at: insertionIndex)
+            audio.playbackManager.replaceQueue(queue)
+            return
+        }
+
+        playAudio(items: [track])
+    }
+
+    private func addTrackToQueue(_ track: ServerItem) {
+        if let audio = container.playbackCoordinator.audioManager {
+            audio.addToQueue(items: [track])
+            return
+        }
+
+        playAudio(items: [track])
+    }
+
+    private func toggleTrackFavorite(_ track: ServerItem) {
+        let isFavorite = track.userData?.isFavorite ?? false
+        Task {
+            _ = try? await container.itemMutationService.setFavorite(itemId: track.id, isFavorite: !isFavorite)
+            viewModel.loadItem()
+        }
+    }
+
     private func metadataColumns(for item: ServerItem) -> [(label: String, value: String)] {
         var columns: [(label: String, value: String)] = []
         let genres = item.genres ?? []
@@ -555,7 +678,7 @@ struct ItemDetailsView: View {
         let writers = viewModel.writers
         let studios = item.studios ?? []
 
-        if !genres.isEmpty {
+        if item.type != .playlist, !genres.isEmpty {
             columns.append(("Genres", genres.joined(separator: ", ")))
         }
         if !directors.isEmpty {
@@ -931,15 +1054,66 @@ struct ItemDetailsView: View {
     }
 
     private func interactiveTrackList(items: [ServerItem]) -> some View {
-        LazyVStack(spacing: 0) {
-            ForEach(Array(items.enumerated()), id: \.element.id) { index, track in
+        let canManagePlaylist = viewModel.canManagePlaylistTracks
+
+        return LazyVStack(spacing: 0) {
+            ForEach(items.indices, id: \.self) { index in
+                let track = items[index]
+                let canMoveUp = canManagePlaylist && index > 0
+                let canMoveDown = canManagePlaylist && index < items.count - 1
+
+                let onRemoveFromPlaylist: (() -> Void)? = canManagePlaylist ? {
+                    Task { await viewModel.removeTrackFromPlaylist(track) }
+                } : nil
+
+                let onMoveUp: (() -> Void)? = canMoveUp ? {
+                    Task {
+                        await viewModel.movePlaylistItem(fromIndex: index, toIndex: index - 1)
+                        focusedTrackId = track.id
+                    }
+                } : nil
+
+                let onMoveDown: (() -> Void)? = canMoveDown ? {
+                    Task {
+                        await viewModel.movePlaylistItem(fromIndex: index, toIndex: index + 1)
+                        focusedTrackId = track.id
+                    }
+                } : nil
+
                 FocusableTrackRow(
                     track: track,
-                    onSelect: {
-                        playAudio(items: items, startIndex: index)
+                    rowIndex: index,
+                    focusBinding: $focusedTrackId,
+                    focusId: track.id,
+                    onSelect: { playAudio(items: items, startIndex: index) },
+                    onPlayNext: { playTrackNext(track) },
+                    onAddToQueue: { addTrackToQueue(track) },
+                    onAddToPlaylist: {
+                        playlistDialogItemIds = [track.id]
+                        showAddToPlaylist = true
+                    },
+                    onRemoveFromPlaylist: onRemoveFromPlaylist,
+                    onMoveUp: onMoveUp,
+                    onMoveDown: onMoveDown,
+                    onToggleFavorite: { toggleTrackFavorite(track) },
+                    onGoToAlbum: track.albumId != nil ? {
+                        if let albumId = track.albumId {
+                            router.navigate(to: .itemDetails(itemId: albumId, serverId: track.serverId))
+                        }
+                    } : nil,
+                    onGoToArtist: (track.albumArtists?.first?.id) != nil ? {
+                        if let artistId = track.albumArtists?.first?.id {
+                            router.navigate(to: .itemDetails(itemId: artistId, serverId: track.serverId))
+                        }
+                    } : nil,
+                    onMoveLeft: onMoveUp,
+                    onMoveRight: onMoveDown,
+                    onFocused: {
+                        focusedTrackId = track.id
                     }
                 )
             }
         }
+        .defaultFocus($focusedTrackId, items.first?.id, priority: .userInitiated)
     }
 }

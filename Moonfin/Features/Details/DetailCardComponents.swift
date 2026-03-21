@@ -201,40 +201,133 @@ struct FocusableEpisodeCard: View {
 
 struct FocusableTrackRow: View {
     let track: ServerItem
+    let rowIndex: Int
+    let focusBinding: FocusState<String?>.Binding
+    let focusId: String
     let onSelect: () -> Void
+    var onPlayNext: (() -> Void)? = nil
+    var onAddToQueue: (() -> Void)? = nil
+    var onAddToPlaylist: (() -> Void)? = nil
+    var onRemoveFromPlaylist: (() -> Void)? = nil
+    var onMoveUp: (() -> Void)? = nil
+    var onMoveDown: (() -> Void)? = nil
+    var onToggleFavorite: (() -> Void)? = nil
+    var onGoToAlbum: (() -> Void)? = nil
+    var onGoToArtist: (() -> Void)? = nil
+    var onMoveLeft: (() -> Void)? = nil
+    var onMoveRight: (() -> Void)? = nil
+    var onFocused: (() -> Void)? = nil
 
     @EnvironmentObject var theme: MoonfinTheme
-    @FocusState private var isFocused: Bool
 
     var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: SpaceTokens.spaceSm) {
-                if let num = track.indexNumber {
-                    Text("\(num)")
-                        .font(.bodyMd)
-                        .foregroundColor(isFocused ? .white : theme.colorScheme.listCaption)
-                        .frame(width: 40, alignment: .trailing)
-                }
+        HStack(spacing: SpaceTokens.spaceSm) {
+            if let num = track.indexNumber {
+                Text("\(num)")
+                    .font(.bodyMd)
+                    .foregroundColor(isFocused ? .white : theme.colorScheme.listCaption)
+                    .frame(width: 40, alignment: .trailing)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
                 Text(track.name)
                     .font(.bodyMd)
                     .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground)
                     .lineLimit(1)
-                Spacer()
-                if let ticks = track.runTimeTicks {
-                    Text(RuntimeFormatter.format(ticks: ticks))
+
+                let artistText = (track.artists?.joined(separator: ", ") ?? track.albumArtist ?? "")
+                if !artistText.isEmpty {
+                    Text(artistText)
                         .font(.bodySm)
-                        .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.listCaption)
+                        .foregroundColor(isFocused ? .white.opacity(0.8) : theme.colorScheme.listCaption)
+                        .lineLimit(1)
                 }
             }
-            .padding(.horizontal, SpaceTokens.spaceMd)
-            .padding(.vertical, SpaceTokens.spaceSm)
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused ? theme.accent : Color.clear)
-            )
+
+            Spacer()
+
+            if let ticks = track.runTimeTicks {
+                Text(RuntimeFormatter.format(ticks: ticks))
+                    .font(.bodySm)
+                    .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.listCaption)
+            }
+
+            Image(systemName: "chevron.right.2")
+                .font(.bodySm)
+                .foregroundColor(isFocused ? .white.opacity(0.85) : theme.colorScheme.listCaption.opacity(0.75))
         }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
+        .padding(.horizontal, SpaceTokens.spaceMd)
+        .padding(.vertical, SpaceTokens.spaceSm)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.small)
+                .fill(
+                    isFocused
+                        ? theme.accent
+                        : (rowIndex.isMultiple(of: 2) ? Color.clear : Color.white.opacity(0.04))
+                )
+        )
+        .contentShape(Rectangle())
+        .focusable(true)
+        .onTapGesture(perform: onSelect)
+        .focused(focusBinding, equals: focusId)
+        .onChange(of: focusBinding.wrappedValue) { focused in
+            if focused == focusId {
+                onFocused?()
+            }
+        }
+        .onMoveCommand { direction in
+            switch direction {
+            case .left:
+                onMoveLeft?()
+            case .right:
+                onMoveRight?()
+            default:
+                break
+            }
+        }
+        .contextMenu {
+            Button(Strings.play, action: onSelect)
+
+            if let onPlayNext {
+                Button("Play Next", action: onPlayNext)
+            }
+
+            if let onAddToQueue {
+                Button(Strings.addToQueue, action: onAddToQueue)
+            }
+
+            if let onAddToPlaylist {
+                Button(Strings.addToPlaylist, action: onAddToPlaylist)
+            }
+
+            if let onRemoveFromPlaylist {
+                Button("Delete from Playlist", role: .destructive, action: onRemoveFromPlaylist)
+            }
+
+            if let onMoveUp {
+                Button("Move Up", action: onMoveUp)
+            }
+
+            if let onMoveDown {
+                Button("Move Down", action: onMoveDown)
+            }
+
+            if let onToggleFavorite {
+                Button((track.userData?.isFavorite ?? false) ? "Remove from Favorites" : "Add to Favorites", action: onToggleFavorite)
+            }
+
+            if let onGoToAlbum {
+                Button("Go to Album", action: onGoToAlbum)
+            }
+
+            if let onGoToArtist {
+                Button("Go to Artist", action: onGoToArtist)
+            }
+        }
+    }
+
+    private var isFocused: Bool {
+        focusBinding.wrappedValue == focusId
     }
 }
 

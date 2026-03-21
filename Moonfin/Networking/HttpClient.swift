@@ -111,6 +111,7 @@ final class HttpClient {
 
         var request = URLRequest(url: url)
         request.httpMethod = method
+        request.cachePolicy = .reloadIgnoringLocalCacheData
         request.timeoutInterval = 30
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(authorizationHeader, forHTTPHeaderField: "Authorization")

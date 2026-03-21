@@ -115,8 +115,8 @@ struct GenreBrowseScreen: View {
     // MARK: - Grid
 
     private var genresGrid: some View {
-        let cardWidth: CGFloat = 320
-        let cardHeight: CGFloat = 180
+        let cardWidth: CGFloat = 220
+        let cardHeight: CGFloat = 220
         let columns = [GridItem(.adaptive(minimum: cardWidth + 24), spacing: 12)]
 
         return ScrollView {

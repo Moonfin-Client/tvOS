@@ -62,6 +62,9 @@ final class MusicBrowseViewModel: ObservableObject {
             MusicRow(id: "lastPlayed", title: "Last Played"),
             MusicRow(id: "favoriteAlbums", title: "Favorite Albums"),
             MusicRow(id: "playlists", title: "Playlists"),
+            MusicRow(id: "albumArtists", title: "Album Artists"),
+            MusicRow(id: "artists", title: "Artists"),
+            MusicRow(id: "albums", title: "Albums"),
         ]
 
         Task {
@@ -76,6 +79,25 @@ final class MusicBrowseViewModel: ObservableObject {
         focusedItem = item
         if let url = backdropUrl(for: item) {
             backgroundService.setBackground(url: url)
+        }
+    }
+
+    func fetchRandomAlbumId() async -> String? {
+        guard let client else { return nil }
+        do {
+            let request = GetItemsRequest(
+                parentId: parentId,
+                recursive: true,
+                includeItemTypes: [.musicAlbum],
+                sortBy: [.random],
+                sortOrder: .ascending,
+                limit: 1,
+                imageTypeLimit: 1
+            )
+            let result = try await client.itemsApi.getItems(request: request)
+            return result.items.first?.id
+        } catch {
+            return nil
         }
     }
 
@@ -137,6 +159,9 @@ final class MusicBrowseViewModel: ObservableObject {
             group.addTask { await ("lastPlayed", self.loadLastPlayed(client: client)) }
             group.addTask { await ("favoriteAlbums", self.loadFavoriteAlbums(client: client)) }
             group.addTask { await ("playlists", self.loadPlaylists(client: client)) }
+            group.addTask { await ("albumArtists", self.loadAlbumArtists(client: client)) }
+            group.addTask { await ("artists", self.loadArtists(client: client)) }
+            group.addTask { await ("albums", self.loadAlbums(client: client)) }
 
             for await (rowId, items) in group {
                 if let index = rows.firstIndex(where: { $0.id == rowId }) {
@@ -197,6 +222,85 @@ final class MusicBrowseViewModel: ObservableObject {
             let request = GetItemsRequest(
                 recursive: true,
                 includeItemTypes: [.playlist],
+                sortBy: [.dateCreated],
+                sortOrder: .descending,
+                imageTypeLimit: 1
+            )
+            let result = try await client.itemsApi.getItems(request: request)
+            return result.items.filter { item in
+                item.mediaType != .video
+            }
+        } catch { return [] }
+    }
+
+    private func loadAlbumArtists(client: MediaServerClient) async -> [ServerItem] {
+        do {
+            let query = buildQuery([
+                ("UserId", client.userId),
+                ("ParentId", parentId),
+                ("Recursive", "true"),
+                ("SortBy", ItemSortBy.sortName.rawValue),
+                ("SortOrder", SortOrder.ascending.rawValue),
+                ("EnableImages", "true"),
+                ("ImageTypeLimit", "1"),
+                ("Fields", "PrimaryImageAspectRatio"),
+            ])
+            let result: ItemsResult = try await client.httpClient.request("/Artists/AlbumArtists", queryItems: query)
+            return result.items
+        } catch {
+            do {
+                let request = GetItemsRequest(
+                    parentId: parentId,
+                    recursive: true,
+                    includeItemTypes: [.albumArtist],
+                    sortBy: [.sortName],
+                    imageTypeLimit: 1
+                )
+                let result = try await client.itemsApi.getItems(request: request)
+                return result.items
+            } catch {
+                return []
+            }
+        }
+    }
+
+    private func loadArtists(client: MediaServerClient) async -> [ServerItem] {
+        do {
+            let query = buildQuery([
+                ("UserId", client.userId),
+                ("ParentId", parentId),
+                ("Recursive", "true"),
+                ("SortBy", ItemSortBy.sortName.rawValue),
+                ("SortOrder", SortOrder.ascending.rawValue),
+                ("EnableImages", "true"),
+                ("ImageTypeLimit", "1"),
+                ("Fields", "PrimaryImageAspectRatio"),
+            ])
+            let result: ItemsResult = try await client.httpClient.request("/Artists", queryItems: query)
+            return result.items
+        } catch {
+            do {
+                let request = GetItemsRequest(
+                    parentId: parentId,
+                    recursive: true,
+                    includeItemTypes: [.musicArtist],
+                    sortBy: [.sortName],
+                    imageTypeLimit: 1
+                )
+                let result = try await client.itemsApi.getItems(request: request)
+                return result.items
+            } catch {
+                return []
+            }
+        }
+    }
+
+    private func loadAlbums(client: MediaServerClient) async -> [ServerItem] {
+        do {
+            let request = GetItemsRequest(
+                parentId: parentId,
+                recursive: true,
+                includeItemTypes: [.musicAlbum],
                 sortBy: [.dateCreated],
                 sortOrder: .descending,
                 imageTypeLimit: 1

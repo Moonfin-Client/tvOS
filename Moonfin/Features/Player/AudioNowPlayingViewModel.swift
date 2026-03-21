@@ -6,11 +6,13 @@ final class AudioNowPlayingViewModel: ObservableObject {
     @Published private(set) var lyrics: [LyricLine] = []
     @Published private(set) var isLoadingLyrics = false
     @Published var showQueue = false
+    @Published var showLyrics = false
 
     let audioManager: AudioManager
     private let client: MediaServerClient
     private var lyricsTask: Task<Void, Never>?
     private var trackObserver: AnyCancellable?
+    private var playerObserver: AnyCancellable?
 
     var player: VLCPlayerWrapper { audioManager.player }
     var playbackManager: PlaybackManager { audioManager.playbackManager }
@@ -52,6 +54,23 @@ final class AudioNowPlayingViewModel: ObservableObject {
         self.audioManager = audioManager
         self.client = client
         observeTrackChanges()
+        observePlayerUpdates()
+        loadLyricsForCurrentTrack()
+    }
+
+    func toggleQueue() {
+        showQueue.toggle()
+        if showQueue {
+            showLyrics = false
+        }
+    }
+
+    func toggleLyrics() {
+        guard hasLyrics else { return }
+        showLyrics.toggle()
+        if showLyrics {
+            showQueue = false
+        }
     }
 
     func togglePlayPause() {
@@ -99,8 +118,18 @@ final class AudioNowPlayingViewModel: ObservableObject {
         trackObserver = audioManager.playbackManager.$currentIndex
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
+                guard let self else { return }
+                self.showLyrics = false
+                self.objectWillChange.send()
+                self.loadLyricsForCurrentTrack()
+            }
+    }
+
+    private func observePlayerUpdates() {
+        playerObserver = audioManager.player.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
                 self?.objectWillChange.send()
-                self?.loadLyricsForCurrentTrack()
             }
     }
 

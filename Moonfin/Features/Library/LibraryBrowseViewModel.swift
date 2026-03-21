@@ -38,6 +38,18 @@ final class LibraryBrowseViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     var isGenreMode: Bool { genreName != nil }
+    var isForcedSquareMode: Bool {
+        if let includeTypes, !includeTypes.isEmpty {
+            return includeTypes.allSatisfy { type in
+                type == .musicAlbum || type == .musicArtist || type == .albumArtist
+            }
+        }
+        return collectionType == "music"
+    }
+
+    private var resolvedImageType: ImageDisplayType {
+        isForcedSquareMode ? .square : imageType
+    }
 
     private static let defaultFields: [ItemField] = [
         .overview, .primaryImageAspectRatio, .genres, .mediaSources, .providerIds
@@ -106,7 +118,7 @@ final class LibraryBrowseViewModel: ObservableObject {
     var imageApi: ServerImageApi? { client?.imageApi }
 
     var cardDimensions: (width: CGFloat, height: CGFloat) {
-        switch imageType {
+        switch resolvedImageType {
         case .poster:
             switch posterSize {
             case .smallest: return (120, 180)
@@ -216,6 +228,10 @@ final class LibraryBrowseViewModel: ObservableObject {
     }
 
     func setImageType(_ type: ImageDisplayType) {
+        if isForcedSquareMode {
+            imageType = .square
+            return
+        }
         imageType = type
         libraryPreferences.imageType = type
     }
@@ -223,7 +239,7 @@ final class LibraryBrowseViewModel: ObservableObject {
     func imageUrl(for item: ServerItem) -> String? {
         guard let imageApi else { return nil }
         let w = Int(cardDimensions.width * 2)
-        switch imageType {
+        switch resolvedImageType {
         case .poster, .square:
             return imageApi.getItemImageUrl(
                 itemId: item.id, imageType: .primary,
@@ -294,6 +310,28 @@ final class LibraryBrowseViewModel: ObservableObject {
             if filterFavorites { filters.append(.isFavorite) }
             if filterUnwatched { filters.append(.isUnplayed) }
 
+            if !isGenreMode,
+               let includeTypes,
+               includeTypes.count == 1,
+               includeTypes[0] == .musicArtist || includeTypes[0] == .albumArtist {
+                let result = try await fetchArtistItems(
+                    client: client,
+                    includeType: includeTypes[0],
+                    filters: filters,
+                    startIndex: currentPage * pageSize
+                )
+
+                let fetchedItems = container.parentalControlsRepository.filterItems(result.items)
+                let allItems = reset ? fetchedItems : items + fetchedItems
+                currentPage += 1
+
+                self.items = allItems
+                self.totalItems = result.totalRecordCount
+                self.hasMoreItems = allItems.count < result.totalRecordCount
+                self.isLoading = false
+                return
+            }
+
             let resolvedIncludeTypes: [ItemType]?
             let resolvedExcludeTypes: [ItemType]?
             let recursive: Bool
@@ -313,7 +351,7 @@ final class LibraryBrowseViewModel: ObservableObject {
                     resolvedExcludeTypes = nil
                     recursive = true
                 case "music":
-                    resolvedIncludeTypes = [.musicAlbum]
+                    resolvedIncludeTypes = includeTypes ?? [.musicAlbum]
                     resolvedExcludeTypes = nil
                     recursive = true
                 default:
@@ -344,7 +382,8 @@ final class LibraryBrowseViewModel: ObservableObject {
             )
 
             let result = try await client.itemsApi.getItems(request: request)
-            let fetchedItems = container.parentalControlsRepository.filterItems(result.items)
+            let playlistFilteredItems = applyPlaylistExclusionLogic(to: result.items)
+            let fetchedItems = container.parentalControlsRepository.filterItems(playlistFilteredItems)
             let allItems = reset ? fetchedItems : items + fetchedItems
             currentPage += 1
 
@@ -357,6 +396,31 @@ final class LibraryBrowseViewModel: ObservableObject {
         }
     }
 
+    private func fetchArtistItems(
+        client: MediaServerClient,
+        includeType: ItemType,
+        filters: [ItemFilter],
+        startIndex: Int
+    ) async throws -> ItemsResult {
+        let path = includeType == .albumArtist ? "/Artists/AlbumArtists" : "/Artists"
+        let query = buildQuery([
+            ("UserId", client.userId),
+            ("ParentId", parentId),
+            ("Recursive", "true"),
+            ("SortOrder", currentSort.sortOrder.rawValue),
+            ("SortBy", [currentSort.sortBy, .sortName].map(\.rawValue).joined(separator: ",")),
+            ("Fields", Self.defaultFields.map(\.rawValue).joined(separator: ",")),
+            ("Filters", filters.isEmpty ? nil : filters.map(\.rawValue).joined(separator: ",")),
+            ("EnableImages", "true"),
+            ("ImageTypeLimit", "1"),
+            ("EnableUserData", "true"),
+            ("NameStartsWith", startLetter),
+            ("StartIndex", String(startIndex)),
+            ("Limit", String(pageSize)),
+        ])
+        return try await client.httpClient.request(path, queryItems: query)
+    }
+
     private func loadLibraryInfo(client: MediaServerClient) async {
         guard libraryName.isEmpty else { return }
         do {
@@ -364,6 +428,20 @@ final class LibraryBrowseViewModel: ObservableObject {
             libraryName = parentItem.name
             collectionType = parentItem.collectionType
         } catch {}
+    }
+
+    private func applyPlaylistExclusionLogic(to sourceItems: [ServerItem]) -> [ServerItem] {
+        guard includeTypes == [.playlist] else { return sourceItems }
+
+        if collectionType == "music" {
+            return sourceItems.filter { $0.mediaType != .video }
+        }
+
+        if collectionType == "playlists" {
+            return sourceItems.filter { $0.mediaType != .audio }
+        }
+
+        return sourceItems
     }
 
     private func savePreferences() {

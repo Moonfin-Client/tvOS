@@ -2,7 +2,7 @@ import SwiftUI
 
 enum ActionButtonID: Hashable {
     case resume, play, shuffle, instantMix, nextEpisode, watched, favorite, goToSeries
-    case audioTrack, subtitleTrack, addToPlaylist
+    case audioTrack, subtitleTrack, addToPlaylist, delete
 }
 
 struct ActionButtonsRow: View {
@@ -23,6 +23,7 @@ struct ActionButtonsRow: View {
     let onAudioTrack: (() -> Void)?
     let onSubtitleTrack: (() -> Void)?
     let onAddToPlaylist: (() -> Void)?
+    let onDelete: (() -> Void)?
 
     var body: some View {
         HStack {
@@ -49,6 +50,7 @@ struct ActionButtonsRow: View {
                     ActionButton(
                         label: "Shuffle",
                         icon: "shuffle",
+                        isAssetIcon: true,
                         action: onShuffle
                     )
                     .focused(focusedButton, equals: .shuffle)
@@ -125,6 +127,15 @@ struct ActionButtonsRow: View {
                     )
                     .focused(focusedButton, equals: .addToPlaylist)
                 }
+
+                if let onDelete {
+                    ActionButton(
+                        label: "Delete",
+                        icon: "trash",
+                        action: onDelete
+                    )
+                    .focused(focusedButton, equals: .delete)
+                }
             }
             Spacer()
         }
@@ -135,6 +146,7 @@ struct ActionButtonsRow: View {
 private struct ActionButton: View {
     let label: String
     let icon: String
+    var isAssetIcon: Bool = false
     var detail: String? = nil
     var isActive: Bool = false
     var activeColor: Color? = nil
@@ -154,9 +166,18 @@ private struct ActionButton: View {
                                 .stroke(borderColor, lineWidth: isFocused ? 3 : 1)
                         )
 
-                    Image(systemName: icon)
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundColor(iconColor)
+                    if isAssetIcon {
+                        Image(icon)
+                            .renderingMode(.template)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 22, height: 22)
+                            .foregroundColor(iconColor)
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 22, weight: .medium))
+                            .foregroundColor(iconColor)
+                    }
                 }
                 .frame(width: 72, height: 72)
 

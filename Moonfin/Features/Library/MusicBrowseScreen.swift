@@ -3,6 +3,7 @@ import Nuke
 
 struct MusicBrowseScreen: View {
     @StateObject private var viewModel: MusicBrowseViewModel
+    @EnvironmentObject var container: AppContainer
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
 
@@ -64,8 +65,6 @@ struct MusicBrowseScreen: View {
                     action: { router.navigate(to: .home) }
                 )
             }
-
-            musicNavButtons
         }
     }
 
@@ -90,25 +89,75 @@ struct MusicBrowseScreen: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var musicNavButtons: some View {
-        HStack(spacing: 8) {
-            MusicNavButton(title: "Albums", theme: theme) {
-                router.navigate(to: .libraryBrowserByType(
-                    itemId: viewModel.parentId, includeType: ItemType.musicAlbum.rawValue
-                ))
-            }
+    private var musicViewsRow: some View {
+        FocusFirstRow(firstItemId: "view_albums") { focusBinding in
+            LazyHStack(spacing: 12) {
+                MusicViewButton(
+                    icon: "opticaldisc",
+                    label: "Albums",
+                    theme: theme,
+                    focusBinding: focusBinding,
+                    focusId: "view_albums"
+                ) {
+                    router.navigate(to: .libraryBrowserByType(
+                        itemId: viewModel.parentId, includeType: ItemType.musicAlbum.rawValue
+                    ))
+                }
 
-            MusicNavButton(title: "Artists", theme: theme) {
-                router.navigate(to: .libraryBrowserByType(
-                    itemId: viewModel.parentId, includeType: ItemType.musicArtist.rawValue
-                ))
-            }
+                MusicViewButton(
+                    icon: "person.2",
+                    label: "Album Artists",
+                    theme: theme,
+                    focusBinding: focusBinding,
+                    focusId: "view_album_artists"
+                ) {
+                    router.navigate(to: .libraryBrowserByType(
+                        itemId: viewModel.parentId, includeType: ItemType.albumArtist.rawValue
+                    ))
+                }
 
-            MusicNavButton(title: "Genres", theme: theme) {
-                router.navigate(to: .libraryByGenres(
-                    itemId: viewModel.parentId, includeType: ItemType.musicAlbum.rawValue
-                ))
+                MusicViewButton(
+                    icon: "person",
+                    label: "Artists",
+                    theme: theme,
+                    focusBinding: focusBinding,
+                    focusId: "view_artists"
+                ) {
+                    router.navigate(to: .libraryBrowserByType(
+                        itemId: viewModel.parentId, includeType: ItemType.musicArtist.rawValue
+                    ))
+                }
+
+                MusicViewButton(
+                    icon: "theatermasks",
+                    label: "Genres",
+                    theme: theme,
+                    focusBinding: focusBinding,
+                    focusId: "view_genres"
+                ) {
+                    router.navigate(to: .libraryByGenres(
+                        itemId: viewModel.parentId, includeType: ItemType.musicAlbum.rawValue
+                    ))
+                }
+
+                MusicViewButton(
+                    icon: "shuffle",
+                    label: "Random Album",
+                    isAssetIcon: true,
+                    theme: theme,
+                    focusBinding: focusBinding,
+                    focusId: "view_random_album"
+                ) {
+                    Task {
+                        if let albumId = await viewModel.fetchRandomAlbumId() {
+                            router.navigate(to: .itemDetails(itemId: albumId, serverId: nil))
+                        }
+                    }
+                }
             }
+            .padding(.vertical, 4)
+            .padding(.leading, 12)
+            .padding(.trailing, 2)
         }
     }
 
@@ -117,6 +166,15 @@ struct MusicBrowseScreen: View {
     private var musicContent: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Views")
+                        .font(.bodyLg)
+                        .fontWeight(.semibold)
+                        .foregroundColor(theme.colorScheme.onBackground)
+
+                    musicViewsRow
+                }
+
                 ForEach(viewModel.rows) { row in
                     if row.isLoading {
                         musicLoadingRow(title: row.title)
@@ -158,26 +216,48 @@ struct MusicBrowseScreen: View {
                 .fontWeight(.semibold)
                 .foregroundColor(theme.colorScheme.onBackground)
 
-            ScrollView(.horizontal, showsIndicators: false) {
+            FocusFirstRow(firstItemId: row.items.first?.id) { focusBinding in
                 LazyHStack(spacing: SpaceTokens.spaceMd) {
-                    ForEach(row.items) { item in
+                    ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                         MusicSquareCard(
                             item: item,
                             imageUrl: viewModel.squareImageUrl(for: item),
                             subtitle: viewModel.subtitle(for: item),
                             theme: theme,
+                            focusBinding: focusBinding,
+                            focusId: item.id,
                             onFocused: { viewModel.setFocusedItem(item) },
-                            onTap: { navigateToItem(item) }
+                            onTap: { handleItemSelection(item: item, rowItems: row.items, index: index) }
                         )
                     }
                 }
                 .padding(.vertical, 10)
-                .padding(.leading, 6)
+                .padding(.leading, 12)
+                .padding(.trailing, 2)
             }
         }
     }
 
     // MARK: - Navigation
+
+    private func handleItemSelection(item: ServerItem, rowItems: [ServerItem], index: Int) {
+        if item.type == .audio {
+            let playableItems = rowItems.filter { $0.type == .audio }
+            guard !playableItems.isEmpty else {
+                navigateToItem(item)
+                return
+            }
+
+            let startIndex = playableItems.firstIndex(where: { $0.id == item.id }) ?? max(0, index)
+            Task {
+                await container.playbackCoordinator.startAudioPlayback(items: playableItems, startIndex: startIndex)
+                router.navigate(to: .nowPlaying)
+            }
+            return
+        }
+
+        navigateToItem(item)
+    }
 
     private func navigateToItem(_ item: ServerItem) {
         if item.type == .audio, let albumId = item.albumId {
@@ -242,10 +322,10 @@ private struct MusicSquareCard: View {
     let imageUrl: String?
     let subtitle: String
     let theme: MoonfinTheme
+    let focusBinding: FocusState<String?>.Binding
+    let focusId: String
     let onFocused: () -> Void
     let onTap: () -> Void
-
-    @FocusState private var isFocused: Bool
 
     private let cardSize: CGFloat = 160
 
@@ -270,6 +350,10 @@ private struct MusicSquareCard: View {
                 }
                 .frame(width: cardSize, height: cardSize)
                 .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.extraSmall))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
+                        .stroke(isFocused ? Color.white : Color.clear, lineWidth: isFocused ? 3 : 0)
+                )
 
                 Text(item.name)
                     .font(.captionXs)
@@ -286,10 +370,14 @@ private struct MusicSquareCard: View {
             .frame(width: cardSize)
         }
         .buttonStyle(MusicCardButtonStyle(isFocused: isFocused))
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-            if focused { onFocused() }
+        .focused(focusBinding, equals: focusId)
+        .onChange(of: focusBinding.wrappedValue) { focused in
+            if focused == focusId { onFocused() }
         }
+    }
+
+    private var isFocused: Bool {
+        focusBinding.wrappedValue == focusId
     }
 
     private var cardPlaceholder: some View {
@@ -315,31 +403,57 @@ private struct MusicCardButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - Music Nav Button
+// MARK: - Music View Button
 
-private struct MusicNavButton: View {
-    let title: String
+private struct MusicViewButton: View {
+    let icon: String
+    let label: String
+    var isAssetIcon: Bool = false
     let theme: MoonfinTheme
+    let focusBinding: FocusState<String?>.Binding
+    let focusId: String
     let action: () -> Void
-
-    @FocusState private var isFocused: Bool
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.bodySm)
-                .fontWeight(.semibold)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-                .background(
-                    Capsule()
-                        .fill(isFocused ? theme.focusBorder.color : Color.white.opacity(0.1))
-                )
-                .foregroundColor(isFocused ? .white : .white.opacity(0.7))
+            VStack(spacing: 6) {
+                Group {
+                    if isAssetIcon {
+                        Image(icon)
+                            .renderingMode(.template)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 30, height: 30)
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 30, weight: .medium))
+                    }
+                }
+                .foregroundColor(.white.opacity(isFocused ? 1.0 : 0.75))
+
+                Text(label)
+                    .font(.bodySm)
+                    .fontWeight(isFocused ? .semibold : .regular)
+                    .foregroundColor(.white.opacity(isFocused ? 1.0 : 0.75))
+                    .lineLimit(1)
+            }
+            .frame(width: 170, height: 92)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .fill(Color.white.opacity(isFocused ? 0.22 : 0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .stroke(isFocused ? Color.white : Color.clear, lineWidth: isFocused ? 3 : 0)
+            )
         }
         .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .scaleEffect(isFocused ? 1.05 : 1.0)
+        .focused(focusBinding, equals: focusId)
+        .scaleEffect(isFocused ? 1.04 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+
+    private var isFocused: Bool {
+        focusBinding.wrappedValue == focusId
     }
 }

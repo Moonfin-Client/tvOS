@@ -152,12 +152,14 @@ struct LibraryBrowseScreen: View {
                 action: { showSortDialog = true }
             )
 
-            ToolbarIconButton(
-                systemImage: "gearshape",
-                isActive: false,
-                theme: theme,
-                action: { showSettings = true }
-            )
+            if !viewModel.isForcedSquareMode {
+                ToolbarIconButton(
+                    systemImage: "gearshape",
+                    isActive: false,
+                    theme: theme,
+                    action: { showSettings = true }
+                )
+            }
         }
     }
 

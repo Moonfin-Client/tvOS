@@ -3,6 +3,7 @@ import Foundation
 enum ItemType: String, Codable, CaseIterable {
     case movie, series, season, episode
     case audio, musicAlbum, musicArtist, musicVideo
+    case albumArtist = "AlbumArtist"
     case playlist, photo, photoAlbum
     case boxSet, channel, program
     case recording, liveTvChannel, liveTvProgram
@@ -13,13 +14,14 @@ enum ItemType: String, Codable, CaseIterable {
 
     init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer().decode(String.self)
-        self = ItemType(rawValue: value)
-            ?? ItemType(rawValue: value.lowercased())
-            ?? .unknown
+        let normalized = value.replacingOccurrences(of: "_", with: "").lowercased()
+        self = ItemType.allCases.first(where: {
+            $0.rawValue.replacingOccurrences(of: "_", with: "").lowercased() == normalized
+        }) ?? .unknown
     }
 }
 
-enum MediaType: String, Codable {
+enum MediaType: String, Codable, CaseIterable {
     case video = "Video"
     case audio = "Audio"
     case photo = "Photo"
@@ -28,7 +30,9 @@ enum MediaType: String, Codable {
 
     init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer().decode(String.self)
-        self = MediaType(rawValue: value) ?? .unknown
+        self = MediaType.allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(value) == .orderedSame
+        }) ?? .unknown
     }
 }
 

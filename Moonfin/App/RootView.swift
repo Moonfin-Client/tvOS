@@ -283,6 +283,14 @@ struct MainNavigationView: View {
                 includeTypes: includeType.flatMap { ItemType(rawValue: $0) }.map { [$0] },
                 genreName: genreName
             )
+        case .libraryByGenres(let itemId, let includeType):
+            GenreBrowseScreen(container: container, parentId: itemId, includeType: includeType)
+        case .libraryByLetter(let itemId, let includeType):
+            LibraryBrowseScreen(
+                container: container,
+                parentId: itemId,
+                includeTypes: [ItemType(rawValue: includeType) ?? .movie]
+            )
         case .musicBrowser(let itemId, let serverId, _):
             MusicBrowseScreen(container: container, parentId: itemId, serverId: serverId)
         case .folderView:
@@ -349,6 +357,8 @@ struct MainNavigationView: View {
             AudioNowPlayingView(
                 viewModel: AudioNowPlayingViewModel(audioManager: audio, client: client)
             )
+            .onAppear { router.hideNavbar = true }
+            .onDisappear { router.hideNavbar = false }
         } else {
             PlaceholderView(title: "Now Playing")
         }

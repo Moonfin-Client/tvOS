@@ -33,31 +33,87 @@ struct AudioNowPlayingView: View {
     }
 
     private var contentLayer: some View {
-        HStack(spacing: SpaceTokens.space3xl) {
-            VStack(spacing: SpaceTokens.spaceLg) {
-                albumArt
-                trackInfo
-                progressSection
-                controlButtons
-            }
-            .frame(width: 500)
+        GeometryReader { geo in
+            let totalPadding = SpaceTokens.space3xl * 3
+            let panelWidth = max(360, (geo.size.width - totalPadding) / 2)
 
-            if viewModel.showQueue {
-                queueList
-                    .frame(width: 400)
-                    .transition(.move(edge: .trailing).combined(with: .opacity))
-            } else if viewModel.hasLyrics {
+            VStack(spacing: SpaceTokens.spaceMd) {
+                HStack {
+                    Spacer()
+
+                    if viewModel.hasLyrics {
+                        modeToggleButton(
+                            icon: "quote.bubble",
+                            isActive: viewModel.showLyrics,
+                            action: viewModel.toggleLyrics
+                        )
+                    }
+
+                    modeToggleButton(
+                        icon: "music.note.list",
+                        isActive: viewModel.showQueue,
+                        action: viewModel.toggleQueue
+                    )
+                }
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: SpaceTokens.space3xl) {
+                    VStack(spacing: SpaceTokens.spaceLg) {
+                        albumArt
+                        trackInfo
+                        progressSection
+                        controlButtons
+                    }
+                    .frame(width: panelWidth)
+
+                    if viewModel.showQueue {
+                        queueList
+                            .frame(width: panelWidth)
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
+                    } else if viewModel.showLyrics {
+                        lyricsPanel
+                            .frame(width: panelWidth)
+                            .transition(.opacity)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .padding(SpaceTokens.space3xl)
+        }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.showQueue)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.showLyrics)
+    }
+
+    private var lyricsPanel: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+            Text("Lyrics")
+                .font(.titleXl)
+                .foregroundColor(.white)
+
+            if viewModel.isLoadingLyrics {
+                Spacer()
+                HStack {
+                    Spacer()
+                    ProgressView().tint(.white)
+                    Spacer()
+                }
+                Spacer()
+            } else {
                 LyricsView(
                     lyrics: viewModel.lyrics,
                     currentTime: viewModel.player.currentTime,
                     duration: viewModel.player.duration
                 )
-                .frame(width: 400)
-                .transition(.opacity)
             }
         }
-        .padding(SpaceTokens.space3xl)
-        .animation(.easeInOut(duration: 0.3), value: viewModel.showQueue)
+        .padding(SpaceTokens.spaceMd)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .fill(theme.colorScheme.surface.opacity(0.6))
+        )
     }
 
     private var albumArt: some View {
@@ -140,6 +196,7 @@ struct AudioNowPlayingView: View {
         HStack(spacing: SpaceTokens.spaceXl) {
             audioControlButton(
                 icon: "shuffle",
+                isAssetIcon: true,
                 tint: viewModel.audioManager.playbackOrder == .shuffle ? theme.accent : .white.opacity(0.7)
             ) {
                 viewModel.audioManager.toggleShuffle()
@@ -178,15 +235,40 @@ struct AudioNowPlayingView: View {
 
     private func audioControlButton(
         icon: String,
+        isAssetIcon: Bool = false,
         size: CGFloat = 28,
         tint: Color = .white,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
+            Group {
+                if isAssetIcon {
+                    Image(icon)
+                        .renderingMode(.template)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: size, height: size)
+                } else {
+                    Image(systemName: icon)
+                        .font(.system(size: size))
+                }
+            }
+            .foregroundColor(tint)
+            .frame(width: 60, height: 60)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func modeToggleButton(icon: String, isActive: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: size))
-                .foregroundColor(tint)
-                .frame(width: 60, height: 60)
+                .font(.system(size: 21, weight: .semibold))
+                .foregroundColor(isActive ? theme.accent : .white.opacity(0.85))
+                .frame(width: 52, height: 52)
+                .background(
+                    RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                        .fill(isActive ? Color.white.opacity(0.16) : Color.white.opacity(0.08))
+                )
         }
         .buttonStyle(.plain)
     }

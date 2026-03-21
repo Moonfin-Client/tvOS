@@ -110,6 +110,16 @@ struct JellyfinItemsApi: ServerItemsApi {
         return try await client.request("/Users/\(userId)/Items", queryItems: query)
     }
 
+    func getPlaylistItems(itemId: String, userId: String?) async throws -> ItemsResult {
+        let cacheBust = String(Int(Date().timeIntervalSince1970 * 1000))
+        let query = buildQuery([
+            ("UserId", userId ?? client.userId),
+            ("Fields", "PlaylistItemId"),
+            ("_ts", cacheBust),
+        ])
+        return try await client.request("/Playlists/\(itemId)/Items", queryItems: query)
+    }
+
     func getResumeItems(request: GetResumeItemsRequest) async throws -> ItemsResult {
         let userId = request.userId ?? client.userId ?? ""
         let query = buildQuery([
@@ -202,6 +212,10 @@ struct JellyfinUserLibraryApi: ServerUserLibraryApi {
     func getIntros(itemId: String) async throws -> [ServerItem] {
         let result: ItemsResult = try await client.request("/Items/\(itemId)/Intros")
         return result.items
+    }
+
+    func deleteItem(itemId: String) async throws {
+        try await client.requestVoid("/Items/\(itemId)", method: "DELETE")
     }
 
     func markFavorite(itemId: String, userId: String) async throws -> UserItemData {
@@ -466,6 +480,13 @@ struct JellyfinPlaylistApi: ServerPlaylistApi {
             ("UserId", userId ?? client.userId),
         ])
         try await client.requestVoid("/Playlists/\(playlistId)/Items", method: "POST", queryItems: query)
+    }
+
+    func moveItem(playlistId: String, itemId: String, newIndex: Int) async throws {
+        try await client.requestVoid(
+            "/Playlists/\(playlistId)/Items/\(itemId)/Move/\(newIndex)",
+            method: "POST"
+        )
     }
 
     func removeFromPlaylist(playlistId: String, entryIds: [String]) async throws {
