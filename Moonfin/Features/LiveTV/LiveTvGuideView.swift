@@ -30,10 +30,10 @@ struct LiveTvGuideView: View {
             }
         }
         .onAppear {
-            router.hideNavbar = true
+            router.pushNavbarHidden()
         }
         .onDisappear {
-            router.hideNavbar = false
+            router.popNavbarHidden()
         }
         .sheet(isPresented: $viewModel.showProgramDetail) {
             if let program = viewModel.selectedProgram {

@@ -27,13 +27,13 @@ struct SearchScreen: View {
             }
         }
         .onAppear {
-            router.hideNavbar = true
+            router.pushNavbarHidden()
             if !viewModel.query.isEmpty {
                 viewModel.searchImmediately()
             }
         }
         .onDisappear {
-            router.hideNavbar = false
+            router.popNavbarHidden()
         }
     }
 

@@ -129,21 +129,16 @@ struct MainNavigationView: View {
 
     var body: some View {
         ZStack {
-            // --- Main content layer: NavigationStack is ALWAYS here,
-            //     never inside a switch or conditional that could change.
             mainContent
                 .focusSection()
                 .prefersDefaultFocus(contentShouldPreferDefaultFocus, in: mainNamespace)
                 .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
 
-            // --- Navigation overlay (navbar or sidebar) rendered on top
             navigationOverlay
                 .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
 
-            // --- Clock overlay
             clockOverlay
 
-            // --- Settings sheet
             if settingsRouter.isPresented {
                 theme.colorScheme.scrim
                     .ignoresSafeArea()
@@ -154,7 +149,6 @@ struct MainNavigationView: View {
                     .transition(.move(edge: .trailing))
             }
 
-            // --- Screensaver
             if container.inactivityTracker.isScreensaverVisible {
                 ScreensaverView(container: container) {
                     container.inactivityTracker.notifyInteraction()
@@ -192,9 +186,7 @@ struct MainNavigationView: View {
         .onChange(of: router.path.count) { count in
             if count == 0 {
                 DispatchQueue.main.async {
-                    if router.hideNavbar {
-                        router.hideNavbar = false
-                    }
+                    router.resetNavbarVisibility()
                     if suppressTopNavbarInRows {
                         suppressTopNavbarInRows = false
                     }
@@ -208,8 +200,6 @@ struct MainNavigationView: View {
         }
     }
 
-    // MARK: - Stable NavigationStack (never recreated)
-
     private var mainContent: some View {
         NavigationStack(path: $router.path) {
             HomeScreen(
@@ -221,17 +211,13 @@ struct MainNavigationView: View {
                 onRequestTopNavbarHomeFocus: requestNavbarHomeFocus
             )
             .onAppear {
-                if router.hideNavbar {
-                    router.hideNavbar = false
-                }
+                router.resetNavbarVisibility()
             }
                 .navigationDestination(for: Destination.self) { destination in
                     mainDestinationView(for: destination)
                 }
         }
     }
-
-    // MARK: - Navigation overlay (changes freely without affecting NavigationStack)
 
     @ViewBuilder
     private var navigationOverlay: some View {
@@ -379,9 +365,9 @@ struct MainNavigationView: View {
     private var videoPlayerDestination: some View {
         if let manager = container.playbackCoordinator.videoPlayerManager {
             VideoPlayerScreen(playbackManager: manager)
-                .onAppear { router.hideNavbar = true }
+                .onAppear { router.pushNavbarHidden() }
                 .onDisappear {
-                    router.hideNavbar = false
+                    router.popNavbarHidden()
                     Task { await container.playbackCoordinator.stopVideoPlayback() }
                 }
         } else {
@@ -397,8 +383,8 @@ struct MainNavigationView: View {
             AudioNowPlayingView(
                 viewModel: AudioNowPlayingViewModel(audioManager: audio, client: client)
             )
-            .onAppear { router.hideNavbar = true }
-            .onDisappear { router.hideNavbar = false }
+            .onAppear { router.pushNavbarHidden() }
+            .onDisappear { router.popNavbarHidden() }
         } else {
             PlaceholderView(title: "Now Playing")
         }
@@ -408,8 +394,9 @@ struct MainNavigationView: View {
     private func liveTvPlayerDestination(channelId: String) -> some View {
         if let manager = container.playbackCoordinator.videoPlayerManager {
             VideoPlayerScreen(playbackManager: manager, isLiveTV: true)
-                .onAppear { router.hideNavbar = true }
+                .onAppear { router.pushNavbarHidden() }
                 .onDisappear {
+                    router.popNavbarHidden()
                     Task { await container.playbackCoordinator.stopVideoPlayback() }
                 }
         } else {

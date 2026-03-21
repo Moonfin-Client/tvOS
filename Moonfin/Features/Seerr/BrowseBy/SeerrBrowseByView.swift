@@ -44,10 +44,10 @@ struct SeerrBrowseByView: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.loadInitial()
-            router.hideNavbar = true
+            router.pushNavbarHidden()
         }
         .onDisappear {
-            router.hideNavbar = false
+            router.popNavbarHidden()
         }
         .sheet(isPresented: $showSortDialog) { sortDialog }
         .sheet(isPresented: $showDisplaySettings) { displaySettingsDialog }

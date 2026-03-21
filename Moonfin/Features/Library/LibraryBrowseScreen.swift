@@ -54,10 +54,10 @@ struct LibraryBrowseScreen: View {
         .ignoresSafeArea()
         .onAppear {
             viewModel.initialize()
-            router.hideNavbar = true
+            router.pushNavbarHidden()
         }
         .onDisappear {
-            router.hideNavbar = false
+            router.popNavbarHidden()
         }
         .sheet(isPresented: $showSortDialog) {
             FilterSortDialogView(

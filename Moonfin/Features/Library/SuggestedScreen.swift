@@ -36,11 +36,11 @@ struct SuggestedScreen: View {
         }
         .ignoresSafeArea()
         .onAppear {
-            router.hideNavbar = true
+            router.pushNavbarHidden()
             viewModel.initialize()
         }
         .onDisappear {
-            router.hideNavbar = false
+            router.popNavbarHidden()
         }
     }
 
