@@ -8,6 +8,7 @@ struct MediaBarView: View {
     let screenHeight: CGFloat
     let onItemSelected: (MediaBarSlideItem) -> Void
     let onNavigateDown: () -> Void
+    let onNavigateUp: () -> Void
     @Binding var requestFocus: Bool
 
     @EnvironmentObject var theme: MoonfinTheme
@@ -98,6 +99,7 @@ struct MediaBarView: View {
                         switch direction {
                         case .left:  viewModel.goToPrevious()
                         case .right: viewModel.goToNext()
+                        case .up:    onNavigateUp()
                         case .down:  onNavigateDown()
                         default:     break
                         }

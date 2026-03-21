@@ -37,6 +37,9 @@ struct FavoritesScreen: View {
             router.hideNavbar = true
             viewModel.initialize()
         }
+        .onDisappear {
+            router.hideNavbar = false
+        }
     }
 
     private var screenHeader: some View {
@@ -46,7 +49,7 @@ struct FavoritesScreen: View {
                     systemImage: "house",
                     isActive: false,
                     theme: theme,
-                    action: { router.navigate(to: .home) }
+                    action: { router.goBack() }
                 )
 
                 HStack(spacing: 6) {

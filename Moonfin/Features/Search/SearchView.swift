@@ -32,6 +32,9 @@ struct SearchScreen: View {
                 viewModel.searchImmediately()
             }
         }
+        .onDisappear {
+            router.hideNavbar = false
+        }
     }
 
     // MARK: - Header
@@ -43,7 +46,7 @@ struct SearchScreen: View {
                     systemImage: "house",
                     isActive: false,
                     theme: theme,
-                    action: { router.navigate(to: .home) }
+                    action: { router.goBack() }
                 )
 
                 searchField

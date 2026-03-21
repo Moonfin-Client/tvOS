@@ -83,6 +83,7 @@ struct MainNavigationView: View {
     @State private var contentReady = false
     @State private var sidebarHandoffToken = 0
     @State private var suppressTopNavbarInRows = false
+    @State private var navbarHomeFocusToken = 0
 
     private var navbarPosition: NavbarPosition {
         container.userPreferences[UserPreferences.navbarPosition]
@@ -96,8 +97,19 @@ struct MainNavigationView: View {
         return !suppressTopNavbarInRows
     }
 
+    private var contentShouldPreferDefaultFocus: Bool {
+        switch navbarPosition {
+        case .top:
+            return !shouldShowTopNavbar
+        case .left:
+            return !contentReady || router.hideNavbar
+        }
+    }
+
     private func handoffSidebarFocusToContent() {
         sidebarHandoffToken += 1
+        let isTopNavbarHome = navbarPosition == .top && router.path.isEmpty
+        guard !isTopNavbarHome else { return }
         DispatchQueue.main.async {
             resetFocus(in: mainNamespace)
         }
@@ -110,13 +122,18 @@ struct MainNavigationView: View {
         }
     }
 
+    private func requestNavbarHomeFocus() {
+        guard navbarPosition == .top, shouldShowTopNavbar else { return }
+        navbarHomeFocusToken += 1
+    }
+
     var body: some View {
         ZStack {
             // --- Main content layer: NavigationStack is ALWAYS here,
             //     never inside a switch or conditional that could change.
             mainContent
                 .focusSection()
-                .prefersDefaultFocus(in: mainNamespace)
+                .prefersDefaultFocus(contentShouldPreferDefaultFocus, in: mainNamespace)
                 .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
 
             // --- Navigation overlay (navbar or sidebar) rendered on top
@@ -172,6 +189,18 @@ struct MainNavigationView: View {
                 }
             }
         }
+        .onChange(of: router.path.count) { count in
+            if count == 0 {
+                DispatchQueue.main.async {
+                    if router.hideNavbar {
+                        router.hideNavbar = false
+                    }
+                    if suppressTopNavbarInRows {
+                        suppressTopNavbarInRows = false
+                    }
+                }
+            }
+        }
         .onMoveCommand { _ in
             if !container.inactivityTracker.isScreensaverVisible {
                 container.inactivityTracker.notifyInteraction()
@@ -188,8 +217,14 @@ struct MainNavigationView: View {
                 mainNamespace: mainNamespace,
                 contentReady: $contentReady,
                 sidebarHandoffToken: sidebarHandoffToken,
-                suppressTopNavbarInRows: $suppressTopNavbarInRows
+                suppressTopNavbarInRows: $suppressTopNavbarInRows,
+                onRequestTopNavbarHomeFocus: requestNavbarHomeFocus
             )
+            .onAppear {
+                if router.hideNavbar {
+                    router.hideNavbar = false
+                }
+            }
                 .navigationDestination(for: Destination.self) { destination in
                     mainDestinationView(for: destination)
                 }
@@ -204,10 +239,14 @@ struct MainNavigationView: View {
         case .top:
             if shouldShowTopNavbar {
                 VStack(spacing: 0) {
-                    Navbar(container: container, onMoveToContent: handoffSidebarFocusToContent)
+                    Navbar(
+                        container: container,
+                        requestHomeFocusToken: navbarHomeFocusToken,
+                        onMoveToContent: handoffSidebarFocusToContent
+                    )
                         .frame(height: navbarHeight)
                         .focusSection()
-                        .prefersDefaultFocus(false, in: mainNamespace)
+                        .prefersDefaultFocus(true, in: mainNamespace)
                     Spacer()
                 }
                 .zIndex(1)
@@ -255,7 +294,8 @@ struct MainNavigationView: View {
                 container: container,
                 mainNamespace: mainNamespace,
                 sidebarHandoffToken: sidebarHandoffToken,
-                suppressTopNavbarInRows: $suppressTopNavbarInRows
+                suppressTopNavbarInRows: $suppressTopNavbarInRows,
+                onRequestTopNavbarHomeFocus: requestNavbarHomeFocus
             )
         case .search(let query):
             SearchScreen(container: container, query: query)

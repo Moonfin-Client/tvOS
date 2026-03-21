@@ -32,6 +32,22 @@ final class NavigationRouter: ObservableObject {
         if let destination { path.append(destination) }
     }
 
+    func navigatePrimary(to destination: Destination) {
+        path = NavigationPath()
+        path.append(destination)
+    }
+
+    func navigatePrimaryToLibrary(_ item: ServerItem) {
+        switch item.collectionType?.lowercased() {
+        case "music":
+            navigatePrimary(to: .musicBrowser(itemId: item.id))
+        case "livetv":
+            navigatePrimary(to: .liveTvGuide)
+        default:
+            navigatePrimary(to: .libraryBrowser(itemId: item.id))
+        }
+    }
+
     func navigateToLibrary(_ item: ServerItem) {
         switch item.collectionType?.lowercased() {
         case "music":

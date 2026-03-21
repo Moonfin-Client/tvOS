@@ -10,6 +10,7 @@ struct HomeScreen: View {
     @Binding var contentReady: Bool
     @Binding var suppressTopNavbarInRows: Bool
     let sidebarHandoffToken: Int
+    let onRequestTopNavbarHomeFocus: (() -> Void)?
     @State private var isMediaBarMode = true
     @State private var sentinelEnabled = false
     @State private var focusedRowId: String?
@@ -33,18 +34,24 @@ struct HomeScreen: View {
         navbarIsLeft ? LeftSidebar.sidebarInset : 50
     }
 
+    private var rowsShouldPreferDefaultFocus: Bool {
+        navbarIsLeft || suppressTopNavbarInRows
+    }
+
     init(
         container: AppContainer,
         mainNamespace: Namespace.ID,
         contentReady: Binding<Bool> = .constant(true),
         sidebarHandoffToken: Int = 0,
-        suppressTopNavbarInRows: Binding<Bool> = .constant(false)
+        suppressTopNavbarInRows: Binding<Bool> = .constant(false),
+        onRequestTopNavbarHomeFocus: (() -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
         self.mainNamespace = mainNamespace
         self._contentReady = contentReady
         self.sidebarHandoffToken = sidebarHandoffToken
         self._suppressTopNavbarInRows = suppressTopNavbarInRows
+        self.onRequestTopNavbarHomeFocus = onRequestTopNavbarHomeFocus
     }
 
     private func resolveFocus(delay: UInt64 = 50_000_000) {
@@ -110,6 +117,9 @@ struct HomeScreen: View {
                             }
                             resolveFocus(delay: 150_000_000)
                         },
+                        onNavigateUp: {
+                            onRequestTopNavbarHomeFocus?()
+                        },
                         requestFocus: $mediaBarRequestFocus
                     )
                     .zIndex(1)
@@ -126,7 +136,7 @@ struct HomeScreen: View {
                     rowsContent(screenHeight: geo.size.height)
                         .disabled(mediaBarPresented)
                         .opacity(mediaBarPresented ? 0 : 1)
-                        .prefersDefaultFocus(in: mainNamespace)
+                        .prefersDefaultFocus(rowsShouldPreferDefaultFocus, in: mainNamespace)
                         .zIndex(0)
                 }
             }
@@ -146,6 +156,9 @@ struct HomeScreen: View {
                 isRestoringPosition = true
                 sentinelEnabled = false
                 resolveFocus(delay: 500_000_000)
+            } else if viewModel.isMediaBarActive {
+                isMediaBarMode = true
+                requestMediaBarFocus(after: 0)
             }
         }
         .onDisappear {
@@ -180,8 +193,17 @@ struct HomeScreen: View {
         }
         .onChange(of: sidebarHandoffToken) { _ in
             guard viewModel.hasFocusableContent else { return }
+            if !navbarIsLeft && viewModel.isMediaBarActive {
+                isMediaBarMode = true
+                requestMediaBarFocus(after: 0)
+                return
+            }
             isMediaBarMode = false
-            resolveFocus(delay: 0)
+            if !navbarIsLeft {
+                focusFirstRowTrigger += 1
+            } else {
+                resolveFocus(delay: 0)
+            }
         }
     }
 
@@ -434,9 +456,8 @@ private class SentinelFocusView: UIView {
             }
         } else {
             passingThrough = true
-            setNeedsFocusUpdate()
-            updateFocusIfNeeded()
             DispatchQueue.main.async { [weak self] in
+                self?.setNeedsFocusUpdate()
                 self?.passingThrough = false
             }
         }

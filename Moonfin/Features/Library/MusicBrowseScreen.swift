@@ -41,6 +41,9 @@ struct MusicBrowseScreen: View {
             viewModel.initialize()
             router.hideNavbar = true
         }
+        .onDisappear {
+            router.hideNavbar = false
+        }
     }
 
     // MARK: - Header
@@ -62,7 +65,7 @@ struct MusicBrowseScreen: View {
                     systemImage: "house",
                     isActive: false,
                     theme: theme,
-                    action: { router.navigate(to: .home) }
+                    action: { router.goBack() }
                 )
             }
         }

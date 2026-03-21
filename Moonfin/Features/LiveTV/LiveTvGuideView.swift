@@ -4,7 +4,6 @@ struct LiveTvGuideView: View {
     @StateObject private var viewModel: LiveTvGuideViewModel
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
-    @State private var navigatingToPlayer = false
 
     private let container: AppContainer
 
@@ -32,12 +31,9 @@ struct LiveTvGuideView: View {
         }
         .onAppear {
             router.hideNavbar = true
-            navigatingToPlayer = false
         }
         .onDisappear {
-            if !navigatingToPlayer {
-                router.hideNavbar = false
-            }
+            router.hideNavbar = false
         }
         .sheet(isPresented: $viewModel.showProgramDetail) {
             if let program = viewModel.selectedProgram {
@@ -272,7 +268,6 @@ struct LiveTvGuideView: View {
             do {
                 let item = try await client.userLibraryApi.getItem(itemId: channelId)
                 await container.playbackCoordinator.startVideoPlayback(items: [item])
-                navigatingToPlayer = true
                 router.navigate(to: .liveTvPlayer(channelId: channelId))
             } catch {
                 viewModel.error = "Failed to start playback: \(error.localizedDescription)"

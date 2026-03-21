@@ -46,6 +46,9 @@ struct SeerrBrowseByView: View {
             viewModel.loadInitial()
             router.hideNavbar = true
         }
+        .onDisappear {
+            router.hideNavbar = false
+        }
         .sheet(isPresented: $showSortDialog) { sortDialog }
         .sheet(isPresented: $showDisplaySettings) { displaySettingsDialog }
     }
@@ -151,7 +154,7 @@ struct SeerrBrowseByView: View {
                 systemImage: "house",
                 isActive: false,
                 theme: theme,
-                action: { router.navigate(to: .home) }
+                action: { router.goBack() }
             )
 
             ToolbarIconButton(

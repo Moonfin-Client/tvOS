@@ -47,6 +47,9 @@ struct GenreBrowseScreen: View {
             viewModel.initialize()
             router.hideNavbar = true
         }
+        .onDisappear {
+            router.hideNavbar = false
+        }
         .sheet(isPresented: $showSortDialog) {
             GenreSortDialogView(
                 currentSort: viewModel.currentSort,
@@ -82,7 +85,7 @@ struct GenreBrowseScreen: View {
                     systemImage: "house",
                     isActive: false,
                     theme: theme,
-                    action: { router.navigate(to: .home) }
+                    action: { router.goBack() }
                 )
 
                 ToolbarIconButton(

@@ -14,6 +14,7 @@ struct LeftSidebar: View {
     @State private var isLibraryExpanded = false
     @State private var collapseTask: Task<Void, Never>?
     @State private var sidebarHadFocus = false
+    @State private var focusResetToken = 0
     @FocusState private var focusedItem: SidebarFocusItem?
 
     let mainNamespace: Namespace.ID
@@ -33,6 +34,7 @@ struct LeftSidebar: View {
         focusedItem = nil
         isExpanded = false
         isLibraryExpanded = false
+        sidebarHadFocus = false
         onMoveToContent?()
     }
 
@@ -40,13 +42,21 @@ struct LeftSidebar: View {
         focusedItem = nil
         isExpanded = false
         isLibraryExpanded = false
+        sidebarHadFocus = false
         onMoveToContent?()
     }
 
     var body: some View {
         sidebarColumn
+            .id(focusResetToken)
             .ignoresSafeArea()
             .defaultFocus($focusedItem, .home)
+            .onAppear {
+                sidebarHadFocus = false
+                DispatchQueue.main.async {
+                    focusedItem = .home
+                }
+            }
             .onMoveCommand { direction in
                 if direction == .right {
                     handoffFocusToContent()
@@ -58,15 +68,14 @@ struct LeftSidebar: View {
                     if !sidebarHadFocus {
                         sidebarHadFocus = true
                         if newValue != .home {
-                            DispatchQueue.main.async {
-                                focusedItem = .home
-                            }
+                            focusedItem = .home
                             return
                         }
                     }
                     isExpanded = true
                 } else {
                     sidebarHadFocus = false
+                    focusResetToken += 1
                     collapseTask = Task {
                         try? await Task.sleep(nanoseconds: 150_000_000)
                         guard !Task.isCancelled else { return }
@@ -143,7 +152,7 @@ struct LeftSidebar: View {
                 label: "Search",
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .search,
-                action: { router.navigate(to: .search()) }
+                action: { router.navigatePrimary(to: .search()) }
             )
             .focused($focusedItem, equals: .search)
 
@@ -171,7 +180,7 @@ struct LeftSidebar: View {
                     label: "Favorites",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .favorites,
-                    action: { router.navigate(to: .allFavorites) }
+                    action: { router.navigatePrimary(to: .allFavorites) }
                 )
                 .focused($focusedItem, equals: .favorites)
             }
@@ -182,7 +191,7 @@ struct LeftSidebar: View {
                     label: "Genres",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .genres,
-                    action: { router.navigate(to: .allGenres) }
+                    action: { router.navigatePrimary(to: .allGenres) }
                 )
                 .focused($focusedItem, equals: .genres)
             }
@@ -192,7 +201,7 @@ struct LeftSidebar: View {
                 label: "Folders",
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .folders,
-                action: { router.navigate(to: .folderView) }
+                action: { router.navigatePrimary(to: .folderView) }
             )
             .focused($focusedItem, equals: .folders)
 
@@ -213,7 +222,7 @@ struct LeftSidebar: View {
                     label: viewModel.seerrDisplayName,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .seerr,
-                    action: { router.navigate(to: .seerrDiscover) }
+                    action: { router.navigatePrimary(to: .seerrDiscover) }
                 )
                 .focused($focusedItem, equals: .seerr)
             }
@@ -237,7 +246,7 @@ struct LeftSidebar: View {
                         label: library.name,
                         isFocused: focusedItem == .library(library.id),
                         action: {
-                            router.navigateToLibrary(library)
+                            router.navigatePrimaryToLibrary(library)
                         }
                     )
                     .focused($focusedItem, equals: .library(library.id))

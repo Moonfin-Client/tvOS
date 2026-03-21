@@ -39,6 +39,9 @@ struct FolderBrowseScreen: View {
             router.hideNavbar = true
             viewModel.initialize()
         }
+        .onDisappear {
+            router.hideNavbar = false
+        }
     }
 
     private var folderHeader: some View {
@@ -48,7 +51,7 @@ struct FolderBrowseScreen: View {
                     systemImage: "house",
                     isActive: false,
                     theme: theme,
-                    action: { router.navigate(to: .home) }
+                    action: { router.goBack() }
                 )
 
                 breadcrumbBar

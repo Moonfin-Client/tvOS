@@ -56,6 +56,9 @@ struct LibraryBrowseScreen: View {
             viewModel.initialize()
             router.hideNavbar = true
         }
+        .onDisappear {
+            router.hideNavbar = false
+        }
         .sheet(isPresented: $showSortDialog) {
             FilterSortDialogView(
                 sortOptions: viewModel.sortOptions,
@@ -142,7 +145,7 @@ struct LibraryBrowseScreen: View {
                 systemImage: "house",
                 isActive: false,
                 theme: theme,
-                action: { router.navigate(to: .home) }
+                action: { router.goBack() }
             )
 
             ToolbarIconButton(
