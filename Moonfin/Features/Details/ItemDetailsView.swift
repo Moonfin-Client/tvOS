@@ -602,7 +602,10 @@ struct ItemDetailsView: View {
         let canDeletePlaylist = item.type == .playlist && (item.canDelete ?? false)
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
         let hasMultipleVersions = (item.mediaSources?.count ?? 0) > 1
-        let hasTrailers = (item.localTrailerCount ?? 0) > 0 || !(item.remoteTrailers ?? []).isEmpty
+        let hasTrailers = item.type == .movie
+            || item.type == .series
+            || (item.localTrailerCount ?? 0) > 0
+            || !(item.remoteTrailers ?? []).isEmpty
         let streams = resolvedStreams(for: item)
         let hasAudioStreams = streams.contains { $0.type == .audio }
         let hasSubtitleStreams = streams.contains { $0.type == .subtitle }
@@ -733,47 +736,14 @@ struct ItemDetailsView: View {
     }
 
     private func playTrailer(item: ServerItem) async {
-        do {
-            let trailers = try await viewModel.fetchLocalTrailers(itemId: item.id)
-            if !trailers.isEmpty {
-                await container.playbackCoordinator.startVideoPlayback(items: trailers)
-                router.navigate(to: .videoPlayer)
-                return
-            }
-        } catch { }
-
-        if let remoteTrailers = item.remoteTrailers,
-           let videoId = remoteTrailers.lazy
-            .compactMap({ $0.url })
-            .compactMap(extractYouTubeVideoId)
-            .first {
-            router.navigate(to: .trailerPlayer(videoId: videoId))
-        }
-    }
-
-    private func extractYouTubeVideoId(from urlString: String) -> String? {
-        guard let url = URL(string: urlString) else { return nil }
-        guard let host = url.host?.lowercased() else { return nil }
-        if host.contains("youtu.be") {
-            let id = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            return id.isEmpty ? nil : id
-        }
-
-        if host.contains("youtube.com") {
-            if let queryId = URLComponents(url: url, resolvingAgainstBaseURL: false)?
-                .queryItems?.first(where: { $0.name == "v" })?.value,
-               !queryId.isEmpty {
-                return queryId
-            }
-
-            let pathComponents = url.path.split(separator: "/")
-            if pathComponents.count >= 2,
-               (pathComponents[0] == "embed" || pathComponents[0] == "shorts") {
-                let id = String(pathComponents[1])
-                return id.isEmpty ? nil : id
-            }
-        }
-        return nil
+        guard let server = container.serverRepository.currentServer.value else { return }
+        let client = container.serverClientFactory.client(for: server)
+        _ = await TrailerPlaybackHelper.playTrailer(
+            for: item,
+            client: client,
+            playbackCoordinator: container.playbackCoordinator,
+            router: router
+        )
     }
 
     private func playTrackNext(_ track: ServerItem) {

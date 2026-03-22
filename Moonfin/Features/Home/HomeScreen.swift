@@ -22,6 +22,9 @@ struct HomeScreen: View {
     @State private var mediaBarRequestFocus = false
     @State private var focusTask: Task<Void, Never>?
     @State private var sentinelTask: Task<Void, Never>?
+    @State private var mediaBarTrailerPreviewTask: Task<Void, Never>?
+    @State private var lastPreviewedMediaBarItemId: String?
+    @StateObject private var inlineTrailerPlayer = VLCPlayerWrapper()
     @Environment(\.resetFocus) private var resetFocus
     @State private var focusFirstRowTrigger: Int = 0
     @State private var suppressTopNavbarUntilMediaBarFocus = false
@@ -102,11 +105,21 @@ struct HomeScreen: View {
                         ratingsViewModel: viewModel.mediaBarRatingsViewModel,
                         userPreferences: container.userPreferences,
                         screenHeight: geo.size.height,
+                        inlineTrailerPlayer: inlineTrailerPlayer,
                         onItemSelected: { item in
+                            cancelMediaBarTrailerPreview()
                             navigatedFromMediaBar = true
                             router.navigate(to: .itemDetails(itemId: item.id))
                         },
+                        onPlayTrailer: { item in
+                            cancelMediaBarTrailerPreview()
+                            Task { await playTrailerFromMediaBar(item) }
+                        },
+                        onFocusedItemChanged: { item in
+                            scheduleMediaBarTrailerPreview(for: item)
+                        },
                         onNavigateDown: {
+                            cancelMediaBarTrailerPreview()
                             sentinelEnabled = false
                             isMediaBarMode = false
                             sentinelTask?.cancel()
@@ -164,6 +177,7 @@ struct HomeScreen: View {
         .onDisappear {
             focusTask?.cancel()
             sentinelTask?.cancel()
+            cancelMediaBarTrailerPreview()
             viewModel.mediaBarViewModel.cleanup()
             suppressTopNavbarUntilMediaBarFocus = false
             suppressTopNavbarInRows = false
@@ -417,6 +431,103 @@ struct HomeScreen: View {
         default:
             break
         }
+    }
+
+    private func scheduleMediaBarTrailerPreview(for item: MediaBarSlideItem?) {
+        cancelMediaBarTrailerPreview()
+        guard container.userPreferences[UserPreferences.mediaBarTrailerPreview] else { return }
+        guard isMediaBarMode, let item else { return }
+        guard lastPreviewedMediaBarItemId != item.id else { return }
+
+        mediaBarTrailerPreviewTask = Task {
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            guard !Task.isCancelled else { return }
+            guard isMediaBarMode else { return }
+            guard container.userPreferences[UserPreferences.mediaBarTrailerPreview] else { return }
+            await playTrailerFromMediaBar(item)
+        }
+    }
+
+    private func cancelMediaBarTrailerPreview() {
+        mediaBarTrailerPreviewTask?.cancel()
+        mediaBarTrailerPreviewTask = nil
+        inlineTrailerPlayer.stop()
+    }
+
+    private func resolvePreviewStreamWithTimeout(
+        videoId: String,
+        timeoutSeconds: Double = 8
+    ) async -> YouTubeStreamResolver.ResolveResult? {
+        await withTaskGroup(of: YouTubeStreamResolver.ResolveResult?.self) { group in
+            group.addTask {
+                await YouTubeStreamResolver.resolveStream(videoId: videoId, mode: .preview)
+            }
+            group.addTask {
+                let nanos = UInt64(timeoutSeconds * 1_000_000_000)
+                try? await Task.sleep(nanoseconds: nanos)
+                return nil
+            }
+
+            let first = await group.next() ?? nil
+            group.cancelAll()
+            return first
+        }
+    }
+
+    private func mediaBarPreviewVLCOptions(isYouTube: Bool) -> [String: Any] {
+        var options: [String: Any] = [
+            "http-reconnect": 1,
+            "network-caching": 2500,
+            "file-caching": 1500,
+            "live-caching": 2500,
+        ]
+
+        if !container.userPreferences[UserPreferences.previewAudioEnabled] {
+            options["no-audio"] = true
+        }
+
+        if isYouTube {
+            options["http-user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+            options["http-referrer"] = "https://www.youtube.com/"
+        }
+
+        return options
+    }
+
+    private func playTrailerFromMediaBar(_ slideItem: MediaBarSlideItem) async {
+        guard let server = container.serverRepository.currentServer.value else { return }
+        let client = container.serverClientFactory.client(for: server)
+        guard let item = try? await client.userLibraryApi.getItem(itemId: slideItem.id) else { return }
+
+        if let localTrailers = try? await client.userLibraryApi.getLocalTrailers(itemId: item.id),
+           let localTrailer = localTrailers.first {
+            let resolver = ServerStreamResolver(client: client)
+            let mediaSourceId = localTrailer.mediaSources?.first?.id
+            if let stream = try? await resolver.resolve(
+                item: localTrailer,
+                mediaSourceId: mediaSourceId,
+                maxBitrate: nil,
+                maxAudioChannels: nil,
+                audioStreamIndex: nil,
+                subtitleStreamIndex: nil,
+                startTimeTicks: nil
+            ) {
+                guard !Task.isCancelled, isMediaBarMode else { return }
+                inlineTrailerPlayer.configureNetworkOptions(mediaBarPreviewVLCOptions(isYouTube: false))
+                await inlineTrailerPlayer.play(streamUrl: stream.url)
+                lastPreviewedMediaBarItemId = slideItem.id
+                return
+            }
+        }
+
+        guard let videoId = TrailerPlaybackHelper.firstYouTubeVideoId(from: item.remoteTrailers) else { return }
+        guard let result = await resolvePreviewStreamWithTimeout(videoId: videoId) else { return }
+        guard let streamInfo = result.stream else { return }
+        guard !Task.isCancelled, isMediaBarMode else { return }
+
+        inlineTrailerPlayer.configureNetworkOptions(mediaBarPreviewVLCOptions(isYouTube: true))
+        await inlineTrailerPlayer.play(url: streamInfo.url)
+        lastPreviewedMediaBarItemId = slideItem.id
     }
 }
 

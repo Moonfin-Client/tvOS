@@ -59,6 +59,7 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     private(set) var mediaPlayer: VLCMediaPlayer?
     private(set) var videoView: UIView?
     private var subtitleOptions: [String: Any] = [:]
+    private var networkOptions: [String: Any] = [:]
     private var lastTimeUpdate: CFAbsoluteTime = 0
     private let timeUpdateInterval: CFAbsoluteTime = 0.25
 
@@ -76,6 +77,10 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
 
     func configureSubtitleAppearance(_ options: [String: Any]) {
         subtitleOptions = options
+    }
+
+    func configureNetworkOptions(_ options: [String: Any]) {
+        networkOptions = options
     }
 
     func configureAudioSession() {
@@ -99,8 +104,12 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         }
 
         let media = VLCMedia(url: url)
-        if !subtitleOptions.isEmpty {
-            media.addOptions(subtitleOptions)
+        var allOptions = subtitleOptions
+        for (key, value) in networkOptions {
+            allOptions[key] = value
+        }
+        if !allOptions.isEmpty {
+            media.addOptions(allOptions)
         }
         player.media = media
         mediaPlayer = player

@@ -558,11 +558,6 @@ final class ItemDetailViewModel: ObservableObject {
         } catch { }
     }
 
-    func fetchLocalTrailers(itemId: String) async throws -> [ServerItem] {
-        guard let client else { return [] }
-        return try await client.userLibraryApi.getLocalTrailers(itemId: itemId)
-    }
-
     private func loadSpecialFeatures(itemId: String, client: MediaServerClient) async {
         do {
             let items = try await client.userLibraryApi.getSpecialFeatures(itemId: itemId)

@@ -7,12 +7,42 @@ struct MediaBarView: View {
     let userPreferences: UserPreferences
     let screenHeight: CGFloat
     let onItemSelected: (MediaBarSlideItem) -> Void
+    let onPlayTrailer: (MediaBarSlideItem) -> Void
+    let onFocusedItemChanged: (MediaBarSlideItem?) -> Void
     let onNavigateDown: () -> Void
     let onNavigateUp: () -> Void
     @Binding var requestFocus: Bool
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
+    @ObservedObject var inlineTrailerPlayer: VLCPlayerWrapper
+    @State private var inlineVideoOpacity: Double = 0
+
+    init(
+        viewModel: MediaBarViewModel,
+        ratingsViewModel: MediaBarRatingsViewModel,
+        userPreferences: UserPreferences,
+        screenHeight: CGFloat,
+        inlineTrailerPlayer: VLCPlayerWrapper,
+        onItemSelected: @escaping (MediaBarSlideItem) -> Void,
+        onPlayTrailer: @escaping (MediaBarSlideItem) -> Void,
+        onFocusedItemChanged: @escaping (MediaBarSlideItem?) -> Void,
+        onNavigateDown: @escaping () -> Void,
+        onNavigateUp: @escaping () -> Void,
+        requestFocus: Binding<Bool>
+    ) {
+        self.viewModel = viewModel
+        self.ratingsViewModel = ratingsViewModel
+        self.userPreferences = userPreferences
+        self.screenHeight = screenHeight
+        self.inlineTrailerPlayer = inlineTrailerPlayer
+        self.onItemSelected = onItemSelected
+        self.onPlayTrailer = onPlayTrailer
+        self.onFocusedItemChanged = onFocusedItemChanged
+        self.onNavigateDown = onNavigateDown
+        self.onNavigateUp = onNavigateUp
+        self._requestFocus = requestFocus
+    }
 
     private let navbarClearance: CGFloat = 120
 
@@ -109,8 +139,19 @@ struct MediaBarView: View {
                             onItemSelected(item)
                         }
                     }
+                    .onPlayPauseCommand {
+                        if let item = viewModel.currentItem {
+                            onPlayTrailer(item)
+                        }
+                    }
                     .onChange(of: isFocused) { focused in
                         viewModel.setFocused(focused)
+                        onFocusedItemChanged(focused ? viewModel.currentItem : nil)
+                    }
+                    .onChange(of: viewModel.currentIndex) { _ in
+                        if isFocused {
+                            onFocusedItemChanged(viewModel.currentItem)
+                        }
                     }
                     .onChange(of: requestFocus) { shouldFocus in
                         if shouldFocus {
@@ -143,9 +184,25 @@ struct MediaBarView: View {
                 .opacity(index == viewModel.currentIndex ? 1 : 0)
                 .animation(.easeInOut(duration: 0.8), value: viewModel.currentIndex)
             }
+
+            VLCPlayerView(player: inlineTrailerPlayer)
+                .opacity(inlineVideoOpacity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
+        .onChange(of: inlineTrailerPlayer.state) { newState in
+            switch newState {
+            case .playing:
+                withAnimation(.easeInOut(duration: 1.5)) { inlineVideoOpacity = 1.0 }
+            case .stopped, .ended, .idle, .error:
+                withAnimation(.easeInOut(duration: 0.6)) { inlineVideoOpacity = 0 }
+            default:
+                break
+            }
+        }
+        .onChange(of: viewModel.currentIndex) { _ in
+            withAnimation(.easeInOut(duration: 0.4)) { inlineVideoOpacity = 0 }
+        }
     }
 
     private func visibleIndices(current: Int, total: Int) -> [Int] {

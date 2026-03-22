@@ -1,4 +1,5 @@
 import SwiftUI
+import AVKit
 
 struct RootView: View {
     @EnvironmentObject var container: AppContainer
@@ -337,6 +338,8 @@ struct MainNavigationView: View {
             )
         case .videoPlayer:
             videoPlayerDestination
+        case .trailerPlayer(let videoId, let startSeconds, let segmentsJson):
+            TrailerPlayerScreen(videoId: videoId, startSeconds: startSeconds, segmentsJson: segmentsJson)
         case .liveTvGuide:
             LiveTvGuideView(container: container)
         case .liveTvRecordings:
@@ -414,6 +417,247 @@ struct PlaceholderView: View {
             Text(title)
                 .font(.titleXl)
                 .foregroundColor(theme.colorScheme.onBackground)
+        }
+    }
+}
+
+struct TrailerPlayerScreen: View {
+    let videoId: String
+    let startSeconds: Double
+    let segmentsJson: String
+
+    @EnvironmentObject var router: NavigationRouter
+    @StateObject private var player = VLCPlayerWrapper()
+    @State private var hasStartedPlayback = false
+    @State private var resolveError: String?
+    @State private var resolverDiagnostics: String = ""
+    @State private var sponsorSegments: [SponsorBlockAPI.Segment] = []
+    @State private var effectiveStartSeconds: Double = 0
+    @State private var playbackWatchdogTask: Task<Void, Never>?
+    @State private var resolvedStreamURL: URL?
+    @State private var didTryNativeFallback = false
+    @State private var nativePlayer: AVPlayer?
+
+    private var isLoading: Bool {
+        switch player.state {
+        case .idle, .opening, .buffering:
+            return resolveError == nil
+        default:
+            return false
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            if let nativePlayer {
+                VideoPlayer(player: nativePlayer)
+                    .ignoresSafeArea()
+                    .onAppear {
+                        nativePlayer.play()
+                    }
+            } else {
+                VLCPlayerView(player: player)
+                    .ignoresSafeArea()
+                    .id(videoId)
+            }
+
+            if isLoading {
+                VStack(spacing: SpaceTokens.spaceMd) {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                    Text("Loading trailer...")
+                        .font(.titleLg)
+                        .foregroundColor(.white.opacity(0.9))
+                }
+            }
+
+            if let resolveError {
+                ScrollView {
+                    VStack(spacing: SpaceTokens.spaceMd) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.title2xl)
+                            .foregroundColor(.yellow)
+                        Text("Unable to play trailer")
+                            .font(.titleLg)
+                            .foregroundColor(.white)
+                        Text(resolveError)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.75))
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, SpaceTokens.spaceXl)
+                    }
+                    .padding(SpaceTokens.spaceLg)
+                }
+            }
+
+            if player.state == .error && resolveError == nil {
+                VStack(spacing: SpaceTokens.spaceMd) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.title2xl)
+                        .foregroundColor(.yellow)
+                    Text("Trailer playback failed")
+                        .font(.titleLg)
+                        .foregroundColor(.white)
+                }
+                .padding(SpaceTokens.spaceLg)
+            }
+        }
+        .onAppear {
+            router.pushNavbarHidden()
+        }
+        .onDisappear {
+            playbackWatchdogTask?.cancel()
+            player.stop()
+            nativePlayer?.pause()
+            nativePlayer = nil
+            router.popNavbarHidden()
+        }
+        .task {
+            guard !hasStartedPlayback else { return }
+            hasStartedPlayback = true
+            await resolveAndPlay()
+        }
+        .onChange(of: player.currentTime) { currentTime in
+            skipSponsorSegmentsIfNeeded(currentTime: currentTime)
+        }
+        .onChange(of: player.state) { newState in
+            if newState == .error && resolveError == nil {
+                attemptNativeFallbackOrFail(reason: "VLC state: \(stateDescription(newState))")
+            }
+        }
+        .onExitCommand {
+            playbackWatchdogTask?.cancel()
+            player.stop()
+            nativePlayer?.pause()
+            router.goBack()
+        }
+    }
+
+    private func resolveAndPlay() async {
+        async let streamTask = YouTubeStreamResolver.resolveStream(videoId: videoId)
+        async let segmentsTask = SponsorBlockAPI.getSkipSegments(videoId: videoId)
+
+        let segments = await segmentsTask
+        sponsorSegments = segments
+        effectiveStartSeconds = SponsorBlockAPI.calculateStartTime(segments: segments)
+
+        let result = await streamTask
+        resolverDiagnostics = result.diagnostics
+        guard let streamInfo = result.stream else {
+            resolveError = "Could not resolve a playable stream.\n\n\(result.diagnostics)"
+            return
+        }
+        resolvedStreamURL = streamInfo.url
+
+        player.configureNetworkOptions([
+            "http-user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+            "http-referrer": "https://www.youtube.com/",
+            "http-reconnect": 1,
+            "network-caching": 1000,
+        ])
+
+        if effectiveStartSeconds > 0 {
+            await player.play(streamUrl: streamInfo.url.absoluteString, startPosition: effectiveStartSeconds)
+        } else {
+            await player.play(url: streamInfo.url)
+        }
+
+        startPlaybackWatchdog(streamURL: streamInfo.url)
+    }
+
+    private func startPlaybackWatchdog(streamURL: URL) {
+        playbackWatchdogTask?.cancel()
+        playbackWatchdogTask = Task { @MainActor in
+            for _ in 0..<60 {
+                try? await Task.sleep(nanoseconds: 250_000_000)
+
+                if Task.isCancelled { return }
+
+                switch player.state {
+                case .playing, .paused:
+                    return
+                case .error:
+                    attemptNativeFallbackOrFail(
+                        reason: "VLC state: \(stateDescription(player.state))\nURL host: \(streamURL.host ?? "unknown")"
+                    )
+                    return
+                default:
+                    break
+                }
+            }
+
+            if resolveError == nil {
+                attemptNativeFallbackOrFail(
+                    reason: "VLC state: \(stateDescription(player.state))\nURL host: \(streamURL.host ?? "unknown")"
+                )
+            }
+        }
+    }
+
+    @MainActor
+    private func attemptNativeFallbackOrFail(reason: String) {
+        if !didTryNativeFallback, let streamURL = resolvedStreamURL {
+            didTryNativeFallback = true
+            player.stop()
+
+            let av = AVPlayer(url: streamURL)
+            nativePlayer = av
+
+            if effectiveStartSeconds > 0 {
+                let target = CMTime(seconds: effectiveStartSeconds, preferredTimescale: 600)
+                av.seek(to: target)
+            }
+            av.play()
+
+            playbackWatchdogTask?.cancel()
+            playbackWatchdogTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 6_000_000_000)
+                guard !Task.isCancelled else { return }
+                guard let player = nativePlayer else { return }
+
+                if player.timeControlStatus != .playing {
+                    resolveError = "Trailer playback failed after stream resolution.\n\n\(reason)\nAVPlayer status: \(player.status == .failed ? "failed" : "not-playing")\n\n\(resolverDiagnostics)"
+                }
+            }
+            return
+        }
+
+        if resolveError == nil {
+            resolveError = "Trailer playback failed after stream resolution.\n\n\(reason)\n\n\(resolverDiagnostics)"
+        }
+    }
+
+    private func stateDescription(_ state: VLCPlayerState) -> String {
+        switch state {
+        case .idle:
+            return "idle"
+        case .opening:
+            return "opening"
+        case .buffering(let progress):
+            return String(format: "buffering(%.2f)", progress)
+        case .playing:
+            return "playing"
+        case .paused:
+            return "paused"
+        case .stopped:
+            return "stopped"
+        case .ended:
+            return "ended"
+        case .error:
+            return "error"
+        }
+    }
+
+    private func skipSponsorSegmentsIfNeeded(currentTime: TimeInterval) {
+        guard !sponsorSegments.isEmpty else { return }
+        for segment in sponsorSegments {
+            if currentTime >= segment.startTime && currentTime < segment.endTime - 0.5 {
+                player.seek(to: segment.endTime)
+                break
+            }
         }
     }
 }
