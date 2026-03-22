@@ -19,6 +19,7 @@ final class VideoPlayerViewModel: ObservableObject {
 
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
+    private var castPrefetchTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
     private let overlayTimeout: TimeInterval = 5
     private let endTimeFormatter: DateFormatter = {
@@ -38,6 +39,7 @@ final class VideoPlayerViewModel: ObservableObject {
     private var _cachedChapters: [ServerChapter] = []
     private var _cachedCast: [ServerPerson] = []
     private var _cachedEntryId: String?
+    private var _castResolvedItemId: String?
 
     var player: VLCPlayerWrapper { playbackManager.player }
 
@@ -46,7 +48,7 @@ final class VideoPlayerViewModel: ObservableObject {
     var chapters: [ServerChapter] { ensureItemCache(); return _cachedChapters }
     var castMembers: [ServerPerson] { ensureItemCache(); return _cachedCast }
     var hasChapters: Bool { chapters.count > 1 }
-    var hasCast: Bool { !castMembers.isEmpty }
+    var hasCast: Bool { playbackManager.currentEntry?.item != nil }
 
     var nextQueueItem: ServerItem? {
         playbackManager.nextEntry?.item
@@ -123,6 +125,7 @@ final class VideoPlayerViewModel: ObservableObject {
             .sink { [weak self] _ in
                 self?._cachedEntryId = nil
                 self?.objectWillChange.send()
+                self?.prefetchCastForCurrentItem()
             }
             .store(in: &cancellables)
 
@@ -131,12 +134,15 @@ final class VideoPlayerViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+
+        prefetchCastForCurrentItem()
     }
 
     private func ensureItemCache() {
         let entryId = playbackManager.currentEntry?.id
         guard entryId != _cachedEntryId else { return }
         _cachedEntryId = entryId
+        _castResolvedItemId = nil
 
         guard let item = playbackManager.currentEntry?.item else {
             _cachedTitle = ""
@@ -158,8 +164,7 @@ final class VideoPlayerViewModel: ObservableObject {
         _cachedSubtitle = item.seriesName != nil ? item.name : ""
         _cachedChapters = item.chapters ?? []
 
-        let people = item.people ?? []
-        _cachedCast = people.filter { $0.type == .actor || $0.type == .guestStar }
+        _cachedCast = item.people ?? []
     }
 
     func showOverlay() {
@@ -296,15 +301,73 @@ final class VideoPlayerViewModel: ObservableObject {
     }
 
     func showCastList() {
-        overlayVisible = false
-        castListVisible = true
         hideTask?.cancel()
+        castPrefetchTask?.cancel()
+        Task {
+            let hasCast = await ensureCastForCurrentItem()
+            if hasCast {
+                overlayVisible = false
+                castListVisible = true
+            } else {
+                castListVisible = false
+                overlayVisible = true
+                resetHideTimer()
+            }
+        }
+    }
+
+    private func prefetchCastForCurrentItem() {
+        castPrefetchTask?.cancel()
+        guard playbackManager.currentEntry?.item != nil else { return }
+        castPrefetchTask = Task { [weak self] in
+            guard let self else { return }
+            _ = await self.ensureCastForCurrentItem()
+        }
     }
 
     func hideCastList() {
         castListVisible = false
         overlayVisible = true
         resetHideTimer()
+    }
+
+    private func ensureCastForCurrentItem() async -> Bool {
+        ensureItemCache()
+        guard let item = playbackManager.currentEntry?.item else {
+            return false
+        }
+
+        if _castResolvedItemId == item.id {
+            return !_cachedCast.isEmpty
+        }
+
+        if !_cachedCast.isEmpty {
+            _castResolvedItemId = item.id
+            return true
+        }
+
+        if let refreshed = await playbackManager.fetchItem(itemId: item.id),
+           let people = refreshed.people,
+           !people.isEmpty {
+            _cachedCast = people
+            _castResolvedItemId = item.id
+            objectWillChange.send()
+            return true
+        }
+
+        if item.type == .episode,
+           let seriesId = item.seriesId,
+           let series = await playbackManager.fetchItem(itemId: seriesId),
+           let seriesPeople = series.people,
+           !seriesPeople.isEmpty {
+            _cachedCast = seriesPeople
+            _castResolvedItemId = item.id
+            objectWillChange.send()
+            return true
+        }
+
+        _castResolvedItemId = item.id
+        return false
     }
 
     func showPlaybackInfo() {

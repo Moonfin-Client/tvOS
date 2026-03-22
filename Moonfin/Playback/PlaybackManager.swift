@@ -67,6 +67,10 @@ final class PlaybackManager: ObservableObject {
         return client.imageApi.getItemImageUrl(itemId: personId, imageType: .primary, maxWidth: maxWidth, maxHeight: maxHeight, tag: tag)
     }
 
+    func fetchItem(itemId: String) async -> ServerItem? {
+        try? await client.userLibraryApi.getItem(itemId: itemId)
+    }
+
     init(
         player: VLCPlayerWrapper,
         client: MediaServerClient,

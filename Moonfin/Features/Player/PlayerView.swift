@@ -112,6 +112,7 @@ struct VideoPlayerScreen: View {
         .animation(.easeInOut(duration: 0.3), value: nextUpManager.promptState)
         .onAppear {
             viewModel.showOverlay()
+            reclaimGestureFocus()
         }
         .onChange(of: viewModel.overlayVisible) { _ in restoreFocusIfNeeded() }
         .onChange(of: viewModel.audioSelectionVisible) { _ in restoreFocusIfNeeded() }
@@ -127,9 +128,19 @@ struct VideoPlayerScreen: View {
             || viewModel.chapterSelectionVisible || viewModel.castListVisible
             || viewModel.playbackInfoVisible
         if !anyVisible {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                gestureLayerFocused = true
-            }
+            reclaimGestureFocus()
+        }
+    }
+
+    private func reclaimGestureFocus() {
+        DispatchQueue.main.async {
+            gestureLayerFocused = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            gestureLayerFocused = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            gestureLayerFocused = true
         }
     }
 
@@ -144,6 +155,11 @@ struct VideoPlayerScreen: View {
                 if !viewModel.overlayVisible { viewModel.showOverlay() }
             }
             .onMoveCommand { _ in
+                if !viewModel.overlayVisible {
+                    viewModel.showOverlay()
+                }
+            }
+            .onTapGesture {
                 if !viewModel.overlayVisible {
                     viewModel.showOverlay()
                 }
@@ -192,13 +208,18 @@ struct VideoPlayerScreen: View {
                 .ignoresSafeArea()
 
             CastListView(viewModel: viewModel) { person in
-                viewModel.hideCastList()
                 guard let personId = person.id else { return }
                 let serverId = viewModel.playbackManager.currentEntry?.item.serverId
+                viewModel.hideCastList()
                 dismiss()
-                router.navigate(to: .itemDetails(itemId: personId, serverId: serverId))
+                DispatchQueue.main.async {
+                    router.navigate(to: .itemDetails(itemId: personId, serverId: serverId))
+                }
             }
         }
         .transition(.opacity)
+        .onExitCommand {
+            viewModel.hideCastList()
+        }
     }
 }

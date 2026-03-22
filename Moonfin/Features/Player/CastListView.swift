@@ -45,7 +45,9 @@ struct CastListView: View {
     }
 
     private func castCard(person: ServerPerson, index: Int) -> some View {
-        Button {
+        let isFocused = focusedIndex == index
+
+        return Button {
             onSelectPerson(person)
         } label: {
             VStack(spacing: SpaceTokens.spaceXs) {
@@ -83,7 +85,12 @@ struct CastListView: View {
                         .lineLimit(1)
                 }
             }
+            .padding(8)
             .frame(width: 130)
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .stroke(Color.white, lineWidth: isFocused ? 2.5 : 0)
+            )
         }
         .buttonStyle(PopupCardButtonStyle())
         .focused($focusedIndex, equals: index)

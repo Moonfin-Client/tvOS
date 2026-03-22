@@ -7,6 +7,8 @@ struct PlayerOverlayView: View {
 
     private static let headerGradientColors: [Color] = [.black.opacity(0.8), .clear]
     private static let controlsGradientColors: [Color] = [.clear, .black.opacity(0.85)]
+    private static let rowButtonSpacing: CGFloat = 20
+    private static let buttonSize: CGFloat = 46
 
     enum ControlFocus: Hashable {
         case seekbar
@@ -104,7 +106,7 @@ struct PlayerOverlayView: View {
     }
 
     private var primaryControlRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Self.rowButtonSpacing) {
             overlayButton(icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill",
                           focus: .playPause) {
                 viewModel.togglePlayPause()
@@ -175,7 +177,7 @@ struct PlayerOverlayView: View {
     }
 
     private var secondaryControlRow: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Self.rowButtonSpacing) {
             if !viewModel.isLiveTV {
                 if viewModel.playbackManager.hasPrevious {
                     overlayButton(icon: "backward.end.fill", focus: .previous) {
@@ -236,7 +238,7 @@ struct PlayerOverlayView: View {
         }) {
             Image(systemName: icon)
                 .font(.system(size: 20, weight: .medium))
-                .frame(width: 40, height: 40)
+                .frame(width: Self.buttonSize, height: Self.buttonSize)
                 .contentShape(Circle())
         }
         .buttonStyle(PlayerButtonStyle())
