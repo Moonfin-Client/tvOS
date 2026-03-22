@@ -5,12 +5,17 @@ import Combine
 final class AudioNowPlayingViewModel: ObservableObject {
     @Published private(set) var lyrics: [LyricLine] = []
     @Published private(set) var isLoadingLyrics = false
+    @Published private(set) var isFavorite = false
+    @Published var isScrubbing = false
+    @Published var scrubPosition: Float = 0
     @Published var showQueue = false
     @Published var showLyrics = false
 
     let audioManager: AudioManager
     private let client: MediaServerClient
     private var lyricsTask: Task<Void, Never>?
+    private var lyricsItemId: String?
+    private var scrubSeekTask: Task<Void, Never>?
     private var trackObserver: AnyCancellable?
     private var playerObserver: AnyCancellable?
 
@@ -36,26 +41,39 @@ final class AudioNowPlayingViewModel: ObservableObject {
         return audioManager.albumArtUrl(for: item)
     }
 
-    var positionText: String { formatTime(player.currentTime) }
+    var positionText: String { formatTime(displayCurrentTime) }
 
     var remainingText: String {
-        let remaining = player.duration - player.currentTime
+        let remaining = player.duration - displayCurrentTime
         guard remaining > 0 else { return "0:00" }
         return "-\(formatTime(remaining))"
     }
 
+    var displayedProgress: Float {
+        isScrubbing ? scrubPosition : player.position
+    }
+
     var hasLyrics: Bool { !lyrics.isEmpty }
+
+    var lyricsAvailable: Bool {
+        hasLyrics || isLoadingLyrics || (currentItem?.hasLyrics == true && supportsLyrics)
+    }
 
     var supportsLyrics: Bool {
         client.serverType.featureSupport.isSupported(.lyrics)
     }
 
+    private var displayCurrentTime: TimeInterval {
+        isScrubbing ? TimeInterval(scrubPosition) * player.duration : player.currentTime
+    }
+
     init(audioManager: AudioManager, client: MediaServerClient) {
         self.audioManager = audioManager
         self.client = client
+        syncCurrentItemState()
         observeTrackChanges()
         observePlayerUpdates()
-        loadLyricsForCurrentTrack()
+        clearLyricsState()
     }
 
     func toggleQueue() {
@@ -66,11 +84,21 @@ final class AudioNowPlayingViewModel: ObservableObject {
     }
 
     func toggleLyrics() {
-        guard hasLyrics else { return }
-        showLyrics.toggle()
         if showLyrics {
-            showQueue = false
+            showLyrics = false
+            return
         }
+
+        showQueue = false
+
+        if hasLyrics {
+            showLyrics = true
+            return
+        }
+
+        guard currentItem?.hasLyrics == true, supportsLyrics else { return }
+        showLyrics = true
+        loadLyricsForCurrentTrack(autoShow: true)
     }
 
     func togglePlayPause() {
@@ -93,13 +121,48 @@ final class AudioNowPlayingViewModel: ObservableObject {
         await audioManager.playEntry(at: index)
     }
 
-    func loadLyricsForCurrentTrack() {
-        lyricsTask?.cancel()
-        lyrics = []
+    func toggleFavorite() {
+        isFavorite.toggle()
+    }
 
+    func beginScrub() {
+        isScrubbing = true
+        scrubPosition = player.position
+    }
+
+    func updateScrub(by delta: Float) {
+        scrubPosition = max(0, min(1, scrubPosition + delta))
+        debouncedSeek()
+    }
+
+    func commitScrub() {
+        guard isScrubbing else { return }
+        scrubSeekTask?.cancel()
+        let target = TimeInterval(scrubPosition) * player.duration
+        playbackManager.seek(to: target)
+        isScrubbing = false
+    }
+
+    func cancelScrub() {
+        scrubSeekTask?.cancel()
+        isScrubbing = false
+    }
+
+    func loadLyricsForCurrentTrack(autoShow: Bool = false) {
         guard let item = currentItem,
               item.hasLyrics == true,
-              supportsLyrics else { return }
+              supportsLyrics else {
+            if autoShow { showLyrics = false }
+            clearLyricsState()
+            return
+        }
+
+        if item.id == lyricsItemId, (hasLyrics || isLoadingLyrics) { return }
+        lyricsItemId = item.id
+
+        lyricsTask?.cancel()
+        lyrics = []
+        isLoadingLyrics = false
 
         isLoadingLyrics = true
         lyricsTask = Task {
@@ -107,8 +170,10 @@ final class AudioNowPlayingViewModel: ObservableObject {
                 let result = try await client.lyricsApi.getLyrics(itemId: item.id)
                 guard !Task.isCancelled else { return }
                 lyrics = result.lyrics
+                if autoShow { showLyrics = !result.lyrics.isEmpty }
             } catch {
                 lyrics = []
+                if autoShow { showLyrics = false }
             }
             isLoadingLyrics = false
         }
@@ -120,8 +185,10 @@ final class AudioNowPlayingViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
                 self.showLyrics = false
+                self.cancelScrub()
+                self.syncCurrentItemState()
+                self.clearLyricsState()
                 self.objectWillChange.send()
-                self.loadLyricsForCurrentTrack()
             }
     }
 
@@ -131,6 +198,27 @@ final class AudioNowPlayingViewModel: ObservableObject {
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
             }
+    }
+
+    private func debouncedSeek() {
+        scrubSeekTask?.cancel()
+        scrubSeekTask = Task {
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            guard !Task.isCancelled, isScrubbing else { return }
+            let target = TimeInterval(scrubPosition) * player.duration
+            playbackManager.seek(to: target)
+        }
+    }
+
+    private func syncCurrentItemState() {
+        isFavorite = currentItem?.userData?.isFavorite ?? false
+    }
+
+    private func clearLyricsState() {
+        lyricsTask?.cancel()
+        lyricsItemId = nil
+        isLoadingLyrics = false
+        lyrics = []
     }
 
     private func formatTime(_ seconds: TimeInterval) -> String {

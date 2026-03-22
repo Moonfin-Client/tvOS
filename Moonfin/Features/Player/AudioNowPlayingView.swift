@@ -2,8 +2,14 @@ import SwiftUI
 import NukeUI
 
 struct AudioNowPlayingView: View {
+    private enum FocusTarget: Hashable {
+        case lyrics, queue, favorite, seekbar, shuffle, previous, playPause, next, `repeat`
+    }
+
     @ObservedObject var viewModel: AudioNowPlayingViewModel
     @EnvironmentObject private var theme: MoonfinTheme
+    @EnvironmentObject private var router: NavigationRouter
+    @FocusState private var focusedTarget: FocusTarget?
 
     var body: some View {
         ZStack {
@@ -11,6 +17,23 @@ struct AudioNowPlayingView: View {
             contentLayer
         }
         .ignoresSafeArea()
+        .defaultFocus($focusedTarget, .playPause)
+        .onExitCommand {
+            if viewModel.showQueue {
+                viewModel.showQueue = false
+                return
+            }
+            if viewModel.showLyrics {
+                viewModel.showLyrics = false
+                return
+            }
+            router.goBack()
+        }
+        .onChange(of: focusedTarget) { newValue in
+            if newValue != .seekbar && viewModel.isScrubbing {
+                viewModel.commitScrub()
+            }
+        }
     }
 
     private var backgroundLayer: some View {
@@ -36,47 +59,39 @@ struct AudioNowPlayingView: View {
         GeometryReader { geo in
             let totalPadding = SpaceTokens.space3xl * 3
             let panelWidth = max(360, (geo.size.width - totalPadding) / 2)
+            let seekbarSidePadding = max(CGFloat(48), SpaceTokens.space3xl)
 
             VStack(spacing: SpaceTokens.spaceMd) {
-                HStack {
-                    Spacer()
-
-                    if viewModel.hasLyrics {
-                        modeToggleButton(
-                            icon: "quote.bubble",
-                            isActive: viewModel.showLyrics,
-                            action: viewModel.toggleLyrics
-                        )
-                    }
-
-                    modeToggleButton(
-                        icon: "music.note.list",
-                        isActive: viewModel.showQueue,
-                        action: viewModel.toggleQueue
-                    )
-                }
-
                 Spacer(minLength: 0)
 
                 HStack(spacing: SpaceTokens.space3xl) {
                     VStack(spacing: SpaceTokens.spaceLg) {
                         albumArt
                         trackInfo
-                        progressSection
-                        controlButtons
                     }
                     .frame(width: panelWidth)
 
                     if viewModel.showQueue {
                         queueList
-                            .frame(width: panelWidth)
+                            .frame(width: panelWidth, height: 560)
+                            .padding(.top, SpaceTokens.spaceSm)
                             .transition(.move(edge: .trailing).combined(with: .opacity))
                     } else if viewModel.showLyrics {
                         lyricsPanel
-                            .frame(width: panelWidth)
+                            .frame(width: panelWidth, height: 560)
+                            .padding(.top, SpaceTokens.spaceSm)
                             .transition(.opacity)
                     }
                 }
+
+                modeAndFavoriteRow
+
+                progressSection
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, seekbarSidePadding)
+
+                controlButtons
+                    .frame(width: panelWidth)
 
                 Spacer(minLength: 0)
             }
@@ -85,6 +100,28 @@ struct AudioNowPlayingView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: viewModel.showQueue)
         .animation(.easeInOut(duration: 0.3), value: viewModel.showLyrics)
+    }
+
+    private var modeAndFavoriteRow: some View {
+        HStack(spacing: SpaceTokens.spaceXl) {
+            if viewModel.lyricsAvailable {
+                modeToggleButton(
+                    icon: "quote.bubble",
+                    focus: .lyrics,
+                    isActive: viewModel.showLyrics,
+                    action: viewModel.toggleLyrics
+                )
+            }
+
+            favoriteButton
+
+            modeToggleButton(
+                icon: "music.note.list",
+                focus: .queue,
+                isActive: viewModel.showQueue,
+                action: viewModel.toggleQueue
+            )
+        }
     }
 
     private var lyricsPanel: some View {
@@ -112,8 +149,17 @@ struct AudioNowPlayingView: View {
         .padding(SpaceTokens.spaceMd)
         .background(
             RoundedRectangle(cornerRadius: RadiusTokens.large)
-                .fill(theme.colorScheme.surface.opacity(0.6))
+                .fill(theme.colorScheme.surface.opacity(0.26))
         )
+        .opacity(0.88)
+        .mask(
+            LinearGradient(
+                colors: [Color.clear, Color.white, Color.white, Color.clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .clipped()
     }
 
     private var albumArt: some View {
@@ -174,11 +220,32 @@ struct AudioNowPlayingView: View {
     private var progressSection: some View {
         VStack(spacing: SpaceTokens.spaceXs) {
             PlayerSeekBar(
-                progress: viewModel.player.position,
-                bufferProgress: 0,
-                isFocused: false
+                progress: viewModel.displayedProgress,
+                bufferProgress: viewModel.player.bufferProgress,
+                isFocused: focusedTarget == .seekbar
             )
-            .frame(height: 6)
+            .focusable()
+            .focused($focusedTarget, equals: .seekbar)
+            .onMoveCommand { direction in
+                switch direction {
+                case .left:
+                    if !viewModel.isScrubbing { viewModel.beginScrub() }
+                    viewModel.updateScrub(by: -0.02)
+                case .right:
+                    if !viewModel.isScrubbing { viewModel.beginScrub() }
+                    viewModel.updateScrub(by: 0.02)
+                default:
+                    break
+                }
+            }
+            .onPlayPauseCommand {
+                if viewModel.isScrubbing {
+                    viewModel.commitScrub()
+                } else {
+                    viewModel.togglePlayPause()
+                }
+            }
+            .frame(height: 12)
 
             HStack {
                 Text(viewModel.positionText)
@@ -192,38 +259,68 @@ struct AudioNowPlayingView: View {
         }
     }
 
+    private var favoriteButton: some View {
+        audioControlButton(
+            icon: viewModel.isFavorite ? "heart.fill" : "heart",
+            focus: .favorite,
+            size: 22,
+            defaultTint: .white,
+            focusedBackground: .white
+        ) {
+            viewModel.toggleFavorite()
+        }
+    }
+
     private var controlButtons: some View {
-        HStack(spacing: SpaceTokens.spaceXl) {
+        HStack(spacing: 56) {
             audioControlButton(
                 icon: "shuffle",
+                focus: .shuffle,
                 isAssetIcon: true,
-                tint: viewModel.audioManager.playbackOrder == .shuffle ? theme.accent : .white.opacity(0.7)
+                defaultTint: viewModel.audioManager.playbackOrder == .shuffle ? theme.accent : .white.opacity(0.7),
+                focusedBackground: .white
             ) {
                 viewModel.audioManager.toggleShuffle()
             }
 
-            audioControlButton(icon: "backward.fill") {
+            audioControlButton(
+                icon: "backward.end.fill",
+                focus: .previous,
+                defaultTint: .white,
+                focusedBackground: .white
+            ) {
                 Task { await viewModel.previous() }
             }
 
             audioControlButton(
                 icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill",
-                size: 40
+                focus: .playPause,
+                size: 40,
+                defaultTint: .white,
+                focusedBackground: theme.accent
             ) {
                 viewModel.togglePlayPause()
             }
 
-            audioControlButton(icon: "forward.fill") {
+            audioControlButton(
+                icon: "forward.end.fill",
+                focus: .next,
+                defaultTint: .white,
+                focusedBackground: .white
+            ) {
                 Task { await viewModel.next() }
             }
 
             audioControlButton(
                 icon: repeatIcon,
-                tint: viewModel.audioManager.repeatMode != .off ? theme.accent : .white.opacity(0.7)
+                focus: .`repeat`,
+                defaultTint: viewModel.audioManager.repeatMode != .off ? theme.accent : .white.opacity(0.7),
+                focusedBackground: .white
             ) {
                 viewModel.audioManager.toggleRepeatMode()
             }
         }
+        .padding(.top, 28)
     }
 
     private var repeatIcon: String {
@@ -235,12 +332,16 @@ struct AudioNowPlayingView: View {
 
     private func audioControlButton(
         icon: String,
+        focus: FocusTarget,
         isAssetIcon: Bool = false,
         size: CGFloat = 28,
-        tint: Color = .white,
+        defaultTint: Color = .white,
+        focusedBackground: Color,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        let isFocused = focusedTarget == focus
+
+        return Button(action: action) {
             Group {
                 if isAssetIcon {
                     Image(icon)
@@ -253,24 +354,32 @@ struct AudioNowPlayingView: View {
                         .font(.system(size: size))
                 }
             }
-            .foregroundColor(tint)
-            .frame(width: 60, height: 60)
+            .foregroundColor(isFocused ? .black : defaultTint)
+            .frame(width: 68, height: 68)
+            .background(
+                Circle()
+                    .fill(isFocused ? focusedBackground : .clear)
+            )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CleanButtonStyle())
+        .focused($focusedTarget, equals: focus)
     }
 
-    private func modeToggleButton(icon: String, isActive: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private func modeToggleButton(icon: String, focus: FocusTarget, isActive: Bool, action: @escaping () -> Void) -> some View {
+        let isFocused = focusedTarget == focus
+
+        return Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 21, weight: .semibold))
-                .foregroundColor(isActive ? theme.accent : .white.opacity(0.85))
+                .foregroundColor(isFocused ? .black : (isActive ? theme.accent : .white.opacity(0.85)))
                 .frame(width: 52, height: 52)
                 .background(
-                    RoundedRectangle(cornerRadius: RadiusTokens.medium)
-                        .fill(isActive ? Color.white.opacity(0.16) : Color.white.opacity(0.08))
+                    Circle()
+                        .fill(isFocused ? Color.white : (isActive ? Color.white.opacity(0.16) : Color.white.opacity(0.08)))
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CleanButtonStyle())
+        .focused($focusedTarget, equals: focus)
     }
 
     private var queueList: some View {
@@ -292,12 +401,23 @@ struct AudioNowPlayingView: View {
                     }
                 }
             }
+            .frame(maxHeight: 420)
         }
+        .padding(.top, SpaceTokens.spaceMd)
         .padding(SpaceTokens.spaceMd)
         .background(
             RoundedRectangle(cornerRadius: RadiusTokens.large)
-                .fill(theme.colorScheme.surface.opacity(0.6))
+                .fill(theme.colorScheme.surface.opacity(0.22))
         )
+        .opacity(0.86)
+        .mask(
+            LinearGradient(
+                colors: [Color.clear, Color.white, Color.white, Color.clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .clipped()
     }
 
     private func queueRow(entry: QueueEntry, index: Int) -> some View {
@@ -305,49 +425,9 @@ struct AudioNowPlayingView: View {
         return Button {
             Task { await viewModel.playQueueItem(at: index) }
         } label: {
-            HStack(spacing: SpaceTokens.spaceSm) {
-                if isCurrent {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .font(.captionXs)
-                        .foregroundColor(theme.accent)
-                        .frame(width: 20)
-                } else {
-                    Text("\(index + 1)")
-                        .font(.captionXs)
-                        .foregroundColor(.white.opacity(0.4))
-                        .frame(width: 20)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.item.name)
-                        .font(.bodySm)
-                        .foregroundColor(isCurrent ? theme.accent : .white)
-                        .lineLimit(1)
-
-                    if let artist = entry.item.artists?.first {
-                        Text(artist)
-                            .font(.captionXs)
-                            .foregroundColor(.white.opacity(0.5))
-                            .lineLimit(1)
-                    }
-                }
-
-                Spacer()
-
-                if let ticks = entry.item.runTimeTicks {
-                    Text(formatDuration(ticks))
-                        .font(.captionXs)
-                        .foregroundColor(.white.opacity(0.4))
-                }
-            }
-            .padding(.horizontal, SpaceTokens.spaceSm)
-            .padding(.vertical, SpaceTokens.spaceXs)
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isCurrent ? Color.white.opacity(0.1) : .clear)
-            )
+            QueueRowLabel(entry: entry, index: index, isCurrent: isCurrent, duration: formatDuration(entry.item.runTimeTicks ?? 0))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CleanButtonStyle())
     }
 
     private func formatDuration(_ ticks: Int64) -> String {
@@ -355,5 +435,75 @@ struct AudioNowPlayingView: View {
         let m = totalSeconds / 60
         let s = totalSeconds % 60
         return String(format: "%d:%02d", m, s)
+    }
+}
+
+private struct QueueRowLabel: View {
+    let entry: QueueEntry
+    let index: Int
+    let isCurrent: Bool
+    let duration: String
+
+    @EnvironmentObject private var theme: MoonfinTheme
+    @Environment(\.isFocused) private var isFocused
+
+    private var primaryText: Color {
+        if isFocused { return .black }
+        return isCurrent ? theme.accent : .white
+    }
+
+    private var secondaryText: Color {
+        isFocused ? .black.opacity(0.72) : .white.opacity(0.5)
+    }
+
+    var body: some View {
+        HStack(spacing: SpaceTokens.spaceSm) {
+            if isCurrent {
+                Image(systemName: "speaker.wave.2.fill")
+                    .font(.captionXs)
+                    .foregroundColor(isFocused ? .black : theme.accent)
+                    .frame(width: 20)
+            } else {
+                Text("\(index + 1)")
+                    .font(.captionXs)
+                    .foregroundColor(isFocused ? .black.opacity(0.7) : .white.opacity(0.4))
+                    .frame(width: 20)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.item.name)
+                    .font(.bodySm)
+                    .foregroundColor(primaryText)
+                    .lineLimit(1)
+
+                if let artist = entry.item.artists?.first {
+                    Text(artist)
+                        .font(.captionXs)
+                        .foregroundColor(secondaryText)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            if entry.item.runTimeTicks != nil {
+                Text(duration)
+                    .font(.captionXs)
+                    .foregroundColor(isFocused ? .black.opacity(0.7) : .white.opacity(0.4))
+            }
+        }
+        .padding(.horizontal, SpaceTokens.spaceSm)
+        .padding(.vertical, SpaceTokens.spaceXs)
+        .background {
+            if isFocused {
+                Capsule()
+                    .fill(Color.white.opacity(0.92))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+            } else {
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(isCurrent ? Color.white.opacity(0.1) : .clear)
+            }
+        }
     }
 }

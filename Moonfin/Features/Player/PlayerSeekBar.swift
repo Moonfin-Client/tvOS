@@ -15,9 +15,12 @@ struct PlayerSeekBar: View {
         GeometryReader { geo in
             let width = geo.size.width
             let clamped = CGFloat(max(0, min(1, progress)))
-            let progressWidth = max(0, clamped * width)
             let bufferWidth = max(0, CGFloat(max(0, min(1, bufferProgress))) * width)
             let activeBarHeight = isFocused ? focusedBarHeight : barHeight
+            let knobRadius = knobDiameter / 2
+            let knobTravelWidth = max(0, width - knobDiameter)
+            let knobX = knobRadius + clamped * knobTravelWidth
+            let progressWidth = isFocused ? knobX : max(0, clamped * width)
 
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: activeBarHeight / 2)
@@ -38,7 +41,7 @@ struct PlayerSeekBar: View {
                     Circle()
                         .fill(theme.colorScheme.rangeControlKnob)
                         .frame(width: knobDiameter, height: knobDiameter)
-                        .offset(x: progressWidth - knobDiameter / 2)
+                        .offset(x: knobX - knobRadius)
                 }
             }
             .frame(maxHeight: .infinity, alignment: .center)

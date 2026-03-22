@@ -234,9 +234,16 @@ final class PlaybackManager: ObservableObject {
 
         playbackState = .resolving
 
+        let isAudioItem = entry.item.mediaType == .audio
+
         let audioIndex = entry.audioStreamIndex
-        let subtitleIndex = entry.subtitleStreamIndex
-            ?? (subtitleConfigurator.shouldDefaultToNone ? -1 : nil)
+        let subtitleIndex: Int?
+        if isAudioItem {
+            subtitleIndex = -1
+        } else {
+            subtitleIndex = entry.subtitleStreamIndex
+                ?? (subtitleConfigurator.shouldDefaultToNone ? -1 : nil)
+        }
 
         do {
             async let segmentsTask: () = loadSegmentsIfSupported(for: entry.item.id)
@@ -272,7 +279,11 @@ final class PlaybackManager: ObservableObject {
                 startSeconds = 0
             }
 
-            player.configureSubtitleAppearance(subtitleConfigurator.mediaOptions())
+            if isAudioItem {
+                player.configureSubtitleAppearance([:])
+            } else {
+                player.configureSubtitleAppearance(subtitleConfigurator.mediaOptions())
+            }
 
             let delay = preferences[UserPreferences.videoStartDelay]
             if delay > 0 {
@@ -300,7 +311,12 @@ final class PlaybackManager: ObservableObject {
         guard let nextItem = nextEntry?.item else { return }
         if prefetchedItemId == nextItem.id { return }
 
-        let subtitleIndex: Int? = subtitleConfigurator.shouldDefaultToNone ? -1 : nil
+        let subtitleIndex: Int?
+        if nextItem.mediaType == .audio {
+            subtitleIndex = -1
+        } else {
+            subtitleIndex = subtitleConfigurator.shouldDefaultToNone ? -1 : nil
+        }
         let mediaSourceId = nextEntry?.mediaSourceId
 
         prefetchTask = Task { [weak self, streamResolver] in
@@ -383,13 +399,14 @@ final class PlaybackManager: ObservableObject {
 
     private func reportPlaybackStart() async {
         guard let entry = currentEntry, let stream = currentStreamInfo else { return }
+        let reportSubtitleIndex = entry.item.mediaType == .audio ? nil : stream.defaultSubtitleStreamIndex
         let report = PlaybackStartReport(
             itemId: entry.item.id,
             playSessionId: stream.playSessionId,
             mediaSourceId: stream.mediaSourceId,
             positionTicks: entry.startPositionTicks,
             audioStreamIndex: stream.defaultAudioStreamIndex,
-            subtitleStreamIndex: stream.defaultSubtitleStreamIndex,
+            subtitleStreamIndex: reportSubtitleIndex,
             playMethod: stream.playMethod,
             isPaused: false,
             isMuted: false,
@@ -412,13 +429,14 @@ final class PlaybackManager: ObservableObject {
     private func reportPlaybackProgress() async {
         guard let entry = currentEntry, let stream = currentStreamInfo else { return }
         let ticks = Int64(player.currentTime * 10_000_000)
+        let reportSubtitleIndex = entry.item.mediaType == .audio ? nil : stream.defaultSubtitleStreamIndex
         let report = PlaybackProgressReport(
             itemId: entry.item.id,
             playSessionId: stream.playSessionId,
             mediaSourceId: stream.mediaSourceId,
             positionTicks: ticks,
             audioStreamIndex: stream.defaultAudioStreamIndex,
-            subtitleStreamIndex: stream.defaultSubtitleStreamIndex,
+            subtitleStreamIndex: reportSubtitleIndex,
             playMethod: stream.playMethod,
             isPaused: player.state == .paused,
             isMuted: false,

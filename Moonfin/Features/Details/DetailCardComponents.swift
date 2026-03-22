@@ -225,21 +225,21 @@ struct FocusableTrackRow: View {
             if let num = track.indexNumber {
                 Text("\(num)")
                     .font(.bodyMd)
-                    .foregroundColor(isFocused ? .white : theme.colorScheme.listCaption)
+                    .foregroundColor(isFocused ? .black.opacity(0.75) : theme.colorScheme.listCaption)
                     .frame(width: 40, alignment: .trailing)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(track.name)
                     .font(.bodyMd)
-                    .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground)
+                    .foregroundColor(isFocused ? .black : theme.colorScheme.onBackground)
                     .lineLimit(1)
 
                 let artistText = (track.artists?.joined(separator: ", ") ?? track.albumArtist ?? "")
                 if !artistText.isEmpty {
                     Text(artistText)
                         .font(.bodySm)
-                        .foregroundColor(isFocused ? .white.opacity(0.8) : theme.colorScheme.listCaption)
+                        .foregroundColor(isFocused ? .black.opacity(0.7) : theme.colorScheme.listCaption)
                         .lineLimit(1)
                 }
             }
@@ -249,12 +249,12 @@ struct FocusableTrackRow: View {
             if let ticks = track.runTimeTicks {
                 Text(RuntimeFormatter.format(ticks: ticks))
                     .font(.bodySm)
-                    .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.listCaption)
+                    .foregroundColor(isFocused ? .black.opacity(0.65) : theme.colorScheme.listCaption)
             }
 
             Image(systemName: "chevron.right.2")
                 .font(.bodySm)
-                .foregroundColor(isFocused ? .white.opacity(0.85) : theme.colorScheme.listCaption.opacity(0.75))
+                .foregroundColor(isFocused ? .black.opacity(0.75) : theme.colorScheme.listCaption.opacity(0.75))
         }
         .padding(.horizontal, SpaceTokens.spaceMd)
         .padding(.vertical, SpaceTokens.spaceSm)
@@ -262,7 +262,7 @@ struct FocusableTrackRow: View {
             RoundedRectangle(cornerRadius: RadiusTokens.small)
                 .fill(
                     isFocused
-                        ? theme.accent
+                        ? Color.white
                         : (rowIndex.isMultiple(of: 2) ? Color.clear : Color.white.opacity(0.04))
                 )
         )

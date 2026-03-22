@@ -35,32 +35,62 @@ final class ServerStreamResolver: StreamResolver {
 
         let isLiveTv = item.type == .liveTvChannel
 
-        let request = PlaybackInfoRequest(
-            userId: userId,
-            mediaSourceId: mediaSourceId,
-            audioStreamIndex: audioStreamIndex,
-            subtitleStreamIndex: subtitleStreamIndex,
-            maxStreamingBitrate: maxBitrate,
-            maxAudioChannels: maxAudioChannels,
-            startTimeTicks: startTimeTicks,
-            autoOpenLiveStream: isLiveTv
-        )
-
-        let result: PlaybackInfoResult
-        do {
-            result = try await client.playbackApi.getPlaybackInfo(itemId: item.id, request: request)
-        } catch {
-            if isLiveTv {
-                return buildLiveTvFallbackStream(item: item, userId: userId)
+        let shouldRetryLyricsPath = item.mediaType == .audio && item.hasLyrics == true
+        var subtitleCandidates: [Int?] = [subtitleStreamIndex]
+        if shouldRetryLyricsPath {
+            if subtitleStreamIndex != -1 {
+                subtitleCandidates.append(-1)
             }
-            throw error
+            if subtitleStreamIndex != nil {
+                subtitleCandidates.append(nil)
+            }
         }
 
-        if let errorCode = result.errorCode {
+        var result: PlaybackInfoResult?
+        var lastError: Error?
+        for (attempt, candidateSubtitleIndex) in subtitleCandidates.enumerated() {
+            let request = PlaybackInfoRequest(
+                userId: userId,
+                mediaSourceId: mediaSourceId,
+                audioStreamIndex: audioStreamIndex,
+                subtitleStreamIndex: candidateSubtitleIndex,
+                maxStreamingBitrate: maxBitrate,
+                maxAudioChannels: maxAudioChannels,
+                startTimeTicks: startTimeTicks,
+                autoOpenLiveStream: isLiveTv
+            )
+
+            do {
+                let attemptResult = try await client.playbackApi.getPlaybackInfo(itemId: item.id, request: request)
+                if let errorCode = attemptResult.errorCode {
+                    if shouldRetryLyricsPath && attempt < subtitleCandidates.count - 1 {
+                        continue
+                    }
+                    if isLiveTv {
+                        return buildLiveTvFallbackStream(item: item, userId: userId)
+                    }
+                    throw StreamResolverError.playbackError(errorCode)
+                }
+
+                result = attemptResult
+                break
+            } catch {
+                lastError = error
+                if shouldRetryLyricsPath && attempt < subtitleCandidates.count - 1 {
+                    continue
+                }
+                if isLiveTv {
+                    return buildLiveTvFallbackStream(item: item, userId: userId)
+                }
+                throw error
+            }
+        }
+
+        guard let result else {
             if isLiveTv {
                 return buildLiveTvFallbackStream(item: item, userId: userId)
             }
-            throw StreamResolverError.playbackError(errorCode)
+            throw lastError ?? StreamResolverError.noCompatibleStream
         }
 
         let sources = result.mediaSources
@@ -76,11 +106,13 @@ final class ServerStreamResolver: StreamResolver {
         let playSessionId = result.playSessionId ?? ""
         let audioStreams = source.mediaStreams.filter { $0.type == .audio }
         let subtitleStreams = source.mediaStreams.filter { $0.type == .subtitle }
-        let container = source.container ?? "ts"
+        let container = normalizedContainer(source.container, isAudio: item.mediaType == .audio)
 
         let streamInfo: StreamInfo
 
-        if source.supportsDirectPlay && !isLiveTv {
+        let preferTranscodedAudioForLyrics = item.mediaType == .audio && item.hasLyrics == true
+
+        if source.supportsDirectPlay && !isLiveTv && !(preferTranscodedAudioForLyrics && source.transcodingUrl != nil) {
             let params = StreamParams(
                 userId: userId,
                 mediaSourceId: source.id,
@@ -198,5 +230,16 @@ final class ServerStreamResolver: StreamResolver {
         }
         if path.hasPrefix("http") { return path }
         return "\(base)\(path)"
+    }
+
+    private func normalizedContainer(_ rawContainer: String?, isAudio: Bool) -> String {
+        let fallback = isAudio ? "mp3" : "ts"
+        guard let rawContainer else { return fallback }
+        let first = rawContainer
+            .split(separator: ",")
+            .first?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let first, !first.isEmpty else { return fallback }
+        return first
     }
 }

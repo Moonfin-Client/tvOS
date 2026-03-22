@@ -111,7 +111,9 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     }
 
     func play(streamUrl: String, startPosition: TimeInterval = 0) async {
-        guard let url = URL(string: streamUrl) else { return }
+        guard let url = URL(string: streamUrl) else {
+            return
+        }
         if startPosition > 0 {
             pendingSeekPosition = startPosition
         }

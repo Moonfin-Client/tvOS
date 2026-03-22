@@ -36,13 +36,21 @@ enum MediaType: String, Codable, CaseIterable {
     }
 }
 
-enum StreamType: String, Codable {
+enum StreamType: String, Codable, CaseIterable {
     case video = "Video"
     case audio = "Audio"
     case subtitle = "Subtitle"
     case embeddedImage = "EmbeddedImage"
     case attachment = "Attachment"
     case data = "Data"
+    case unknown = "Unknown"
+
+    init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer().decode(String.self)
+        self = StreamType.allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(value) == .orderedSame
+        }) ?? .unknown
+    }
 }
 
 enum PersonType: String, Codable {
@@ -78,7 +86,7 @@ enum PlayMethod: String, Codable {
     case transcode = "Transcode"
 }
 
-enum MediaProtocol: String, Codable {
+enum MediaProtocol: String, Codable, CaseIterable {
     case file = "File"
     case http = "Http"
     case rtmp = "Rtmp"
@@ -86,12 +94,28 @@ enum MediaProtocol: String, Codable {
     case udp = "Udp"
     case rtp = "Rtp"
     case ftp = "Ftp"
+    case unknown = "Unknown"
+
+    init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer().decode(String.self)
+        self = MediaProtocol.allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(value) == .orderedSame
+        }) ?? .unknown
+    }
 }
 
-enum PlaybackErrorCode: String, Codable {
+enum PlaybackErrorCode: String, Codable, CaseIterable {
     case notAllowed = "NotAllowed"
     case noCompatibleStream = "NoCompatibleStream"
     case rateLimitExceeded = "RateLimitExceeded"
+    case unknown = "Unknown"
+
+    init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer().decode(String.self)
+        self = PlaybackErrorCode.allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(value) == .orderedSame
+        }) ?? .unknown
+    }
 }
 
 enum ItemSortBy: String, Codable {
