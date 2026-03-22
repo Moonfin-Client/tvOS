@@ -214,6 +214,12 @@ struct JellyfinUserLibraryApi: ServerUserLibraryApi {
         return result.items
     }
 
+    func getLocalTrailers(itemId: String) async throws -> [ServerItem] {
+        let userId = client.userId ?? ""
+        let result: ItemsResult = try await client.request("/Users/\(userId)/Items/\(itemId)/LocalTrailers")
+        return result.items
+    }
+
     func deleteItem(itemId: String) async throws {
         try await client.requestVoid("/Items/\(itemId)", method: "DELETE")
     }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum TrackSelectorMode: String, Identifiable {
-    case audio, subtitle
+    case audio, subtitle, version
     var id: String { rawValue }
 }
 
@@ -59,13 +59,20 @@ struct TrackSelectorDialog: View {
 
             HStack {
                 Spacer()
-                FocusableDialogButton(title: "Cancel", action: onDismiss)
+                DetailsGlassDialogButton(title: "Cancel", action: onDismiss)
                 Spacer()
             }
             .padding(.vertical, SpaceTokens.spaceMd)
         }
         .frame(width: 600)
-        .background(theme.colorScheme.surface)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.large)
+                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                )
+        )
         .cornerRadius(RadiusTokens.large)
     }
 
@@ -104,20 +111,20 @@ struct FocusableTrackSelectorRow: View {
             HStack(spacing: SpaceTokens.spaceSm) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-                    .foregroundColor(isFocused ? .black : (isSelected ? theme.accent : theme.colorScheme.onBackground.opacity(0.5)))
+                    .foregroundColor(isSelected ? theme.accent : theme.colorScheme.onBackground.opacity(0.5))
 
                 VStack(alignment: .leading, spacing: 2) {
                     ScrollView(.horizontal, showsIndicators: false) {
                         Text(label)
                             .font(.bodyLg)
-                            .foregroundColor(isFocused ? .black : theme.colorScheme.onBackground)
+                            .foregroundColor(theme.colorScheme.onBackground)
                             .lineLimit(1)
                             .fixedSize(horizontal: true, vertical: false)
                     }
                     if let detail {
                         Text(detail)
                             .font(.captionXs)
-                            .foregroundColor(isFocused ? .black.opacity(0.6) : theme.colorScheme.onBackground.opacity(0.5))
+                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
                     }
                 }
 
@@ -127,10 +134,93 @@ struct FocusableTrackSelectorRow: View {
             .padding(.vertical, SpaceTokens.spaceMd)
             .background(
                 RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused ? Color.white : Color.clear)
+                    .fill(isFocused ? Color.white.opacity(0.24) : Color.white.opacity(0.08))
+                    .background(
+                        RoundedRectangle(cornerRadius: RadiusTokens.small)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RadiusTokens.small)
+                            .stroke(isFocused ? Color.white.opacity(0.9) : Color.white.opacity(0.22), lineWidth: isFocused ? 2 : 1)
+                    )
             )
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
+    }
+}
+
+// MARK: - Version Selector
+
+struct VersionSelectorDialog: View {
+    let sources: [ServerMediaSource]
+    let selectedIndex: Int
+    let onSelect: (Int) -> Void
+    let onDismiss: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedIndex: Int?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(Strings.selectVersion)
+                .font(.title2xl)
+                .foregroundColor(theme.colorScheme.onBackground)
+                .padding(.horizontal, SpaceTokens.spaceLg)
+                .padding(.top, SpaceTokens.spaceLg)
+                .padding(.bottom, SpaceTokens.spaceMd)
+
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: SpaceTokens.spaceXs) {
+                    ForEach(Array(sources.enumerated()), id: \.offset) { index, source in
+                        FocusableTrackSelectorRow(
+                            label: source.name ?? "Version \(index + 1)",
+                            detail: versionDetail(source),
+                            isSelected: selectedIndex == index,
+                            action: { onSelect(index) }
+                        )
+                        .focused($focusedIndex, equals: index)
+                    }
+                }
+                .padding(.horizontal, SpaceTokens.spaceSm)
+            }
+
+            HStack {
+                Spacer()
+                DetailsGlassDialogButton(title: "Cancel", action: onDismiss)
+                Spacer()
+            }
+            .padding(.vertical, SpaceTokens.spaceMd)
+        }
+        .frame(width: 600)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.large)
+                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                )
+        )
+        .cornerRadius(RadiusTokens.large)
+    }
+
+    private func versionDetail(_ source: ServerMediaSource) -> String? {
+        var parts: [String] = []
+        if let container = source.container, !container.isEmpty {
+            parts.append(container.uppercased())
+        }
+        if let bitrate = source.bitrate {
+            let mbps = Double(bitrate) / 1_000_000
+            parts.append(String(format: "%.1f Mbps", mbps))
+        }
+        if let video = source.mediaStreams.first(where: { $0.type == .video }) {
+            if let w = video.width, let h = video.height {
+                parts.append("\(w)×\(h)")
+            }
+            if let codec = video.codec {
+                parts.append(codec.uppercased())
+            }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }

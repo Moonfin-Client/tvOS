@@ -30,7 +30,8 @@ final class PlaybackCoordinator: ObservableObject {
         startIndex: Int = 0,
         startPosition: TimeInterval = 0,
         audioStreamIndex: Int? = nil,
-        subtitleStreamIndex: Int? = nil
+        subtitleStreamIndex: Int? = nil,
+        mediaSourceIndex: Int? = nil
     ) async {
         await stopVideoPlayback()
         guard let client else { return }
@@ -42,7 +43,8 @@ final class PlaybackCoordinator: ObservableObject {
             startIndex: startIndex,
             startPosition: startPosition,
             audioStreamIndex: audioStreamIndex,
-            subtitleStreamIndex: subtitleStreamIndex
+            subtitleStreamIndex: subtitleStreamIndex,
+            mediaSourceIndex: mediaSourceIndex
         )
     }
 

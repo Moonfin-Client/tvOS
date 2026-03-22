@@ -15,6 +15,7 @@ struct ItemDetailsView: View {
     @State private var playlistDialogItemIds: [String] = []
     @State private var selectedAudioIndex: Int?
     @State private var selectedSubtitleIndex: Int?
+    @State private var selectedMediaSourceIndex: Int = 0
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -60,37 +61,56 @@ struct ItemDetailsView: View {
         }
         .sheet(item: $showTrackSelector) { mode in
             if let item = viewModel.item {
-                TrackSelectorDialog(
-                    mode: mode,
-                    streams: resolvedStreams(for: item),
-                    selectedIndex: mode == .audio ? selectedAudioIndex : selectedSubtitleIndex,
-                    onSelect: { index in
-                        if mode == .audio {
-                            selectedAudioIndex = index
-                        } else {
-                            selectedSubtitleIndex = index
-                        }
-                        showTrackSelector = nil
-                    },
-                    onDismiss: { showTrackSelector = nil }
-                )
+                if mode == .version {
+                    VersionSelectorDialog(
+                        sources: item.mediaSources ?? [],
+                        selectedIndex: selectedMediaSourceIndex,
+                        onSelect: { index in
+                            selectedMediaSourceIndex = index
+                            selectedAudioIndex = nil
+                            selectedSubtitleIndex = nil
+                            initializeTrackIndices()
+                            showTrackSelector = nil
+                        },
+                        onDismiss: { showTrackSelector = nil }
+                    )
+                } else {
+                    TrackSelectorDialog(
+                        mode: mode,
+                        streams: resolvedStreams(for: item),
+                        selectedIndex: mode == .audio ? selectedAudioIndex : selectedSubtitleIndex,
+                        onSelect: { index in
+                            if mode == .audio {
+                                selectedAudioIndex = index
+                            } else {
+                                selectedSubtitleIndex = index
+                            }
+                            showTrackSelector = nil
+                        },
+                        onDismiss: { showTrackSelector = nil }
+                    )
+                }
             }
         }
-        .fullScreenCover(isPresented: $showAddToPlaylist) {
-            if !playlistDialogItemIds.isEmpty {
-                AddToPlaylistDialog(
-                    itemIds: playlistDialogItemIds,
-                    onDismiss: {
-                        showAddToPlaylist = false
-                        playlistDialogItemIds = []
-                    },
-                    onAdded: {
-                        showAddToPlaylist = false
-                        playlistDialogItemIds = []
-                    }
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black.opacity(0.8))
+        .overlay {
+            if showAddToPlaylist {
+                ZStack {
+                    Color.black.opacity(0.8)
+                        .ignoresSafeArea()
+
+                    AddToPlaylistDialog(
+                        itemIds: playlistDialogItemIds,
+                        onDismiss: {
+                            showAddToPlaylist = false
+                            playlistDialogItemIds = []
+                        },
+                        onAdded: {
+                            showAddToPlaylist = false
+                            playlistDialogItemIds = []
+                        }
+                    )
+                }
+                .focusSection()
             }
         }
         .confirmationDialog(
@@ -113,7 +133,9 @@ struct ItemDetailsView: View {
     }
 
     private func initializeTrackIndices() {
-        guard let source = viewModel.item?.mediaSources?.first else { return }
+        guard let sources = viewModel.item?.mediaSources,
+              selectedMediaSourceIndex < sources.count else { return }
+        let source = sources[selectedMediaSourceIndex]
         if selectedAudioIndex == nil {
             selectedAudioIndex = source.defaultAudioStreamIndex
         }
@@ -123,7 +145,10 @@ struct ItemDetailsView: View {
     }
 
     private func resolvedStreams(for item: ServerItem) -> [ServerMediaStream] {
-        item.mediaStreams ?? item.mediaSources?.first?.mediaStreams ?? []
+        if let sources = item.mediaSources, selectedMediaSourceIndex < sources.count {
+            return sources[selectedMediaSourceIndex].mediaStreams
+        }
+        return item.mediaStreams ?? item.mediaSources?.first?.mediaStreams ?? []
     }
 
     private var backdropLayer: some View {
@@ -576,6 +601,8 @@ struct ItemDetailsView: View {
         let showGoToSeries = item.type == .episode && item.seriesId != nil
         let canDeletePlaylist = item.type == .playlist && (item.canDelete ?? false)
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
+        let hasMultipleVersions = (item.mediaSources?.count ?? 0) > 1
+        let hasTrailers = (item.localTrailerCount ?? 0) > 0 || !(item.remoteTrailers ?? []).isEmpty
         let streams = resolvedStreams(for: item)
         let hasAudioStreams = streams.contains { $0.type == .audio }
         let hasSubtitleStreams = streams.contains { $0.type == .subtitle }
@@ -604,16 +631,6 @@ struct ItemDetailsView: View {
                 },
                 onToggleWatched: { viewModel.toggleWatched() },
                 onToggleFavorite: { viewModel.toggleFavorite() },
-                onGoToSeries: showGoToSeries ? {
-                    if let seriesId = item.seriesId {
-                        router.navigate(to: .itemDetails(itemId: seriesId))
-                    }
-                } : nil,
-                onNextEpisode: hasNextEpisode ? {
-                    if let nextEp = viewModel.nextEpisode {
-                        router.navigate(to: .itemDetails(itemId: nextEp.id, serverId: nextEp.serverId))
-                    }
-                } : nil,
                 onShuffle: isMusicType ? {
                     playAudio(items: viewModel.tracks, shuffle: true)
                 } : nil,
@@ -623,11 +640,27 @@ struct ItemDetailsView: View {
                         playAudio(items: viewModel.instantMixItems)
                     }
                 } : nil,
+                onNextEpisode: hasNextEpisode ? {
+                    if let nextEp = viewModel.nextEpisode {
+                        router.navigate(to: .itemDetails(itemId: nextEp.id, serverId: nextEp.serverId))
+                    }
+                } : nil,
+                onSelectVersion: hasMultipleVersions ? {
+                    showTrackSelector = .version
+                } : nil,
                 onAudioTrack: hasAudioStreams ? {
                     showTrackSelector = .audio
                 } : nil,
                 onSubtitleTrack: hasSubtitleStreams ? {
                     showTrackSelector = .subtitle
+                } : nil,
+                onTrailer: hasTrailers ? {
+                    Task { await playTrailer(item: item) }
+                } : nil,
+                onGoToSeries: showGoToSeries ? {
+                    if let seriesId = item.seriesId {
+                        router.navigate(to: .itemDetails(itemId: seriesId))
+                    }
                 } : nil,
                 onAddToPlaylist: canPlay ? {
                     playlistDialogItemIds = [item.id]
@@ -680,7 +713,8 @@ struct ItemDetailsView: View {
                 startIndex: startIndex,
                 startPosition: startPosition,
                 audioStreamIndex: selectedAudioIndex,
-                subtitleStreamIndex: selectedSubtitleIndex
+                subtitleStreamIndex: selectedSubtitleIndex,
+                mediaSourceIndex: selectedMediaSourceIndex > 0 ? selectedMediaSourceIndex : nil
             )
             router.navigate(to: .videoPlayer)
         }
@@ -696,6 +730,50 @@ struct ItemDetailsView: View {
             )
             router.navigate(to: .nowPlaying)
         }
+    }
+
+    private func playTrailer(item: ServerItem) async {
+        do {
+            let trailers = try await viewModel.fetchLocalTrailers(itemId: item.id)
+            if !trailers.isEmpty {
+                await container.playbackCoordinator.startVideoPlayback(items: trailers)
+                router.navigate(to: .videoPlayer)
+                return
+            }
+        } catch { }
+
+        if let remoteTrailers = item.remoteTrailers,
+           let videoId = remoteTrailers.lazy
+            .compactMap({ $0.url })
+            .compactMap(extractYouTubeVideoId)
+            .first {
+            router.navigate(to: .trailerPlayer(videoId: videoId))
+        }
+    }
+
+    private func extractYouTubeVideoId(from urlString: String) -> String? {
+        guard let url = URL(string: urlString) else { return nil }
+        guard let host = url.host?.lowercased() else { return nil }
+        if host.contains("youtu.be") {
+            let id = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            return id.isEmpty ? nil : id
+        }
+
+        if host.contains("youtube.com") {
+            if let queryId = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first(where: { $0.name == "v" })?.value,
+               !queryId.isEmpty {
+                return queryId
+            }
+
+            let pathComponents = url.path.split(separator: "/")
+            if pathComponents.count >= 2,
+               (pathComponents[0] == "embed" || pathComponents[0] == "shorts") {
+                let id = String(pathComponents[1])
+                return id.isEmpty ? nil : id
+            }
+        }
+        return nil
     }
 
     private func playTrackNext(_ track: ServerItem) {

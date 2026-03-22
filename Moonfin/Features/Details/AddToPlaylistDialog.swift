@@ -14,6 +14,13 @@ struct AddToPlaylistDialog: View {
     @State private var errorMessage: String?
     @FocusState private var focusedId: String?
 
+    private func showCreateView() {
+        showCreateNew = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            focusedId = "textfield"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(showCreateNew ? "New Playlist" : "Add to Playlist")
@@ -39,14 +46,22 @@ struct AddToPlaylistDialog: View {
 
             HStack {
                 Spacer()
-                FocusableDialogButton(title: "Cancel", action: onDismiss)
+                DetailsGlassDialogButton(title: "Cancel", action: onDismiss)
                 Spacer()
             }
             .padding(.vertical, SpaceTokens.spaceMd)
         }
         .frame(width: 600)
-        .background(theme.colorScheme.surface)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .fill(Color(white: 0.12).opacity(0.94))
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.large)
+                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                )
+        )
         .cornerRadius(RadiusTokens.large)
+        .focusSection()
         .onAppear {
             loadPlaylists()
             focusedId = "create"
@@ -69,7 +84,7 @@ struct AddToPlaylistDialog: View {
                         icon: "plus.circle.fill",
                         label: "Create New Playlist",
                         iconColor: theme.accent,
-                        action: { showCreateNew = true }
+                        action: { showCreateView() }
                     )
                     .focused($focusedId, equals: "create")
 
@@ -91,20 +106,33 @@ struct AddToPlaylistDialog: View {
     private var createNewView: some View {
         VStack(spacing: SpaceTokens.spaceMd) {
             TextField("Playlist Name", text: $newPlaylistName)
+                .focused($focusedId, equals: "textfield")
                 .textFieldStyle(.plain)
                 .font(.bodyMd)
-                .padding(SpaceTokens.spaceSm)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(RadiusTokens.small)
+                .foregroundColor(theme.colorScheme.onBackground)
+                .padding(.horizontal, SpaceTokens.spaceLg)
+                .padding(.vertical, SpaceTokens.spaceSm + 4)
+                .background(
+                    RoundedRectangle(cornerRadius: RadiusTokens.large)
+                        .fill(theme.colorScheme.background)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: RadiusTokens.large)
+                        .stroke(
+                            focusedId == "textfield" ? Color.white.opacity(0.9) : Color.white.opacity(0.22),
+                            lineWidth: focusedId == "textfield" ? 2 : 1
+                        )
+                )
                 .padding(.horizontal, SpaceTokens.spaceLg)
 
             HStack(spacing: SpaceTokens.spaceMd) {
-                FocusableDialogButton(title: "Back") {
+                DetailsGlassDialogButton(title: "Back") {
                     showCreateNew = false
                     newPlaylistName = ""
+                    focusedId = "create"
                 }
 
-                FocusableDialogButton(title: "Create") {
+                DetailsGlassDialogButton(title: "Create") {
                     createNewPlaylist()
                 }
                 .disabled(newPlaylistName.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -185,10 +213,10 @@ private struct FocusablePlaylistRow: View {
             HStack(spacing: SpaceTokens.spaceSm) {
                 Image(systemName: icon)
                     .font(.system(size: 22))
-                    .foregroundColor(isFocused ? .black : (iconColor ?? theme.colorScheme.onBackground.opacity(0.6)))
+                    .foregroundColor(iconColor ?? theme.colorScheme.onBackground.opacity(0.6))
                 Text(label)
                     .font(.bodyLg)
-                    .foregroundColor(isFocused ? .black : theme.colorScheme.onBackground)
+                    .foregroundColor(theme.colorScheme.onBackground)
                     .lineLimit(1)
                 Spacer()
             }
@@ -196,8 +224,51 @@ private struct FocusablePlaylistRow: View {
             .padding(.vertical, SpaceTokens.spaceMd)
             .background(
                 RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused ? Color.white : Color.clear)
+                    .fill(isFocused ? Color.white.opacity(0.24) : Color.white.opacity(0.08))
+                    .background(
+                        RoundedRectangle(cornerRadius: RadiusTokens.small)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RadiusTokens.small)
+                            .stroke(isFocused ? Color.white.opacity(0.9) : Color.white.opacity(0.22), lineWidth: isFocused ? 2 : 1)
+                    )
             )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+    }
+}
+
+struct DetailsGlassDialogButton: View {
+    let title: String
+    let action: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @Environment(\.isEnabled) private var isEnabled
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.bodyMd)
+                .fontWeight(.medium)
+                .foregroundColor(isFocused ? .white : theme.colorScheme.onBackground)
+                .padding(.horizontal, SpaceTokens.spaceLg)
+                .padding(.vertical, SpaceTokens.spaceSm)
+                .background(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .fill(isFocused ? Color.white.opacity(0.26) : Color.white.opacity(0.08))
+                        .background(
+                            RoundedRectangle(cornerRadius: RadiusTokens.small)
+                                .fill(.ultraThinMaterial)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: RadiusTokens.small)
+                                .stroke(isFocused ? Color.white.opacity(0.92) : Color.white.opacity(0.24), lineWidth: isFocused ? 2 : 1)
+                        )
+                )
+                .opacity(isEnabled ? 1.0 : 0.45)
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)

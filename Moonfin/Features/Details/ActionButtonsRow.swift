@@ -1,8 +1,8 @@
 import SwiftUI
 
 enum ActionButtonID: Hashable {
-    case resume, play, shuffle, instantMix, nextEpisode, watched, favorite, goToSeries
-    case audioTrack, subtitleTrack, addToPlaylist, delete
+    case resume, play, shuffle, instantMix, nextEpisode, selectVersion
+    case audioTrack, subtitleTrack, trailer, watched, favorite, addToPlaylist, goToSeries, delete
 }
 
 struct ActionButtonsRow: View {
@@ -16,129 +16,146 @@ struct ActionButtonsRow: View {
     let onResume: () -> Void
     let onToggleWatched: () -> Void
     let onToggleFavorite: () -> Void
-    let onGoToSeries: (() -> Void)?
-    let onNextEpisode: (() -> Void)?
     let onShuffle: (() -> Void)?
     let onInstantMix: (() -> Void)?
+    let onNextEpisode: (() -> Void)?
+    let onSelectVersion: (() -> Void)?
     let onAudioTrack: (() -> Void)?
     let onSubtitleTrack: (() -> Void)?
+    let onTrailer: (() -> Void)?
+    let onGoToSeries: (() -> Void)?
     let onAddToPlaylist: (() -> Void)?
     let onDelete: (() -> Void)?
 
     var body: some View {
-        HStack {
-            Spacer()
-            HStack(alignment: .top, spacing: SpaceTokens.spaceMd) {
-                if canResume {
-                    ActionButton(
-                        label: "Resume",
-                        icon: "play.fill",
-                        detail: resumePositionText.map { "at \($0)" },
-                        action: onResume
-                    )
-                    .focused(focusedButton, equals: .resume)
-                }
-
+        HStack(alignment: .top, spacing: SpaceTokens.space3xl) {
+            if canResume {
                 ActionButton(
-                    label: canResume ? "Restart" : "Play",
-                    icon: canResume ? "arrow.counterclockwise" : "play.fill",
-                    action: onPlay
+                    label: "Resume",
+                    icon: "play.fill",
+                    detail: resumePositionText.map { "at \($0)" },
+                    action: onResume
                 )
-                .focused(focusedButton, equals: .play)
-
-                if let onShuffle {
-                    ActionButton(
-                        label: "Shuffle",
-                        icon: "shuffle",
-                        isAssetIcon: true,
-                        action: onShuffle
-                    )
-                    .focused(focusedButton, equals: .shuffle)
-                }
-
-                if let onInstantMix {
-                    ActionButton(
-                        label: "Instant Mix",
-                        icon: "wand.and.stars",
-                        action: onInstantMix
-                    )
-                    .focused(focusedButton, equals: .instantMix)
-                }
-
-                if let onNextEpisode {
-                    ActionButton(
-                        label: "Next",
-                        icon: "forward.fill",
-                        action: onNextEpisode
-                    )
-                    .focused(focusedButton, equals: .nextEpisode)
-                }
-
-                ActionButton(
-                    label: isPlayed ? "Watched" : "Unwatched",
-                    icon: "checkmark",
-                    isActive: isPlayed,
-                    activeColor: Color(hex: 0x2196F3),
-                    action: onToggleWatched
-                )
-                .focused(focusedButton, equals: .watched)
-
-                ActionButton(
-                    label: isFavorite ? "Favorited" : "Favorite",
-                    icon: isFavorite ? "heart.fill" : "heart",
-                    isActive: isFavorite,
-                    activeColor: Color(hex: 0xFF4757),
-                    action: onToggleFavorite
-                )
-                .focused(focusedButton, equals: .favorite)
-
-                if let onGoToSeries {
-                    ActionButton(
-                        label: "Go to Series",
-                        icon: "tv",
-                        action: onGoToSeries
-                    )
-                    .focused(focusedButton, equals: .goToSeries)
-                }
-
-                if let onAudioTrack {
-                    ActionButton(
-                        label: "Audio",
-                        icon: "speaker.wave.2",
-                        action: onAudioTrack
-                    )
-                    .focused(focusedButton, equals: .audioTrack)
-                }
-
-                if let onSubtitleTrack {
-                    ActionButton(
-                        label: "Subtitles",
-                        icon: "captions.bubble",
-                        action: onSubtitleTrack
-                    )
-                    .focused(focusedButton, equals: .subtitleTrack)
-                }
-
-                if let onAddToPlaylist {
-                    ActionButton(
-                        label: "Add to List",
-                        icon: "text.badge.plus",
-                        action: onAddToPlaylist
-                    )
-                    .focused(focusedButton, equals: .addToPlaylist)
-                }
-
-                if let onDelete {
-                    ActionButton(
-                        label: "Delete",
-                        icon: "trash",
-                        action: onDelete
-                    )
-                    .focused(focusedButton, equals: .delete)
-                }
+                .focused(focusedButton, equals: .resume)
             }
-            Spacer()
+
+            ActionButton(
+                label: canResume ? "Restart" : "Play",
+                icon: canResume ? "arrow.counterclockwise" : "play.fill",
+                action: onPlay
+            )
+            .focused(focusedButton, equals: .play)
+
+            if let onShuffle {
+                ActionButton(
+                    label: "Shuffle",
+                    icon: "shuffle",
+                    isAssetIcon: true,
+                    action: onShuffle
+                )
+                .focused(focusedButton, equals: .shuffle)
+            }
+
+            if let onInstantMix {
+                ActionButton(
+                    label: "Instant Mix",
+                    icon: "wand.and.stars",
+                    action: onInstantMix
+                )
+                .focused(focusedButton, equals: .instantMix)
+            }
+
+            if let onNextEpisode {
+                ActionButton(
+                    label: "Next",
+                    icon: "forward.fill",
+                    action: onNextEpisode
+                )
+                .focused(focusedButton, equals: .nextEpisode)
+            }
+
+            if let onSelectVersion {
+                ActionButton(
+                    label: "Version",
+                    icon: "film.stack",
+                    action: onSelectVersion
+                )
+                .focused(focusedButton, equals: .selectVersion)
+            }
+
+            if let onAudioTrack {
+                ActionButton(
+                    label: "Audio",
+                    icon: "speaker.wave.2",
+                    action: onAudioTrack
+                )
+                .focused(focusedButton, equals: .audioTrack)
+            }
+
+            if let onSubtitleTrack {
+                ActionButton(
+                    label: "Subtitles",
+                    icon: "captions.bubble",
+                    action: onSubtitleTrack
+                )
+                .focused(focusedButton, equals: .subtitleTrack)
+            }
+
+            if let onTrailer {
+                ActionButton(
+                    label: "Trailer",
+                    icon: "film",
+                    action: onTrailer
+                )
+                .focused(focusedButton, equals: .trailer)
+            }
+
+            ActionButton(
+                label: isPlayed ? "Watched" : "Unwatched",
+                icon: "checkmark",
+                isActive: isPlayed,
+                activeColor: Color(hex: 0x2196F3),
+                action: onToggleWatched
+            )
+            .focused(focusedButton, equals: .watched)
+
+            ActionButton(
+                label: isFavorite ? "Favorited" : "Favorite",
+                icon: isFavorite ? "heart.fill" : "heart",
+                isActive: isFavorite,
+                activeColor: Color(hex: 0xFF4757),
+                action: onToggleFavorite
+            )
+            .focused(focusedButton, equals: .favorite)
+
+            if let onAddToPlaylist {
+                ActionButton(
+                    label: "Add to List",
+                    icon: "text.badge.plus",
+                    action: onAddToPlaylist
+                )
+                .focused(focusedButton, equals: .addToPlaylist)
+            }
+
+            if let onGoToSeries {
+                ActionButton(
+                    label: "Go to Series",
+                    icon: "tv",
+                    action: onGoToSeries
+                )
+                .focused(focusedButton, equals: .goToSeries)
+            }
+
+            if let onDelete {
+                ActionButton(
+                    label: "Delete",
+                    icon: "trash",
+                    action: onDelete
+                )
+                .focused(focusedButton, equals: .delete)
+            }
         }
+        .frame(maxWidth: .infinity)
         .focusSection()
     }
 }
@@ -160,10 +177,14 @@ private struct ActionButton: View {
             VStack(spacing: SpaceTokens.spaceXs) {
                 ZStack {
                     RoundedRectangle(cornerRadius: RadiusTokens.large)
-                        .fill(backgroundColor)
+                        .fill(baseGlassTint)
+                        .background(
+                            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                                .fill(.ultraThinMaterial)
+                        )
                         .overlay(
                             RoundedRectangle(cornerRadius: RadiusTokens.large)
-                                .stroke(borderColor, lineWidth: isFocused ? 3 : 1)
+                                .stroke(glassBorderColor, lineWidth: isFocused ? 2.5 : 1)
                         )
 
                     if isAssetIcon {
@@ -204,26 +225,26 @@ private struct ActionButton: View {
         .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 
-    private var backgroundColor: Color {
+    private var baseGlassTint: Color {
         if isFocused {
-            return .white
+            return Color.white.opacity(0.26)
         }
         if isActive {
-            return theme.colorScheme.buttonActive
+            return (activeColor ?? theme.colorScheme.buttonActive).opacity(0.22)
         }
-        return theme.colorScheme.button
+        return theme.colorScheme.button.opacity(0.22)
     }
 
-    private var borderColor: Color {
+    private var glassBorderColor: Color {
         if isFocused {
-            return .clear
+            return .white.opacity(0.95)
         }
-        return Color.white.opacity(0.15)
+        return Color.white.opacity(0.28)
     }
 
     private var iconColor: Color {
         if isFocused {
-            return Color(white: 0.3)
+            return .white
         }
         if isActive, let activeColor {
             return activeColor

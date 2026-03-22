@@ -219,6 +219,8 @@ struct ServerItem: Codable, Identifiable {
     let dateCreated: Date?
     let playlistItemId: String?
     let canDelete: Bool?
+    let localTrailerCount: Int?
+    let remoteTrailers: [MediaUrl]?
 
     let startDate: Date?
     let channelNumber: String?
@@ -290,6 +292,8 @@ struct ServerItem: Codable, Identifiable {
         case dateCreated = "DateCreated"
         case playlistItemId = "PlaylistItemId"
         case canDelete = "CanDelete"
+        case localTrailerCount = "LocalTrailerCount"
+        case remoteTrailers = "RemoteTrailers"
         case startDate = "StartDate"
         case channelNumber = "ChannelNumber"
         case timerId = "TimerId"
@@ -325,7 +329,7 @@ extension ServerItem {
             taglines: nil, studios: nil, providerIds: nil, endDate: nil,
             productionLocations: nil, artists: nil, albumArtists: nil, albumArtist: nil,
             albumId: nil, albumPrimaryImageTag: nil, album: nil, childCount: nil,
-            albumCount: nil, hasLyrics: nil, dateCreated: nil, playlistItemId: nil, canDelete: nil, startDate: nil, channelNumber: nil,
+            albumCount: nil, hasLyrics: nil, dateCreated: nil, playlistItemId: nil, canDelete: nil, localTrailerCount: nil, remoteTrailers: nil, startDate: nil, channelNumber: nil,
             timerId: nil, seriesTimerId: nil, isMovie: nil, isSeries: nil, isNews: nil,
             isSports: nil, isKids: nil, isPremiere: nil, isRepeat: nil, isLive: nil,
             isHD: nil, status: nil, currentProgram: nil
@@ -380,5 +384,15 @@ struct AllThemeMediaResult: Codable {
     enum CodingKeys: String, CodingKey {
         case themeSongsResult = "ThemeSongsResult"
         case themeVideosResult = "ThemeVideosResult"
+    }
+}
+
+struct MediaUrl: Codable {
+    let url: String?
+    let name: String?
+
+    enum CodingKeys: String, CodingKey {
+        case url = "Url"
+        case name = "Name"
     }
 }

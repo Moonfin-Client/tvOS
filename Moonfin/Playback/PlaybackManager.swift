@@ -108,13 +108,21 @@ final class PlaybackManager: ObservableObject {
         startIndex: Int = 0,
         startPosition: TimeInterval = 0,
         audioStreamIndex: Int? = nil,
-        subtitleStreamIndex: Int? = nil
+        subtitleStreamIndex: Int? = nil,
+        mediaSourceIndex: Int? = nil
     ) async {
         queue = items.enumerated().map { index, item in
-            QueueEntry(
+            let sourceId: String?
+            if index == startIndex, let msIndex = mediaSourceIndex,
+               let sources = item.mediaSources, msIndex < sources.count {
+                sourceId = sources[msIndex].id
+            } else {
+                sourceId = item.mediaSources?.first?.id
+            }
+            return QueueEntry(
                 id: item.id,
                 item: item,
-                mediaSourceId: item.mediaSources?.first?.id,
+                mediaSourceId: sourceId,
                 startPositionTicks: index == startIndex ? Int64(startPosition * 10_000_000) : 0,
                 audioStreamIndex: index == startIndex ? audioStreamIndex : nil,
                 subtitleStreamIndex: index == startIndex ? subtitleStreamIndex : nil
