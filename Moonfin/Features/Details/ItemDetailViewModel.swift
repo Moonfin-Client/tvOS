@@ -558,6 +558,21 @@ final class ItemDetailViewModel: ObservableObject {
         } catch { }
     }
 
+    func chapterImageUrl(for chapter: ServerChapter) -> String? {
+        guard let item,
+              let chapters = item.chapters,
+              let tag = chapter.imageTag,
+              let index = chapters.firstIndex(where: { $0.startPositionTicks == chapter.startPositionTicks }),
+              let client else { return nil }
+
+        return client.imageApi.getChapterImageUrl(
+            itemId: item.id,
+            chapterIndex: index,
+            maxWidth: 480,
+            tag: tag
+        )
+    }
+
     private func loadSpecialFeatures(itemId: String, client: MediaServerClient) async {
         do {
             let items = try await client.userLibraryApi.getSpecialFeatures(itemId: itemId)

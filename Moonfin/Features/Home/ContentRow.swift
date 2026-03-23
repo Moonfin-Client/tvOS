@@ -5,6 +5,7 @@ struct ContentRow: View {
     let viewModel: HomeViewModel
     var watchedIndicator: WatchedIndicatorBehavior = .always
     var onRowFocused: (() -> Void)?
+    var onItemFocused: ((ServerItem) -> Void)?
     var onItemSelected: ((ServerItem) -> Void)?
     var restoredItemId: String?
     var focusTrigger: Int = 0
@@ -91,7 +92,7 @@ struct ContentRow: View {
             rowTitle
 
             ScrollViewReader { scrollProxy in
-                FocusFirstRow(firstItemId: row.items.first?.id, focusTrigger: focusTrigger) { focusBinding in
+                FocusFirstRow(firstItemId: row.items.first?.id, restoredItemId: restoredItemId, focusTrigger: focusTrigger) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                             cardView(for: item)
@@ -119,6 +120,7 @@ struct ContentRow: View {
                 cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
                 onFocused: { item in
                     viewModel.onItemFocused(item)
+                    onItemFocused?(item)
                     onRowFocused?()
                 },
                 onSelect: { onItemSelected?(item) }
@@ -129,6 +131,7 @@ struct ContentRow: View {
                 cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
                 onFocused: {
                     viewModel.onItemFocused(item)
+                    onItemFocused?(item)
                     onRowFocused?()
                 },
                 onSelect: { onItemSelected?(item) }
@@ -139,6 +142,7 @@ struct ContentRow: View {
                 cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
                 aspectRatio: row.rowType.aspectRatio,
                 onFocused: {
+                    onItemFocused?(item)
                     onRowFocused?()
                 },
                 onSelect: { onItemSelected?(item) }
@@ -153,6 +157,7 @@ struct ContentRow: View {
                 serverName: viewModel.serverName(for: item),
                 onFocused: { item in
                     viewModel.onItemFocused(item)
+                    onItemFocused?(item)
                     onRowFocused?()
                 },
                 onSelect: { onItemSelected?(item) }

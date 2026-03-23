@@ -14,23 +14,32 @@ struct LeftSidebar: View {
     @State private var isLibraryExpanded = false
     @State private var collapseTask: Task<Void, Never>?
     @State private var sidebarHadFocus = false
-    @State private var focusResetToken = 0
+    @State private var didProcessInitialFocus = false
+    @State private var returnFocusItem: SidebarFocusItem = .home
     @FocusState private var focusedItem: SidebarFocusItem?
 
     let mainNamespace: Namespace.ID
     let onMoveToContent: (() -> Void)?
+    let onSidebarEntered: (() -> Void)?
 
     static let sidebarInset: CGFloat = 90
     private static let expandedWidth: CGFloat = 280
 
-    init(container: AppContainer, mainNamespace: Namespace.ID, onMoveToContent: (() -> Void)? = nil) {
+    init(
+        container: AppContainer,
+        mainNamespace: Namespace.ID,
+        onMoveToContent: (() -> Void)? = nil,
+        onSidebarEntered: (() -> Void)? = nil
+    ) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
         self.mainNamespace = mainNamespace
         self.onMoveToContent = onMoveToContent
+        self.onSidebarEntered = onSidebarEntered
     }
 
     private func routeHomeAndHandoffFocus() {
         router.reset()
+        returnFocusItem = .home
         focusedItem = nil
         isExpanded = false
         isLibraryExpanded = false
@@ -39,6 +48,9 @@ struct LeftSidebar: View {
     }
 
     private func handoffFocusToContent() {
+        if let current = focusedItem {
+            returnFocusItem = current
+        }
         focusedItem = nil
         isExpanded = false
         isLibraryExpanded = false
@@ -48,7 +60,6 @@ struct LeftSidebar: View {
 
     var body: some View {
         sidebarColumn
-            .id(focusResetToken)
             .ignoresSafeArea()
             .defaultFocus($focusedItem, .home)
             .onAppear {
@@ -64,18 +75,23 @@ struct LeftSidebar: View {
             }
             .onChange(of: focusedItem) { newValue in
                 collapseTask?.cancel()
-                if newValue != nil {
+                if let newValue {
                     if !sidebarHadFocus {
                         sidebarHadFocus = true
-                        if newValue != .home {
-                            focusedItem = .home
+                        if didProcessInitialFocus {
+                            onSidebarEntered?()
+                        } else {
+                            didProcessInitialFocus = true
+                        }
+                        if newValue != returnFocusItem {
+                            focusedItem = returnFocusItem
                             return
                         }
                     }
+                    returnFocusItem = newValue
                     isExpanded = true
                 } else {
                     sidebarHadFocus = false
-                    focusResetToken += 1
                     collapseTask = Task {
                         try? await Task.sleep(nanoseconds: 150_000_000)
                         guard !Task.isCancelled else { return }
@@ -152,7 +168,10 @@ struct LeftSidebar: View {
                 label: "Search",
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .search,
-                action: { router.navigatePrimary(to: .search()) }
+                action: {
+                    router.navigatePrimary(to: .search())
+                    handoffFocusToContent()
+                }
             )
             .focused($focusedItem, equals: .search)
 
@@ -162,7 +181,10 @@ struct LeftSidebar: View {
                     label: "Shuffle",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .shuffle,
-                    action: { viewModel.performQuickShuffle(router: router) }
+                    action: {
+                        viewModel.performQuickShuffle(router: router)
+                        handoffFocusToContent()
+                    }
                 )
                 .focused($focusedItem, equals: .shuffle)
                 .contextMenu {
@@ -180,7 +202,10 @@ struct LeftSidebar: View {
                     label: "Favorites",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .favorites,
-                    action: { router.navigatePrimary(to: .allFavorites) }
+                    action: {
+                        router.navigatePrimary(to: .allFavorites)
+                        handoffFocusToContent()
+                    }
                 )
                 .focused($focusedItem, equals: .favorites)
             }
@@ -191,7 +216,10 @@ struct LeftSidebar: View {
                     label: "Genres",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .genres,
-                    action: { router.navigatePrimary(to: .allGenres) }
+                    action: {
+                        router.navigatePrimary(to: .allGenres)
+                        handoffFocusToContent()
+                    }
                 )
                 .focused($focusedItem, equals: .genres)
             }
@@ -201,7 +229,10 @@ struct LeftSidebar: View {
                 label: "Folders",
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .folders,
-                action: { router.navigatePrimary(to: .folderView) }
+                action: {
+                    router.navigatePrimary(to: .folderView)
+                    handoffFocusToContent()
+                }
             )
             .focused($focusedItem, equals: .folders)
 
@@ -211,7 +242,10 @@ struct LeftSidebar: View {
                     label: "SyncPlay",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .syncPlay,
-                    action: { settingsRouter.open(to: .syncPlay) }
+                    action: {
+                        settingsRouter.open(to: .syncPlay)
+                        handoffFocusToContent()
+                    }
                 )
                 .focused($focusedItem, equals: .syncPlay)
             }
@@ -222,7 +256,10 @@ struct LeftSidebar: View {
                     label: viewModel.seerrDisplayName,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .seerr,
-                    action: { router.navigatePrimary(to: .seerrDiscover) }
+                    action: {
+                        router.navigatePrimary(to: .seerrDiscover)
+                        handoffFocusToContent()
+                    }
                 )
                 .focused($focusedItem, equals: .seerr)
             }
@@ -247,6 +284,7 @@ struct LeftSidebar: View {
                         isFocused: focusedItem == .library(library.id),
                         action: {
                             router.navigatePrimaryToLibrary(library)
+                            handoffFocusToContent()
                         }
                     )
                     .focused($focusedItem, equals: .library(library.id))

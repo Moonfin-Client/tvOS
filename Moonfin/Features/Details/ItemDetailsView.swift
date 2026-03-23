@@ -1,6 +1,12 @@
 import SwiftUI
 import Nuke
 
+private enum DetailsRestoreTarget: Equatable {
+    case button(ActionButtonID)
+    case track(String)
+    case content(String)
+}
+
 struct ItemDetailsView: View {
     @StateObject private var viewModel: ItemDetailViewModel
     @EnvironmentObject var container: AppContainer
@@ -8,6 +14,7 @@ struct ItemDetailsView: View {
     @EnvironmentObject var router: NavigationRouter
     @FocusState private var focusedButton: ActionButtonID?
     @FocusState private var focusedTrackId: String?
+    @FocusState private var focusedEpisodeId: String?
     @State private var showFullBio = false
     @State private var showTrackSelector: TrackSelectorMode?
     @State private var showAddToPlaylist = false
@@ -16,6 +23,51 @@ struct ItemDetailsView: View {
     @State private var selectedAudioIndex: Int?
     @State private var selectedSubtitleIndex: Int?
     @State private var selectedMediaSourceIndex: Int = 0
+    let sidebarEntryToken: Int
+    let sidebarHandoffToken: Int
+    @State private var currentFocusTarget: DetailsRestoreTarget?
+    @State private var sidebarEntryFocusTarget: DetailsRestoreTarget?
+    @State private var restoredContentId: String?
+    @State private var restoreContentFocusTrigger: Int = 0
+    @State private var restoredEpisodeId: String?
+    @State private var restoreEpisodeFocusTrigger: Int = 0
+
+    private func focusTrace(_ message: String) {
+        _ = message
+    }
+
+    private func describe(_ target: DetailsRestoreTarget?) -> String {
+        guard let target else { return "nil" }
+        switch target {
+        case .button(let button):
+            return "button:\(String(describing: button))"
+        case .track(let id):
+            return "track:\(id)"
+        case .content(let id):
+            return "content:\(id)"
+        }
+    }
+
+    private func restoreDetailsFocus(_ target: DetailsRestoreTarget) {
+        focusTrace("restoring target=\(describe(target))")
+        switch target {
+        case .button(let button):
+            focusedButton = nil
+            DispatchQueue.main.async {
+                focusedButton = button
+            }
+        case .track(let id):
+            focusedTrackId = nil
+            DispatchQueue.main.async {
+                focusedTrackId = id
+            }
+        case .content(let id):
+            restoredContentId = id
+            restoreContentFocusTrigger += 1
+            restoredEpisodeId = id
+            restoreEpisodeFocusTrigger += 1
+        }
+    }
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -25,12 +77,20 @@ struct ItemDetailsView: View {
         navbarIsLeft ? LeftSidebar.sidebarInset : 50
     }
 
-    init(container: AppContainer, itemId: String, serverId: String? = nil) {
+    init(
+        container: AppContainer,
+        itemId: String,
+        serverId: String? = nil,
+        sidebarEntryToken: Int = 0,
+        sidebarHandoffToken: Int = 0
+    ) {
         _viewModel = StateObject(wrappedValue: ItemDetailViewModel(
             container: container,
             itemId: itemId,
             serverId: serverId
         ))
+        self.sidebarEntryToken = sidebarEntryToken
+        self.sidebarHandoffToken = sidebarHandoffToken
     }
 
     var body: some View {
@@ -49,15 +109,49 @@ struct ItemDetailsView: View {
             }
         }
         .ignoresSafeArea()
-        .onAppear { viewModel.loadItem() }
+        .onAppear {
+            focusTrace("ItemDetailsView appeared itemId=\(viewModel.item?.id ?? "loading")")
+            viewModel.loadItem()
+        }
         .onDisappear { viewModel.cleanup() }
         .onChange(of: viewModel.isLoading) { isLoading in
             if !isLoading, viewModel.item != nil {
                 DispatchQueue.main.async {
                     focusedButton = viewModel.canResume ? .resume : .play
+                    focusTrace("initial focusedButton=\(String(describing: focusedButton))")
                 }
                 initializeTrackIndices()
             }
+        }
+        .onChange(of: focusedButton) { newValue in
+            focusTrace("focusedButton changed to \(String(describing: newValue))")
+            if let newValue {
+                currentFocusTarget = .button(newValue)
+            }
+        }
+        .onChange(of: focusedTrackId) { newValue in
+            focusTrace("focusedTrackId changed to \(newValue ?? "nil")")
+            if let newValue {
+                currentFocusTarget = .track(newValue)
+            }
+        }
+        .onChange(of: focusedEpisodeId) { newValue in
+            focusTrace("focusedEpisodeId changed to \(newValue ?? "nil")")
+            if let newValue {
+                currentFocusTarget = .content(newValue)
+            }
+        }
+        .onChange(of: sidebarEntryToken) { _ in
+            guard navbarIsLeft else { return }
+            sidebarEntryFocusTarget = currentFocusTarget
+            focusTrace("captured sidebar entry target=\(describe(sidebarEntryFocusTarget))")
+        }
+        .onChange(of: sidebarHandoffToken) { _ in
+            guard navbarIsLeft else { return }
+            let restoreTarget = sidebarEntryFocusTarget ?? currentFocusTarget
+            focusTrace("sidebar handoff target=\(describe(restoreTarget))")
+            guard let restoreTarget else { return }
+            restoreDetailsFocus(restoreTarget)
         }
         .sheet(item: $showTrackSelector) { mode in
             if let item = viewModel.item {
@@ -874,6 +968,7 @@ struct ItemDetailsView: View {
 
     @ViewBuilder
     private func episodeSections() -> some View {
+        chaptersSection
         if let nextEp = viewModel.nextEpisode {
             detailSection(title: "Next Episode", id: "nextEp") {
                 episodeList(items: [nextEp])
@@ -1025,6 +1120,7 @@ struct ItemDetailsView: View {
     @ViewBuilder
     private func movieSections() -> some View {
         castSection
+        chaptersSection
         specialFeaturesSection
         similarSection
     }
@@ -1062,6 +1158,17 @@ struct ItemDetailsView: View {
         }
     }
 
+    @ViewBuilder
+    private var chaptersSection: some View {
+        if let item = viewModel.item,
+           let chapters = item.chapters,
+           !chapters.isEmpty {
+            detailSection(title: "Chapters", id: "chapters") {
+                chapterRow(item: item, chapters: chapters)
+            }
+        }
+    }
+
     private func detailSection<Content: View>(
         title: String,
         id: String,
@@ -1089,7 +1196,11 @@ struct ItemDetailsView: View {
         let cardWidth: CGFloat = overrideWidth ?? (aspectRatio >= 1.0 ? 200 : 160)
         let cardHeight = cardWidth / aspectRatio
 
-        return FocusFirstRow(firstItemId: items.first?.id) { focusBinding in
+        return FocusFirstRow(
+            firstItemId: items.first?.id,
+            restoredItemId: restoredContentId,
+            focusTrigger: restoreContentFocusTrigger
+        ) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(items) { item in
                     FocusableItemCard(
@@ -1099,6 +1210,10 @@ struct ItemDetailsView: View {
                         cardHeight: cardHeight,
                         onSelect: {
                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+                        },
+                        onFocused: {
+                            focusTrace("focused itemRow sectionItem=\(item.id)")
+                            currentFocusTarget = .content(item.id)
                         }
                     )
                     .focused(focusBinding, equals: item.id)
@@ -1109,10 +1224,77 @@ struct ItemDetailsView: View {
         }
     }
 
+    private func chapterRow(item: ServerItem, chapters: [ServerChapter]) -> some View {
+        let cardWidth: CGFloat = 240
+        let cardHeight: CGFloat = 135
+
+        return FocusFirstRow(
+            firstItemId: chapters.first.map(chapterFocusId),
+            restoredItemId: restoredContentId,
+            focusTrigger: restoreContentFocusTrigger
+        ) { focusBinding in
+            LazyHStack(spacing: SpaceTokens.spaceMd) {
+                ForEach(chapters) { chapter in
+                    Button {
+                        playVideo(item: item, positionTicks: chapter.startPositionTicks)
+                    } label: {
+                        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+                            ZStack {
+                                if let imageUrl = viewModel.chapterImageUrl(for: chapter) {
+                                    CachedImage(urlString: imageUrl)
+                                        .frame(width: cardWidth, height: cardHeight)
+                                        .clipped()
+                                } else {
+                                    Rectangle()
+                                        .fill(theme.colorScheme.surface)
+                                        .frame(width: cardWidth, height: cardHeight)
+                                        .overlay(
+                                            Image(systemName: "film")
+                                                .font(.titleXl)
+                                                .foregroundColor(theme.colorScheme.listCaption)
+                                        )
+                                }
+                            }
+                            .cornerRadius(RadiusTokens.small)
+
+                            Text(chapter.name ?? "Chapter")
+                                .font(.bodySm)
+                                .foregroundColor(theme.colorScheme.onBackground)
+                                .lineLimit(1)
+                                .frame(width: cardWidth, alignment: .leading)
+
+                            Text(RuntimeFormatter.format(ticks: chapter.startPositionTicks))
+                                .font(.caption2xs)
+                                .foregroundColor(theme.colorScheme.listCaption)
+                        }
+                    }
+                    .buttonStyle(PopupCardButtonStyle())
+                    .focused(focusBinding, equals: chapterFocusId(chapter))
+                    .onChange(of: focusBinding.wrappedValue) { focusedId in
+                        if focusedId == chapterFocusId(chapter) {
+                            currentFocusTarget = .content(chapterFocusId(chapter))
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, SpaceTokens.spaceSm)
+        }
+    }
+
+    private func chapterFocusId(_ chapter: ServerChapter) -> String {
+        return "chapter:\(chapter.startPositionTicks)"
+    }
+
     private var castRow: some View {
-        FocusFirstRow(firstItemId: viewModel.cast.first?.name) { focusBinding in
+        FocusFirstRow(
+            firstItemId: viewModel.cast.first.map { $0.id ?? $0.name },
+            restoredItemId: restoredContentId,
+            focusTrigger: restoreContentFocusTrigger
+        ) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(viewModel.cast, id: \.name) { person in
+                    let focusId = person.id ?? person.name
                     FocusableCastCard(
                         person: person,
                         imageUrl: viewModel.imageUrl(for: person),
@@ -1120,9 +1302,13 @@ struct ItemDetailsView: View {
                             if let id = person.id {
                                 router.navigate(to: .itemDetails(itemId: id))
                             }
+                        },
+                        onFocused: {
+                            focusTrace("focused castRow person=\(focusId)")
+                            currentFocusTarget = .content(focusId)
                         }
                     )
-                    .focused(focusBinding, equals: person.name)
+                    .focused(focusBinding, equals: focusId)
                 }
             }
             .padding(.horizontal, SpaceTokens.spaceSm)
@@ -1131,7 +1317,11 @@ struct ItemDetailsView: View {
     }
 
     private var seasonRow: some View {
-        FocusFirstRow(firstItemId: viewModel.seasons.first?.id) { focusBinding in
+        FocusFirstRow(
+            firstItemId: viewModel.seasons.first?.id,
+            restoredItemId: restoredContentId,
+            focusTrigger: restoreContentFocusTrigger
+        ) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(viewModel.seasons) { season in
                     FocusableSeasonCard(
@@ -1139,6 +1329,10 @@ struct ItemDetailsView: View {
                         imageUrl: viewModel.imageUrl(for: season, maxWidth: 320),
                         onSelect: {
                             router.navigate(to: .itemDetails(itemId: season.id, serverId: season.serverId))
+                        },
+                        onFocused: {
+                            focusTrace("focused seasonRow season=\(season.id)")
+                            currentFocusTarget = .content(season.id)
                         }
                     )
                     .focused(focusBinding, equals: season.id)
@@ -1157,8 +1351,21 @@ struct ItemDetailsView: View {
                     imageUrl: viewModel.imageUrl(for: episode, imageType: .thumb, maxWidth: 560),
                     onSelect: {
                         router.navigate(to: .itemDetails(itemId: episode.id, serverId: episode.serverId))
+                    },
+                    onFocused: {
+                        focusTrace("focused episodeList episode=\(episode.id)")
+                        currentFocusTarget = .content(episode.id)
                     }
                 )
+                .focused($focusedEpisodeId, equals: episode.id)
+            }
+        }
+        .defaultFocus($focusedEpisodeId, restoredEpisodeId ?? items.first?.id, priority: .userInitiated)
+        .onChange(of: restoreEpisodeFocusTrigger) { _ in
+            guard let target = restoredEpisodeId else { return }
+            focusedEpisodeId = nil
+            DispatchQueue.main.async {
+                focusedEpisodeId = target
             }
         }
     }
@@ -1220,6 +1427,7 @@ struct ItemDetailsView: View {
                     onMoveRight: onMoveDown,
                     onFocused: {
                         focusedTrackId = track.id
+                        focusTrace("focused track=\(track.id)")
                     }
                 )
             }

@@ -82,9 +82,12 @@ struct MainNavigationView: View {
     @Namespace private var mainNamespace
     @Environment(\.resetFocus) private var resetFocus
     @State private var contentReady = false
+    @State private var sidebarEntryToken = 0
     @State private var sidebarHandoffToken = 0
     @State private var suppressTopNavbarInRows = false
     @State private var navbarHomeFocusToken = 0
+    @State private var preferContentFocusDuringHandoff = false
+    @State private var isCurrentDestinationDetails = false
 
     private var navbarPosition: NavbarPosition {
         container.userPreferences[UserPreferences.navbarPosition]
@@ -103,23 +106,43 @@ struct MainNavigationView: View {
         case .top:
             return !shouldShowTopNavbar
         case .left:
-            return !contentReady || router.hideNavbar
+            return preferContentFocusDuringHandoff || !contentReady || router.hideNavbar
         }
+    }
+
+    private var isLeftNavbarDetails: Bool {
+        navbarPosition == .left && isCurrentDestinationDetails
     }
 
     private func handoffSidebarFocusToContent() {
-        sidebarHandoffToken += 1
         let isTopNavbarHome = navbarPosition == .top && router.path.isEmpty
         guard !isTopNavbarHome else { return }
-        DispatchQueue.main.async {
-            resetFocus(in: mainNamespace)
+        preferContentFocusDuringHandoff = true
+        sidebarHandoffToken += 1
+        let isLeftNavbarHome = navbarPosition == .left && router.path.isEmpty
+        let shouldSkipResetFocus = isLeftNavbarHome || isLeftNavbarDetails
+        if !shouldSkipResetFocus {
+            DispatchQueue.main.async {
+                resetFocus(in: mainNamespace)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            preferContentFocusDuringHandoff = false
         }
     }
 
+    private func noteSidebarEntered() {
+        sidebarEntryToken += 1
+    }
+
     private func handoffSettingsFocusToContent() {
+        preferContentFocusDuringHandoff = true
         sidebarHandoffToken += 1
         DispatchQueue.main.async {
             resetFocus(in: mainNamespace)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            preferContentFocusDuringHandoff = false
         }
     }
 
@@ -207,6 +230,7 @@ struct MainNavigationView: View {
                 container: container,
                 mainNamespace: mainNamespace,
                 contentReady: $contentReady,
+                sidebarEntryToken: sidebarEntryToken,
                 sidebarHandoffToken: sidebarHandoffToken,
                 suppressTopNavbarInRows: $suppressTopNavbarInRows,
                 onRequestTopNavbarHomeFocus: requestNavbarHomeFocus
@@ -243,7 +267,8 @@ struct MainNavigationView: View {
                 LeftSidebar(
                     container: container,
                     mainNamespace: mainNamespace,
-                    onMoveToContent: handoffSidebarFocusToContent
+                    onMoveToContent: handoffSidebarFocusToContent,
+                    onSidebarEntered: noteSidebarEntered
                 )
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .ignoresSafeArea()
@@ -280,6 +305,7 @@ struct MainNavigationView: View {
             HomeScreen(
                 container: container,
                 mainNamespace: mainNamespace,
+                sidebarEntryToken: sidebarEntryToken,
                 sidebarHandoffToken: sidebarHandoffToken,
                 suppressTopNavbarInRows: $suppressTopNavbarInRows,
                 onRequestTopNavbarHomeFocus: requestNavbarHomeFocus
@@ -325,7 +351,15 @@ struct MainNavigationView: View {
         case .folderBrowser(let itemId, _, _):
             FolderBrowseScreen(container: container, folderId: itemId)
         case .itemDetails(let itemId, let serverId):
-            ItemDetailsView(container: container, itemId: itemId, serverId: serverId)
+            ItemDetailsView(
+                container: container,
+                itemId: itemId,
+                serverId: serverId,
+                sidebarEntryToken: sidebarEntryToken,
+                sidebarHandoffToken: sidebarHandoffToken
+            )
+            .onAppear { isCurrentDestinationDetails = true }
+            .onDisappear { isCurrentDestinationDetails = false }
         case .nowPlaying:
             audioPlayerDestination
         case .photoPlayer(let itemId, let autoPlay, let sortBy, let sortOrder):

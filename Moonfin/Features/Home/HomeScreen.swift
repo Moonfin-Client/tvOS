@@ -9,6 +9,7 @@ struct HomeScreen: View {
     let mainNamespace: Namespace.ID
     @Binding var contentReady: Bool
     @Binding var suppressTopNavbarInRows: Bool
+    let sidebarEntryToken: Int
     let sidebarHandoffToken: Int
     let onRequestTopNavbarHomeFocus: (() -> Void)?
     @State private var isMediaBarMode = true
@@ -27,7 +28,12 @@ struct HomeScreen: View {
     @StateObject private var inlineTrailerPlayer = VLCPlayerWrapper()
     @Environment(\.resetFocus) private var resetFocus
     @State private var focusFirstRowTrigger: Int = 0
+    @State private var restoreRowFocusTrigger: Int = 0
     @State private var suppressTopNavbarUntilMediaBarFocus = false
+    @State private var lastContentAreaWasMediaBar = false
+    @State private var sidebarEntryRowId: String?
+    @State private var sidebarEntryItemId: String?
+    @State private var sidebarEntryWasMediaBar = false
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -45,6 +51,7 @@ struct HomeScreen: View {
         container: AppContainer,
         mainNamespace: Namespace.ID,
         contentReady: Binding<Bool> = .constant(true),
+        sidebarEntryToken: Int = 0,
         sidebarHandoffToken: Int = 0,
         suppressTopNavbarInRows: Binding<Bool> = .constant(false),
         onRequestTopNavbarHomeFocus: (() -> Void)? = nil
@@ -52,6 +59,7 @@ struct HomeScreen: View {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
         self.mainNamespace = mainNamespace
         self._contentReady = contentReady
+        self.sidebarEntryToken = sidebarEntryToken
         self.sidebarHandoffToken = sidebarHandoffToken
         self._suppressTopNavbarInRows = suppressTopNavbarInRows
         self.onRequestTopNavbarHomeFocus = onRequestTopNavbarHomeFocus
@@ -62,10 +70,12 @@ struct HomeScreen: View {
         focusTask = Task {
             try? await Task.sleep(nanoseconds: delay)
             guard !Task.isCancelled else { return }
+            if isRestoringPosition, lastFocusedRowId != nil {
+                restoreRowFocusTrigger += 1
+                return
+            }
             if isRestoringPosition {
                 isRestoringPosition = false
-                lastFocusedRowId = nil
-                lastFocusedItemId = nil
                 sentinelEnabled = viewModel.isMediaBarActive
             }
             if isMediaBarMode && viewModel.isMediaBarActive {
@@ -73,6 +83,15 @@ struct HomeScreen: View {
             } else {
                 resetFocus(in: mainNamespace)
             }
+        }
+    }
+
+    private func scheduleSidebarRowRestore(delay: UInt64 = 100_000_000) {
+        focusTask?.cancel()
+        focusTask = Task {
+            try? await Task.sleep(nanoseconds: delay)
+            guard !Task.isCancelled else { return }
+            restoreRowFocusTrigger += 1
         }
     }
 
@@ -116,6 +135,7 @@ struct HomeScreen: View {
                             Task { await playTrailerFromMediaBar(item) }
                         },
                         onFocusedItemChanged: { item in
+                            lastContentAreaWasMediaBar = item != nil
                             scheduleMediaBarTrailerPreview(for: item)
                         },
                         onNavigateDown: {
@@ -207,16 +227,54 @@ struct HomeScreen: View {
         }
         .onChange(of: sidebarHandoffToken) { _ in
             guard viewModel.hasFocusableContent else { return }
-            if !navbarIsLeft && viewModel.isMediaBarActive {
+            let restoreMediaBar = sidebarEntryWasMediaBar || (viewModel.isMediaBarActive && lastContentAreaWasMediaBar)
+            let restoreRowId = sidebarEntryRowId ?? lastFocusedRowId
+            let restoreItemId = sidebarEntryItemId ?? lastFocusedItemId
+
+            if viewModel.isMediaBarActive && restoreMediaBar {
                 isMediaBarMode = true
                 requestMediaBarFocus(after: 0)
+                sidebarEntryWasMediaBar = false
+                sidebarEntryRowId = nil
+                sidebarEntryItemId = nil
                 return
             }
+
             isMediaBarMode = false
             if !navbarIsLeft {
                 focusFirstRowTrigger += 1
             } else {
-                resolveFocus(delay: 0)
+                if let restoreRowId {
+                    focusedRowId = restoreRowId
+                    lastFocusedRowId = restoreRowId
+                    lastFocusedItemId = restoreItemId
+                    isRestoringPosition = true
+                    scrollTrigger += 1
+                    scheduleSidebarRowRestore()
+                } else {
+                    resolveFocus(delay: 0)
+                }
+            }
+
+            sidebarEntryWasMediaBar = false
+            sidebarEntryRowId = nil
+            sidebarEntryItemId = nil
+        }
+        .onChange(of: sidebarEntryToken) { _ in
+            guard navbarIsLeft else { return }
+            if isMediaBarMode && viewModel.isMediaBarActive {
+                sidebarEntryWasMediaBar = true
+                sidebarEntryRowId = nil
+                sidebarEntryItemId = nil
+                return
+            }
+
+            sidebarEntryWasMediaBar = false
+            sidebarEntryRowId = focusedRowId ?? lastFocusedRowId
+            if let rowId = sidebarEntryRowId, rowId == lastFocusedRowId {
+                sidebarEntryItemId = lastFocusedItemId
+            } else {
+                sidebarEntryItemId = nil
             }
         }
     }
@@ -346,12 +404,16 @@ struct HomeScreen: View {
                                         focusedRowId = row.id
                                         if isRestoringPosition {
                                             isRestoringPosition = false
-                                            lastFocusedRowId = nil
-                                            lastFocusedItemId = nil
                                             sentinelEnabled = true
                                         } else {
                                             scrollTrigger += 1
                                         }
+                                    },
+                                    onItemFocused: { item in
+                                        lastContentAreaWasMediaBar = false
+                                        focusedRowId = row.id
+                                        lastFocusedRowId = row.id
+                                        lastFocusedItemId = item.id
                                     },
                                     onItemSelected: { item in
                                         navigatedFromMediaBar = false
@@ -369,8 +431,16 @@ struct HomeScreen: View {
                                             router.navigate(to: .itemDetails(itemId: item.id, serverId: item.effectiveServerId))
                                         }
                                     },
-                                    restoredItemId: nil,
-                                    focusTrigger: visibleRows.first?.id == row.id ? focusFirstRowTrigger : 0
+                                    restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil,
+                                    focusTrigger: {
+                                        if lastFocusedRowId == row.id {
+                                            return restoreRowFocusTrigger
+                                        }
+                                        if visibleRows.first?.id == row.id {
+                                            return focusFirstRowTrigger
+                                        }
+                                        return 0
+                                    }()
                                 )
                                 .id(row.id)
                             }

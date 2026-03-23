@@ -33,6 +33,7 @@ struct FocusableItemCard: View {
     let cardWidth: CGFloat
     let cardHeight: CGFloat
     let onSelect: () -> Void
+    var onFocused: (() -> Void)? = nil
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
@@ -63,6 +64,11 @@ struct FocusableItemCard: View {
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+            if focused {
+                onFocused?()
+            }
+        }
         .scaleEffect(isFocused ? 1.05 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
@@ -74,6 +80,7 @@ struct FocusableCastCard: View {
     let person: ServerPerson
     let imageUrl: String?
     let onSelect: () -> Void
+    var onFocused: (() -> Void)? = nil
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
@@ -108,6 +115,11 @@ struct FocusableCastCard: View {
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+            if focused {
+                onFocused?()
+            }
+        }
         .scaleEffect(isFocused ? 1.05 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
@@ -119,6 +131,7 @@ struct FocusableEpisodeCard: View {
     let item: ServerItem
     let imageUrl: String?
     let onSelect: () -> Void
+    var onFocused: (() -> Void)? = nil
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
@@ -135,6 +148,11 @@ struct FocusableEpisodeCard: View {
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+            if focused {
+                onFocused?()
+            }
+        }
         .scaleEffect(isFocused ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
@@ -337,6 +355,7 @@ struct FocusableSeasonCard: View {
     let item: ServerItem
     let imageUrl: String?
     let onSelect: () -> Void
+    var onFocused: (() -> Void)? = nil
 
     private let cardWidth: CGFloat = 160
     private var cardHeight: CGFloat { cardWidth / (2.0 / 3.0) }
@@ -347,7 +366,8 @@ struct FocusableSeasonCard: View {
             imageUrl: imageUrl,
             cardWidth: cardWidth,
             cardHeight: cardHeight,
-            onSelect: onSelect
+            onSelect: onSelect,
+            onFocused: onFocused
         )
     }
 }
