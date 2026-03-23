@@ -4,6 +4,7 @@ struct ServerScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
     @StateObject private var viewModel: ServerViewModel
+    @State private var mainFlowTransitionTask: Task<Void, Never>?
 
     let serverId: UUID
 
@@ -38,9 +39,13 @@ struct ServerScreen: View {
         .onChange(of: viewModel.loginState) { state in
             switch state {
             case .authenticated:
-                router.switchFlow(to: .main)
-                Task { await container.pluginSyncService.syncOnStartup() }
-                container.serverConnectionMonitor.startMonitoring()
+                guard mainFlowTransitionTask == nil else { return }
+                mainFlowTransitionTask = Task {
+                    await container.pluginSyncService.syncOnStartup()
+                    guard !Task.isCancelled else { return }
+                    router.switchFlow(to: .main)
+                    container.serverConnectionMonitor.startMonitoring()
+                }
             case .requireSignIn:
                 if let server = viewModel.server {
                     let username = viewModel.authenticatingUser?.name ?? viewModel.pinUser?.name
@@ -52,6 +57,10 @@ struct ServerScreen: View {
             default:
                 break
             }
+        }
+        .onDisappear {
+            mainFlowTransitionTask?.cancel()
+            mainFlowTransitionTask = nil
         }
     }
 

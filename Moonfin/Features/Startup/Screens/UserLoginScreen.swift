@@ -4,6 +4,7 @@ struct UserLoginScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
     @StateObject private var viewModel: UserLoginViewModel
+    @State private var mainFlowTransitionTask: Task<Void, Never>?
 
     @State private var selectedTab: LoginTab = .credentials
 
@@ -84,12 +85,18 @@ struct UserLoginScreen: View {
         }
         .onDisappear {
             viewModel.stopQuickConnect()
+            mainFlowTransitionTask?.cancel()
+            mainFlowTransitionTask = nil
         }
         .onChange(of: viewModel.loginState) { state in
             if state == .authenticated {
-                router.switchFlow(to: .main)
-                Task { await container.pluginSyncService.syncOnStartup() }
-                container.serverConnectionMonitor.startMonitoring()
+                guard mainFlowTransitionTask == nil else { return }
+                mainFlowTransitionTask = Task {
+                    await container.pluginSyncService.syncOnStartup()
+                    guard !Task.isCancelled else { return }
+                    router.switchFlow(to: .main)
+                    container.serverConnectionMonitor.startMonitoring()
+                }
             }
         }
         .onChange(of: viewModel.quickConnectState) { state in
