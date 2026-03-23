@@ -180,7 +180,7 @@ private struct ActionButton: View {
                         .fill(baseGlassTint)
                         .background(
                             RoundedRectangle(cornerRadius: RadiusTokens.large)
-                                .fill(.ultraThinMaterial)
+                                .fill(isFocused ? AnyShapeStyle(Color.clear) : AnyShapeStyle(.ultraThinMaterial))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: RadiusTokens.large)
@@ -226,9 +226,7 @@ private struct ActionButton: View {
     }
 
     private var baseGlassTint: Color {
-        if isFocused {
-            return Color.white.opacity(0.26)
-        }
+        if isFocused { return .white }
         if isActive {
             return (activeColor ?? theme.colorScheme.buttonActive).opacity(0.22)
         }
@@ -236,19 +234,12 @@ private struct ActionButton: View {
     }
 
     private var glassBorderColor: Color {
-        if isFocused {
-            return .white.opacity(0.95)
-        }
-        return Color.white.opacity(0.28)
+        isFocused ? .white : Color.white.opacity(0.28)
     }
 
     private var iconColor: Color {
-        if isFocused {
-            return .white
-        }
-        if isActive, let activeColor {
-            return activeColor
-        }
+        if isFocused { return .black }
+        if isActive, let activeColor { return activeColor }
         return theme.colorScheme.onButton
     }
 }
