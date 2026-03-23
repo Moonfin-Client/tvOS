@@ -123,10 +123,11 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         guard let url = URL(string: streamUrl) else {
             return
         }
+        await play(url: url)
+        // Set AFTER play(url:) so stop() inside it doesn't clear the pending seek
         if startPosition > 0 {
             pendingSeekPosition = startPosition
         }
-        await play(url: url)
     }
 
     func pause() {

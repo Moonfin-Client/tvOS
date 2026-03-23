@@ -6,6 +6,7 @@ struct MoonfinApp: App {
     @StateObject private var theme = MoonfinTheme()
     @StateObject private var router = NavigationRouter()
     @StateObject private var settingsRouter = SettingsRouter()
+    @StateObject private var previewManager = PreviewPlayerManager()
 
     init() {
         ImagePipelineConfig.configure()
@@ -20,6 +21,7 @@ struct MoonfinApp: App {
                 .environmentObject(settingsRouter)
                 .environmentObject(container.featureDegradationManager)
                 .environmentObject(container.serverConnectionMonitor)
+                .environmentObject(previewManager)
                 .rtlAware()
                 .environmentObject(LocalizationManager.shared)
         }

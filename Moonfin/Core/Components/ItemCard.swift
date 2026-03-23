@@ -17,6 +17,7 @@ struct ItemCard: View {
     var onSelect: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var container: AppContainer
     @FocusState private var isFocused: Bool
 
     private var cardHeight: CGFloat { cardWidth / aspectRatio }
@@ -29,6 +30,15 @@ struct ItemCard: View {
         Button(action: { onSelect?() }) {
             ZStack(alignment: .bottomLeading) {
                 cardImage
+                
+                if shouldShowPreview {
+                    EpisodePreviewOverlay(
+                        item: item,
+                        shouldPlay: isFocused,
+                        muted: !previewAudioEnabled
+                    )
+                }
+                
                 cardOverlays
             }
             .frame(width: cardWidth, height: cardHeight)
@@ -43,6 +53,24 @@ struct ItemCard: View {
         .onChange(of: isFocused) { focused in
             if focused { onFocused?(item) }
         }
+    }
+    
+    private var shouldShowPreview: Bool {
+        guard previewEnabled else { return false }
+        switch item.type {
+        case .episode, .season, .series, .movie, .trailer, .video:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private var previewEnabled: Bool {
+        container.userPreferences[UserPreferences.episodePreviewEnabled]
+    }
+    
+    private var previewAudioEnabled: Bool {
+        container.userPreferences[UserPreferences.previewAudioEnabled]
     }
 
     @ViewBuilder
