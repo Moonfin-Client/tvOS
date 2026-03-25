@@ -46,7 +46,13 @@ struct PhotoPlayerScreen: View {
             }
             viewModel.showOverlay()
         }
-        .onExitCommand { router.goBack() }
+        .onExitCommand {
+            if !router.path.isEmpty {
+                router.goBack()
+            } else {
+                router.reset(to: .home)
+            }
+        }
         .task { await viewModel.load() }
         .onDisappear { viewModel.cleanup() }
     }
@@ -108,7 +114,7 @@ struct PhotoPlayerScreen: View {
     }
 
     private var controlsSection: some View {
-        HStack(spacing: SpaceTokens.spaceLg) {
+        VStack(spacing: SpaceTokens.spaceSm) {
             HStack(spacing: SpaceTokens.spaceMd) {
                 overlayButton(icon: "backward.end.fill", focus: .previous) {
                     viewModel.goToPrevious()
@@ -127,13 +133,12 @@ struct PhotoPlayerScreen: View {
                 }
             }
 
-            Spacer()
-
             Text(viewModel.positionText)
                 .font(.bodySm)
                 .foregroundColor(.white.opacity(0.8))
                 .monospacedDigit()
         }
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(.top, SpaceTokens.spaceMd)
         .background(
             LinearGradient(

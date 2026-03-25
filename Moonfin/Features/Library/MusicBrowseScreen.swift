@@ -266,7 +266,7 @@ struct MusicBrowseScreen: View {
         if item.type == .audio, let albumId = item.albumId {
             router.navigate(to: .itemDetails(itemId: albumId, serverId: item.serverId))
         } else {
-            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+            router.navigateToItem(item)
         }
     }
 

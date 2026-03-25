@@ -271,7 +271,7 @@ final class HomeViewModel: ObservableObject {
                     ))
 
                 case .latestMedia:
-                    let supportedTypes: Set<String> = ["movies", "tvshows", "music", "mixed"]
+                    let supportedTypes: Set<String> = ["movies", "tvshows", "music", "mixed", "photos"]
                     let filteredLibs = aggregatedLibraries.filter { lib in
                         guard let ct = lib.library.collectionType?.lowercased() else { return true }
                         return supportedTypes.contains(ct)
@@ -510,7 +510,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     private var latestMediaViewTypes: [ServerItem] {
-        let supportedTypes: Set<String> = ["movies", "tvshows", "music", "mixed"]
+        let supportedTypes: Set<String> = ["movies", "tvshows", "music", "mixed", "photos"]
         return userViews.filter { view in
             guard let ct = view.collectionType?.lowercased() else { return true }
             return supportedTypes.contains(ct)

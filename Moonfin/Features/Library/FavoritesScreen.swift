@@ -138,7 +138,7 @@ struct FavoritesScreen: View {
                             subtitle: viewModel.subtitle(for: item),
                             theme: theme,
                             onFocused: { viewModel.setFocusedItem(item) },
-                            onTap: { router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId)) }
+                            onTap: { router.navigateToItem(item) }
                         )
                     }
                 }

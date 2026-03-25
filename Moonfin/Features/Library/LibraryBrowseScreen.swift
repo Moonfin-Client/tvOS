@@ -269,7 +269,7 @@ struct LibraryBrowseScreen: View {
         case .userView, .collectionFolder:
             router.navigate(to: .libraryBrowser(itemId: item.id, serverId: item.serverId))
         default:
-            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+            router.navigateToItem(item)
         }
     }
 }

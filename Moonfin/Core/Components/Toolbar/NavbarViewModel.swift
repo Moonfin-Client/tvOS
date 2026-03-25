@@ -138,7 +138,7 @@ final class NavbarViewModel: ObservableObject {
         let contentType = container.userPreferences[UserPreferences.shuffleContentType]
         Task {
             guard let item = await shuffle(contentType: contentType) else { return }
-            router.navigatePrimary(to: .itemDetails(itemId: item.id))
+            router.navigatePrimaryToItem(item)
         }
     }
 
@@ -146,7 +146,7 @@ final class NavbarViewModel: ObservableObject {
         container.userPreferences[UserPreferences.shuffleContentType] = contentType
         Task {
             guard let item = await shuffle(contentType: contentType) else { return }
-            router.navigatePrimary(to: .itemDetails(itemId: item.id))
+            router.navigatePrimaryToItem(item)
         }
     }
 

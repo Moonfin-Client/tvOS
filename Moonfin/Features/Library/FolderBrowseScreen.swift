@@ -206,7 +206,7 @@ struct FolderBrowseScreen: View {
         } else if item.isFolder == true {
             router.navigate(to: .libraryBrowser(itemId: item.id, serverId: item.serverId))
         } else {
-            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+            router.navigateToItem(item)
         }
     }
 

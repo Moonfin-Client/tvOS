@@ -128,7 +128,7 @@ struct HomeScreen: View {
                         onItemSelected: { item in
                             cancelMediaBarTrailerPreview()
                             navigatedFromMediaBar = true
-                            router.navigate(to: .itemDetails(itemId: item.id))
+                            router.navigateToItem(item)
                         },
                         onPlayTrailer: { item in
                             cancelMediaBarTrailerPreview()
@@ -428,7 +428,7 @@ struct HomeScreen: View {
                                                 router.navigate(to: .liveTvPlayer(channelId: channelId))
                                             }
                                         } else {
-                                            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.effectiveServerId))
+                                            router.navigateToItem(item, serverId: item.effectiveServerId)
                                         }
                                     },
                                     restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil,

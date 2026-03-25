@@ -56,6 +56,41 @@ final class NavigationRouter: ObservableObject {
         reset(to: destination)
     }
 
+    func navigateToItem(_ item: ServerItem, serverId: String? = nil) {
+        if isPhotoItem(item) {
+            navigate(to: .photoPlayer(itemId: item.id, autoPlay: false))
+            return
+        }
+
+        navigate(to: .itemDetails(itemId: item.id, serverId: serverId ?? item.effectiveServerId))
+    }
+
+    func navigatePrimaryToItem(_ item: ServerItem, serverId: String? = nil) {
+        if isPhotoItem(item) {
+            navigatePrimary(to: .photoPlayer(itemId: item.id, autoPlay: false))
+            return
+        }
+
+        navigatePrimary(to: .itemDetails(itemId: item.id, serverId: serverId ?? item.effectiveServerId))
+    }
+
+    func navigateToItem(_ item: MediaBarSlideItem) {
+        if isPhotoItem(item) {
+            navigate(to: .photoPlayer(itemId: item.id, autoPlay: false))
+            return
+        }
+
+        navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+    }
+
+    private func isPhotoItem(_ item: ServerItem) -> Bool {
+        item.type == .photo || item.mediaType == .photo
+    }
+
+    private func isPhotoItem(_ item: MediaBarSlideItem) -> Bool {
+        item.itemType == .photo
+    }
+
     func navigatePrimaryToLibrary(_ item: ServerItem) {
         switch item.collectionType?.lowercased() {
         case "music":

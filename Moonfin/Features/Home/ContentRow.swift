@@ -166,6 +166,10 @@ struct ContentRow: View {
     }
 
     private func imageUrl(for item: ServerItem) -> String? {
+        if item.type == .photo || item.mediaType == .photo {
+            return viewModel.thumbImageUrl(for: item)
+        }
+
         switch row.rowType {
         case .continueWatching, .nextUp, .liveTvOnNow, .liveTvComingUp:
             return viewModel.thumbImageUrl(for: item)

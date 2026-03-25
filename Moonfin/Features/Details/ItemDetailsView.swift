@@ -1209,7 +1209,7 @@ struct ItemDetailsView: View {
                         cardWidth: cardWidth,
                         cardHeight: cardHeight,
                         onSelect: {
-                            router.navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
+                            router.navigateToItem(item)
                         },
                         onFocused: {
                             focusTrace("focused itemRow sectionItem=\(item.id)")
