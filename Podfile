@@ -3,6 +3,7 @@ platform :tvos, '16.0'
 target 'Moonfin' do
   use_frameworks!
   pod 'TVVLCKit', '~> 3.0'
+  pod 'ZIPFoundation', '~> 0.9'
 end
 
 post_install do |installer|

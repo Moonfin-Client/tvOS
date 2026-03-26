@@ -1,16 +1,20 @@
 PODS:
   - TVVLCKit (3.7.3)
+  - ZIPFoundation (0.9.20)
 
 DEPENDENCIES:
   - TVVLCKit (~> 3.0)
+  - ZIPFoundation (~> 0.9)
 
 SPEC REPOS:
   trunk:
     - TVVLCKit
+    - ZIPFoundation
 
 SPEC CHECKSUMS:
   TVVLCKit: 57ab7bbd31178881ae5200ae5d93f8c7cd1385b9
+  ZIPFoundation: dfd3d681c4053ff7e2f7350bc4e53b5dba3f5351
 
-PODFILE CHECKSUM: d68f58aa21231ca05d80fff45c2c88fb5d46596f
+PODFILE CHECKSUM: b9c1f15be9599a520a89a304a228b2e2e8713689
 
 COCOAPODS: 1.16.2

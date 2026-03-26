@@ -370,6 +370,8 @@ struct MainNavigationView: View {
                 sortBy: sortBy,
                 sortOrder: sortOrder
             )
+        case .bookReader(let itemId, let serverId):
+            BookReaderScreen(container: container, itemId: itemId, serverId: serverId)
         case .videoPlayer:
             videoPlayerDestination
         case .trailerPlayer(let videoId, let startSeconds, let segmentsJson):

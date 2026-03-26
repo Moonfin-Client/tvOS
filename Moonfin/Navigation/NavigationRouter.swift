@@ -62,12 +62,32 @@ final class NavigationRouter: ObservableObject {
             return
         }
 
+        if isFolderLike(item) {
+            navigateToLibrary(item)
+            return
+        }
+
+        if isBookItem(item) {
+            navigate(to: .bookReader(itemId: item.id, serverId: serverId ?? item.effectiveServerId))
+            return
+        }
+
         navigate(to: .itemDetails(itemId: item.id, serverId: serverId ?? item.effectiveServerId))
     }
 
     func navigatePrimaryToItem(_ item: ServerItem, serverId: String? = nil) {
         if isPhotoItem(item) {
             navigatePrimary(to: .photoPlayer(itemId: item.id, autoPlay: false))
+            return
+        }
+
+        if isFolderLike(item) {
+            navigatePrimaryToLibrary(item)
+            return
+        }
+
+        if isBookItem(item) {
+            navigatePrimary(to: .bookReader(itemId: item.id, serverId: serverId ?? item.effectiveServerId))
             return
         }
 
@@ -80,6 +100,11 @@ final class NavigationRouter: ObservableObject {
             return
         }
 
+        if isBookItem(item) {
+            navigate(to: .bookReader(itemId: item.id, serverId: item.serverId))
+            return
+        }
+
         navigate(to: .itemDetails(itemId: item.id, serverId: item.serverId))
     }
 
@@ -89,6 +114,34 @@ final class NavigationRouter: ObservableObject {
 
     private func isPhotoItem(_ item: MediaBarSlideItem) -> Bool {
         item.itemType == .photo
+    }
+
+    private func isFolderLike(_ item: ServerItem) -> Bool {
+        if item.isFolder == true {
+            return true
+        }
+
+        if [.folder, .collectionFolder, .userView, .basePluginFolder].contains(item.type) {
+            return true
+        }
+
+        if (item.collectionType?.isEmpty == false) && (item.childCount ?? 0) > 0 {
+            return true
+        }
+
+        if (item.type == .book || item.mediaType == .book) && (item.childCount ?? 0) > 0 {
+            return true
+        }
+
+        return false
+    }
+
+    private func isBookItem(_ item: ServerItem) -> Bool {
+        (item.type == .book || item.mediaType == .book) && item.isFolder != true
+    }
+
+    private func isBookItem(_ item: MediaBarSlideItem) -> Bool {
+        item.itemType == .book
     }
 
     func navigatePrimaryToLibrary(_ item: ServerItem) {

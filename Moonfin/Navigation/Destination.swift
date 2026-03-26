@@ -54,6 +54,7 @@ enum Destination: Hashable {
 
     case nowPlaying
     case photoPlayer(itemId: String, autoPlay: Bool, sortBy: String? = nil, sortOrder: String? = nil)
+    case bookReader(itemId: String, serverId: String? = nil)
     case videoPlayer
     case nextUp(itemId: String)
     case stillWatching(itemId: String)

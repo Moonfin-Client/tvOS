@@ -691,7 +691,8 @@ struct ItemDetailsView: View {
     private func actionButtonsSection(item: ServerItem) -> some View {
         let isMusicType = [ItemType.musicAlbum, .musicArtist, .playlist].contains(item.type)
         let isPlayableMusicCollection = [ItemType.musicAlbum, .playlist].contains(item.type)
-        let canPlay = isMusicType || [ItemType.movie, .episode, .video, .series, .season].contains(item.type)
+        let isReadableBook = item.type == .book || item.mediaType == .book
+        let canPlay = isMusicType || isReadableBook || [ItemType.movie, .episode, .video, .series, .season].contains(item.type)
         let showGoToSeries = item.type == .episode && item.seriesId != nil
         let canDeletePlaylist = item.type == .playlist && (item.canDelete ?? false)
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
@@ -714,6 +715,8 @@ struct ItemDetailsView: View {
                 onPlay: {
                     if isPlayableMusicCollection {
                         playAudio(items: viewModel.tracks)
+                    } else if isReadableBook {
+                        router.navigate(to: .bookReader(itemId: item.id, serverId: item.effectiveServerId))
                     } else {
                         playVideo(item: item, positionTicks: 0)
                     }
@@ -721,6 +724,8 @@ struct ItemDetailsView: View {
                 onResume: {
                     if isPlayableMusicCollection {
                         playAudio(items: viewModel.tracks)
+                    } else if isReadableBook {
+                        router.navigate(to: .bookReader(itemId: item.id, serverId: item.effectiveServerId))
                     } else {
                         let ticks = item.userData?.playbackPositionTicks ?? 0
                         playVideo(item: item, positionTicks: ticks)
