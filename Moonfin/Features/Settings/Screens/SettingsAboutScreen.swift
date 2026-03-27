@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsAboutScreen: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
@@ -23,7 +24,9 @@ struct SettingsAboutScreen: View {
                 caption: "Open source licenses",
                 action: { settingsRouter.navigate(to: .licenses) }
             )
+            .focused($focusedRoute, equals: .licenses)
         }
+        .restoresFocus($focusedRoute)
     }
 
     private func aboutItem(label: String, value: String) -> some View {

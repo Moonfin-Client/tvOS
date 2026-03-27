@@ -4,6 +4,7 @@ struct SettingsSeerrScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedRoute: SettingsRoute?
 
     @State private var isEnabled = false
     @State private var serverUrl = ""
@@ -71,6 +72,7 @@ struct SettingsSeerrScreen: View {
                 trailingText: fetchLimit.displayName,
                 action: { settingsRouter.navigate(to: .seerrFetchLimit) }
             )
+            .focused($focusedRoute, equals: .seerrFetchLimit)
 
             SettingsToggleButton(
                 icon: "sidebar.leading",
@@ -101,8 +103,10 @@ struct SettingsSeerrScreen: View {
                 caption: "Configure visible rows and order",
                 action: { settingsRouter.navigate(to: .seerrRows) }
             )
+            .focused($focusedRoute, equals: .seerrRows)
         }
         .task { await loadState() }
+        .restoresFocus($focusedRoute)
         .alert("Server URL", isPresented: $showUrlAlert) {
             TextField("https://seerr.example.com", text: $urlInput)
             Button("Save") { saveServerUrl() }

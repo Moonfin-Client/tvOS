@@ -4,6 +4,7 @@ struct SettingsPlaybackAdvancedScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var prefs: UserPreferences { container.userPreferences }
 
@@ -50,6 +51,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: resumeLabel,
                 action: { settingsRouter.navigate(to: .playbackResumeSubtractDuration) }
             )
+            .focused($focusedRoute, equals: .playbackResumeSubtractDuration)
 
             SettingsListButton(
                 icon: "forward",
@@ -58,6 +60,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: skipForwardLabel,
                 action: { settingsRouter.navigate(to: .playbackSkipForwardLength) }
             )
+            .focused($focusedRoute, equals: .playbackSkipForwardLength)
 
             SettingsListButton(
                 icon: "gobackward",
@@ -66,6 +69,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: unpauseRewindLabel,
                 action: { settingsRouter.navigate(to: .playbackUnpauseRewind) }
             )
+            .focused($focusedRoute, equals: .playbackUnpauseRewind)
 
             SettingsToggleButton(
                 icon: "text.below.photo",
@@ -84,6 +88,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: bitrateLabel,
                 action: { settingsRouter.navigate(to: .playbackMaxBitrate) }
             )
+            .focused($focusedRoute, equals: .playbackMaxBitrate)
 
             SettingsListButton(
                 icon: "rectangle.badge.checkmark",
@@ -92,6 +97,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: prefs[UserPreferences.maxVideoResolution].displayName,
                 action: { settingsRouter.navigate(to: .playbackMaxResolution) }
             )
+            .focused($focusedRoute, equals: .playbackMaxResolution)
 
             SettingsListButton(
                 icon: "arrow.up.left.and.arrow.down.right",
@@ -100,6 +106,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: prefs[UserPreferences.playerZoomMode].displayName,
                 action: { settingsRouter.navigate(to: .playbackZoomMode) }
             )
+            .focused($focusedRoute, equals: .playbackZoomMode)
 
             SettingsListButton(
                 icon: "clock.badge.questionmark",
@@ -108,6 +115,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: videoStartDelayLabel,
                 action: { settingsRouter.navigate(to: .playbackVideoStartDelay) }
             )
+            .focused($focusedRoute, equals: .playbackVideoStartDelay)
 
             sectionDivider()
             sectionHeader("Audio")
@@ -119,6 +127,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 trailingText: prefs[UserPreferences.audioOutput].displayName,
                 action: { settingsRouter.navigate(to: .playbackAudioOutput) }
             )
+            .focused($focusedRoute, equals: .playbackAudioOutput)
 
             SettingsToggleButton(
                 icon: "moon",
@@ -137,6 +146,7 @@ struct SettingsPlaybackAdvancedScreen: View {
                 isOn: prefs.binding(for: UserPreferences.liveTvDirectPlay)
             )
         }
+        .restoresFocus($focusedRoute)
     }
 
     private func sectionHeader(_ title: String) -> some View {

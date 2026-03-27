@@ -4,6 +4,7 @@ struct SettingsLiveTvGuideOptionsScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var prefs: UserPreferences { container.userPreferences }
 
@@ -15,6 +16,7 @@ struct SettingsLiveTvGuideOptionsScreen: View {
                 caption: prefs[UserPreferences.liveTvChannelOrder].displayName,
                 action: { settingsRouter.navigate(to: .liveTvGuideChannelOrder) }
             )
+            .focused($focusedRoute, equals: .liveTvGuideChannelOrder)
 
             SettingsToggleButton(
                 icon: "star",
@@ -70,6 +72,8 @@ struct SettingsLiveTvGuideOptionsScreen: View {
                 caption: "Filter guide by content type",
                 action: { settingsRouter.navigate(to: .liveTvGuideFilters) }
             )
+            .focused($focusedRoute, equals: .liveTvGuideFilters)
         }
+        .restoresFocus($focusedRoute)
     }
 }

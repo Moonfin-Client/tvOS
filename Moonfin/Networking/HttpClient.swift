@@ -94,6 +94,30 @@ final class HttpClient {
         _ = try await performRequest(path, method: method, queryItems: queryItems, body: body)
     }
 
+    func requestData(_ path: String, queryItems: [URLQueryItem]? = nil) async throws -> Data {
+        try await performRequest(path, method: "GET", queryItems: queryItems, body: nil)
+    }
+
+    func postRaw(_ path: String, rawBody: Data) async throws {
+        guard let baseURL else { throw NetworkError.invalidURL }
+        var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)
+        guard let url = components?.url else { throw NetworkError.invalidURL }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.cachePolicy = .reloadIgnoringLocalCacheData
+        req.timeoutInterval = 30
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue(authorizationHeader, forHTTPHeaderField: "Authorization")
+        req.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        req.httpBody = rawBody
+        let (data, response) = try await session.data(for: req)
+        guard let http = response as? HTTPURLResponse else { throw NetworkError.serverUnavailable }
+        guard (200...299).contains(http.statusCode) else {
+            if http.statusCode == 401 { throw NetworkError.unauthorized }
+            throw NetworkError.httpError(statusCode: http.statusCode, data: data)
+        }
+    }
+
     private func performRequest(
         _ path: String,
         method: String,

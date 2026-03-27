@@ -31,6 +31,7 @@ struct MoonfinApp: App {
 struct AppRootView: View {
     @StateObject private var sessionInitializer: SessionInitializer
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var localization: LocalizationManager
 
     init(container: AppContainer) {
         _sessionInitializer = StateObject(wrappedValue: SessionInitializer(container: container))
@@ -38,6 +39,8 @@ struct AppRootView: View {
 
     var body: some View {
         RootView()
+            .id(localization.currentLanguageCode)
+            .environment(\.locale, localization.locale)
             .environmentObject(sessionInitializer)
             .onOpenURL { url in
                 sessionInitializer.handleDeepLink(url: url, router: router)

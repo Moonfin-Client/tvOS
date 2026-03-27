@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsMediaSegmentsScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var actionMap: [MediaSegmentType: MediaSegmentAction] {
         MediaSegmentRepositoryImpl.parseActionsString(
@@ -22,8 +23,10 @@ struct SettingsMediaSegmentsScreen: View {
                         settingsRouter.navigate(to: .playbackMediaSegment(segmentType: type.rawValue))
                     }
                 )
+                .focused($focusedRoute, equals: .playbackMediaSegment(segmentType: type.rawValue))
             }
         }
+        .restoresFocus($focusedRoute)
     }
 
     private func iconForType(_ type: MediaSegmentType) -> String {

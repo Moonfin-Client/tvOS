@@ -59,7 +59,7 @@ struct SettingsAuthPinCodeScreen: View {
 
                 Button(action: { startFlow(.set) }) {
                     HStack {
-                        Image(systemName: "lock.badge.plus")
+                        Image(systemName: "lock.fill")
                         Text("Set PIN")
                     }
                     .font(.bodyMd)

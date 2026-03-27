@@ -1,5 +1,18 @@
 import SwiftUI
 
+private struct PinPadButtonStyle: ButtonStyle {
+    @Environment(\.isFocused) private var isFocused
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(isFocused ? 1.1 : 1.0)
+            .shadow(color: isFocused ? .white.opacity(0.35) : .clear, radius: 10)
+            .animation(.easeInOut(duration: 0.14), value: isFocused)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeInOut(duration: 0.08), value: configuration.isPressed)
+    }
+}
+
 struct PinEntryView: View {
     enum Mode {
         case set
@@ -20,17 +33,10 @@ struct PinEntryView: View {
     private let maxLength = 10
     private let minLength = 4
 
-    private let columns = [
-        GridItem(.fixed(80), spacing: SpaceTokens.spaceSm),
-        GridItem(.fixed(80), spacing: SpaceTokens.spaceSm),
-        GridItem(.fixed(80), spacing: SpaceTokens.spaceSm),
-    ]
-
     var body: some View {
         ZStack {
             Color.black.opacity(0.85)
                 .ignoresSafeArea()
-                .onTapGesture { onComplete(nil) }
 
             VStack(spacing: SpaceTokens.spaceLg) {
                 Text(title)
@@ -64,6 +70,9 @@ struct PinEntryView: View {
                     .fill(theme.colorScheme.surface)
             )
         }
+        .onExitCommand {
+            onComplete(nil)
+        }
     }
 
     private var title: String {
@@ -93,19 +102,36 @@ struct PinEntryView: View {
 
     private var numericKeypad: some View {
         VStack(spacing: SpaceTokens.spaceSm) {
-            LazyVGrid(columns: columns, spacing: SpaceTokens.spaceSm) {
-                ForEach(1...9, id: \.self) { digit in
-                    keypadButton("\(digit)") { appendDigit("\(digit)") }
-                }
-
-                keypadButton("Clear", systemImage: "delete.left") { deleteDigit() }
-                keypadButton("0") { appendDigit("0") }
-                keypadButton("OK", systemImage: "checkmark") { submit() }
+            HStack(spacing: SpaceTokens.spaceSm) {
+                keypadButton(label: "1", systemImage: nil) { appendDigit("1") }
+                keypadButton(label: "2", systemImage: nil) { appendDigit("2") }
+                keypadButton(label: "3", systemImage: nil) { appendDigit("3") }
+            }
+            HStack(spacing: SpaceTokens.spaceSm) {
+                keypadButton(label: "4", systemImage: nil) { appendDigit("4") }
+                keypadButton(label: "5", systemImage: nil) { appendDigit("5") }
+                keypadButton(label: "6", systemImage: nil) { appendDigit("6") }
+            }
+            HStack(spacing: SpaceTokens.spaceSm) {
+                keypadButton(label: "7", systemImage: nil) { appendDigit("7") }
+                keypadButton(label: "8", systemImage: nil) { appendDigit("8") }
+                keypadButton(label: "9", systemImage: nil) { appendDigit("9") }
+            }
+            HStack(spacing: SpaceTokens.spaceSm) {
+                keypadButton(label: "", systemImage: "delete.left") { deleteDigit() }
+                keypadButton(label: "0", systemImage: nil) { appendDigit("0") }
+                keypadButton(label: "", systemImage: "checkmark") { submit() }
             }
         }
+        .focusSection()
     }
 
-    private func keypadButton(_ label: String, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
+    @ViewBuilder
+    private func keypadButton(
+        label: String,
+        systemImage: String?,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Group {
                 if let systemImage {
@@ -114,16 +140,17 @@ struct PinEntryView: View {
                 } else {
                     Text(label)
                         .font(.title2xl)
+                        .fontWeight(.semibold)
                 }
             }
             .foregroundColor(theme.colorScheme.onButton)
-            .frame(width: 80, height: 60)
+            .frame(width: 84, height: 64)
             .background(
                 RoundedRectangle(cornerRadius: RadiusTokens.small)
                     .fill(theme.colorScheme.button)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PinPadButtonStyle())
     }
 
     private func appendDigit(_ digit: String) {

@@ -4,7 +4,9 @@ struct SettingsOverlayView: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var container: AppContainer
+    @Environment(\.resetFocus) private var resetFocus
     let focusNamespace: Namespace.ID
+    @State private var focusTask: Task<Void, Never>?
 
     var body: some View {
         GeometryReader { geo in
@@ -13,6 +15,25 @@ struct SettingsOverlayView: View {
 
                 settingsPanel(width: min(max(geo.size.width * 0.25, 350), 560))
             }
+        }
+        .onAppear {
+            scheduleFocusReset()
+        }
+        .onChange(of: settingsRouter.path.last ?? .main) { _ in
+            scheduleFocusReset()
+        }
+        .onDisappear {
+            focusTask?.cancel()
+            focusTask = nil
+        }
+    }
+
+    private func scheduleFocusReset(delay: UInt64 = 50_000_000) {
+        focusTask?.cancel()
+        focusTask = Task {
+            try? await Task.sleep(nanoseconds: delay)
+            guard !Task.isCancelled else { return }
+            resetFocus(in: focusNamespace)
         }
     }
 
@@ -31,6 +52,7 @@ struct SettingsOverlayView: View {
         )
         .animation(.easeInOut(duration: 0.3), value: settingsRouter.path)
         .focusSection()
+        .focusScope(focusNamespace)
         .onExitCommand {
             settingsRouter.goBack()
         }

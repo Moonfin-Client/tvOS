@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsSubtitlesScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var prefs: UserPreferences { container.userPreferences }
 
@@ -20,7 +21,8 @@ struct SettingsSubtitlesScreen: View {
                 heading: "Text Color",
                 caption: prefs[UserPreferences.subtitlesTextColor].displayName,
                 action: { settingsRouter.navigate(to: .customizationSubtitlesTextColor) }
-            ) 
+            )
+            .focused($focusedRoute, equals: .customizationSubtitlesTextColor)
 
             SettingsListButton(
                 icon: "rectangle.fill",
@@ -28,6 +30,7 @@ struct SettingsSubtitlesScreen: View {
                 caption: prefs[UserPreferences.subtitlesBackgroundColor].displayName,
                 action: { settingsRouter.navigate(to: .customizationSubtitlesBackgroundColor) }
             )
+            .focused($focusedRoute, equals: .customizationSubtitlesBackgroundColor)
 
             SettingsListButton(
                 icon: "square.dashed",
@@ -35,6 +38,7 @@ struct SettingsSubtitlesScreen: View {
                 caption: prefs[UserPreferences.subtitlesStrokeColor].displayName,
                 action: { settingsRouter.navigate(to: .customizationSubtitlesEdgeColor) }
             )
+            .focused($focusedRoute, equals: .customizationSubtitlesEdgeColor)
 
             SettingsListButton(
                 icon: "textformat.size",
@@ -43,6 +47,7 @@ struct SettingsSubtitlesScreen: View {
                 trailingText: "\(prefs[UserPreferences.subtitlesTextSize])pt",
                 action: { settingsRouter.navigate(to: .customizationSubtitlesTextSize) }
             )
+            .focused($focusedRoute, equals: .customizationSubtitlesTextSize)
 
             SettingsListButton(
                 icon: "arrow.up.and.down",
@@ -51,6 +56,7 @@ struct SettingsSubtitlesScreen: View {
                 trailingText: "\(prefs[UserPreferences.subtitlesOffsetPosition])%",
                 action: { settingsRouter.navigate(to: .customizationSubtitlesOffset) }
             )
+            .focused($focusedRoute, equals: .customizationSubtitlesOffset)
 
             SettingsToggleButton(
                 icon: "captions.bubble",
@@ -59,6 +65,7 @@ struct SettingsSubtitlesScreen: View {
                 isOn: prefs.binding(for: UserPreferences.subtitlesDefaultToNone)
             )
         }
+        .restoresFocus($focusedRoute)
     }
 }
 

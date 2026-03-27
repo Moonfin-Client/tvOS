@@ -4,6 +4,7 @@ struct SettingsMainScreen: View {
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var container: AppContainer
     @FocusState private var focusedRoute: SettingsRoute?
+    @Namespace private var screenNamespace
 
     private var prefs: UserPreferences { container.userPreferences }
 
@@ -11,15 +12,16 @@ struct SettingsMainScreen: View {
         SettingsScreenLayout(title: "Settings") {
             SettingsListButton(
                 icon: "person.2",
-                heading: "Authentication",
+                heading: Strings.authentication,
                 caption: "Manage servers & users",
                 action: { settingsRouter.navigate(to: .authentication) }
             )
             .focused($focusedRoute, equals: .authentication)
+            .prefersDefaultFocus(in: screenNamespace)
 
             SettingsListButton(
                 icon: "paintbrush",
-                heading: "Customization",
+                heading: Strings.customization,
                 caption: "Theme, clock, watched indicators",
                 action: { settingsRouter.navigate(to: .customization) }
             )
@@ -51,7 +53,7 @@ struct SettingsMainScreen: View {
 
             SettingsListButton(
                 icon: "play.circle",
-                heading: "Playback",
+                heading: Strings.playbackSettings,
                 caption: "Quality, next up, audio",
                 action: { settingsRouter.navigate(to: .playback) }
             )
@@ -68,7 +70,7 @@ struct SettingsMainScreen: View {
 
             SettingsListButton(
                 icon: "lock.shield",
-                heading: "Parental Controls",
+                heading: Strings.parentalControls,
                 caption: "Block content by rating",
                 trailingText: container.parentalControlsRepository.isEnabled ? "On" : "Off",
                 action: { settingsRouter.navigate(to: .moonfinParentalControls) }
@@ -77,23 +79,15 @@ struct SettingsMainScreen: View {
 
             SettingsListButton(
                 icon: "tv",
-                heading: "Live TV Guide",
+                heading: Strings.liveTvGuide,
                 caption: "Channel order, indicators, filters",
                 action: { settingsRouter.navigate(to: .liveTvGuideOptions) }
             )
             .focused($focusedRoute, equals: .liveTvGuideOptions)
 
             SettingsListButton(
-                icon: "globe",
-                heading: "Language",
-                caption: "App language & region",
-                action: { settingsRouter.navigate(to: .language) }
-            )
-            .focused($focusedRoute, equals: .language)
-
-            SettingsListButton(
                 icon: "chart.bar",
-                heading: "Telemetry",
+                heading: Strings.telemetry,
                 caption: "Analytics & crash reporting",
                 action: { settingsRouter.navigate(to: .telemetry) }
             )
@@ -109,23 +103,14 @@ struct SettingsMainScreen: View {
 
             SettingsListButton(
                 icon: "info.circle",
-                heading: "About",
+                heading: Strings.about,
                 caption: "Version & licenses",
                 action: { settingsRouter.navigate(to: .about) }
             )
             .focused($focusedRoute, equals: .about)
         }
-        .restoresFocus($focusedRoute)
+        .focusScope(screenNamespace)
         .defaultFocus($focusedRoute, .authentication)
-        .onAppear {
-            guard settingsRouter.lastPoppedRoute == nil else { return }
-            DispatchQueue.main.async {
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    focusedRoute = .authentication
-                }
-            }
-        }
+        .restoresFocus($focusedRoute)
     }
 }

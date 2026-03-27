@@ -4,11 +4,18 @@ struct SettingsLicenseDetailScreen: View {
     let artifactId: String
 
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var settingsRouter: SettingsRouter
 
     @State private var entry: LicenseEntry?
 
     var body: some View {
         SettingsScreenLayout(title: entry?.name ?? "License") {
+            SettingsListButton(
+                icon: "chevron.left",
+                heading: "Back",
+                action: { settingsRouter.goBack() }
+            )
+
             if let entry {
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                     HStack {

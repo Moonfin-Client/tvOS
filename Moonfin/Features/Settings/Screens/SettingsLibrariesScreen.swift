@@ -4,12 +4,24 @@ struct SettingsLibrariesScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedRoute: SettingsRoute?
 
     @State private var libraries: [AggregatedLibrary] = []
     @State private var isLoading = true
 
+    private var multiServerActive: Bool {
+        container.userPreferences[UserPreferences.enableMultiServerLibraries]
+            && container.serverRepository.storedServers.value.count > 1
+    }
+
     var body: some View {
         SettingsScreenLayout(title: "Libraries") {
+            SettingsListButton(
+                icon: "chevron.left",
+                heading: "Back",
+                action: { settingsRouter.goBack() }
+            )
+
             if isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity)
@@ -20,6 +32,15 @@ struct SettingsLibrariesScreen: View {
                     .foregroundColor(theme.colorScheme.listCaption)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, SpaceTokens.spaceLg)
+
+                SettingsListButton(
+                    icon: "arrow.clockwise",
+                    heading: "Reload Libraries",
+                    caption: multiServerActive
+                        ? "Retry loading from your logged-in servers"
+                        : "Retry loading from your current server",
+                    action: { Task { await loadLibraries() } }
+                )
             } else {
                 ForEach(libraries, id: \.library.id) { entry in
                     SettingsListButton(
@@ -35,15 +56,43 @@ struct SettingsLibrariesScreen: View {
                             ))
                         }
                     )
+                    .focused($focusedRoute, equals: .librariesDisplay(
+                        itemId: entry.library.id,
+                        displayPreferencesId: entry.library.id,
+                        serverId: entry.server.id.uuidString,
+                        userId: entry.userId.uuidString
+                    ))
                 }
             }
         }
         .task { await loadLibraries() }
+        .restoresFocus($focusedRoute)
     }
 
+    @MainActor
     private func loadLibraries() async {
-        let results = await container.multiServerRepository.getAggregatedLibraries()
-        libraries = results
+        isLoading = true
+
+        if multiServerActive {
+            libraries = await container.multiServerRepository.getAggregatedLibraries()
+            isLoading = false
+            return
+        }
+
+        guard let session = container.sessionRepository.currentSession.value,
+              let server = container.serverRepository.currentServer.value else {
+            isLoading = false
+            return
+        }
+        let views = await container.userViewsService.awaitLoaded()
+        libraries = views.map { view in
+            AggregatedLibrary(
+                library: view,
+                server: server,
+                userId: session.userId,
+                displayName: view.name
+            )
+        }
         isLoading = false
     }
 

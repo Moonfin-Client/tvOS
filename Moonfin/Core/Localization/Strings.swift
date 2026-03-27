@@ -243,6 +243,8 @@ enum Strings {
     static var audioSettings: String { l("pref_audio") }
     static var mediaSegmentActions: String { l("pref_mediasegment_actions") }
     static var nextUpSettings: String { l("pref_playback_next_up") }
+    static var prerollsEnabled: String { l("pref_prerolls_enabled") }
+    static var prerollsEnabledDescription: String { l("pref_prerolls_enabled_description") }
     static var navbarPosition: String { l("pref_navbar_position") }
     static var liveTvSettings: String { l("pref_live_tv_cat") }
     static var debugOptions: String { l("lbl_enable_debug") }

@@ -2,43 +2,47 @@ import SwiftUI
 
 struct SettingsLanguageScreen: View {
     @EnvironmentObject var localization: LocalizationManager
+    @FocusState private var focusedLanguageCode: String?
+    @State private var selectedCode = "system"
 
-    private var selectedCode: String {
-        localization.currentLanguageCode
+    private var languageOptions: [SupportedLocale] {
+        [.system] + SupportedLocale.allCases.filter { $0 != .system }
     }
 
     var body: some View {
         SettingsScreenLayout(title: "Language") {
-            languageButton(for: .system)
-
-            ForEach(SupportedLocale.allCases.filter { $0 != .system }) { locale in
+            ForEach(languageOptions) { locale in
                 languageButton(for: locale)
+                    .focused($focusedLanguageCode, equals: locale.rawValue)
             }
+        }
+        .defaultFocus($focusedLanguageCode, "system")
+        .onAppear {
+            selectedCode = localization.currentLanguageCode
+            if focusedLanguageCode == nil {
+                focusedLanguageCode = selectedCode
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
+            selectedCode = localization.currentLanguageCode
         }
     }
 
     private func languageButton(for locale: SupportedLocale) -> some View {
         let isSelected = selectedCode == locale.rawValue
         return Button {
+            selectedCode = locale.rawValue
             localization.setLanguage(locale.rawValue)
         } label: {
-            HStack(spacing: SpaceTokens.spaceMd) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .accentColor : .secondary)
-
-                VStack(alignment: .leading, spacing: SpaceTokens.spaceSm / 2) {
-                    Text(locale.displayName)
-                        .font(.bodyMd)
-                    if locale != .system, !locale.nativeName.isEmpty, locale.nativeName != locale.displayName {
-                        Text(locale.nativeName)
-                            .font(.bodySm)
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                Spacer()
+            SettingsItemContent(
+                icon: isSelected ? "checkmark.circle.fill" : "circle",
+                heading: locale.displayName,
+                caption: locale != .system && !locale.nativeName.isEmpty && locale.nativeName != locale.displayName
+                    ? locale.nativeName
+                    : nil
+            ) { _ in
+                EmptyView()
             }
-            .padding(.vertical, SpaceTokens.spaceSm)
         }
         .buttonStyle(CleanButtonStyle())
     }

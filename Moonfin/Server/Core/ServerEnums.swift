@@ -154,6 +154,7 @@ enum ItemFilter: String, Codable {
 enum ItemField: String, Codable {
     case overview = "Overview"
     case genres = "Genres"
+    case officialRating = "OfficialRating"
     case mediaSources = "MediaSources"
     case mediaStreams = "MediaStreams"
     case primaryImageAspectRatio = "PrimaryImageAspectRatio"

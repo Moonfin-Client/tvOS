@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsPlaybackScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var prefs: UserPreferences { container.userPreferences }
 
@@ -29,6 +30,7 @@ struct SettingsPlaybackScreen: View {
                 trailingText: prefs[UserPreferences.nextUpBehavior].displayName,
                 action: { settingsRouter.navigate(to: .playbackNextUpBehavior) }
             )
+            .focused($focusedRoute, equals: .playbackNextUpBehavior)
 
             SettingsListButton(
                 icon: "timer",
@@ -37,6 +39,7 @@ struct SettingsPlaybackScreen: View {
                 trailingText: nextUpTimeoutLabel,
                 action: { settingsRouter.navigate(to: .playbackNextUpTimeout) }
             )
+            .focused($focusedRoute, equals: .playbackNextUpTimeout)
 
             SettingsListButton(
                 icon: "pause.circle",
@@ -45,6 +48,7 @@ struct SettingsPlaybackScreen: View {
                 trailingText: stillWatchingLabel,
                 action: { settingsRouter.navigate(to: .playbackInactivityPrompt) }
             )
+            .focused($focusedRoute, equals: .playbackInactivityPrompt)
 
             SettingsListButton(
                 icon: "speaker.wave.2",
@@ -53,6 +57,7 @@ struct SettingsPlaybackScreen: View {
                 trailingText: prefs[UserPreferences.audioBehavior].displayName,
                 action: { settingsRouter.navigate(to: .playbackAudioBehavior) }
             )
+            .focused($focusedRoute, equals: .playbackAudioBehavior)
 
             SettingsListButton(
                 icon: "photo.on.rectangle",
@@ -61,11 +66,12 @@ struct SettingsPlaybackScreen: View {
                 trailingText: prefs[UserPreferences.photoSlideshowInterval].displayName,
                 action: { settingsRouter.navigate(to: .playbackSlideshowInterval) }
             )
+            .focused($focusedRoute, equals: .playbackSlideshowInterval)
 
             SettingsToggleButton(
                 icon: "film.stack",
-                heading: NSLocalizedString("pref_prerolls_enabled", comment: ""),
-                caption: NSLocalizedString("pref_prerolls_enabled_description", comment: ""),
+                heading: Strings.prerollsEnabled,
+                caption: Strings.prerollsEnabledDescription,
                 isOn: prefs.binding(for: UserPreferences.cinemaModeEnabled)
             )
 
@@ -76,6 +82,7 @@ struct SettingsPlaybackScreen: View {
                     caption: "Skip intros, outros, and more",
                     action: { settingsRouter.navigate(to: .playbackMediaSegments) }
                 )
+                .focused($focusedRoute, equals: .playbackMediaSegments)
             }
 
             SettingsListButton(
@@ -84,6 +91,8 @@ struct SettingsPlaybackScreen: View {
                 caption: "Resolution, zoom, delays, and more",
                 action: { settingsRouter.navigate(to: .playbackAdvanced) }
             )
+            .focused($focusedRoute, equals: .playbackAdvanced)
         }
+        .restoresFocus($focusedRoute)
     }
 }

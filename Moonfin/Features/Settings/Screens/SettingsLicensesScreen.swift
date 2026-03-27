@@ -12,22 +12,50 @@ struct LicenseEntry: Codable, Identifiable {
 
 struct SettingsLicensesScreen: View {
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedArtifactId: String?
 
     @State private var licenses: [LicenseEntry] = []
 
     var body: some View {
         SettingsScreenLayout(title: "Licenses") {
-            ForEach(licenses) { entry in
-                SettingsListButton(
-                    icon: "doc.text",
-                    heading: entry.name,
-                    caption: entry.license,
-                    trailingText: entry.version,
-                    action: { settingsRouter.navigate(to: .license(artifactId: entry.artifactId)) }
-                )
+            SettingsListButton(
+                icon: "chevron.left",
+                heading: "Back",
+                action: { settingsRouter.goBack() }
+            )
+
+            if licenses.isEmpty {
+                Text("No licenses found")
+                    .font(.bodyMd)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, SpaceTokens.spaceLg)
+            } else {
+                ForEach(licenses) { entry in
+                    SettingsListButton(
+                        icon: "doc.text",
+                        heading: entry.name,
+                        caption: entry.license,
+                        trailingText: entry.version,
+                        action: { settingsRouter.navigate(to: .license(artifactId: entry.artifactId)) }
+                    )
+                    .focused($focusedArtifactId, equals: entry.artifactId)
+                }
             }
         }
         .onAppear { loadLicenses() }
+        .onAppear {
+            guard let route = settingsRouter.lastPoppedRoute,
+                  case .license(let artifactId) = route else { return }
+            settingsRouter.lastPoppedRoute = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    focusedArtifactId = artifactId
+                }
+            }
+        }
     }
 
     private func loadLicenses() {

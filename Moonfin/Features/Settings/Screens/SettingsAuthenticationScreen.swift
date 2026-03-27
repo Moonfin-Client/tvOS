@@ -4,6 +4,7 @@ struct SettingsAuthenticationScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var authPrefs: AuthenticationPreferences { container.authPreferences }
     private var servers: [Server] { container.serverRepository.storedServers.value }
@@ -17,6 +18,7 @@ struct SettingsAuthenticationScreen: View {
                 trailingText: authPrefs.sortBy.displayName,
                 action: { settingsRouter.navigate(to: .authenticationSortBy) }
             )
+            .focused($focusedRoute, equals: .authenticationSortBy)
 
             SettingsListButton(
                 icon: "person.crop.circle.badge.checkmark",
@@ -25,6 +27,7 @@ struct SettingsAuthenticationScreen: View {
                 trailingText: authPrefs.autoLoginBehavior.displayName,
                 action: { settingsRouter.navigate(to: .authenticationAutoSignIn) }
             )
+            .focused($focusedRoute, equals: .authenticationAutoSignIn)
 
             SettingsToggleButton(
                 icon: "lock",
@@ -34,13 +37,6 @@ struct SettingsAuthenticationScreen: View {
                     get: { authPrefs.alwaysAuthenticate },
                     set: { authPrefs.alwaysAuthenticate = $0 }
                 )
-            )
-
-            SettingsListButton(
-                icon: "lock.shield",
-                heading: "PIN Code",
-                caption: "Set a PIN to protect access",
-                action: { settingsRouter.navigate(to: .authenticationPinCode) }
             )
 
             if !servers.isEmpty {
@@ -61,8 +57,10 @@ struct SettingsAuthenticationScreen: View {
                         caption: server.address,
                         action: { settingsRouter.navigate(to: .authenticationServer(serverId: server.id.uuidString)) }
                     )
+                    .focused($focusedRoute, equals: .authenticationServer(serverId: server.id.uuidString))
                 }
             }
         }
+        .restoresFocus($focusedRoute)
     }
 }

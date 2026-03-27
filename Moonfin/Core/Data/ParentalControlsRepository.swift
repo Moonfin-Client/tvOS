@@ -16,6 +16,8 @@ final class ParentalControlsRepository: ObservableObject {
     private static let blockedKey = "blocked_ratings"
     private static let cachedRatingsKey = "cached_ratings"
     private static let cacheTimestampKey = "cache_timestamp"
+    private static let cacheVersionKey = "cache_version"
+    private static let cacheVersion = 2
     private static let cacheDuration: TimeInterval = 24 * 60 * 60
 
     init(
@@ -74,9 +76,11 @@ final class ParentalControlsRepository: ObservableObject {
     }
 
     func getAvailableRatings() async -> [String] {
-        if let cached = cachedAvailableRatings { return cached }
+        if let cached = cachedAvailableRatings, !cached.isEmpty { return cached }
 
-        if let userId = currentUserId, let diskCached = loadCachedRatings(userId: userId) {
+        if let userId = currentUserId,
+           let diskCached = loadCachedRatings(userId: userId),
+           !diskCached.isEmpty {
             cachedAvailableRatings = diskCached
             return diskCached
         }
@@ -94,7 +98,7 @@ final class ParentalControlsRepository: ObservableObject {
         if let userId = currentUserId, !sorted.isEmpty {
             saveCachedRatings(userId: userId, ratings: sorted)
         }
-        cachedAvailableRatings = sorted
+        cachedAvailableRatings = sorted.isEmpty ? nil : sorted
         return sorted
     }
 
@@ -104,6 +108,7 @@ final class ParentalControlsRepository: ObservableObject {
         let defaults = defaultsForUser(userId)
         defaults.removeObject(forKey: Self.cachedRatingsKey)
         defaults.removeObject(forKey: Self.cacheTimestampKey)
+        defaults.removeObject(forKey: Self.cacheVersionKey)
     }
 
     private var currentUserId: UUID? {
@@ -141,6 +146,8 @@ final class ParentalControlsRepository: ObservableObject {
 
     private func loadCachedRatings(userId: UUID) -> [String]? {
         let defaults = defaultsForUser(userId)
+        let version = defaults.integer(forKey: Self.cacheVersionKey)
+        guard version == Self.cacheVersion else { return nil }
         let timestamp = defaults.double(forKey: Self.cacheTimestampKey)
         guard timestamp > 0 else { return nil }
         let age = Date().timeIntervalSince1970 - timestamp
@@ -156,35 +163,26 @@ final class ParentalControlsRepository: ObservableObject {
         if let data = try? JSONEncoder().encode(ratings) {
             defaults.set(data, forKey: Self.cachedRatingsKey)
             defaults.set(Date().timeIntervalSince1970, forKey: Self.cacheTimestampKey)
+            defaults.set(Self.cacheVersion, forKey: Self.cacheVersionKey)
         }
     }
 
     private func fetchRatingsFromServer(_ client: MediaServerClient) async -> [String] {
-        guard let userId = client.userId else { return [] }
         do {
-            let views = try await client.userViewsApi.getUserViews(userId: userId)
-            let supportedTypes: Set<String> = ["movies", "tvshows", "mixed"]
-            let targetViews = views.filter { view in
-                guard let ct = view.collectionType?.lowercased() else { return false }
-                return supportedTypes.contains(ct)
+            let globalRatings = try await fetchRatingsForView(client: client, parentId: nil)
+            if !globalRatings.isEmpty {
+                return Array(globalRatings)
             }
 
+            guard let userId = client.userId else { return [] }
+            let views = try await client.userViewsApi.getUserViews(userId: userId)
             var ratings = Set<String>()
-
-            for view in targetViews {
-                let result = try await client.itemsApi.getItems(request: GetItemsRequest(
-                    parentId: view.id,
-                    recursive: true,
-                    includeItemTypes: [.movie, .series, .episode],
-                    fields: [],
-                    limit: 500,
-                    enableImages: false,
-                    enableTotalRecordCount: false
-                ))
-                for item in result.items {
-                    if let rating = item.officialRating, !rating.isEmpty {
-                        ratings.insert(rating)
-                    }
+            for view in views {
+                do {
+                    let viewRatings = try await fetchRatingsForView(client: client, parentId: view.id)
+                    ratings.formUnion(viewRatings)
+                } catch {
+                    continue
                 }
             }
 
@@ -192,6 +190,49 @@ final class ParentalControlsRepository: ObservableObject {
         } catch {
             return []
         }
+    }
+
+    private func fetchRatingsForView(client: MediaServerClient, parentId: String?) async throws -> Set<String> {
+        let pageSize = 500
+        var startIndex = 0
+        var safetyPages = 0
+        let maxPages = 40
+        var ratings = Set<String>()
+
+        while safetyPages < maxPages {
+            let result = try await client.itemsApi.getItems(request: GetItemsRequest(
+                parentId: parentId,
+                recursive: true,
+                includeItemTypes: [.movie, .series, .season, .episode, .video, .musicVideo, .book, .audio, .boxSet],
+                fields: [.officialRating],
+                limit: pageSize,
+                startIndex: startIndex,
+                enableImages: false,
+                enableTotalRecordCount: true
+            ))
+
+            for item in result.items {
+                let normalized = item.officialRating?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .uppercased()
+                if let normalized, !normalized.isEmpty {
+                    ratings.insert(normalized)
+                }
+            }
+
+            let fetchedCount = result.items.count
+            startIndex += fetchedCount
+            safetyPages += 1
+
+            if fetchedCount == 0 || fetchedCount < pageSize {
+                break
+            }
+            if result.totalRecordCount > 0 && startIndex >= result.totalRecordCount {
+                break
+            }
+        }
+
+        return ratings
     }
 }
 

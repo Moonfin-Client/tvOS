@@ -80,6 +80,7 @@ struct MainNavigationView: View {
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
     @Namespace private var mainNamespace
+    @Namespace private var settingsNamespace
     @Environment(\.resetFocus) private var resetFocus
     @State private var contentReady = false
     @State private var sidebarEntryToken = 0
@@ -168,9 +169,10 @@ struct MainNavigationView: View {
                     .ignoresSafeArea()
                     .transition(.opacity)
 
-                SettingsOverlayView(focusNamespace: mainNamespace)
+                SettingsOverlayView(focusNamespace: settingsNamespace)
                     .ignoresSafeArea()
                     .transition(.move(edge: .trailing))
+                    .prefersDefaultFocus(in: mainNamespace)
             }
 
             if container.inactivityTracker.isScreensaverVisible {
@@ -190,7 +192,7 @@ struct MainNavigationView: View {
             container.inactivityTracker.notifyInteraction()
             if presented {
                 container.inactivityTracker.addLock()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
+                DispatchQueue.main.async {
                     resetFocus(in: mainNamespace)
                 }
             } else {

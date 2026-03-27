@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsScreensaverScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedRoute: SettingsRoute?
 
     private var prefs: UserPreferences { container.userPreferences }
 
@@ -25,6 +26,7 @@ struct SettingsScreensaverScreen: View {
                 trailingText: prefs[UserPreferences.screensaverMode].displayName,
                 action: { settingsRouter.navigate(to: .customizationScreensaverMode) }
             )
+            .focused($focusedRoute, equals: .customizationScreensaverMode)
 
             SettingsListButton(
                 icon: "timer",
@@ -33,6 +35,7 @@ struct SettingsScreensaverScreen: View {
                 trailingText: "\(prefs[UserPreferences.screensaverTimeout]) min",
                 action: { settingsRouter.navigate(to: .customizationScreensaverTimeout) }
             )
+            .focused($focusedRoute, equals: .customizationScreensaverTimeout)
 
             SettingsListButton(
                 icon: "circle.lefthalf.filled",
@@ -41,6 +44,7 @@ struct SettingsScreensaverScreen: View {
                 trailingText: dimmingCaption,
                 action: { settingsRouter.navigate(to: .customizationScreensaverDimming) }
             )
+            .focused($focusedRoute, equals: .customizationScreensaverDimming)
 
             SettingsToggleButton(
                 icon: "clock",
@@ -65,7 +69,9 @@ struct SettingsScreensaverScreen: View {
                 caption: ageRatingCaption,
                 action: { settingsRouter.navigate(to: .customizationScreensaverAgeRating) }
             )
+            .focused($focusedRoute, equals: .customizationScreensaverAgeRating)
         }
+        .restoresFocus($focusedRoute)
     }
 
     private var dimmingCaption: String {

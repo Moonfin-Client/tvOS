@@ -47,6 +47,10 @@ struct HomeScreen: View {
         navbarIsLeft || suppressTopNavbarInRows
     }
 
+    private var seasonalSurprise: SeasonalSurprise {
+        container.userPreferences[UserPreferences.seasonalSurprise]
+    }
+
     init(
         container: AppContainer,
         mainNamespace: Namespace.ID,
@@ -324,8 +328,36 @@ struct HomeScreen: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+
+            if seasonalSurprise != .none {
+                seasonalTintOverlay
+            }
         }
         .ignoresSafeArea()
+    }
+
+    @ViewBuilder
+    private var seasonalTintOverlay: some View {
+        let tint: Color = {
+            switch seasonalSurprise {
+            case .none: return .clear
+            case .winter: return Color.blue.opacity(0.12)
+            case .spring: return Color.green.opacity(0.10)
+            case .summer: return Color.orange.opacity(0.12)
+            case .halloween: return Color.orange.opacity(0.18)
+            case .fall: return Color(red: 0.64, green: 0.30, blue: 0.10).opacity(0.16)
+            }
+        }()
+
+        LinearGradient(
+            stops: [
+                .init(color: tint, location: 0),
+                .init(color: .clear, location: 0.55),
+                .init(color: tint.opacity(0.7), location: 1.0)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     private var infoArea: some View {

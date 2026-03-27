@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsParentalControlsScreen: View {
     @EnvironmentObject var container: AppContainer
+    @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var theme: MoonfinTheme
 
     @State private var availableRatings: [String] = []
@@ -12,6 +13,12 @@ struct SettingsParentalControlsScreen: View {
 
     var body: some View {
         SettingsScreenLayout(title: "Parental Controls") {
+            SettingsListButton(
+                icon: "chevron.left",
+                heading: "Back",
+                action: { settingsRouter.goBack() }
+            )
+
             if isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity)
@@ -22,6 +29,13 @@ struct SettingsParentalControlsScreen: View {
                     .foregroundColor(theme.colorScheme.listCaption)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, SpaceTokens.spaceLg)
+
+                SettingsListButton(
+                    icon: "arrow.clockwise",
+                    heading: "Retry Fetch",
+                    caption: "Load ratings from your current server",
+                    action: { Task { await loadRatings(forceRefresh: true) } }
+                )
             } else {
                 ForEach(availableRatings, id: \.self) { rating in
                     SettingsToggleButton(
@@ -35,9 +49,20 @@ struct SettingsParentalControlsScreen: View {
         .task { await loadRatings() }
     }
 
-    private func loadRatings() async {
+    @MainActor
+    private func loadRatings(forceRefresh: Bool = false) async {
+        isLoading = true
         blockedRatings = repo.getBlockedRatings()
+        if forceRefresh {
+            repo.clearCache()
+        }
         availableRatings = await repo.getAvailableRatings()
+
+        if availableRatings.isEmpty && !forceRefresh {
+            repo.clearCache()
+            availableRatings = await repo.getAvailableRatings()
+        }
+
         isLoading = false
     }
 
