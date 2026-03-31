@@ -24,16 +24,16 @@ final class HomeViewModel: ObservableObject {
     private var backdropDebounceTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
     private var dataSources: [String: RowDataSource] = [:]
+    private var rowClients: [String: MediaServerClient] = [:]
     private var userViews: [ServerItem] = []
     private var cancellables = Set<AnyCancellable>()
     private static let selectionDebounceMs: UInt64 = 150_000_000
     private static let backdropDebounceMs: UInt64 = 200_000_000
     private static let chunkSize = 15
-    private static let latestMediaLimit = 50
     private static let multiServerLimit = 30
 
     private static let defaultFields: [ItemField] = [
-        .overview, .primaryImageAspectRatio, .genres, .mediaSources, .providerIds
+        .overview, .genres, .providerIds
     ]
 
     init(container: AppContainer) {
@@ -148,6 +148,7 @@ final class HomeViewModel: ObservableObject {
                 || sections.contains(where: { viewDependent.contains($0) })
 
             dataSources = [:]
+            rowClients = [:]
             var earlyRows: [HomeRow] = []
             for section in sections where !viewDependent.contains(section) {
                 earlyRows.append(contentsOf: buildRowDefinitions(for: section))
@@ -228,6 +229,10 @@ final class HomeViewModel: ObservableObject {
         let multiServerSections: Set<HomeSectionType> = [.resume, .nextUp, .latestMedia, .myMedia, .myMediaSmall]
 
         dataSources = [:]
+        rowClients = [:]
+
+        let sessions = await multiRepo.getLoggedInServers()
+        let clientsByServerId = Dictionary(uniqueKeysWithValues: sessions.map { ($0.server.id, $0.client) })
 
         let needsViews = mediaBarViewModel.isEnabled
             || sections.contains(.latestMedia) || sections.contains(.myMedia) || sections.contains(.myMediaSmall)
@@ -277,17 +282,20 @@ final class HomeViewModel: ObservableObject {
                         return supportedTypes.contains(ct)
                     }
                     for lib in filteredLibs {
-                        let items = await multiRepo.getAggregatedLatestItems(
-                            parentId: lib.library.id,
-                            limit: Self.latestMediaLimit,
-                            serverId: lib.server.id
-                        )
-                        resultRows.append(makeStaticRow(
-                            id: "ms_latest_\(lib.server.id.uuidString)_\(lib.library.id)",
+                        let rowId = "ms_latest_\(lib.server.id.uuidString)_\(lib.library.id)"
+                        if let rowClient = clientsByServerId[lib.server.id] {
+                            rowClients[rowId] = rowClient
+                        }
+                        resultRows.append(makeRow(
+                            id: rowId,
                             title: "Latest \(lib.displayName)",
                             rowType: .latestMedia(libraryId: lib.library.id),
-                            items: items,
-                            isMusicLibraryRow: lib.library.collectionType?.lowercased() == "music"
+                            isMusicLibraryRow: lib.library.collectionType?.lowercased() == "music",
+                            queryType: .items(latestMediaRequest(
+                                parentId: lib.library.id,
+                                collectionType: lib.library.collectionType
+                            )),
+                            triggers: [.libraryUpdated]
                         ))
                     }
 
@@ -316,13 +324,12 @@ final class HomeViewModel: ObservableObject {
         }
 
         rows = resultRows
+        dedupeNextUpAgainstContinueWatching()
         isInitialLoad = false
 
-        let singleRowIds = Set(dataSources.keys).filter { id in
-            !id.hasPrefix("ms_")
-        }
-        if !singleRowIds.isEmpty {
-            await loadRows(singleRowIds, client: client)
+        let rowIds = Set(dataSources.keys)
+        if !rowIds.isEmpty {
+            await loadRows(rowIds, client: client)
         }
 
         indexForSpotlight()
@@ -408,12 +415,9 @@ final class HomeViewModel: ObservableObject {
                     title: "Latest \(view.name)",
                     rowType: .latestMedia(libraryId: view.id),
                     isMusicLibraryRow: view.collectionType?.lowercased() == "music",
-                    queryType: .latestMedia(GetLatestMediaRequest(
+                    queryType: .items(latestMediaRequest(
                         parentId: view.id,
-                        fields: Self.defaultFields,
-                        limit: Self.latestMediaLimit,
-                        groupItems: true,
-                        imageTypeLimit: 1
+                        collectionType: view.collectionType
                     )),
                     triggers: [.libraryUpdated]
                 )
@@ -517,13 +521,75 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    private func latestMediaRequest(parentId: String, collectionType: String?) -> GetItemsRequest {
+        GetItemsRequest(
+            parentId: parentId,
+            recursive: true,
+            includeItemTypes: latestIncludeItemTypes(for: collectionType),
+            excludeItemTypes: [.boxSet],
+            sortBy: [.dateCreated],
+            sortOrder: .descending,
+            fields: Self.defaultFields,
+            enableImages: true,
+            imageTypeLimit: 1,
+            groupItems: true,
+            enableTotalRecordCount: true
+        )
+    }
+
+    private func latestIncludeItemTypes(for collectionType: String?) -> [ItemType]? {
+        switch collectionType?.lowercased() {
+        case "tvshows":
+            return [.series]
+        case "music":
+            return [.musicAlbum]
+        case "movies":
+            return [.movie]
+        case "photos":
+            return [.photoAlbum]
+        case "mixed":
+            return [.movie, .series, .musicAlbum, .photoAlbum]
+        default:
+            return nil
+        }
+    }
+
+    private func dedupeNextUpAgainstContinueWatching() {
+        guard let nextUpIndex = rows.firstIndex(where: { $0.rowType == .nextUp }) else { return }
+
+        let continueWatchingItems = rows
+            .filter { $0.rowType == .continueWatching }
+            .flatMap(\.items)
+        let continueWatchingIds = Set(continueWatchingItems.map(\.id))
+
+        let deduped = rows[nextUpIndex].items.filter { item in
+            !continueWatchingIds.contains(item.id) && !isInProgress(item)
+        }
+
+        rows[nextUpIndex].items = deduped
+        rows[nextUpIndex].totalItemCount = deduped.count
+    }
+
+    private func isInProgress(_ item: ServerItem) -> Bool {
+        guard let userData = item.userData else { return false }
+        if userData.played { return false }
+        if userData.playbackPositionTicks > 0 { return true }
+        if let percent = userData.playedPercentage, percent > 0 { return true }
+        return false
+    }
+
     private func loadRows(_ rowIds: Set<String>, client: MediaServerClient) async {
+        let rowLoads: [(rowId: String, source: RowDataSource, sourceClient: MediaServerClient)] = rowIds.compactMap { rowId in
+            guard let source = dataSources[rowId] else { return nil }
+            let sourceClient = rowClients[rowId] ?? client
+            return (rowId, source, sourceClient)
+        }
+
         await withTaskGroup(of: String?.self) { group in
-            for rowId in rowIds {
-                guard let source = dataSources[rowId] else { continue }
+            for load in rowLoads {
                 group.addTask {
-                    await source.retrieve(client: client)
-                    return rowId
+                    await load.source.retrieve(client: load.sourceClient)
+                    return load.rowId
                 }
             }
             for await rowId in group {
@@ -537,10 +603,14 @@ final class HomeViewModel: ObservableObject {
         guard let index = rows.firstIndex(where: { $0.id == rowId }),
               let source = dataSources[rowId]
         else { return }
+        let rowType = rows[index].rowType
         let filtered = container.parentalControlsRepository.filterItems(source.items)
         rows[index].items = filtered
         rows[index].isLoading = source.isLoading
         rows[index].totalItemCount = source.totalItemCount
+        if rowType == .continueWatching || rowType == .nextUp {
+            dedupeNextUpAgainstContinueWatching()
+        }
     }
 
     func loadMoreIfNeeded(row: HomeRow, currentIndex: Int) {
@@ -550,7 +620,8 @@ final class HomeViewModel: ObservableObject {
         else { return }
 
         Task {
-            await source.loadMore(client: client)
+            let sourceClient = rowClients[row.id] ?? client
+            await source.loadMore(client: sourceClient)
             syncRow(row.id)
         }
     }

@@ -59,36 +59,29 @@ struct MediaBarRatingRow: View {
 
     var body: some View {
         if source == "stars" {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 Text("")
-                    .font(.system(size: 24))
+                    .font(.system(size: 20))
                     .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
                 Text(String(format: "%.1f", value))
-                    .font(.system(size: 22))
+                    .font(.system(size: 20))
                     .foregroundColor(.white)
+                    .fixedSize()
             }
         } else {
-            let scorePercent = Int(value)
+            let scorePercent = Int(value * 100)
             let iconName = RatingIconProvider.getIcon(source: source, scorePercent: scorePercent)
-            let formatted = formatMediaBarRating(source: source, value: value)
+            let formatted = RatingSource(rawValue: source)?.format(value) ?? "\(scorePercent)%"
 
-            HStack(spacing: 8) {
+            HStack(spacing: 4) {
                 if let iconName {
-                    Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 28, height: 28)
+                    Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 24, height: 24)
                 }
                 Text(formatted)
-                    .font(.system(size: 22))
+                    .font(.system(size: 20))
                     .foregroundColor(.white)
+                    .fixedSize()
             }
-        }
-    }
-
-    private func formatMediaBarRating(source: String, value: Float) -> String {
-        switch source {
-        case "tomatoes", "popcorn", "tmdb", "metacritic", "metacriticuser", "trakt", "anilist":
-            return "\(Int(value))%"
-        default:
-            return String(format: "%.1f", value)
         }
     }
 }
@@ -150,7 +143,7 @@ struct MediaBarRatingsRow: View {
         }
 
         if !filtered.isEmpty {
-            HStack(spacing: 28) {
+            HStack(spacing: 16) {
                 ForEach(filtered, id: \.0) { source, value in
                     MediaBarRatingRow(source: source, value: value)
                 }

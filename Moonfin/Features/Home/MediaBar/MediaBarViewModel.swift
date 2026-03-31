@@ -19,7 +19,7 @@ final class MediaBarViewModel: ObservableObject {
     }
 
     static let autoAdvanceInterval: TimeInterval = 7
-    static let fetchFields: [ItemField] = [.overview, .genres, .primaryImageAspectRatio, .providerIds]
+    static let fetchFields: [ItemField] = [.overview, .genres, .providerIds]
 
     var currentItem: MediaBarSlideItem? {
         guard case .ready(let items) = state, !items.isEmpty else { return nil }
@@ -98,11 +98,56 @@ final class MediaBarViewModel: ObservableObject {
         guard let client else { return [] }
 
         if container.pluginSyncService.isPluginAvailable,
-           let serverItems = try? await fetchFromPlugin(client: client) {
+           var serverItems = try? await fetchFromPlugin(client: client) {
+            let missingProviderIds = serverItems.contains { $0.providerIds == nil || $0.providerIds?.isEmpty == true }
+            if missingProviderIds {
+                serverItems = await enrichWithProviderIds(items: serverItems, client: client)
+            }
             return serverItems
         }
 
         return try await fetchFromClient(client: client, userViews: userViews)
+    }
+
+    private func enrichWithProviderIds(items: [MediaBarSlideItem], client: MediaServerClient) async -> [MediaBarSlideItem] {
+        let ids = items.filter { $0.providerIds == nil || $0.providerIds?.isEmpty == true }.map(\.id)
+        guard !ids.isEmpty else { return items }
+
+        let request = GetItemsRequest(
+            fields: [.providerIds],
+            ids: ids,
+            enableImages: false,
+            enableTotalRecordCount: false
+        )
+        guard let result = try? await client.itemsApi.getItems(request: request) else { return items }
+
+        let providerMap: [String: [String: String]] = Dictionary(uniqueKeysWithValues: result.items.compactMap { item -> (String, [String: String])? in
+            guard let pids = item.providerIds, !pids.isEmpty else { return nil }
+            return (item.id, pids)
+        })
+
+        return items.map { item in
+            if item.providerIds == nil || item.providerIds?.isEmpty == true,
+               let pids = providerMap[item.id] {
+                return MediaBarSlideItem(
+                    id: item.id,
+                    serverId: item.serverId,
+                    title: item.title,
+                    overview: item.overview,
+                    backdropUrl: item.backdropUrl,
+                    logoUrl: item.logoUrl,
+                    year: item.year,
+                    genres: item.genres,
+                    runtime: item.runtime,
+                    officialRating: item.officialRating,
+                    communityRating: item.communityRating,
+                    criticRating: item.criticRating,
+                    itemType: item.itemType,
+                    providerIds: pids
+                )
+            }
+            return item
+        }
     }
 
     private func fetchFromPlugin(client: MediaServerClient) async throws -> [MediaBarSlideItem] {
@@ -125,11 +170,12 @@ final class MediaBarViewModel: ObservableObject {
             let CriticRating: Double?
             let ImageTags: [String: String]?
             let BackdropImageTags: [String]?
+            let ProviderIds: [String: String]?
 
             enum CodingKeys: String, CodingKey {
                 case Id, Name, ProductionYear, OfficialRating, RunTimeTicks
                 case Genres, Overview, CommunityRating, CriticRating
-                case ImageTags, BackdropImageTags
+                case ImageTags, BackdropImageTags, ProviderIds
                 case ItemType = "Type"
             }
         }
@@ -178,7 +224,7 @@ final class MediaBarViewModel: ObservableObject {
                 communityRating: dto.CommunityRating,
                 criticRating: dto.CriticRating,
                 itemType: itemType,
-                providerIds: nil
+                providerIds: dto.ProviderIds
             )
         }
     }
@@ -195,7 +241,11 @@ final class MediaBarViewModel: ObservableObject {
 
         var allItems: [ServerItem] = []
 
-        let fetchLimit = maxItems * 3
+        let totalFetchBudget = max(maxItems * 2, 12)
+        let perLibraryFetchLimit = max(
+            6,
+            Int(ceil(Double(totalFetchBudget) / Double(max(targetLibraries.count, 1))))
+        )
 
         if targetLibraries.isEmpty {
             let result = try await client.itemsApi.getItems(request: GetItemsRequest(
@@ -204,7 +254,7 @@ final class MediaBarViewModel: ObservableObject {
                 excludeItemTypes: [.boxSet],
                 sortBy: [.random],
                 fields: Self.fetchFields,
-                limit: fetchLimit,
+                limit: totalFetchBudget,
                 enableImages: true,
                 imageTypeLimit: 1
             ))
@@ -220,7 +270,7 @@ final class MediaBarViewModel: ObservableObject {
                             excludeItemTypes: [.boxSet],
                             sortBy: [.random],
                             fields: Self.fetchFields,
-                            limit: fetchLimit,
+                            limit: perLibraryFetchLimit,
                             enableImages: true,
                             imageTypeLimit: 1
                         ))

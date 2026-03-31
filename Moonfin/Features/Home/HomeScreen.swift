@@ -2,6 +2,14 @@ import SwiftUI
 import Nuke
 
 struct HomeScreen: View {
+    private static let infoLogoReservedHeight: CGFloat = 128
+    private static let infoLogoMaxWidth: CGFloat = 560
+    private static let infoMetaReservedHeight: CGFloat = 28
+    private static let infoRatingsReservedHeight: CGFloat = 40
+    private static let infoSummaryReservedHeight: CGFloat = 120
+    private static let infoAreaTotalHeight: CGFloat =
+        infoLogoReservedHeight + infoMetaReservedHeight + infoRatingsReservedHeight + infoSummaryReservedHeight + (3 * SpaceTokens.spaceSm)
+
     @StateObject private var viewModel: HomeViewModel
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var theme: MoonfinTheme
@@ -373,44 +381,55 @@ struct HomeScreen: View {
 
     private var infoArea: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            if let logoUrl = viewModel.selectedItemState.logoUrl,
-               let url = URL(string: logoUrl) {
-                AsyncImage(url: url) { phase in
-                    if case .success(let image) = phase {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxHeight: 120)
+            ZStack(alignment: .leading) {
+                if let logoUrl = viewModel.selectedItemState.logoUrl,
+                   let url = URL(string: logoUrl) {
+                    AsyncImage(url: url) { phase in
+                        if case .success(let image) = phase {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: Self.infoLogoMaxWidth, maxHeight: 120, alignment: .leading)
+                        } else {
+                            Color.clear
+                        }
                     }
+                } else if !viewModel.selectedItemState.title.isEmpty {
+                    Text(viewModel.selectedItemState.title)
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundColor(theme.colorScheme.onBackground)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
                 }
-            } else if !viewModel.selectedItemState.title.isEmpty {
-                Text(viewModel.selectedItemState.title)
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundColor(theme.colorScheme.onBackground)
-                    .lineLimit(1)
             }
+            .frame(height: Self.infoLogoReservedHeight, alignment: .leading)
 
             SimpleInfoRow(item: viewModel.selectedItemState.item)
+                .frame(height: Self.infoMetaReservedHeight, alignment: .leading)
 
-            if !viewModel.mediaBarRatingsViewModel.ratings.isEmpty {
+            ZStack(alignment: .leading) {
                 MediaBarRatingsRow(
                     ratings: viewModel.mediaBarRatingsViewModel.ratings,
                     enableAdditionalRatings: viewModel.mediaBarRatingsViewModel.enableAdditionalRatings
                 )
             }
+            .frame(height: Self.infoRatingsReservedHeight, alignment: .leading)
+            .opacity(viewModel.mediaBarRatingsViewModel.ratings.isEmpty ? 0 : 1)
 
-            if !viewModel.selectedItemState.summary.isEmpty {
+            ZStack(alignment: .topLeading) {
                 Text(viewModel.selectedItemState.summary)
                     .font(.titleXl)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                     .lineLimit(4)
             }
+            .frame(height: Self.infoSummaryReservedHeight, alignment: .topLeading)
+            .opacity(viewModel.selectedItemState.summary.isEmpty ? 0 : 1)
         }
         .padding(.leading, contentLeading)
         .padding(.trailing, 50)
         .padding(.top, 80)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .animation(.easeInOut(duration: 0.3), value: viewModel.selectedItemState.title)
+        .frame(height: Self.infoAreaTotalHeight, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
     private func rowsContent(screenHeight: CGFloat) -> some View {
@@ -445,11 +464,12 @@ struct HomeScreen: View {
                                     watchedIndicator: viewModel.watchedIndicator,
                                     titleTopPadding: visibleRows.first?.id == row.id ? 4 : 0,
                                     onRowFocused: {
+                                        let isNewRow = focusedRowId != row.id
                                         focusedRowId = row.id
                                         if isRestoringPosition {
                                             isRestoringPosition = false
                                             sentinelEnabled = true
-                                        } else {
+                                        } else if isNewRow {
                                             scrollTrigger += 1
                                         }
                                     },

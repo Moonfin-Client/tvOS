@@ -17,7 +17,6 @@ protocol MultiServerRepositoryProtocol {
     func getLoggedInServers() async -> [ServerUserSession]
     func getAggregatedLibraries() async -> [AggregatedLibrary]
     func getAggregatedResumeItems(mediaTypes: [MediaType], limit: Int) async -> [ServerItem]
-    func getAggregatedLatestItems(parentId: String, limit: Int, serverId: UUID?) async -> [ServerItem]
     func getAggregatedNextUpItems(limit: Int) async -> [ServerItem]
     func getAggregatedMergedContinueWatching(limit: Int) async -> [ServerItem]
 }
@@ -31,7 +30,7 @@ final class MultiServerRepository: MultiServerRepositoryProtocol {
     private static let serverTimeoutNs: UInt64 = 8_000_000_000
 
     private static let defaultFields: [ItemField] = [
-        .overview, .primaryImageAspectRatio, .genres, .mediaSources, .providerIds, .dateCreated
+        .overview, .genres, .providerIds, .dateCreated
     ]
 
     init(
@@ -120,29 +119,6 @@ final class MultiServerRepository: MultiServerRepositoryProtocol {
         }.flatMap { $0 }
 
         return sortByLastPlayed(allItems, limit: limit)
-    }
-
-    func getAggregatedLatestItems(parentId: String, limit: Int, serverId: UUID?) async -> [ServerItem] {
-        let sessions: [ServerUserSession]
-        if let serverId {
-            sessions = await getLoggedInServers().filter { $0.server.id == serverId }
-        } else {
-            sessions = await getLoggedInServers()
-        }
-
-        let allItems = await queryAllServers(sessions) { session in
-            let request = GetLatestMediaRequest(
-                parentId: parentId,
-                fields: Self.defaultFields,
-                limit: limit,
-                groupItems: true,
-                imageTypeLimit: 1
-            )
-            let items = try await session.client.itemsApi.getLatestMedia(request: request)
-            return self.stampServerId(items, server: session.server)
-        }.flatMap { $0 }
-
-        return sortByDateCreated(allItems, limit: limit)
     }
 
     func getAggregatedNextUpItems(limit: Int) async -> [ServerItem] {
@@ -255,15 +231,6 @@ final class MultiServerRepository: MultiServerRepositoryProtocol {
             let dateB = b.userData?.lastPlayedDate
                 ?? b.seriesId.flatMap { seriesLastPlayed[$0] }
                 ?? Date.distantPast
-            return dateA > dateB
-        }
-        return Array(sorted.prefix(limit))
-    }
-
-    private func sortByDateCreated(_ items: [ServerItem], limit: Int) -> [ServerItem] {
-        let sorted = items.sorted { a, b in
-            let dateA = a.dateCreated ?? Date.distantPast
-            let dateB = b.dateCreated ?? Date.distantPast
             return dateA > dateB
         }
         return Array(sorted.prefix(limit))

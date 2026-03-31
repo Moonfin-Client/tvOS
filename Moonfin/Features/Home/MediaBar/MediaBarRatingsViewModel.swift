@@ -83,13 +83,14 @@ final class MediaBarRatingsViewModel: ObservableObject {
             if let apiRatings {
                 for (source, value) in apiRatings {
                     if source == "tomatoes" && criticRating != nil { continue }
-                    result.append((source, value))
+                    let normalized = RatingSource(rawValue: source)?.normalize(value) ?? (value / 100.0)
+                    result.append((source, normalized))
                 }
             }
 
             if !result.contains(where: { $0.0 == "tomatoes" }),
                let critic = criticRating, critic > 0 {
-                result.append(("tomatoes", Float(critic)))
+                result.append(("tomatoes", RatingSource.tomatoes.normalize(Float(critic))))
             }
 
             self.ratings = result
@@ -108,8 +109,9 @@ final class MediaBarRatingsViewModel: ObservableObject {
             result.append(("stars", Float(community)))
         }
         if let critic = criticRating, critic > 0 {
-            result.append(("tomatoes", Float(critic)))
+            result.append(("tomatoes", RatingSource.tomatoes.normalize(Float(critic))))
         }
         return result
     }
+
 }
