@@ -89,6 +89,7 @@ struct MainNavigationView: View {
     @State private var navbarHomeFocusToken = 0
     @State private var preferContentFocusDuringHandoff = false
     @State private var isCurrentDestinationDetails = false
+    @State private var contentHandoffResetTask: Task<Void, Never>?
 
     private var navbarPosition: NavbarPosition {
         container.userPreferences[UserPreferences.navbarPosition]
@@ -107,12 +108,21 @@ struct MainNavigationView: View {
         case .top:
             return !shouldShowTopNavbar
         case .left:
-            return preferContentFocusDuringHandoff || !contentReady || router.hideNavbar
+            return true
         }
     }
 
     private var isLeftNavbarDetails: Bool {
         navbarPosition == .left && isCurrentDestinationDetails
+    }
+
+    private func scheduleContentHandoffReset() {
+        contentHandoffResetTask?.cancel()
+        contentHandoffResetTask = Task {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            guard !Task.isCancelled else { return }
+            preferContentFocusDuringHandoff = false
+        }
     }
 
     private func handoffSidebarFocusToContent() {
@@ -127,9 +137,7 @@ struct MainNavigationView: View {
                 resetFocus(in: mainNamespace)
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            preferContentFocusDuringHandoff = false
-        }
+        scheduleContentHandoffReset()
     }
 
     private func noteSidebarEntered() {
@@ -142,9 +150,7 @@ struct MainNavigationView: View {
         DispatchQueue.main.async {
             resetFocus(in: mainNamespace)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            preferContentFocusDuringHandoff = false
-        }
+        scheduleContentHandoffReset()
     }
 
     private func requestNavbarHomeFocus() {
@@ -209,6 +215,9 @@ struct MainNavigationView: View {
                 }
             }
         }
+        .onDisappear {
+            contentHandoffResetTask?.cancel()
+        }
         .onChange(of: router.path.count) { count in
             if count == 0 {
                 DispatchQueue.main.async {
@@ -268,7 +277,6 @@ struct MainNavigationView: View {
             if contentReady && !router.hideNavbar {
                 LeftSidebar(
                     container: container,
-                    mainNamespace: mainNamespace,
                     onMoveToContent: handoffSidebarFocusToContent,
                     onSidebarEntered: noteSidebarEntered
                 )

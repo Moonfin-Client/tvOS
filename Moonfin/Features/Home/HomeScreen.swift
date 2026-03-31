@@ -34,6 +34,7 @@ struct HomeScreen: View {
     @State private var sidebarEntryRowId: String?
     @State private var sidebarEntryItemId: String?
     @State private var sidebarEntryWasMediaBar = false
+    @State private var hasInitiallyFocusedFirstRow = false
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -44,7 +45,7 @@ struct HomeScreen: View {
     }
 
     private var rowsShouldPreferDefaultFocus: Bool {
-        navbarIsLeft || suppressTopNavbarInRows
+        suppressTopNavbarInRows
     }
 
     private var seasonalSurprise: SeasonalSurprise {
@@ -84,6 +85,10 @@ struct HomeScreen: View {
             }
             if isMediaBarMode && viewModel.isMediaBarActive {
                 mediaBarRequestFocus = true
+            } else if navbarIsLeft {
+                DispatchQueue.main.async {
+                    focusFirstRowTrigger += 1
+                }
             } else {
                 resetFocus(in: mainNamespace)
             }
@@ -146,6 +151,9 @@ struct HomeScreen: View {
                             cancelMediaBarTrailerPreview()
                             sentinelEnabled = false
                             isMediaBarMode = false
+                            let firstVisibleRowId = viewModel.rows.first(where: { !$0.isEmpty })?.id
+                            lastFocusedRowId = firstVisibleRowId
+                            focusedRowId = firstVisibleRowId
                             sentinelTask?.cancel()
                             sentinelTask = Task {
                                 try? await Task.sleep(nanoseconds: 600_000_000)
@@ -153,6 +161,7 @@ struct HomeScreen: View {
                                 sentinelEnabled = true
                             }
                             resolveFocus(delay: 150_000_000)
+                            scheduleSidebarRowRestore(delay: 250_000_000)
                         },
                         onNavigateUp: {
                             onRequestTopNavbarHomeFocus?()
@@ -173,7 +182,7 @@ struct HomeScreen: View {
                     rowsContent(screenHeight: geo.size.height)
                         .disabled(mediaBarPresented)
                         .opacity(mediaBarPresented ? 0 : 1)
-                        .prefersDefaultFocus(rowsShouldPreferDefaultFocus, in: mainNamespace)
+                        .focusSection()
                         .zIndex(0)
                 }
             }
@@ -184,6 +193,7 @@ struct HomeScreen: View {
             viewModel.loadContent()
             suppressTopNavbarUntilMediaBarFocus = viewModel.mediaBarViewModel.isEnabled && lastFocusedRowId == nil
             syncTopNavbarSuppression()
+            hasInitiallyFocusedFirstRow = false
             if navigatedFromMediaBar {
                 isMediaBarMode = true
                 navigatedFromMediaBar = false
@@ -218,13 +228,13 @@ struct HomeScreen: View {
         .onChange(of: viewModel.hasFocusableContent) { ready in
             if ready {
                 if !contentReady { contentReady = true }
-                if !isRestoringPosition {
+                if !isRestoringPosition && !hasInitiallyFocusedFirstRow {
+                    hasInitiallyFocusedFirstRow = true
                     if isMediaBarMode && viewModel.isMediaBarActive {
-                        requestMediaBarFocus()
+                        mediaBarRequestFocus = true
                     } else {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            focusFirstRowTrigger += 1
-                        }
+                        focusFirstRowTrigger += 1
+                        scheduleSidebarRowRestore(delay: 100_000_000)
                     }
                 }
             }
@@ -253,6 +263,7 @@ struct HomeScreen: View {
                     lastFocusedRowId = restoreRowId
                     lastFocusedItemId = restoreItemId
                     isRestoringPosition = true
+                    hasInitiallyFocusedFirstRow = true
                     scrollTrigger += 1
                     scheduleSidebarRowRestore()
                 } else {
@@ -432,6 +443,7 @@ struct HomeScreen: View {
                                     row: row,
                                     viewModel: viewModel,
                                     watchedIndicator: viewModel.watchedIndicator,
+                                    titleTopPadding: visibleRows.first?.id == row.id ? 4 : 0,
                                     onRowFocused: {
                                         focusedRowId = row.id
                                         if isRestoringPosition {

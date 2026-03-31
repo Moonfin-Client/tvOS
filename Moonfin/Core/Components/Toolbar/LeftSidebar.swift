@@ -12,13 +12,11 @@ struct LeftSidebar: View {
 
     @State private var isExpanded = false
     @State private var isLibraryExpanded = false
-    @State private var collapseTask: Task<Void, Never>?
     @State private var sidebarHadFocus = false
-    @State private var didProcessInitialFocus = false
+    @State private var allowAutoExpansion = false
     @State private var returnFocusItem: SidebarFocusItem = .home
     @FocusState private var focusedItem: SidebarFocusItem?
 
-    let mainNamespace: Namespace.ID
     let onMoveToContent: (() -> Void)?
     let onSidebarEntered: (() -> Void)?
 
@@ -27,23 +25,54 @@ struct LeftSidebar: View {
 
     init(
         container: AppContainer,
-        mainNamespace: Namespace.ID,
         onMoveToContent: (() -> Void)? = nil,
         onSidebarEntered: (() -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: NavbarViewModel(container: container))
-        self.mainNamespace = mainNamespace
         self.onMoveToContent = onMoveToContent
         self.onSidebarEntered = onSidebarEntered
+    }
+
+    private var hasVisibleLibraries: Bool {
+        viewModel.showLibraries && !viewModel.userViews.isEmpty
+    }
+
+    private func normalizedFocusItem(_ item: SidebarFocusItem) -> SidebarFocusItem {
+        switch item {
+        case .shuffle:
+            return viewModel.showShuffle ? item : .home
+        case .favorites:
+            return viewModel.showFavorites ? item : .home
+        case .genres:
+            return viewModel.showGenres ? item : .home
+        case .syncPlay:
+            return viewModel.showSyncPlay ? item : .home
+        case .seerr:
+            return viewModel.showSeerrInNavigation ? item : .home
+        case .libraries:
+            return hasVisibleLibraries ? item : .home
+        case .library(let id):
+            guard hasVisibleLibraries,
+                  viewModel.userViews.contains(where: { $0.id == id }) else { return .home }
+            return item
+        default:
+            return item
+        }
+    }
+
+    private func applyExpansionState(for item: SidebarFocusItem?) {
+        guard let item else { return }
+        isExpanded = true
+        if case .library = item {
+            isLibraryExpanded = true
+        } else if item != .libraries {
+            isLibraryExpanded = false
+        }
     }
 
     private func routeHomeAndHandoffFocus() {
         router.reset()
         returnFocusItem = .home
-        focusedItem = nil
-        isExpanded = false
-        isLibraryExpanded = false
-        sidebarHadFocus = false
         onMoveToContent?()
     }
 
@@ -51,21 +80,16 @@ struct LeftSidebar: View {
         if let current = focusedItem {
             returnFocusItem = current
         }
-        focusedItem = nil
-        isExpanded = false
-        isLibraryExpanded = false
-        sidebarHadFocus = false
         onMoveToContent?()
     }
 
     var body: some View {
         sidebarColumn
             .ignoresSafeArea()
-            .defaultFocus($focusedItem, .home)
             .onAppear {
                 sidebarHadFocus = false
-                DispatchQueue.main.async {
-                    focusedItem = .home
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    allowAutoExpansion = true
                 }
             }
             .onMoveCommand { direction in
@@ -74,30 +98,29 @@ struct LeftSidebar: View {
                 }
             }
             .onChange(of: focusedItem) { newValue in
-                collapseTask?.cancel()
                 if let newValue {
+                    if allowAutoExpansion {
+                        applyExpansionState(for: newValue)
+                    }
                     if !sidebarHadFocus {
                         sidebarHadFocus = true
-                        if didProcessInitialFocus {
-                            onSidebarEntered?()
-                        } else {
-                            didProcessInitialFocus = true
-                        }
-                        if newValue != returnFocusItem {
-                            focusedItem = returnFocusItem
+                        onSidebarEntered?()
+                        let target = normalizedFocusItem(returnFocusItem)
+                        if newValue != target {
+                            if allowAutoExpansion {
+                                applyExpansionState(for: target)
+                            }
+                            DispatchQueue.main.async {
+                                focusedItem = target
+                            }
                             return
                         }
                     }
                     returnFocusItem = newValue
-                    isExpanded = true
                 } else {
                     sidebarHadFocus = false
-                    collapseTask = Task {
-                        try? await Task.sleep(nanoseconds: 150_000_000)
-                        guard !Task.isCancelled else { return }
-                        isExpanded = false
-                        isLibraryExpanded = false
-                    }
+                    isExpanded = false
+                    isLibraryExpanded = false
                 }
             }
     }
@@ -131,10 +154,10 @@ struct LeftSidebar: View {
                     )
                 )
                 .frame(width: isExpanded ? Self.expandedWidth : 0)
-                .animation(.easeInOut(duration: 0.25), value: isExpanded)
         }
         .clipped()
-        .focusSection()
+        .animation(.easeOut(duration: 0.18), value: isExpanded)
+
     }
 
     private var userSection: some View {
@@ -349,8 +372,6 @@ private struct SidebarIconItem: View {
         self.action = action
     }
 
-    @State private var delayedShowLabel = false
-    @State private var labelTask: Task<Void, Never>?
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
@@ -360,7 +381,7 @@ private struct SidebarIconItem: View {
                     iconContent
                         .frame(width: 32, height: 32)
 
-                    if delayedShowLabel {
+                    if isExpanded {
                         Text(label)
                             .font(.bodyMd)
                             .foregroundColor(.white)
@@ -378,26 +399,6 @@ private struct SidebarIconItem: View {
             }
         }
         .buttonStyle(CleanButtonStyle())
-        .onChange(of: isExpanded) { expanded in
-            labelTask?.cancel()
-            if expanded {
-                labelTask = Task {
-                    try? await Task.sleep(nanoseconds: 150_000_000)
-                    guard !Task.isCancelled else { return }
-                    var transaction = Transaction()
-                    transaction.disablesAnimations = true
-                    withTransaction(transaction) {
-                        delayedShowLabel = true
-                    }
-                }
-            } else {
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    delayedShowLabel = false
-                }
-            }
-        }
         .opacity(imageUrl != nil ? 1.0 : (isExpanded ? 1.0 : 0.5))
     }
 

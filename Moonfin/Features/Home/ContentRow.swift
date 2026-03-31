@@ -4,6 +4,7 @@ struct ContentRow: View {
     let row: HomeRow
     let viewModel: HomeViewModel
     var watchedIndicator: WatchedIndicatorBehavior = .always
+    var titleTopPadding: CGFloat = 0
     var onRowFocused: (() -> Void)?
     var onItemFocused: ((ServerItem) -> Void)?
     var onItemSelected: ((ServerItem) -> Void)?
@@ -67,6 +68,7 @@ struct ContentRow: View {
             .font(.bodyLg)
             .fontWeight(.semibold)
             .foregroundColor(theme.colorScheme.onBackground)
+            .padding(.top, titleTopPadding)
     }
 
     private var loadingRow: some View {
