@@ -4,6 +4,10 @@ struct ExpandableLibrariesButton: View {
     let libraries: [ServerItem]
     let activeLibraryId: String?
     let onLibrarySelected: (ServerItem) -> Void
+    let pillNamespace: Namespace.ID
+    let pillAnchorId: NavbarItem
+    let pillHeight: CGFloat
+    let onIconFocusChanged: (Bool) -> Void
 
     enum FocusedItem: Hashable {
         case icon
@@ -14,43 +18,62 @@ struct ExpandableLibrariesButton: View {
     @State private var isExpanded = false
     @EnvironmentObject var theme: MoonfinTheme
 
+    private var initialLibraryFocus: FocusedItem? {
+        if let activeLibraryId,
+           libraries.contains(where: { $0.id == activeLibraryId }) {
+            return .library(activeLibraryId)
+        }
+        if let first = libraries.first {
+            return .library(first.id)
+        }
+        return nil
+    }
+
     var body: some View {
         HStack(spacing: 0) {
-            Button(action: { isExpanded.toggle() }) {
-                HStack(spacing: SpaceTokens.spaceSm) {
-                    Image(systemName: "movieclapper.fill")
-                        .font(.system(size: 22))
-
-                    if focusedItem == .icon && !isExpanded {
-                        Text("Libraries")
-                            .font(.bodySm)
-                            .fontWeight(.bold)
-                            .padding(.trailing, 4)
-                            .transition(.opacity.combined(with: .scale(scale: 0.8, anchor: .leading)))
+            Button(action: {
+                if isExpanded {
+                    isExpanded = false
+                    focusedItem = .icon
+                } else {
+                    isExpanded = true
+                    if let target = initialLibraryFocus {
+                        DispatchQueue.main.async {
+                            focusedItem = target
+                        }
                     }
                 }
-                .padding(.horizontal, focusedItem == .icon ? 16 : 8)
-                .padding(.vertical, 10)
-                .background(
-                    Capsule()
-                        .fill(iconBackground)
-                )
+            }) {
+                HStack(spacing: SpaceTokens.spaceSm) {
+                    Image(systemName: "movieclapper.fill")
+                        .font(.system(size: 26))
+
+                    Text("Libraries")
+                        .font(.bodyMd)
+                        .fontWeight(.bold)
+                        .padding(.trailing, 4)
+                        .opacity(focusedItem == .icon && !isExpanded ? 1.0 : 0.0)
+                        .frame(width: focusedItem == .icon && !isExpanded ? nil : 0, alignment: .center)
+                        .clipped()
+                }
+                .padding(.horizontal, focusedItem == .icon ? 20 : 10)
+                .padding(.vertical, 12)
                 .foregroundColor(iconForeground)
             }
             .buttonStyle(CleanButtonStyle())
             .focused($focusedItem, equals: .icon)
-            .scaleEffect(focusedItem == .icon ? 1.05 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: focusedItem)
+            .background(Color.clear.frame(height: pillHeight).matchedGeometryEffect(id: pillAnchorId, in: pillNamespace, isSource: true))
+            .animation(.spring(response: 0.3, dampingFraction: 0.82), value: focusedItem)
 
             if isExpanded {
                 HStack(spacing: 0) {
                     ForEach(libraries, id: \.id) { library in
                         Button(action: { onLibrarySelected(library) }) {
                             Text(library.name)
-                                .font(.bodySm)
+                                .font(.bodyMd)
                                 .fontWeight(.bold)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
+                                .padding(.horizontal, 18)
+                                .frame(height: pillHeight)
                                 .background(
                                     Capsule()
                                         .fill(pillBackground(for: library))
@@ -59,8 +82,7 @@ struct ExpandableLibrariesButton: View {
                         }
                         .buttonStyle(CleanButtonStyle())
                         .focused($focusedItem, equals: .library(library.id))
-                        .scaleEffect(focusedItem == .library(library.id) ? 1.05 : 1.0)
-                        .animation(.easeInOut(duration: 0.15), value: focusedItem)
+                        .animation(.spring(response: 0.25, dampingFraction: 0.82), value: focusedItem)
                     }
                 }
                 .padding(.leading, 8)
@@ -69,12 +91,12 @@ struct ExpandableLibrariesButton: View {
                 .onMoveCommand { direction in
                     if direction == .up {
                         isExpanded = false
-                        focusedItem = nil
+                        focusedItem = .icon
                     }
                 }
                 .transition(
                     .asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .leading)),
+                        insertion: .opacity.combined(with: .scale(scale: 0.9, anchor: .center)),
                         removal: .opacity
                     )
                 )
@@ -82,16 +104,11 @@ struct ExpandableLibrariesButton: View {
         }
         .animation(.easeInOut(duration: 0.25), value: isExpanded)
         .onChange(of: focusedItem) { newValue in
+            onIconFocusChanged(newValue == .icon)
             if newValue == nil {
                 isExpanded = false
             }
         }
-    }
-
-    private var iconBackground: Color {
-        if focusedItem == .icon { return theme.focusBorder.color }
-        if activeLibraryId != nil { return theme.colorScheme.buttonActive }
-        return .clear
     }
 
     private var iconForeground: Color {

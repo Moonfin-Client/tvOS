@@ -17,35 +17,26 @@ struct ExpandableToolbarButton: View {
                         .renderingMode(.template)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 22, height: 22)
+                        .frame(width: 26, height: 26)
                 } else {
                     Image(systemName: icon)
-                        .font(.system(size: 22))
+                        .font(.system(size: 26))
                 }
 
-                if isFocused {
-                    Text(label)
-                        .font(.bodySm)
-                        .fontWeight(.bold)
-                        .padding(.trailing, 4)
-                        .transition(.opacity.combined(with: .scale(scale: 0.8, anchor: .leading)))
-                }
+                Text(label)
+                    .font(.bodyMd)
+                    .fontWeight(.bold)
+                    .padding(.trailing, 4)
+                    .opacity(isFocused ? 1.0 : 0.0)
+                    .frame(width: isFocused ? nil : 0, alignment: .center)
+                    .clipped()
             }
-            .padding(.horizontal, isFocused ? 16 : 8)
-            .padding(.vertical, 10)
-            .background(
-                Capsule()
-                    .fill(isFocused ? theme.focusBorder.color : .clear)
-            )
-            .foregroundColor(isFocused ? focusContentColor : theme.colorScheme.onButton)
+            .padding(.horizontal, isFocused ? 20 : 10)
+            .padding(.vertical, 12)
+            .foregroundColor(isFocused ? theme.focusBorder.color.contrastingContentColor : theme.colorScheme.onButton)
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.2), value: isFocused)
-    }
-
-    private var focusContentColor: Color {
-        theme.focusBorder.color.contrastingContentColor
+        .animation(.spring(response: 0.3, dampingFraction: 0.82), value: isFocused)
     }
 }

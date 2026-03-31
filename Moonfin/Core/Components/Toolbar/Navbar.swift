@@ -6,8 +6,11 @@ struct Navbar: View {
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
     @FocusState private var navFocusItem: NavbarItem?
+    @Namespace private var navPillNamespace
     @State private var lockToHomeOnEntry = true
     @State private var relockTask: Task<Void, Never>?
+    @State private var isLibrariesIconFocused = true
+    private let navbarPillHeight: CGFloat = 56
     let requestHomeFocusToken: Int
     let onMoveToContent: (() -> Void)?
 
@@ -98,6 +101,7 @@ struct Navbar: View {
                 action: { routeHomeAndHandoffFocus() }
             )
             .focused($navFocusItem, equals: .home)
+            .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.home, in: navPillNamespace, isSource: true))
 
             Group {
                 ExpandableToolbarButton(
@@ -106,6 +110,7 @@ struct Navbar: View {
                     action: { router.navigatePrimary(to: .search()) }
                 )
                 .focused($navFocusItem, equals: .search)
+                .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.search, in: navPillNamespace, isSource: true))
 
                 if viewModel.showShuffle {
                     ExpandableToolbarButton(
@@ -122,6 +127,7 @@ struct Navbar: View {
                             }
                         }
                     }
+                    .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.shuffle, in: navPillNamespace, isSource: true))
                 }
 
                 if viewModel.showFavorites {
@@ -131,6 +137,7 @@ struct Navbar: View {
                         action: { router.navigatePrimary(to: .allFavorites) }
                     )
                     .focused($navFocusItem, equals: .favorites)
+                    .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.favorites, in: navPillNamespace, isSource: true))
                 }
 
                 ExpandableToolbarButton(
@@ -139,6 +146,7 @@ struct Navbar: View {
                     action: { router.navigatePrimary(to: .folderView) }
                 )
                 .focused($navFocusItem, equals: .folders)
+                .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.folders, in: navPillNamespace, isSource: true))
 
                 if viewModel.showGenres {
                     ExpandableToolbarButton(
@@ -147,6 +155,7 @@ struct Navbar: View {
                         action: { router.navigatePrimary(to: .allGenres) }
                     )
                     .focused($navFocusItem, equals: .genres)
+                    .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.genres, in: navPillNamespace, isSource: true))
                 }
 
                 if viewModel.showSeerrInToolbar {
@@ -157,6 +166,7 @@ struct Navbar: View {
                         action: { router.navigatePrimary(to: .seerrDiscover) }
                     )
                     .focused($navFocusItem, equals: .seerr)
+                    .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.seerr, in: navPillNamespace, isSource: true))
                 }
 
                 if viewModel.showLibraries && !viewModel.userViews.isEmpty {
@@ -165,6 +175,12 @@ struct Navbar: View {
                         activeLibraryId: nil,
                         onLibrarySelected: { library in
                             router.navigatePrimaryToLibrary(library)
+                        },
+                        pillNamespace: navPillNamespace,
+                        pillAnchorId: .libraries,
+                        pillHeight: navbarPillHeight,
+                        onIconFocusChanged: { isIconFocused in
+                            isLibrariesIconFocused = isIconFocused
                         }
                     )
                     .focused($navFocusItem, equals: .libraries)
@@ -177,6 +193,7 @@ struct Navbar: View {
                         action: { settingsRouter.open(to: .syncPlay) }
                     )
                     .focused($navFocusItem, equals: .syncPlay)
+                    .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.syncPlay, in: navPillNamespace, isSource: true))
                 }
 
                 ExpandableToolbarButton(
@@ -185,18 +202,32 @@ struct Navbar: View {
                     action: { settingsRouter.open() }
                 )
                 .focused($navFocusItem, equals: .settings)
+                .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.settings, in: navPillNamespace, isSource: true))
             }
             .disabled(lockToHomeOnEntry)
         }
-        .background(
-            Capsule()
-                .fill(viewModel.overlayColor.opacity(viewModel.overlayOpacity))
-        )
+        .background {
+            ZStack {
+                Capsule()
+                    .fill(viewModel.overlayColor.opacity(viewModel.overlayOpacity))
+                    .frame(height: navbarPillHeight)
+                if let focused = navFocusItem, focused != .user {
+                    if focused != .libraries || isLibrariesIconFocused {
+                        Capsule()
+                            .fill(theme.focusBorder.color)
+                            .frame(height: navbarPillHeight)
+                            .matchedGeometryEffect(id: focused, in: navPillNamespace, isSource: false)
+                            .transition(.opacity)
+                    }
+                }
+            }
+        }
         .clipShape(Capsule())
+        .animation(.spring(response: 0.3, dampingFraction: 0.82), value: navFocusItem)
     }
 }
 
-private enum NavbarItem: Hashable {
+enum NavbarItem: Hashable {
     case user
     case home
     case search
@@ -235,7 +266,7 @@ private struct UserAvatarToolbarButton: View {
                     fallbackIcon
                 }
             }
-            .frame(width: 44, height: 44)
+            .frame(width: 52, height: 52)
             .clipShape(Circle())
             .overlay(
                 Circle()
@@ -252,7 +283,7 @@ private struct UserAvatarToolbarButton: View {
             Circle()
                 .fill(theme.colorScheme.button)
             Image(systemName: "person.fill")
-                .font(.system(size: 20))
+                .font(.system(size: 24))
                 .foregroundColor(theme.colorScheme.onButton)
         }
     }
