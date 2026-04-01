@@ -21,6 +21,9 @@ packages:
   KeychainAccess:
     url: https://github.com/kishikawakatsumi/KeychainAccess
     from: "4.2.2"
+  MPVKit:
+    url: https://github.com/mpvkit/MPVKit
+    from: "0.41.0"
 
 targets:
   Moonfin:
@@ -43,3 +46,19 @@ targets:
         product: NukeUI
       - package: Nuke
       - package: KeychainAccess
+      - package: MPVKit
+        product: MPVKit
+
+schemes:
+  Moonfin:
+    build:
+      targets:
+        Moonfin: all
+    run:
+      config: Debug
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+    profile:
+      config: Release

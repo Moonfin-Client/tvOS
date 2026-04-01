@@ -473,7 +473,7 @@ struct TrailerPlayerScreen: View {
     let segmentsJson: String
 
     @EnvironmentObject var router: NavigationRouter
-    @StateObject private var player = VLCPlayerWrapper()
+    @StateObject private var player: VLCPlayerWrapper
     @State private var hasStartedPlayback = false
     @State private var resolveError: String?
     @State private var resolverDiagnostics: String = ""
@@ -483,6 +483,13 @@ struct TrailerPlayerScreen: View {
     @State private var resolvedStreamURL: URL?
     @State private var didTryNativeFallback = false
     @State private var nativePlayer: AVPlayer?
+
+    init(videoId: String, startSeconds: Double, segmentsJson: String) {
+        self.videoId = videoId
+        self.startSeconds = startSeconds
+        self.segmentsJson = segmentsJson
+        _player = StateObject(wrappedValue: MpvPlayerWrapper.makePreferredPlayer())
+    }
 
     private var isLoading: Bool {
         switch player.state {

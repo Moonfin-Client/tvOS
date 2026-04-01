@@ -39,21 +39,44 @@ enum ZoomMode: String, StringRepresentableEnum, CaseIterable {
 struct VLCTrack: Identifiable, Equatable {
     let id: Int32
     let name: String
+    let language: String?
+    let title: String?
+    let isDefault: Bool
+    let isForced: Bool
+    let codec: String?
+
+    init(
+        id: Int32,
+        name: String,
+        language: String? = nil,
+        title: String? = nil,
+        isDefault: Bool = false,
+        isForced: Bool = false,
+        codec: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.language = language
+        self.title = title
+        self.isDefault = isDefault
+        self.isForced = isForced
+        self.codec = codec
+    }
 }
 
 @MainActor
-final class VLCPlayerWrapper: NSObject, ObservableObject {
-    @Published private(set) var state: VLCPlayerState = .idle
-    @Published private(set) var position: Float = 0
-    @Published private(set) var currentTime: TimeInterval = 0
-    @Published private(set) var duration: TimeInterval = 0
-    @Published private(set) var bufferProgress: Float = 0
+class VLCPlayerWrapper: NSObject, ObservableObject {
+    @Published internal(set) var state: VLCPlayerState = .idle
+    @Published internal(set) var position: Float = 0
+    @Published internal(set) var currentTime: TimeInterval = 0
+    @Published internal(set) var duration: TimeInterval = 0
+    @Published internal(set) var bufferProgress: Float = 0
     @Published private(set) var isSeekable: Bool = false
-    @Published private(set) var audioTracks: [VLCTrack] = []
-    @Published private(set) var subtitleTracks: [VLCTrack] = []
-    @Published private(set) var currentAudioTrackIndex: Int32 = -1
-    @Published private(set) var currentSubtitleTrackIndex: Int32 = -1
-    @Published private(set) var rate: Float = 1.0
+    @Published internal(set) var audioTracks: [VLCTrack] = []
+    @Published internal(set) var subtitleTracks: [VLCTrack] = []
+    @Published internal(set) var currentAudioTrackIndex: Int32 = -1
+    @Published internal(set) var currentSubtitleTrackIndex: Int32 = -1
+    @Published internal(set) var rate: Float = 1.0
     @Published private(set) var zoomMode: ZoomMode = .fit
 
     private(set) var mediaPlayer: VLCMediaPlayer?
@@ -68,7 +91,19 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
     private var audioSessionActive = false
     private var pendingSeekPosition: TimeInterval?
 
+    private(set) var playbackBackendIdentifier: String = "tvvlckit"
+    private(set) var playbackFallbackReason: String?
+
     var isPlaying: Bool { state == .playing }
+
+    func updatePlaybackBackend(identifier: String, fallbackReason: String?) {
+        playbackBackendIdentifier = identifier
+        playbackFallbackReason = fallbackReason
+    }
+
+    func configurePreferredBackendForNextPlayback(_ backend: PlaybackBackendDirective, fallbackReason: String?) {
+        updatePlaybackBackend(identifier: backend.rawValue, fallbackReason: fallbackReason)
+    }
 
     func attachVideoView(_ view: UIView) {
         videoView = view
@@ -165,6 +200,10 @@ final class VLCPlayerWrapper: NSObject, ObservableObject {
         guard let player = mediaPlayer, isSeekable else { return }
         let ms = Int32(seconds * 1000)
         player.time = VLCTime(int: ms)
+    }
+
+    func seekBy(_ delta: TimeInterval) {
+        seek(to: max(currentTime + delta, 0))
     }
 
     func seekToPosition(_ pos: Float) {

@@ -33,7 +33,7 @@ struct HomeScreen: View {
     @State private var sentinelTask: Task<Void, Never>?
     @State private var mediaBarTrailerPreviewTask: Task<Void, Never>?
     @State private var lastPreviewedMediaBarItemId: String?
-    @StateObject private var inlineTrailerPlayer = VLCPlayerWrapper()
+    @StateObject private var inlineTrailerPlayer: VLCPlayerWrapper
     @Environment(\.resetFocus) private var resetFocus
     @State private var focusFirstRowTrigger: Int = 0
     @State private var restoreRowFocusTrigger: Int = 0
@@ -72,6 +72,7 @@ struct HomeScreen: View {
         onRequestTopNavbarHomeFocus: (() -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
+        _inlineTrailerPlayer = StateObject(wrappedValue: MpvPlayerWrapper.makePreferredPlayer())
         self.mainNamespace = mainNamespace
         self._contentReady = contentReady
         self.sidebarEntryToken = sidebarEntryToken
@@ -653,7 +654,12 @@ struct HomeScreen: View {
 
         if let localTrailers = try? await client.userLibraryApi.getLocalTrailers(itemId: item.id),
            let localTrailer = localTrailers.first {
-            let resolver = ServerStreamResolver(client: client)
+            let requestedBackend = PlaybackRolloutPolicy.effectiveRequestedDirective(
+                requested: container.userPreferences[UserPreferences.playbackPlayerBackend],
+                stage: container.userPreferences[UserPreferences.playbackMpvCanaryStage],
+                localKillSwitch: container.userPreferences[UserPreferences.playbackMpvKillSwitchEnabled]
+            )
+            let resolver = ServerStreamResolver(client: client, requestedBackend: requestedBackend)
             let mediaSourceId = localTrailer.mediaSources?.first?.id
             if let stream = try? await resolver.resolve(
                 item: localTrailer,

@@ -2,6 +2,7 @@ import Foundation
 
 final class ServerStreamResolver: StreamResolver {
     private let client: MediaServerClient
+    private let requestedBackend: PlaybackBackendDirective
 
     private lazy var deviceId: String = AppConstants.deviceId
 
@@ -9,8 +10,9 @@ final class ServerStreamResolver: StreamResolver {
     private var lastResolvedSourceId: String?
     private var lastResolvedStream: StreamInfo?
 
-    init(client: MediaServerClient) {
+    init(client: MediaServerClient, requestedBackend: PlaybackBackendDirective) {
         self.client = client
+        self.requestedBackend = requestedBackend
     }
 
     func resolve(
@@ -106,13 +108,51 @@ final class ServerStreamResolver: StreamResolver {
         let playSessionId = result.playSessionId ?? ""
         let audioStreams = source.mediaStreams.filter { $0.type == .audio }
         let subtitleStreams = source.mediaStreams.filter { $0.type == .subtitle }
+        let videoStream = source.mediaStreams.first { $0.type == .video }
+        let selectedAudioIndex = audioStreamIndex ?? source.defaultAudioStreamIndex
+        let selectedAudioStream = audioStreams.first { $0.index == selectedAudioIndex } ?? audioStreams.first
         let container = normalizedContainer(source.container, isAudio: item.mediaType == .audio)
+
+        let audioPolicy = AudioCapabilityPolicy.decide(
+            requestedBackend: requestedBackend,
+            selectedAudioStream: selectedAudioStream,
+            canTranscode: source.transcodingUrl != nil,
+            maxAudioChannels: maxAudioChannels
+        )
+
+        let capabilities = VideoCapabilityDetector.current()
+        let dynamicRange = VideoDynamicRangePolicy.detectRange(videoStream: videoStream)
+        let videoPolicy = VideoDynamicRangePolicy.decide(
+            requestedBackend: requestedBackend,
+            dynamicRange: dynamicRange,
+            capabilities: capabilities,
+            canTranscode: source.transcodingUrl != nil
+        )
+
+        let preferredBackend: PlaybackBackendDirective =
+            (videoPolicy.backend == .tvvlcKit || audioPolicy.backend == .tvvlcKit) ? .tvvlcKit : .mpv
+        let fallbackReason = audioPolicy.reason ?? videoPolicy.reason
+        let combinedDiagnostics = videoPolicy.diagnostics + audioPolicy.diagnostics
+
+        let forceTranscodeReasons: Set<String> = [
+            "hdr10_requires_transcode",
+            "hlg_requires_transcode",
+            "hdr10_plus_requires_transcode",
+            "dolby_vision_requires_transcode",
+            "downmix_to_stereo_requires_transcode",
+            "truehd_requires_transcode",
+            "dts_requires_transcode",
+            "unsupported_audio_codec_requires_transcode"
+        ]
+        let shouldForceTranscodeForRange =
+            audioPolicy.requiresTranscode ||
+            (fallbackReason.map { forceTranscodeReasons.contains($0) } ?? false)
 
         let streamInfo: StreamInfo
 
         let preferTranscodedAudioForLyrics = item.mediaType == .audio && item.hasLyrics == true
 
-        if source.supportsDirectPlay && !isLiveTv && !(preferTranscodedAudioForLyrics && source.transcodingUrl != nil) {
+        if source.supportsDirectPlay && !isLiveTv && !(preferTranscodedAudioForLyrics && source.transcodingUrl != nil) && !shouldForceTranscodeForRange {
             let params = StreamParams(
                 userId: userId,
                 mediaSourceId: source.id,
@@ -139,7 +179,11 @@ final class ServerStreamResolver: StreamResolver {
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
-                defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex
+                defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
+                dynamicRange: dynamicRange,
+                preferredBackend: preferredBackend,
+                fallbackReason: fallbackReason,
+                diagnostics: combinedDiagnostics
             )
         } else if let transcodingUrl = source.transcodingUrl {
             let method: PlayMethod = source.supportsDirectStream ? .directStream : .transcode
@@ -153,7 +197,11 @@ final class ServerStreamResolver: StreamResolver {
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
-                defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex
+                defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
+                dynamicRange: dynamicRange,
+                preferredBackend: .mpv,
+                fallbackReason: fallbackReason,
+                diagnostics: combinedDiagnostics + ["resolved_via=transcode"]
             )
         } else if isLiveTv {
             let params = StreamParams(
@@ -178,7 +226,11 @@ final class ServerStreamResolver: StreamResolver {
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
-                defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex
+                defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
+                dynamicRange: .unknown,
+                preferredBackend: requestedBackend,
+                fallbackReason: nil,
+                diagnostics: ["resolved_via=livetv"]
             )
         } else {
             throw StreamResolverError.noCompatibleStream
@@ -220,16 +272,38 @@ final class ServerStreamResolver: StreamResolver {
             audioStreams: [],
             subtitleStreams: [],
             defaultAudioStreamIndex: nil,
-            defaultSubtitleStreamIndex: nil
+            defaultSubtitleStreamIndex: nil,
+            dynamicRange: .unknown,
+            preferredBackend: requestedBackend,
+            fallbackReason: nil,
+            diagnostics: ["resolved_via=livetv_fallback"]
         )
     }
 
     private func buildTranscodingUrl(_ path: String) -> String {
-        guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else {
-            return path
+        let absolutePath: String
+        if path.hasPrefix("http") {
+            absolutePath = path
+        } else {
+            guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else {
+                return path
+            }
+            absolutePath = "\(base)\(path)"
         }
-        if path.hasPrefix("http") { return path }
-        return "\(base)\(path)"
+
+        guard let token = client.accessToken, !token.isEmpty else {
+            return absolutePath
+        }
+
+        guard var components = URLComponents(string: absolutePath) else {
+            return absolutePath
+        }
+        var queryItems = components.queryItems ?? []
+        if !queryItems.contains(where: { $0.name == "api_key" }) {
+            queryItems.append(URLQueryItem(name: "api_key", value: token))
+            components.queryItems = queryItems
+        }
+        return components.url?.absoluteString ?? absolutePath
     }
 
     private func normalizedContainer(_ rawContainer: String?, isAudio: Bool) -> String {

@@ -1,5 +1,8 @@
 import Foundation
 import SwiftUI
+#if canImport(MPVKit)
+import MPVKit
+#endif
 
 final class UserPreferences {
     private var store: PreferenceStore
@@ -20,6 +23,9 @@ final class UserPreferences {
     static let liveTvDirectPlay = Preference(key: "playback_livetv_direct_play", defaultValue: true)
     static let videoStartDelay = Preference(key: "playback_video_start_delay", defaultValue: 0)
     static let cinemaModeEnabled = Preference(key: "cinema_mode_enabled", defaultValue: true)
+    static let playbackPlayerBackend = Preference(key: "playback_player_backend", defaultValue: PlaybackPlayerBackend.tvvlcKit)
+    static let playbackMpvCanaryStage = Preference(key: "playback_mpv_canary_stage", defaultValue: PlaybackMpvCanaryStage.optInProduction)
+    static let playbackMpvKillSwitchEnabled = Preference(key: "playback_mpv_kill_switch_enabled", defaultValue: false)
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
     static let shuffleContentType = Preference(key: "shuffle_content_type", defaultValue: ShuffleContentType.both)
@@ -176,6 +182,73 @@ enum AudioOutput: String, StringRepresentableEnum, CaseIterable {
         case .downmixToStereo: return "Downmix to Stereo"
         }
     }
+}
+
+enum PlaybackPlayerBackend: String, StringRepresentableEnum, CaseIterable {
+    case tvvlcKit
+    case mpv
+
+    var displayName: String {
+        switch self {
+        case .tvvlcKit: return "TVVLCKit"
+        case .mpv: return "MPV (Experimental)"
+        }
+    }
+
+    static var selectableCases: [PlaybackPlayerBackend] {
+        [.tvvlcKit, .mpv]
+    }
+}
+
+enum PlaybackMpvCanaryStage: String, StringRepresentableEnum, CaseIterable {
+    case internalOnly
+    case betaUsers
+    case optInProduction
+    case defaultSwitch
+
+    var displayName: String {
+        switch self {
+        case .internalOnly: return "Internal"
+        case .betaUsers: return "Beta Users"
+        case .optInProduction: return "Opt-In Production"
+        case .defaultSwitch: return "Default Switch"
+        }
+    }
+}
+
+enum PlaybackBackendSupport {
+    struct Resolution {
+        let requested: PlaybackPlayerBackend
+        let active: PlaybackPlayerBackend
+        let fallbackReason: PlaybackBackendFallbackReason?
+    }
+
+    enum PlaybackBackendFallbackReason: String {
+        case mpvNotLinked = "mpv_not_linked"
+        case mpvRolloutDisabled = "mpv_rollout_disabled"
+        case mpvKillSwitch = "mpv_kill_switch"
+    }
+
+    static var isMpvLinked: Bool {
+#if canImport(MPVKit)
+        true
+#else
+        false
+#endif
+    }
+
+    static func resolve(for requested: PlaybackPlayerBackend) -> Resolution {
+        switch requested {
+        case .tvvlcKit:
+            return Resolution(requested: requested, active: .tvvlcKit, fallbackReason: nil)
+        case .mpv:
+            if isMpvLinked {
+                return Resolution(requested: requested, active: .mpv, fallbackReason: nil)
+            }
+            return Resolution(requested: requested, active: .tvvlcKit, fallbackReason: .mpvNotLinked)
+        }
+    }
+
 }
 
 enum NavbarPosition: String, StringRepresentableEnum, CaseIterable {

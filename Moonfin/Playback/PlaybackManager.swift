@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import OSLog
 
 enum PlaybackState: Equatable {
     case idle
@@ -35,6 +36,13 @@ final class PlaybackManager: ObservableObject {
     private var prefetchedStreamInfo: StreamInfo?
     private var prefetchedItemId: String?
     private var lastEvaluatedSecond: Int = -1
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "PlaybackManager")
+    private var startupBeganAt: Date?
+    private var startupLatencyMs: Int?
+    private var hasSeenFirstPlayingState = false
+    private var stallCount = 0
+    private var terminalOutcome = "stopped"
+    private var lastBoundaryProgressReportAt: CFAbsoluteTime = 0
 
     var currentEntry: QueueEntry? {
         guard currentIndex >= 0 && currentIndex < queue.count else { return nil }
@@ -79,7 +87,12 @@ final class PlaybackManager: ObservableObject {
         self.player = player
         self.client = client
         self.preferences = preferences
-        self.streamResolver = ServerStreamResolver(client: client)
+        let requestedBackend = PlaybackRolloutPolicy.effectiveRequestedDirective(
+            requested: preferences[UserPreferences.playbackPlayerBackend],
+            stage: preferences[UserPreferences.playbackMpvCanaryStage],
+            localKillSwitch: preferences[UserPreferences.playbackMpvKillSwitchEnabled]
+        )
+        self.streamResolver = ServerStreamResolver(client: client, requestedBackend: requestedBackend)
         self.subtitleConfigurator = SubtitleConfigurator(preferences: preferences)
 
         let segmentRepo = MediaSegmentRepositoryImpl(preferences: preferences, client: client)
@@ -165,6 +178,9 @@ final class PlaybackManager: ObservableObject {
 
     func pause() {
         player.pause()
+        Task { [weak self] in
+            await self?.reportPlaybackProgressBoundary()
+        }
     }
 
     func resume() {
@@ -174,6 +190,9 @@ final class PlaybackManager: ObservableObject {
             player.seek(to: target)
         }
         player.resume()
+        Task { [weak self] in
+            await self?.reportPlaybackProgressBoundary()
+        }
     }
 
     func stop() async {
@@ -186,6 +205,16 @@ final class PlaybackManager: ObservableObject {
 
     func seek(to position: TimeInterval) {
         player.seek(to: position)
+        Task { [weak self] in
+            await self?.reportPlaybackProgressBoundary()
+        }
+    }
+
+    func seek(by delta: TimeInterval) {
+        player.seekBy(delta)
+        Task { [weak self] in
+            await self?.reportPlaybackProgressBoundary()
+        }
     }
 
     func setRate(_ rate: Float) {
@@ -195,10 +224,16 @@ final class PlaybackManager: ObservableObject {
     func setAudioTrack(_ index: Int32) {
         player.setAudioTrack(index)
         saveSelectedAudioLanguage(vlcTrackIndex: index)
+        Task { [weak self] in
+            await self?.reportPlaybackProgressBoundary()
+        }
     }
 
     func setSubtitleTrack(_ index: Int32) {
         player.setSubtitleTrack(index)
+        Task { [weak self] in
+            await self?.reportPlaybackProgressBoundary()
+        }
     }
 
     func addSubtitle(url: URL) {
@@ -282,6 +317,14 @@ final class PlaybackManager: ObservableObject {
             currentStreamInfo = stream
             lastEvaluatedSecond = -1
 
+            player.configurePreferredBackendForNextPlayback(stream.preferredBackend, fallbackReason: stream.fallbackReason)
+            if !stream.diagnostics.isEmpty {
+                let details = stream.diagnostics.joined(separator: ",")
+                logger.info(
+                    "video_range_decision range=\(stream.dynamicRange.rawValue, privacy: .public) preferred_backend=\(stream.preferredBackend.rawValue, privacy: .public) fallback_reason=\((stream.fallbackReason ?? "none"), privacy: .public) diagnostics=\(details, privacy: .public)"
+                )
+            }
+
             let startSeconds: TimeInterval
             if entry.startPositionTicks > 0 && stream.playMethod != .transcode {
                 let raw = TimeInterval(entry.startPositionTicks) / 10_000_000
@@ -301,6 +344,12 @@ final class PlaybackManager: ObservableObject {
             if delay > 0 {
                 try await Task.sleep(nanoseconds: UInt64(delay) * 1_000_000)
             }
+
+            startupBeganAt = Date()
+            startupLatencyMs = nil
+            hasSeenFirstPlayingState = false
+            stallCount = 0
+            terminalOutcome = "stopped"
 
             await player.play(streamUrl: stream.url, startPosition: startSeconds)
 
@@ -363,17 +412,28 @@ final class PlaybackManager: ObservableObject {
                 guard let self else { return }
                 switch vlcState {
                 case .playing:
+                    if !self.hasSeenFirstPlayingState {
+                        self.hasSeenFirstPlayingState = true
+                        if let started = self.startupBeganAt {
+                            self.startupLatencyMs = Int(Date().timeIntervalSince(started) * 1000)
+                        }
+                    }
                     self.playbackState = .playing
                 case .paused:
                     self.playbackState = .paused
                 case .buffering(_):
+                    if self.hasSeenFirstPlayingState {
+                        self.stallCount += 1
+                    }
                     self.playbackState = .buffering
                 case .opening:
                     self.playbackState = .resolving
                 case .ended:
+                    self.terminalOutcome = "ended"
                     self.playbackState = .idle
                     Task { await self.handlePlaybackEnded() }
                 case .error:
+                    self.terminalOutcome = "error"
                     self.playbackState = .error("Playback error")
                     Task { await self.stopAndReport(failed: true) }
                 case .stopped, .idle:
@@ -405,20 +465,39 @@ final class PlaybackManager: ObservableObject {
         nextUpManager.reset()
         lastEvaluatedSecond = -1
         await reportPlaybackStopped(failed: failed)
+        emitPlaybackTelemetry(failed: failed)
         currentStreamInfo = nil
         player.stop()
     }
 
+    private func emitPlaybackTelemetry(failed: Bool) {
+        guard preferences[UserPreferences.telemetryEnabled] else { return }
+
+        if failed {
+            terminalOutcome = "failed"
+        } else if terminalOutcome != "ended" {
+            terminalOutcome = "stopped"
+        }
+
+        let backend = player.playbackBackendIdentifier
+        let fallbackReason = player.playbackFallbackReason ?? "none"
+        let startup = startupLatencyMs ?? -1
+
+        logger.info(
+            "playback_telemetry backend=\(backend, privacy: .public) fallback_reason=\(fallbackReason, privacy: .public) startup_latency_ms=\(startup) stall_count=\(self.stallCount) terminal_outcome=\(self.terminalOutcome, privacy: .public)"
+        )
+    }
+
     private func reportPlaybackStart() async {
         guard let entry = currentEntry, let stream = currentStreamInfo else { return }
-        let reportSubtitleIndex = entry.item.mediaType == .audio ? nil : stream.defaultSubtitleStreamIndex
+        let reportedTracks = resolveReportedTrackIndexes(entry: entry, stream: stream)
         let report = PlaybackStartReport(
             itemId: entry.item.id,
             playSessionId: stream.playSessionId,
             mediaSourceId: stream.mediaSourceId,
             positionTicks: entry.startPositionTicks,
-            audioStreamIndex: stream.defaultAudioStreamIndex,
-            subtitleStreamIndex: reportSubtitleIndex,
+            audioStreamIndex: reportedTracks.audioStreamIndex,
+            subtitleStreamIndex: reportedTracks.subtitleStreamIndex,
             playMethod: stream.playMethod,
             isPaused: false,
             isMuted: false,
@@ -441,20 +520,27 @@ final class PlaybackManager: ObservableObject {
     private func reportPlaybackProgress() async {
         guard let entry = currentEntry, let stream = currentStreamInfo else { return }
         let ticks = Int64(player.currentTime * 10_000_000)
-        let reportSubtitleIndex = entry.item.mediaType == .audio ? nil : stream.defaultSubtitleStreamIndex
+        let reportedTracks = resolveReportedTrackIndexes(entry: entry, stream: stream)
         let report = PlaybackProgressReport(
             itemId: entry.item.id,
             playSessionId: stream.playSessionId,
             mediaSourceId: stream.mediaSourceId,
             positionTicks: ticks,
-            audioStreamIndex: stream.defaultAudioStreamIndex,
-            subtitleStreamIndex: reportSubtitleIndex,
+            audioStreamIndex: reportedTracks.audioStreamIndex,
+            subtitleStreamIndex: reportedTracks.subtitleStreamIndex,
             playMethod: stream.playMethod,
             isPaused: player.state == .paused,
             isMuted: false,
             volumeLevel: 100
         )
         try? await client.playbackApi.reportPlaybackProgress(info: report)
+    }
+
+    private func reportPlaybackProgressBoundary() async {
+        let now = CFAbsoluteTimeGetCurrent()
+        guard now - lastBoundaryProgressReportAt >= 0.5 else { return }
+        lastBoundaryProgressReportAt = now
+        await reportPlaybackProgress()
     }
 
     private func observePosition() {
@@ -492,6 +578,43 @@ final class PlaybackManager: ObservableObject {
             failed: failed
         )
         try? await client.playbackApi.reportPlaybackStopped(info: report)
+    }
+
+    private func resolveReportedTrackIndexes(entry: QueueEntry, stream: StreamInfo) -> (audioStreamIndex: Int?, subtitleStreamIndex: Int?) {
+        let audio = mapPlayerTrackToServerStreamIndex(
+            playerTrackId: player.currentAudioTrackIndex,
+            playerTracks: player.audioTracks,
+            serverStreams: stream.audioStreams,
+            fallback: stream.defaultAudioStreamIndex
+        )
+
+        let subtitle: Int?
+        if entry.item.mediaType == .audio {
+            subtitle = nil
+        } else {
+            subtitle = mapPlayerTrackToServerStreamIndex(
+                playerTrackId: player.currentSubtitleTrackIndex,
+                playerTracks: player.subtitleTracks,
+                serverStreams: stream.subtitleStreams,
+                fallback: stream.defaultSubtitleStreamIndex
+            )
+        }
+
+        return (audio, subtitle)
+    }
+
+    private func mapPlayerTrackToServerStreamIndex(
+        playerTrackId: Int32,
+        playerTracks: [VLCTrack],
+        serverStreams: [ServerMediaStream],
+        fallback: Int?
+    ) -> Int? {
+        guard playerTrackId != -1 else { return nil }
+        guard let trackPosition = playerTracks.firstIndex(where: { $0.id == playerTrackId }) else {
+            return fallback
+        }
+        guard trackPosition < serverStreams.count else { return fallback }
+        return serverStreams[trackPosition].index
     }
 
     private func saveSelectedAudioLanguage(vlcTrackIndex: Int32) {

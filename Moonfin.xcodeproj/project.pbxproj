@@ -43,6 +43,7 @@
 		233936CF9C14976FCC20112E /* SeerrPersonDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4896B0E46688AC0BC71C02C2 /* SeerrPersonDetailsView.swift */; };
 		237509D3C8524F1F758FF7B8 /* SeerrRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A919B8C42BF76839B2BED64 /* SeerrRepository.swift */; };
 		23CC21872990F7E4CE746C3D /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADD2B0ADBDA59B45EBF81A4E /* AppConstants.swift */; };
+		2428C637CD6F6B8B3C0703E3 /* AudioCapabilityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF003B267C85FF1D6480BA5D /* AudioCapabilityPolicy.swift */; };
 		263AE010560A226E3E49877A /* ServerApiModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BAE1BB034AC6127CFDBAE45 /* ServerApiModels.swift */; };
 		278D579448D8D9DA41A6F054 /* MdbListRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F34222302CE85A58A8364B9 /* MdbListRepository.swift */; };
 		27C322C6C1A1E71707F6A64C /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC459B0D609A9F2851F4152 /* User.swift */; };
@@ -76,6 +77,7 @@
 		493970FF836F428B8C0226C8 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = E06089A3C07C6E7548153255 /* NukeUI */; };
 		4953C9006854B851B4D39E4D /* SettingsSyncPlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704499E2DBDF2AED58ABA84B /* SettingsSyncPlayScreen.swift */; };
 		4A145C122DD60B25A04DE2FE /* FavoritesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B523A2B54897DD15342C4926 /* FavoritesViewModel.swift */; };
+		4D594FD41B9ADBD3E9E2A13C /* PlaybackRolloutPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 947DA967952F29198CA33814 /* PlaybackRolloutPolicy.swift */; };
 		4EFD2067E471639216BC6F31 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7FAD9331B478B54CAEE858 /* AppContainer.swift */; };
 		4FBC45A7F73DED36EFF7848C /* SeerrBrowseByView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148150D5166F7D59B34690E3 /* SeerrBrowseByView.swift */; };
 		50C05090550D4CBD7B058385 /* UserLoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */; };
@@ -116,6 +118,7 @@
 		6B27CF86C363B95308E43AD3 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 7AA3582CE6B60BA493DD6E1A /* Localizable.stringsdict */; };
 		6C6B858CD836169931DDA8FF /* PersonAvatarShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81804D76C55705DF5406F5A /* PersonAvatarShape.swift */; };
 		6C837B0D659FD496A8480C0B /* FolderBrowseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96C516D23BC9D0829331B5EB /* FolderBrowseViewModel.swift */; };
+		6D6DACBFE202887C15BFBD12 /* MPVKit in Frameworks */ = {isa = PBXBuildFile; productRef = 97A0E078BE0AF73BB35AAF5F /* MPVKit */; };
 		6F1CEFD99FA29710E74240C1 /* FolderBrowseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F8038B299E18CDF0BDC9A5 /* FolderBrowseScreen.swift */; };
 		705056C003D97862A0A801C6 /* PreferenceStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B6BF213289C258496451F29 /* PreferenceStore.swift */; };
 		71A56B5F1AA6D9A47B0D36F8 /* MoonfinTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDDF43F4829FD7991896EA32 /* MoonfinTheme.swift */; };
@@ -133,6 +136,7 @@
 		7A8BFE855F12A9BEF5963DC4 /* RowQueryType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA8AFF9F6F2ECDE4CA0C191 /* RowQueryType.swift */; };
 		7AD67B0B5C0D50E13B833CFE /* SettingsAuthServerUserScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F113B795D6EA29F5BC2B94 /* SettingsAuthServerUserScreen.swift */; };
 		7B1DED1CA529E49A3E182C3B /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C689D206E49488A79F0153A8 /* SearchView.swift */; };
+		7B484370716BB537FDD4E401 /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D86ED3D930E2B4AB6B040BBF /* Pods_Moonfin.framework */; };
 		7CEA607970DEA24AFA2523D6 /* EmbyConnectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68AC9AB298E561DC071CAD60 /* EmbyConnectService.swift */; };
 		7DD83E80B90A544B22074686 /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B6C16743063B47C88FAEA3 /* Strings.swift */; };
 		7E59908C6B580C47857E7AB0 /* RowDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D350319305B10BAA1D1404CC /* RowDataSource.swift */; };
@@ -164,6 +168,7 @@
 		924383CEDED012A0162C4770 /* ServerFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94722BC7ADD0914A190024A /* ServerFeatures.swift */; };
 		92928E8EA23CBED3CFD11BFE /* PinEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15CF03F310991555CAFB32A3 /* PinEntryView.swift */; };
 		92B6A867405C618441CFBB03 /* SeerrApiModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED9846443665851400FF0E3 /* SeerrApiModels.swift */; };
+		9369F0CE4C647452BEE42370 /* MpvPlayerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA6C3B9D21C70461867A2E19 /* MpvPlayerWrapper.swift */; };
 		9371FB8730176B61184F8CCC /* MoonfinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26B00488A156C151C0CD62A /* MoonfinApp.swift */; };
 		95F316DC7B4ABC5D52E5B35F /* JellyfinServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBEE4F3BBDB81FE8A31535C /* JellyfinServerClient.swift */; };
 		96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D4DD05CBC00A79C149DD76 /* SettingsRouter.swift */; };
@@ -199,7 +204,6 @@
 		AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D633491E2E3C22A82AE90F1A /* SimpleInfoRow.swift */; };
 		AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 443241810250EC1AB21DA8F9 /* LoginCard.swift */; };
 		AEF10B94D7C04E71D90E08BA /* TmdbRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A554C71793F4265E794FAD /* TmdbRepository.swift */; };
-		B265028194FE39DD5B2E046A /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DC9543CA0D8D3BE814CF4B7 /* Pods_Moonfin.framework */; };
 		B273DC84F80FBB5876CCD0F8 /* ServerWebSocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D817B3079DB381F66B8EBE6 /* ServerWebSocketMessage.swift */; };
 		B2F75D0516E9396365E3D32E /* SettingsMaxBitrateScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F337E1EA8A9A452F9A6E97 /* SettingsMaxBitrateScreen.swift */; };
 		B4E1B228F1DF6703825F0403 /* RatingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9474CF2A1C7088470F5E05C4 /* RatingViews.swift */; };
@@ -207,6 +211,7 @@
 		B9B3E56C703FE28E36FF3A25 /* MultiServerRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 814AF986548952D63A6A08E3 /* MultiServerRepository.swift */; };
 		BB1D08C6EF1E61D7B57E9B88 /* SettingsLibraryDisplayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74A3D3823712128523C7DCF4 /* SettingsLibraryDisplayScreen.swift */; };
 		BB8A8389816DAB9F4A557AA4 /* NavbarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBF6559E6FDF03DBF08F2D8 /* NavbarViewModel.swift */; };
+		BC31EA372FC0F5D430C7B93A /* VideoCapabilityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0999A9F52A4E51F806C863EA /* VideoCapabilityPolicy.swift */; };
 		BF09C05738B1479D39355ABE /* SettingsMainScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E52B4DEA949C89B86A017B2 /* SettingsMainScreen.swift */; };
 		BF435588F9323DB78D072C29 /* LeftSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FEDBEA8B169D72EE8465226 /* LeftSidebar.swift */; };
 		BF5254DAE58042C682929BD4 /* ResolutionHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7174976F817669A40E47226 /* ResolutionHelper.swift */; };
@@ -280,6 +285,7 @@
 		074468E8521DA23AB817B560 /* ServerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerError.swift; sourceTree = "<group>"; };
 		07C8A91EC4A411E6D508CF41 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
 		0960BDCAE5D24BD067A35AF1 /* MediaSegmentModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentModels.swift; sourceTree = "<group>"; };
+		0999A9F52A4E51F806C863EA /* VideoCapabilityPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCapabilityPolicy.swift; sourceTree = "<group>"; };
 		0D4477DE8CA9E01077E2A8E5 /* AudioNowPlayingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioNowPlayingViewModel.swift; sourceTree = "<group>"; };
 		0F91BCAC2868F2231BC3267E /* EmbyApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyApis.swift; sourceTree = "<group>"; };
 		0FBBAFFE10B2CFDF1FD8D32E /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
@@ -299,6 +305,7 @@
 		14F83C07B048B081DF06D65C /* MediaSegmentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentHandler.swift; sourceTree = "<group>"; };
 		1593B634F216501A85D350A0 /* tl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tl; path = tl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		15CF03F310991555CAFB32A3 /* PinEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinEntryView.swift; sourceTree = "<group>"; };
+		17E6752B8406E7056CC6A9F6 /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
 		1824103BDC2DF52F02EBFC23 /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
 		18A9F2B2B56FBC679D6866F6 /* MediaBarRatingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarRatingsViewModel.swift; sourceTree = "<group>"; };
 		18DDB37B1DD76A59C18BF602 /* AuthenticationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationStore.swift; sourceTree = "<group>"; };
@@ -309,7 +316,6 @@
 		1BAE1BB034AC6127CFDBAE45 /* ServerApiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerApiModels.swift; sourceTree = "<group>"; };
 		1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAddViewModel.swift; sourceTree = "<group>"; };
 		1D8429DA7A55F0D2A8C8589B /* SettingsScreenLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreenLayout.swift; sourceTree = "<group>"; };
-		1DC9543CA0D8D3BE814CF4B7 /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E1FA00408C9FB598421F7DF /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = he; path = he.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		1FEF85081B859EC243DB434B /* es-AR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-AR"; path = "es-AR.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		20249DB4CBADB314F64A2489 /* ml */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ml; path = ml.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -392,7 +398,6 @@
 		532FB992932D9FF916978F6A /* NetworkError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkError.swift; sourceTree = "<group>"; };
 		550EC585934AE6D18D83DAC0 /* gl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = gl; path = gl.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		553D9132985E8186BD273665 /* LocalizationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationPreferences.swift; sourceTree = "<group>"; };
-		571DC8CBB68FAD60098E3230 /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
 		5750C132C1F57D77BC083FE7 /* pt-PT */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-PT"; path = "pt-PT.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		5A3802F31598E36BBC8FA932 /* sl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = sl; path = sl.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		5A919B8C42BF76839B2BED64 /* SeerrRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrRepository.swift; sourceTree = "<group>"; };
@@ -433,6 +438,7 @@
 		6E8996E58509F065C5A8D304 /* SettingsParentalControlsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsParentalControlsScreen.swift; sourceTree = "<group>"; };
 		6ED9846443665851400FF0E3 /* SeerrApiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrApiModels.swift; sourceTree = "<group>"; };
 		6F50F8BE2C98C1C0C3E4DDF4 /* ConnectHelpScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectHelpScreen.swift; sourceTree = "<group>"; };
+		6F69734CDCF67F49043B9E85 /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
 		702A02D7EBA1FE7132ECE667 /* SettingsMediaSegmentScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaSegmentScreen.swift; sourceTree = "<group>"; };
 		704499E2DBDF2AED58ABA84B /* SettingsSyncPlayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSyncPlayScreen.swift; sourceTree = "<group>"; };
 		72A135055E6D1F2DB8B674DC /* SettingsDeveloperScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDeveloperScreen.swift; sourceTree = "<group>"; };
@@ -495,6 +501,7 @@
 		9242FCAED6A134EA092711A6 /* sl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sl; path = sl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		927459B8F417AB449B24C1F2 /* UserLoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLoginViewModel.swift; sourceTree = "<group>"; };
 		9474CF2A1C7088470F5E05C4 /* RatingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingViews.swift; sourceTree = "<group>"; };
+		947DA967952F29198CA33814 /* PlaybackRolloutPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackRolloutPolicy.swift; sourceTree = "<group>"; };
 		94A0596D38402F7197978552 /* PlaybackInfoDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackInfoDialog.swift; sourceTree = "<group>"; };
 		9577E38B1734E3BCFDB3AC5D /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ko; path = ko.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		9631F6C17CCF3822F2CE05EF /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = cs; path = cs.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -505,7 +512,6 @@
 		99508B67C1B1317A60E956AA /* mk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = mk; path = mk.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		9A8E977D051C49141D6B1B30 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		9AAB441B2D93DAF13B529D21 /* JellyfinApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinApis.swift; sourceTree = "<group>"; };
-		9D33F6D819E8C3AF9F247086 /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
 		9F01563FD7C1AA3617D202D0 /* MediaBarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaBarViewModel.swift; sourceTree = "<group>"; };
 		9FBDE0DA7AABA47AF63658FE /* SettingsCustomizationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsCustomizationScreen.swift; sourceTree = "<group>"; };
 		A0287A8BB7F449C14785A019 /* SettingsLiveTvGuideOptionsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLiveTvGuideOptionsScreen.swift; sourceTree = "<group>"; };
@@ -555,6 +561,7 @@
 		BC58364B116FF22E2A2D2D0F /* ug */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ug; path = ug.lproj/Localizable.strings; sourceTree = "<group>"; };
 		BC58E88339A0A0CDEC4D1F39 /* SettingsOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsOverlayView.swift; sourceTree = "<group>"; };
 		BDC7A36F3499A0D0B041F9B7 /* SplashScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreen.swift; sourceTree = "<group>"; };
+		BF003B267C85FF1D6480BA5D /* AudioCapabilityPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCapabilityPolicy.swift; sourceTree = "<group>"; };
 		BF8ED88662802FBD73A9A433 /* SettingsPlaybackAdvancedScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaybackAdvancedScreen.swift; sourceTree = "<group>"; };
 		BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTelemetryScreen.swift; sourceTree = "<group>"; };
 		BFF72E5EE8056F2728EEDF03 /* es-419 */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "es-419"; path = "es-419.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
@@ -582,6 +589,7 @@
 		C8D9DC6E3197C8498F141404 /* StreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamResolver.swift; sourceTree = "<group>"; };
 		C9F0305BFD9DE8CFA6B83D7A /* SettingsPluginBackgroundsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginBackgroundsScreen.swift; sourceTree = "<group>"; };
 		CA4159CF66566044EE7426BC /* ColorScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorScheme.swift; sourceTree = "<group>"; };
+		CA6C3B9D21C70461867A2E19 /* MpvPlayerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MpvPlayerWrapper.swift; sourceTree = "<group>"; };
 		CDB9E437270C796B41CB3B96 /* SubtitleConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleConfigurator.swift; sourceTree = "<group>"; };
 		CF3E0A4B1D3339C42C84A63A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		D0134334AD83E19655459900 /* ServerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerScreen.swift; sourceTree = "<group>"; };
@@ -594,6 +602,7 @@
 		D5E3D778427819F891587396 /* te */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = te; path = te.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D633491E2E3C22A82AE90F1A /* SimpleInfoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleInfoRow.swift; sourceTree = "<group>"; };
 		D82EC437968B9AE166138987 /* ActionButtonsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonsRow.swift; sourceTree = "<group>"; };
+		D86ED3D930E2B4AB6B040BBF /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8E7AE30259328B5CBC08F34 /* be */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = be; path = be.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		D9F50D11079EEB018393FAEA /* SeerrView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrView.swift; sourceTree = "<group>"; };
 		DA79A0A2AF7B5D30923217F1 /* RatingIconProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingIconProvider.swift; sourceTree = "<group>"; };
@@ -654,7 +663,8 @@
 				493970FF836F428B8C0226C8 /* NukeUI in Frameworks */,
 				555AFC2DDF8B010AEDF450AF /* Nuke in Frameworks */,
 				0D1E59B7FA6065C5EB3ACA78 /* KeychainAccess in Frameworks */,
-				B265028194FE39DD5B2E046A /* Pods_Moonfin.framework in Frameworks */,
+				6D6DACBFE202887C15BFBD12 /* MPVKit in Frameworks */,
+				7B484370716BB537FDD4E401 /* Pods_Moonfin.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -712,8 +722,8 @@
 			children = (
 				EC8EF81012D6A9F511E67D90 /* Moonfin */,
 				D189A2B18468536429738151 /* Products */,
-				AA0BE93A48C103D15A11BA74 /* Pods */,
-				8E3C74A9E8BC49F8FBBCBBC7 /* Frameworks */,
+				69206E6BB2BF432635BD2E17 /* Pods */,
+				24F166B4BC6CD6B6DC1A522F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -784,6 +794,14 @@
 				BC58E88339A0A0CDEC4D1F39 /* SettingsOverlayView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		24F166B4BC6CD6B6DC1A522F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D86ED3D930E2B4AB6B040BBF /* Pods_Moonfin.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		27036A711A3797E96F3282AF /* Components */ = {
@@ -917,15 +935,19 @@
 			isa = PBXGroup;
 			children = (
 				49AA4FA33D282BFE233A8D06 /* MediaSegments */,
+				BF003B267C85FF1D6480BA5D /* AudioCapabilityPolicy.swift */,
 				C33518745EEEEE15D7C873DA /* AudioManager.swift */,
+				CA6C3B9D21C70461867A2E19 /* MpvPlayerWrapper.swift */,
 				7436E1F1DC4C5F651963B721 /* NextUpManager.swift */,
 				F109668B4B1DF4DBE304AD87 /* PlaybackCoordinator.swift */,
 				84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */,
+				947DA967952F29198CA33814 /* PlaybackRolloutPolicy.swift */,
 				EFAA84EA48DD957F041873D7 /* PreviewPlayerManager.swift */,
 				E13C8282BC93E97F87F7D3B5 /* ServerStreamResolver.swift */,
 				C8D9DC6E3197C8498F141404 /* StreamResolver.swift */,
 				CDB9E437270C796B41CB3B96 /* SubtitleConfigurator.swift */,
 				029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */,
+				0999A9F52A4E51F806C863EA /* VideoCapabilityPolicy.swift */,
 				502F18502DD946DEA5888231 /* VLCPlayerView.swift */,
 				BBC987604BAE75373ABA7889 /* VLCPlayerWrapper.swift */,
 			);
@@ -1003,6 +1025,16 @@
 			path = Discover;
 			sourceTree = "<group>";
 		};
+		69206E6BB2BF432635BD2E17 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				17E6752B8406E7056CC6A9F6 /* Pods-Moonfin.debug.xcconfig */,
+				6F69734CDCF67F49043B9E85 /* Pods-Moonfin.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		78EA034A1403B2D90F919362 /* Seerr */ = {
 			isa = PBXGroup;
 			children = (
@@ -1015,14 +1047,6 @@
 				D9F50D11079EEB018393FAEA /* SeerrView.swift */,
 			);
 			path = Seerr;
-			sourceTree = "<group>";
-		};
-		8E3C74A9E8BC49F8FBBCBBC7 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				1DC9543CA0D8D3BE814CF4B7 /* Pods_Moonfin.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		91ED9112A63C43BEB571B627 /* Components */ = {
@@ -1068,16 +1092,6 @@
 				68D4848242EED9AD876A7730 /* SettingsToggleButton.swift */,
 			);
 			path = Components;
-			sourceTree = "<group>";
-		};
-		AA0BE93A48C103D15A11BA74 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				9D33F6D819E8C3AF9F247086 /* Pods-Moonfin.debug.xcconfig */,
-				571DC8CBB68FAD60098E3230 /* Pods-Moonfin.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		AA7532FD2D9BC07A1867B22E /* ViewModels */ = {
@@ -1314,11 +1328,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27492BE8AEF59CC3B0E24072 /* Build configuration list for PBXNativeTarget "Moonfin" */;
 			buildPhases = (
-				5CE052E5FC14E513C312CBDF /* [CP] Check Pods Manifest.lock */,
+				EA4953526F4DC2DD3D872180 /* [CP] Check Pods Manifest.lock */,
 				7772703707EE7DD8FA8C7D63 /* Sources */,
 				02EDCD9F5CB60B47801BD4ED /* Resources */,
 				DBD8DE1F616DE17837EFC577 /* Frameworks */,
-				90D3338CC4CBB98BDB770D0F /* [CP] Embed Pods Frameworks */,
+				253155F00E753983EB018FD1 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1329,6 +1343,7 @@
 				E06089A3C07C6E7548153255 /* NukeUI */,
 				3FA238B35BE531020273CC47 /* Nuke */,
 				63089F17261F9A8FF9EF4DE1 /* KeychainAccess */,
+				97A0E078BE0AF73BB35AAF5F /* MPVKit */,
 			);
 			productName = Moonfin;
 			productReference = 838B6DDE822EEB98311172D6 /* Moonfin.app */;
@@ -1424,6 +1439,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				55E7A0F98F5A263D18279AF5 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
+				A27147E7F35030E722AF2F84 /* XCRemoteSwiftPackageReference "MPVKit" */,
 				B2B8E58CA71B599381066E71 /* XCRemoteSwiftPackageReference "Nuke" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -1451,7 +1467,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		5CE052E5FC14E513C312CBDF /* [CP] Check Pods Manifest.lock */ = {
+		253155F00E753983EB018FD1 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		EA4953526F4DC2DD3D872180 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1473,23 +1506,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		90D3338CC4CBB98BDB770D0F /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -1501,6 +1517,7 @@
 				99F3A085014B9D7AD3D8ACD8 /* AddToPlaylistDialog.swift in Sources */,
 				23CC21872990F7E4CE746C3D /* AppConstants.swift in Sources */,
 				4EFD2067E471639216BC6F31 /* AppContainer.swift in Sources */,
+				2428C637CD6F6B8B3C0703E3 /* AudioCapabilityPolicy.swift in Sources */,
 				2E19EF36F7763CFC157BA2F3 /* AudioManager.swift in Sources */,
 				C3196E7D876BD01CF010F3E1 /* AudioNowPlayingView.swift in Sources */,
 				131295AFF0C20D9BA793CB36 /* AudioNowPlayingViewModel.swift in Sources */,
@@ -1589,6 +1606,7 @@
 				9371FB8730176B61184F8CCC /* MoonfinApp.swift in Sources */,
 				61C25359FCE5DE43AB03A366 /* MoonfinLogo.swift in Sources */,
 				71A56B5F1AA6D9A47B0D36F8 /* MoonfinTheme.swift in Sources */,
+				9369F0CE4C647452BEE42370 /* MpvPlayerWrapper.swift in Sources */,
 				B9B3E56C703FE28E36FF3A25 /* MultiServerRepository.swift in Sources */,
 				FAA9362203F394F8C16A88E0 /* MusicBrowseScreen.swift in Sources */,
 				9783E9F46CFB9ACEEB4E0A62 /* MusicBrowseViewModel.swift in Sources */,
@@ -1607,6 +1625,7 @@
 				77CF04981B2A7FF600BA0F53 /* PlaybackCoordinator.swift in Sources */,
 				D5A758C2F1A8F4C235D3F9CF /* PlaybackInfoDialog.swift in Sources */,
 				8BF09E744242E20B4C19DABC /* PlaybackManager.swift in Sources */,
+				4D594FD41B9ADBD3E9E2A13C /* PlaybackRolloutPolicy.swift in Sources */,
 				00CBC11CBD19027BD5F7AFF1 /* PlayerOverlayView.swift in Sources */,
 				13AA935D6BB99581DF6A3ED7 /* PlayerSeekBar.swift in Sources */,
 				127223D3B2F8CE2B6B03280B /* PlayerView.swift in Sources */,
@@ -1749,6 +1768,7 @@
 				139EF05143A46C8751511836 /* UserViewsService.swift in Sources */,
 				586DFBFA7AA95BC08E71E035 /* VLCPlayerView.swift in Sources */,
 				15F3DC70128565BFF2270889 /* VLCPlayerWrapper.swift in Sources */,
+				BC31EA372FC0F5D430C7B93A /* VideoCapabilityPolicy.swift in Sources */,
 				0A7E56E576320DF03B40D49D /* VideoPlayerViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1887,7 +1907,7 @@
 /* Begin XCBuildConfiguration section */
 		3692D4DC0894416555EE45DC /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 571DC8CBB68FAD60098E3230 /* Pods-Moonfin.release.xcconfig */;
+			baseConfigurationReference = 6F69734CDCF67F49043B9E85 /* Pods-Moonfin.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -1907,7 +1927,7 @@
 		};
 		63305EDE78CAE1C908A0F58F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9D33F6D819E8C3AF9F247086 /* Pods-Moonfin.debug.xcconfig */;
+			baseConfigurationReference = 17E6752B8406E7056CC6A9F6 /* Pods-Moonfin.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -2082,6 +2102,14 @@
 				minimumVersion = 4.2.2;
 			};
 		};
+		A27147E7F35030E722AF2F84 /* XCRemoteSwiftPackageReference "MPVKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mpvkit/MPVKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.41.0;
+			};
+		};
 		B2B8E58CA71B599381066E71 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke";
@@ -2102,6 +2130,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 55E7A0F98F5A263D18279AF5 /* XCRemoteSwiftPackageReference "KeychainAccess" */;
 			productName = KeychainAccess;
+		};
+		97A0E078BE0AF73BB35AAF5F /* MPVKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A27147E7F35030E722AF2F84 /* XCRemoteSwiftPackageReference "MPVKit" */;
+			productName = MPVKit;
 		};
 		E06089A3C07C6E7548153255 /* NukeUI */ = {
 			isa = XCSwiftPackageProductDependency;

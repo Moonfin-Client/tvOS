@@ -199,14 +199,12 @@ final class VideoPlayerViewModel: ObservableObject {
     }
 
     func seekForward() {
-        let target = min(player.currentTime + skipForwardSeconds, player.duration)
-        playbackManager.seek(to: target)
+        playbackManager.seek(by: skipForwardSeconds)
         showOverlay()
     }
 
     func seekBackward() {
-        let target = max(player.currentTime - skipBackSeconds, 0)
-        playbackManager.seek(to: target)
+        playbackManager.seek(by: -skipBackSeconds)
         showOverlay()
     }
 

@@ -1,5 +1,19 @@
 import Foundation
 
+enum VideoDynamicRange: String {
+    case sdr
+    case hdr10
+    case hlg
+    case hdr10Plus
+    case dolbyVision
+    case unknown
+}
+
+enum PlaybackBackendDirective: String {
+    case tvvlcKit = "tvvlckit"
+    case mpv
+}
+
 struct QueueEntry: Identifiable, Equatable {
     let id: String
     let item: ServerItem
@@ -23,6 +37,10 @@ struct StreamInfo {
     let subtitleStreams: [ServerMediaStream]
     let defaultAudioStreamIndex: Int?
     let defaultSubtitleStreamIndex: Int?
+    let dynamicRange: VideoDynamicRange
+    let preferredBackend: PlaybackBackendDirective
+    let fallbackReason: String?
+    let diagnostics: [String]
 }
 
 enum StreamResolverError: Error {

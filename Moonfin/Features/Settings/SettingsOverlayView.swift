@@ -306,6 +306,8 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.audioOutput),
                 displayName: \.displayName
             )
+        case .playbackPlayer:
+            SettingsPlaybackPlayerScreen()
         case .playbackSlideshowInterval:
             SettingsPickerScreen(
                 title: "Slideshow Interval",

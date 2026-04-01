@@ -24,6 +24,15 @@ struct SettingsPlaybackScreen: View {
     var body: some View {
         SettingsScreenLayout(title: "Playback") {
             SettingsListButton(
+                icon: "play.rectangle",
+                heading: "Player",
+                caption: "Choose playback engine",
+                trailingText: prefs[UserPreferences.playbackPlayerBackend].displayName,
+                action: { settingsRouter.navigate(to: .playbackPlayer) }
+            )
+            .focused($focusedRoute, equals: .playbackPlayer)
+
+            SettingsListButton(
                 icon: "forward.end",
                 heading: "Next Up Behavior",
                 caption: "How next up is displayed",
@@ -94,5 +103,35 @@ struct SettingsPlaybackScreen: View {
             .focused($focusedRoute, equals: .playbackAdvanced)
         }
         .restoresFocus($focusedRoute)
+    }
+}
+
+struct SettingsPlaybackPlayerScreen: View {
+    @EnvironmentObject var container: AppContainer
+    @EnvironmentObject var settingsRouter: SettingsRouter
+    @EnvironmentObject var theme: MoonfinTheme
+
+    private var prefs: UserPreferences { container.userPreferences }
+
+    var body: some View {
+        SettingsScreenLayout(title: "Player") {
+            ForEach(PlaybackPlayerBackend.selectableCases, id: \.self) { option in
+                Button {
+                    prefs[UserPreferences.playbackPlayerBackend] = option
+                    settingsRouter.goBack()
+                } label: {
+                    SettingsItemContent(icon: "play.rectangle", heading: option.displayName, caption: nil) { isFocused in
+                        Image(systemName: prefs[UserPreferences.playbackPlayerBackend] == option ? "largecircle.fill.circle" : "circle")
+                            .font(.bodyMd)
+                            .foregroundColor(
+                                prefs[UserPreferences.playbackPlayerBackend] == option
+                                    ? (isFocused ? theme.colorScheme.listHeadlineFocused : theme.accent)
+                                    : (isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
+                            )
+                    }
+                }
+                .buttonStyle(CleanButtonStyle())
+            }
+        }
     }
 }

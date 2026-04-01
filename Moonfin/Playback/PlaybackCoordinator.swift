@@ -35,7 +35,7 @@ final class PlaybackCoordinator: ObservableObject {
     ) async {
         await stopVideoPlayback()
         guard let client else { return }
-        let player = VLCPlayerWrapper()
+        let player = makePlayer()
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
         videoPlayerManager = manager
         await manager.play(
@@ -56,7 +56,7 @@ final class PlaybackCoordinator: ObservableObject {
     func startAudioPlayback(items: [ServerItem], startIndex: Int = 0, shuffle: Bool = false) async {
         await stopAudioPlayback()
         guard let client else { return }
-        let player = VLCPlayerWrapper()
+        let player = makePlayer()
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
         let audio = AudioManager(playbackManager: manager, client: client)
         audioManager = audio
@@ -66,5 +66,29 @@ final class PlaybackCoordinator: ObservableObject {
     func stopAudioPlayback() async {
         await audioManager?.playbackManager.stop()
         audioManager = nil
+    }
+
+    private func makePlayer() -> VLCPlayerWrapper {
+        let requested = preferences[UserPreferences.playbackPlayerBackend]
+        let stage = preferences[UserPreferences.playbackMpvCanaryStage]
+        let killSwitch = preferences[UserPreferences.playbackMpvKillSwitchEnabled]
+        let resolution = PlaybackRolloutPolicy.resolve(
+            requested: requested,
+            stage: stage,
+            localKillSwitch: killSwitch
+        )
+
+        if resolution.fallbackReason == .mpvNotLinked && resolution.active != requested {
+            preferences[UserPreferences.playbackPlayerBackend] = resolution.active
+        }
+
+        switch resolution.active {
+        case .tvvlcKit:
+            let player = VLCPlayerWrapper()
+            player.updatePlaybackBackend(identifier: "tvvlckit", fallbackReason: resolution.fallbackReason?.rawValue)
+            return player
+        case .mpv:
+            return MpvPlayerWrapper.makePlayer()
+        }
     }
 }
