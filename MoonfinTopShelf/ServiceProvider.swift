@@ -55,11 +55,11 @@ final class ServiceProvider: TVTopShelfContentProvider {
                 }
 
                 if let playURL = URL(string: cachedItem.playURL) {
-                    item.playAction = TVTopShelfAction(URL: playURL)
+                    item.playAction = TVTopShelfAction(url: playURL)
                 }
 
                 if let displayURL = URL(string: cachedItem.displayURL) {
-                    item.displayAction = TVTopShelfAction(URL: displayURL)
+                    item.displayAction = TVTopShelfAction(url: displayURL)
                 }
 
                 return item

@@ -36,7 +36,7 @@ targets:
       - path: Moonfin/Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.moonfin.tv
+        PRODUCT_BUNDLE_IDENTIFIER: org.moonfin.app
         INFOPLIST_FILE: Moonfin/Resources/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: false
@@ -59,7 +59,7 @@ targets:
       - path: MoonfinTopShelf
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.moonfin.tv.topshelf
+        PRODUCT_BUNDLE_IDENTIFIER: org.moonfin.app.topshelf
         INFOPLIST_FILE: MoonfinTopShelf/Info.plist
         GENERATE_INFOPLIST_FILE: false
         CODE_SIGN_ENTITLEMENTS: MoonfinTopShelf/MoonfinTopShelf.entitlements
