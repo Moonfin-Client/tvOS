@@ -27,6 +27,7 @@ final class HomeViewModel: ObservableObject {
     private var rowClients: [String: MediaServerClient] = [:]
     private var userViews: [ServerItem] = []
     private var cancellables = Set<AnyCancellable>()
+    private let topShelfCacheWriter = TopShelfCacheWriter()
     private static let selectionDebounceMs: UInt64 = 150_000_000
     private static let backdropDebounceMs: UInt64 = 200_000_000
     private static let chunkSize = 15
@@ -181,6 +182,8 @@ final class HomeViewModel: ObservableObject {
                 await loadRows(lateRowIds, client: client)
             }
 
+            refreshTopShelfCache()
+
             indexForSpotlight()
         }
     }
@@ -331,6 +334,8 @@ final class HomeViewModel: ObservableObject {
         if !rowIds.isEmpty {
             await loadRows(rowIds, client: client)
         }
+
+        refreshTopShelfCache()
 
         indexForSpotlight()
     }
@@ -605,6 +610,26 @@ final class HomeViewModel: ObservableObject {
         rows[index].totalItemCount = source.totalItemCount
         if rowType == .continueWatching || rowType == .nextUp {
             dedupeNextUpAgainstContinueWatching()
+        }
+
+        let shouldRefreshTopShelf: Bool
+        switch rowType {
+        case .continueWatching:
+            shouldRefreshTopShelf = true
+        case .latestMedia:
+            shouldRefreshTopShelf = true
+        default:
+            shouldRefreshTopShelf = false
+        }
+
+        if shouldRefreshTopShelf {
+            refreshTopShelfCache()
+        }
+    }
+
+    private func refreshTopShelfCache() {
+        topShelfCacheWriter.write(rows: rows) { [weak self] item in
+            self?.thumbImageUrl(for: item)
         }
     }
 

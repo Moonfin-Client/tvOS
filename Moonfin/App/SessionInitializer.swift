@@ -56,7 +56,8 @@ final class SessionInitializer: ObservableObject {
             router.navigate(to: .search(query: query))
         case "item":
             if let itemId = components.queryItems?.first(where: { $0.name == "id" })?.value {
-                router.navigate(to: .itemDetails(itemId: itemId))
+                let serverId = components.queryItems?.first(where: { $0.name == "serverId" })?.value
+                router.navigate(to: .itemDetails(itemId: itemId, serverId: serverId))
             }
         default:
             break

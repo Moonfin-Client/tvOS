@@ -48,6 +48,21 @@ targets:
       - package: KeychainAccess
       - package: MPVKit
         product: MPVKit
+      - target: MoonfinTopShelf
+        embed: true
+
+  MoonfinTopShelf:
+    type: app-extension
+    platform: tvOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: MoonfinTopShelf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.moonfin.tv.topshelf
+        INFOPLIST_FILE: MoonfinTopShelf/Info.plist
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_ENTITLEMENTS: MoonfinTopShelf/MoonfinTopShelf.entitlements
 
 schemes:
   Moonfin:
