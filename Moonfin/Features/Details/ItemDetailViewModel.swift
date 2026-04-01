@@ -8,6 +8,8 @@ struct MediaBadge: Identifiable, Equatable {
 
 @MainActor
 final class ItemDetailViewModel: ObservableObject {
+    private static let parentCollectionMediaTypes: [ItemType] = [.movie, .series, .video, .trailer]
+
     // Core
     @Published private(set) var isLoading: Bool = true
     @Published private(set) var item: ServerItem?
@@ -372,11 +374,16 @@ final class ItemDetailViewModel: ObservableObject {
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
             _ = await (tracksTask, similarTask)
 
-        case .movie, .trailer, .video:
+        case .movie:
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
             async let specialTask: () = loadSpecialFeatures(itemId: item.id, client: client)
             async let collectionTask: () = loadParentCollection(itemId: item.id, client: client)
             _ = await (similarTask, specialTask, collectionTask)
+
+        case .trailer, .video:
+            async let similarTask: () = loadSimilar(itemId: item.id, client: client)
+            async let specialTask: () = loadSpecialFeatures(itemId: item.id, client: client)
+            _ = await (similarTask, specialTask)
 
         default:
             await loadSimilar(itemId: item.id, client: client)
@@ -421,7 +428,7 @@ final class ItemDetailViewModel: ObservableObject {
                     includeItemTypes: [.movie, .series],
                     sortBy: [.premiereDate],
                     sortOrder: .descending,
-                    limit: 100,
+                    limit: 50,
                     personIds: [personId],
                     enableUserData: true
                 )
@@ -447,7 +454,11 @@ final class ItemDetailViewModel: ObservableObject {
     private func loadCollectionItems(itemId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getItems(
-                request: GetItemsRequest(parentId: itemId)
+                request: GetItemsRequest(
+                    parentId: itemId,
+                    limit: 120,
+                    enableUserData: true
+                )
             )
             collectionItems = result.items
         } catch { }
@@ -600,8 +611,11 @@ final class ItemDetailViewModel: ObservableObject {
                 let members = try await client.itemsApi.getItems(
                     request: GetItemsRequest(
                         parentId: boxSet.id,
+                        includeItemTypes: Self.parentCollectionMediaTypes,
                         sortBy: [.premiereDate, .sortName],
-                        sortOrder: .ascending
+                        sortOrder: .ascending,
+                        limit: 120,
+                        enableUserData: true
                     )
                 )
                 parentCollectionName = boxSet.name
@@ -615,7 +629,7 @@ final class ItemDetailViewModel: ObservableObject {
                     includeItemTypes: [.boxSet],
                     sortBy: [.sortName],
                     fields: [.childCount],
-                    limit: 200
+                    limit: 75
                 )
             )
 
@@ -623,16 +637,20 @@ final class ItemDetailViewModel: ObservableObject {
                 let members = try await client.itemsApi.getItems(
                     request: GetItemsRequest(
                         parentId: boxSet.id,
-                        fields: [.childCount],
-                        limit: 500
+                        includeItemTypes: Self.parentCollectionMediaTypes,
+                        ids: [itemId],
+                        limit: 1
                     )
                 )
-                if members.items.contains(where: { $0.id == itemId }) {
+                if !members.items.isEmpty {
                     let sortedMembers = try await client.itemsApi.getItems(
                         request: GetItemsRequest(
                             parentId: boxSet.id,
+                            includeItemTypes: Self.parentCollectionMediaTypes,
                             sortBy: [.premiereDate, .sortName],
-                            sortOrder: .ascending
+                            sortOrder: .ascending,
+                            limit: 120,
+                            enableUserData: true
                         )
                     )
                     parentCollectionName = boxSet.name
