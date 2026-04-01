@@ -6,6 +6,7 @@ struct GenreBrowseScreen: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @State private var showSortDialog = false
+    @State private var showDisplaySettings = false
 
     init(container: AppContainer, parentId: String? = nil, includeType: String? = nil) {
         _viewModel = StateObject(wrappedValue: GenreBrowseViewModel(
@@ -56,6 +57,14 @@ struct GenreBrowseScreen: View {
                 onSortSelected: { viewModel.setSortOption($0) }
             )
         }
+        .sheet(isPresented: $showDisplaySettings) {
+            GenreDisplaySettingsDialogView(
+                posterSize: viewModel.posterSize,
+                imageType: viewModel.imageType,
+                onPosterSizeChanged: { viewModel.setPosterSize($0) },
+                onImageTypeChanged: { viewModel.setImageType($0) }
+            )
+        }
     }
 
     // MARK: - Header
@@ -94,6 +103,13 @@ struct GenreBrowseScreen: View {
                     theme: theme,
                     action: { showSortDialog = true }
                 )
+
+                ToolbarIconButton(
+                    systemImage: "slider.horizontal.3",
+                    isActive: false,
+                    theme: theme,
+                    action: { showDisplaySettings = true }
+                )
             }
         }
     }
@@ -118,8 +134,9 @@ struct GenreBrowseScreen: View {
     // MARK: - Grid
 
     private var genresGrid: some View {
-        let cardWidth: CGFloat = 220
-        let cardHeight: CGFloat = 220
+        let cardHeight: CGFloat = 220 * viewModel.posterSize.scaleFactor
+        let cardAspectRatio: CGFloat = viewModel.imageType == .poster ? (2.0 / 3.0) : (16.0 / 9.0)
+        let cardWidth: CGFloat = cardHeight * cardAspectRatio
         let columns = [GridItem(.adaptive(minimum: cardWidth + 24), spacing: 12)]
 
         return ScrollView {
@@ -215,7 +232,7 @@ private struct GenreCard: View {
     var body: some View {
         Button(action: onTap) {
             ZStack(alignment: .bottomLeading) {
-                if let urlString = genre.backdropUrl, let url = URL(string: urlString) {
+                if let urlString = genre.imageUrl ?? genre.backdropUrl, let url = URL(string: urlString) {
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .success(let image):
@@ -238,13 +255,14 @@ private struct GenreCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(genre.name)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .lineLimit(1)
 
                     Text("\(genre.itemCount) Items")
                         .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(.white.opacity(0.7))
+                        .lineLimit(1)
                 }
                 .padding(12)
             }
@@ -267,7 +285,7 @@ private struct GenreCardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .overlay(
-                RoundedRectangle(cornerRadius: RadiusTokens.small + 6)
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
                     .stroke(isFocused ? focusBorderColor : .clear, lineWidth: 3)
             )
             .scaleEffect(isFocused ? 1.08 : 1.0)
@@ -311,6 +329,118 @@ struct GenreSortDialogView: View {
                             )
 
                         Text(option.displayName)
+                            .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                            .foregroundColor(isSelected ? Color(hex: 0x00A4DC) : .white.opacity(0.8))
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(SortRowButtonStyle())
+            }
+
+            Spacer()
+        }
+        .frame(minWidth: 340, maxWidth: 440)
+        .background(Color(red: 0.078, green: 0.078, blue: 0.078).opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+    }
+}
+
+struct GenreDisplaySettingsDialogView: View {
+    let posterSize: PosterSize
+    let imageType: ImageDisplayType
+    let onPosterSizeChanged: (PosterSize) -> Void
+    let onImageTypeChanged: (ImageDisplayType) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var supportedPosterSizes: [PosterSize] {
+        PosterSize.allCases
+    }
+
+    private var supportedImageTypes: [ImageDisplayType] {
+        [.poster, .thumb, .banner]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Display Settings")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+
+            Divider().background(Color.white.opacity(0.08))
+
+            Text("IMAGE TYPE")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.white.opacity(0.45))
+                .padding(.horizontal, 24)
+                .padding(.vertical, 8)
+
+            ForEach(supportedImageTypes, id: \.self) { type in
+                let isSelected = type == imageType
+                Button(action: {
+                    onImageTypeChanged(type)
+                    dismiss()
+                }) {
+                    HStack(spacing: 16) {
+                        Circle()
+                            .stroke(isSelected ? Color(hex: 0x00A4DC) : .white.opacity(0.3), lineWidth: 2)
+                            .frame(width: 18, height: 18)
+                            .overlay(
+                                isSelected ?
+                                    Circle().fill(Color(hex: 0x00A4DC)).frame(width: 10, height: 10)
+                                    : nil
+                            )
+
+                        Text(type.displayName)
+                            .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                            .foregroundColor(isSelected ? Color(hex: 0x00A4DC) : .white.opacity(0.8))
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(SortRowButtonStyle())
+            }
+
+            Divider()
+                .background(Color.white.opacity(0.06))
+                .padding(.horizontal, 24)
+
+            Text("POSTER SIZE")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.white.opacity(0.45))
+                .padding(.horizontal, 24)
+                .padding(.vertical, 8)
+
+            ForEach(supportedPosterSizes, id: \.self) { size in
+                let isSelected = size == posterSize
+                Button(action: {
+                    onPosterSizeChanged(size)
+                    dismiss()
+                }) {
+                    HStack(spacing: 16) {
+                        Circle()
+                            .stroke(isSelected ? Color(hex: 0x00A4DC) : .white.opacity(0.3), lineWidth: 2)
+                            .frame(width: 18, height: 18)
+                            .overlay(
+                                isSelected ?
+                                    Circle().fill(Color(hex: 0x00A4DC)).frame(width: 10, height: 10)
+                                    : nil
+                            )
+
+                        Text(size.displayName)
                             .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
                             .foregroundColor(isSelected ? Color(hex: 0x00A4DC) : .white.opacity(0.8))
 

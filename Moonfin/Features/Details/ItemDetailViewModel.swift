@@ -638,8 +638,8 @@ final class ItemDetailViewModel: ObservableObject {
                     request: GetItemsRequest(
                         parentId: boxSet.id,
                         includeItemTypes: Self.parentCollectionMediaTypes,
-                        ids: [itemId],
-                        limit: 1
+                        limit: 1,
+                        ids: [itemId]
                     )
                 )
                 if !members.items.isEmpty {

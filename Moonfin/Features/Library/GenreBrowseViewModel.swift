@@ -22,6 +22,7 @@ enum GenreSortOption: String, CaseIterable {
 struct GenreItem: Identifiable, Equatable {
     let id: String
     let name: String
+    let imageUrl: String?
     let backdropUrl: String?
     let itemCount: Int
     let parentId: String?
@@ -36,6 +37,8 @@ final class GenreBrowseViewModel: ObservableObject {
     @Published private(set) var focusedGenre: GenreItem?
     @Published private(set) var title = "Genres"
     @Published var currentSort: GenreSortOption = .nameAsc
+    @Published var posterSize: PosterSize
+    @Published var imageType: ImageDisplayType
 
     let backgroundService = BackgroundService()
 
@@ -45,17 +48,47 @@ final class GenreBrowseViewModel: ObservableObject {
     private var allGenres: [GenreItem] = []
     private var hasLoaded = false
     private var cancellables = Set<AnyCancellable>()
+    private static let posterSizeDefaultsKey = "genre_browse_poster_size"
+    private static let imageTypeDefaultsKey = "genre_browse_image_type"
+    private static let supportedImageTypes: [ImageDisplayType] = [.poster, .thumb, .banner]
 
     init(container: AppContainer, parentId: String? = nil, includeType: String? = nil) {
         self.container = container
         self.parentId = parentId
         self.includeType = includeType
+        if let raw = UserDefaults.standard.string(forKey: Self.posterSizeDefaultsKey),
+           let saved = PosterSize(rawValue: raw) {
+            self.posterSize = saved
+        } else {
+            self.posterSize = .medium
+        }
+        if let raw = UserDefaults.standard.string(forKey: Self.imageTypeDefaultsKey),
+           let saved = ImageDisplayType(rawValue: raw),
+           Self.supportedImageTypes.contains(saved) {
+            self.imageType = saved
+        } else {
+            self.imageType = .thumb
+        }
 
         backgroundService.configure(preferences: container.userPreferences)
         backgroundService.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
+    }
+
+    func setPosterSize(_ size: PosterSize) {
+        posterSize = size
+        UserDefaults.standard.set(size.rawValue, forKey: Self.posterSizeDefaultsKey)
+    }
+
+    func setImageType(_ type: ImageDisplayType) {
+        guard Self.supportedImageTypes.contains(type), type != imageType else { return }
+        imageType = type
+        UserDefaults.standard.set(type.rawValue, forKey: Self.imageTypeDefaultsKey)
+
+        guard let client else { return }
+        Task { await loadGenres(client: client) }
     }
 
     private var client: MediaServerClient? {
@@ -163,24 +196,25 @@ final class GenreBrowseViewModel: ObservableObject {
             let count = result.totalRecordCount
             guard count > 0 else { return nil }
 
+            var imageUrl: String?
             var backdropUrl: String?
             if let item = result.items.first {
-                if let primaryTag = item.imageTags?["Primary"] {
+                if let backdropTag = item.backdropImageTags?.first {
                     backdropUrl = client.imageApi.getItemImageUrl(
-                        itemId: item.id, imageType: .primary,
-                        maxWidth: 480, maxHeight: 480, tag: primaryTag
-                    )
-                } else if let backdropTag = item.backdropImageTags?.first {
-                    backdropUrl = client.imageApi.getItemImageUrl(
-                        itemId: item.id, imageType: .backdrop,
-                        maxWidth: 780, maxHeight: 780, tag: backdropTag
+                        itemId: item.id,
+                        imageType: .backdrop,
+                        maxWidth: 780,
+                        maxHeight: 780,
+                        tag: backdropTag
                     )
                 }
+                imageUrl = genreImageUrl(for: item, client: client, fallbackBackdropUrl: backdropUrl)
             }
 
             return GenreItem(
                 id: genre.id,
                 name: genre.name,
+                imageUrl: imageUrl,
                 backdropUrl: backdropUrl,
                 itemCount: count,
                 parentId: parentId,
@@ -195,6 +229,61 @@ final class GenreBrowseViewModel: ObservableObject {
         ItemType.allCases.first { candidate in
             candidate.rawValue.caseInsensitiveCompare(value) == .orderedSame
                 || candidate.apiValue.caseInsensitiveCompare(value) == .orderedSame
+        }
+    }
+
+    private func genreImageUrl(for item: ServerItem, client: MediaServerClient, fallbackBackdropUrl: String?) -> String? {
+        let primaryTag = item.imageTags?["Primary"]
+        let thumbTag = item.imageTags?["Thumb"]
+        let bannerTag = item.imageTags?["Banner"]
+
+        switch imageType {
+        case .poster:
+            if let primaryTag {
+                return client.imageApi.getItemImageUrl(
+                    itemId: item.id,
+                    imageType: .primary,
+                    maxWidth: 480,
+                    maxHeight: 720,
+                    tag: primaryTag
+                )
+            }
+            return fallbackBackdropUrl
+
+        case .thumb:
+            if let thumbTag {
+                return client.imageApi.getItemImageUrl(
+                    itemId: item.id,
+                    imageType: .thumb,
+                    maxWidth: 780,
+                    maxHeight: 440,
+                    tag: thumbTag
+                )
+            }
+            return fallbackBackdropUrl
+
+        case .banner:
+            if let bannerTag {
+                return client.imageApi.getItemImageUrl(
+                    itemId: item.id,
+                    imageType: .banner,
+                    maxWidth: 780,
+                    maxHeight: 440,
+                    tag: bannerTag
+                )
+            }
+            return fallbackBackdropUrl
+
+        case .square:
+            return primaryTag.flatMap { tag in
+                client.imageApi.getItemImageUrl(
+                    itemId: item.id,
+                    imageType: .primary,
+                    maxWidth: 480,
+                    maxHeight: 480,
+                    tag: tag
+                )
+            } ?? fallbackBackdropUrl
         }
     }
 
