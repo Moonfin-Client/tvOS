@@ -137,11 +137,11 @@ final class LibraryBrowseViewModel: ObservableObject {
             }
         case .banner:
             switch posterSize {
-            case .smallest: return (360, 62)
-            case .small: return (440, 76)
-            case .medium: return (520, 90)
-            case .large: return (620, 107)
-            case .xLarge: return (740, 128)
+            case .smallest: return (200, 112)
+            case .small: return (240, 135)
+            case .medium: return (280, 158)
+            case .large: return (340, 191)
+            case .xLarge: return (420, 236)
             }
         case .square:
             switch posterSize {

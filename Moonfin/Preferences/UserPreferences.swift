@@ -259,7 +259,7 @@ enum ImageDisplayType: String, StringRepresentableEnum, CaseIterable {
         switch self {
         case .poster: return 2.0 / 3.0
         case .thumb: return 16.0 / 9.0
-        case .banner: return 16.0 / 3.0
+        case .banner: return 16.0 / 9.0
         case .square: return 1.0
         }
     }
