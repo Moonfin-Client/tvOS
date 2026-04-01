@@ -27,6 +27,8 @@ final class ItemDetailViewModel: ObservableObject {
     @Published private(set) var similar: [ServerItem] = []
     @Published private(set) var nextUp: [ServerItem] = []
     @Published private(set) var collectionItems: [ServerItem] = []
+    @Published private(set) var parentCollectionName: String?
+    @Published private(set) var parentCollectionItems: [ServerItem] = []
     @Published private(set) var tracks: [ServerItem] = []
     @Published private(set) var albums: [ServerItem] = []
     @Published private(set) var specialFeatures: [ServerItem] = []
@@ -142,6 +144,7 @@ final class ItemDetailViewModel: ObservableObject {
         seasons = []; episodes = []; similar = []
         nextUp = []; collectionItems = []; tracks = []
         albums = []; specialFeatures = []; filmography = []
+        parentCollectionName = nil; parentCollectionItems = []
         instantMixItems = []
         isFavorite = false; isPlayed = false
     }
@@ -343,12 +346,14 @@ final class ItemDetailViewModel: ObservableObject {
         case .episode:
             let seriesId = item.seriesId ?? ""
             let seasonId = item.seasonId ?? item.parentId ?? ""
+            async let episodeSpecialTask: () = loadSpecialFeatures(itemId: item.id, client: client)
             if !seriesId.isEmpty && !seasonId.isEmpty {
                 async let episodesTask: () = loadEpisodes(seriesId: seriesId, seasonId: seasonId, userId: userId, client: client)
                 async let similarTask: () = loadSimilar(itemId: item.id, client: client)
-                _ = await (episodesTask, similarTask)
+                _ = await (episodesTask, similarTask, episodeSpecialTask)
             } else {
-                await loadSimilar(itemId: item.id, client: client)
+                async let similarTask: () = loadSimilar(itemId: item.id, client: client)
+                _ = await (similarTask, episodeSpecialTask)
             }
 
         case .boxSet:
@@ -367,10 +372,11 @@ final class ItemDetailViewModel: ObservableObject {
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
             _ = await (tracksTask, similarTask)
 
-        case .movie, .video:
+        case .movie, .trailer, .video:
             async let similarTask: () = loadSimilar(itemId: item.id, client: client)
             async let specialTask: () = loadSpecialFeatures(itemId: item.id, client: client)
-            _ = await (similarTask, specialTask)
+            async let collectionTask: () = loadParentCollection(itemId: item.id, client: client)
+            _ = await (similarTask, specialTask, collectionTask)
 
         default:
             await loadSimilar(itemId: item.id, client: client)
@@ -577,6 +583,63 @@ final class ItemDetailViewModel: ObservableObject {
         do {
             let items = try await client.userLibraryApi.getSpecialFeatures(itemId: itemId)
             specialFeatures = items
+        } catch { }
+    }
+
+    private func loadParentCollection(itemId: String, client: MediaServerClient) async {
+        do {
+            let collapsed = try await client.itemsApi.getItems(
+                request: GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: [.movie, .series, .boxSet],
+                    ids: [itemId],
+                    collapseBoxSetItems: true
+                )
+            )
+            if let boxSet = collapsed.items.first(where: { $0.type == ItemType.boxSet }) {
+                let members = try await client.itemsApi.getItems(
+                    request: GetItemsRequest(
+                        parentId: boxSet.id,
+                        sortBy: [.premiereDate, .sortName],
+                        sortOrder: .ascending
+                    )
+                )
+                parentCollectionName = boxSet.name
+                parentCollectionItems = members.items
+                return
+            }
+
+            let candidateBoxSets = try await client.itemsApi.getItems(
+                request: GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: [.boxSet],
+                    sortBy: [.sortName],
+                    fields: [.childCount],
+                    limit: 200
+                )
+            )
+
+            for boxSet in candidateBoxSets.items where (boxSet.childCount ?? 0) > 0 {
+                let members = try await client.itemsApi.getItems(
+                    request: GetItemsRequest(
+                        parentId: boxSet.id,
+                        fields: [.childCount],
+                        limit: 500
+                    )
+                )
+                if members.items.contains(where: { $0.id == itemId }) {
+                    let sortedMembers = try await client.itemsApi.getItems(
+                        request: GetItemsRequest(
+                            parentId: boxSet.id,
+                            sortBy: [.premiereDate, .sortName],
+                            sortOrder: .ascending
+                        )
+                    )
+                    parentCollectionName = boxSet.name
+                    parentCollectionItems = sortedMembers.items
+                    return
+                }
+            }
         } catch { }
     }
 

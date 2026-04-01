@@ -679,7 +679,7 @@ struct ItemDetailsView: View {
                 artistSections()
             case .boxSet:
                 collectionSections()
-            case .movie, .video:
+            case .movie, .trailer, .video:
                 movieSections()
             default:
                 defaultSections()
@@ -988,6 +988,7 @@ struct ItemDetailsView: View {
             }
         }
         castSection
+        specialFeaturesSection
         similarSection
     }
 
@@ -1127,6 +1128,7 @@ struct ItemDetailsView: View {
         castSection
         chaptersSection
         specialFeaturesSection
+        parentCollectionSection
         similarSection
     }
 
@@ -1159,6 +1161,15 @@ struct ItemDetailsView: View {
         if !viewModel.specialFeatures.isEmpty {
             detailSection(title: "Special Features", id: "specials") {
                 itemRow(items: viewModel.specialFeatures, imageType: .primary, aspectRatio: 16.0/9.0)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var parentCollectionSection: some View {
+        if !viewModel.parentCollectionItems.isEmpty {
+            detailSection(title: viewModel.parentCollectionName ?? "Collection", id: "parentCollection") {
+                itemRow(items: viewModel.parentCollectionItems)
             }
         }
     }
@@ -1240,6 +1251,7 @@ struct ItemDetailsView: View {
         ) { focusBinding in
             LazyHStack(spacing: SpaceTokens.spaceMd) {
                 ForEach(chapters) { chapter in
+                    let isFocused = focusBinding.wrappedValue == chapterFocusId(chapter)
                     Button {
                         playVideo(item: item, positionTicks: chapter.startPositionTicks)
                     } label: {
@@ -1261,6 +1273,10 @@ struct ItemDetailsView: View {
                                 }
                             }
                             .cornerRadius(RadiusTokens.small)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                            )
 
                             Text(chapter.name ?? "Chapter")
                                 .font(.bodySm)
