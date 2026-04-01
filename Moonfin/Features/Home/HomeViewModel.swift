@@ -291,7 +291,7 @@ final class HomeViewModel: ObservableObject {
                             title: "Latest \(lib.displayName)",
                             rowType: .latestMedia(libraryId: lib.library.id),
                             isMusicLibraryRow: lib.library.collectionType?.lowercased() == "music",
-                            queryType: .items(latestMediaRequest(
+                            queryType: .latestMedia(latestMediaRequest(
                                 parentId: lib.library.id,
                                 collectionType: lib.library.collectionType
                             )),
@@ -338,7 +338,7 @@ final class HomeViewModel: ObservableObject {
     private func makeStaticRow(
         id: String, title: String, rowType: HomeRowType, items: [ServerItem], isMusicLibraryRow: Bool = false
     ) -> HomeRow {
-        let filtered = container.parentalControlsRepository.filterItems(items)
+        let filtered = filterHomeRowItems(items, for: rowType)
         let source = RowDataSource(queryType: .staticItems(filtered), changeTriggers: [], chunkSize: Self.chunkSize)
         source.preload(filtered)
         dataSources[id] = source
@@ -415,7 +415,7 @@ final class HomeViewModel: ObservableObject {
                     title: "Latest \(view.name)",
                     rowType: .latestMedia(libraryId: view.id),
                     isMusicLibraryRow: view.collectionType?.lowercased() == "music",
-                    queryType: .items(latestMediaRequest(
+                    queryType: .latestMedia(latestMediaRequest(
                         parentId: view.id,
                         collectionType: view.collectionType
                     )),
@@ -521,19 +521,14 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
-    private func latestMediaRequest(parentId: String, collectionType: String?) -> GetItemsRequest {
-        GetItemsRequest(
+    private func latestMediaRequest(parentId: String, collectionType: String?) -> GetLatestMediaRequest {
+        GetLatestMediaRequest(
             parentId: parentId,
-            recursive: true,
             includeItemTypes: latestIncludeItemTypes(for: collectionType),
-            excludeItemTypes: [.boxSet],
-            sortBy: [.dateCreated],
-            sortOrder: .descending,
             fields: Self.defaultFields,
-            enableImages: true,
+            limit: RowDataSource.maxItems,
+            groupItems: false,
             imageTypeLimit: 1,
-            groupItems: true,
-            enableTotalRecordCount: true
         )
     }
 
@@ -604,12 +599,23 @@ final class HomeViewModel: ObservableObject {
               let source = dataSources[rowId]
         else { return }
         let rowType = rows[index].rowType
-        let filtered = container.parentalControlsRepository.filterItems(source.items)
+        let filtered = filterHomeRowItems(source.items, for: rowType)
         rows[index].items = filtered
         rows[index].isLoading = source.isLoading
         rows[index].totalItemCount = source.totalItemCount
         if rowType == .continueWatching || rowType == .nextUp {
             dedupeNextUpAgainstContinueWatching()
+        }
+    }
+
+    private func filterHomeRowItems(_ items: [ServerItem], for rowType: HomeRowType) -> [ServerItem] {
+        let parentalFiltered = container.parentalControlsRepository.filterItems(items)
+
+        switch rowType {
+        case .continueWatching, .nextUp, .latestMedia, .resumeAudio:
+            return parentalFiltered.filter { $0.type != .boxSet }
+        default:
+            return parentalFiltered
         }
     }
 

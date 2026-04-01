@@ -361,7 +361,9 @@ final class RowDataSource {
             enableImages: base.enableImages,
             imageTypeLimit: base.imageTypeLimit,
             enableUserData: base.enableUserData,
-            groupItems: base.groupItems
+            groupItems: base.groupItems,
+            collapseBoxSetItems: base.collapseBoxSetItems,
+            enableTotalRecordCount: base.enableTotalRecordCount
         )
     }
 
