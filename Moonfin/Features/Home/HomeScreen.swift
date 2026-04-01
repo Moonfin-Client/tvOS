@@ -37,6 +37,8 @@ struct HomeScreen: View {
     @Environment(\.resetFocus) private var resetFocus
     @State private var focusFirstRowTrigger: Int = 0
     @State private var restoreRowFocusTrigger: Int = 0
+    @State private var restoreScrollTrigger: Int = 0
+    @Namespace private var rowsNamespace
     @State private var suppressTopNavbarUntilMediaBarFocus = false
     @State private var lastContentAreaWasMediaBar = false
     @State private var sidebarEntryRowId: String?
@@ -84,7 +86,10 @@ struct HomeScreen: View {
             try? await Task.sleep(nanoseconds: delay)
             guard !Task.isCancelled else { return }
             if isRestoringPosition, lastFocusedRowId != nil {
-                restoreRowFocusTrigger += 1
+                restoreScrollTrigger += 1
+                try? await Task.sleep(nanoseconds: 150_000_000)
+                guard !Task.isCancelled else { return }
+                resetFocus(in: rowsNamespace)
                 return
             }
             if isRestoringPosition {
@@ -209,8 +214,9 @@ struct HomeScreen: View {
             } else if lastFocusedRowId != nil {
                 isMediaBarMode = false
                 isRestoringPosition = true
+                hasInitiallyFocusedFirstRow = true
                 sentinelEnabled = false
-                resolveFocus(delay: 500_000_000)
+                resolveFocus(delay: 100_000_000)
             } else if viewModel.isMediaBarActive {
                 isMediaBarMode = true
                 requestMediaBarFocus(after: 0)
@@ -467,22 +473,26 @@ struct HomeScreen: View {
                                         let isNewRow = focusedRowId != row.id
                                         focusedRowId = row.id
                                         if isRestoringPosition {
-                                            isRestoringPosition = false
-                                            sentinelEnabled = true
+                                            if row.id == lastFocusedRowId {
+                                                isRestoringPosition = false
+                                                sentinelEnabled = viewModel.isMediaBarActive
+                                            }
                                         } else if isNewRow {
                                             scrollTrigger += 1
                                         }
                                     },
                                     onItemFocused: { item in
                                         lastContentAreaWasMediaBar = false
-                                        focusedRowId = row.id
-                                        lastFocusedRowId = row.id
-                                        lastFocusedItemId = item.id
+                                        if !isRestoringPosition {
+                                            focusedRowId = row.id
+                                            lastFocusedRowId = row.id
+                                            lastFocusedItemId = item.id
+                                        }
                                     },
                                     onItemSelected: { item in
                                         navigatedFromMediaBar = false
                                         lastFocusedRowId = row.id
-                                        lastFocusedItemId = nil
+                                        lastFocusedItemId = item.id
                                         if row.rowType == .myMedia || row.rowType == .myMediaSmall {
                                             navigateToLibrary(item)
                                         } else if row.rowType == .liveTvButtons {
@@ -507,8 +517,10 @@ struct HomeScreen: View {
                                     }()
                                 )
                                 .id(row.id)
+                                .prefersDefaultFocus(isRestoringPosition && lastFocusedRowId == row.id, in: rowsNamespace)
                             }
                         }
+                        .focusScope(rowsNamespace)
                     }
                     .padding(.leading, contentLeading)
                     .padding(.trailing, 50)
@@ -532,6 +544,12 @@ struct HomeScreen: View {
                     guard let id = focusedRowId else { return }
                     withAnimation(.easeInOut(duration: 0.3)) {
                         proxy.scrollTo(id, anchor: UnitPoint(x: 0, y: 0.05))
+                    }
+                }
+                .onChange(of: restoreScrollTrigger) { _ in
+                    guard let rowId = lastFocusedRowId else { return }
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(rowId, anchor: UnitPoint(x: 0, y: 0.05))
                     }
                 }
                 .onAppear {
