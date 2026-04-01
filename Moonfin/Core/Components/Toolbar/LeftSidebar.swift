@@ -421,7 +421,7 @@ private struct SidebarIconItem: View {
                 .renderingMode(.template)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 24, height: 24)
+                .frame(width: 28, height: 28)
         } else {
             Image(systemName: systemIcon ?? "questionmark")
                 .font(.system(size: 24))

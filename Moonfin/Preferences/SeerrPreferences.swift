@@ -79,7 +79,7 @@ final class SeerrPreferences {
 
     static let moonfinMode = Preference(key: "seerr_moonfin_mode", defaultValue: false)
     static let moonfinDisplayName = Preference(key: "seerr_moonfin_display_name", defaultValue: "")
-    static let moonfinVariant = Preference(key: "seerr_moonfin_variant", defaultValue: "jellyseerr")
+    static let moonfinVariant = Preference(key: "seerr_moonfin_variant", defaultValue: "seerr")
     static let moonfinJellyseerrUserId = Preference(key: "seerr_moonfin_user_id", defaultValue: "")
 
     static let showInNavigation = Preference(key: "seerr_show_in_navigation", defaultValue: true)
@@ -111,6 +111,14 @@ final class SeerrPreferences {
     subscript<T>(preference: Preference<T>) -> T {
         get { store[preference] }
         set { store[preference] = newValue }
+    }
+
+    static func normalizeVariant(_ value: String?) -> String {
+        let normalized = (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalized == "jellyseerr" || normalized == "jelly" {
+            return "jellyseerr"
+        }
+        return "seerr"
     }
 
     // MARK: - Row Configuration

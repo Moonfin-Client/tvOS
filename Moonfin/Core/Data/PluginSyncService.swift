@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import os
 
 @MainActor
 final class PluginSyncService: ObservableObject {
@@ -10,6 +11,7 @@ final class PluginSyncService: ObservableObject {
     private let resolveSeerrRepository: () -> SeerrRepositoryProtocol?
     private let resolveParentalRepository: () -> ParentalControlsRepository?
     private let defaults: UserDefaults
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "PluginSync")
 
     private var serverSchemaVersion = 1
     private var pushTask: Task<Void, Never>?
@@ -524,7 +526,8 @@ final class PluginSyncService: ObservableObject {
 
             let enabled = camelCased["enabled"] as? Bool ?? false
             let serverUrl = camelCased["url"] as? String
-            let variant = camelCased["variant"] as? String ?? "jellyseerr"
+            let rawVariant = camelCased["variant"] as? String
+            let variant = SeerrPreferences.normalizeVariant(rawVariant)
             let displayName = camelCased["displayName"] as? String
 
             guard let seerr = seerrDefaults() else { return }
@@ -537,6 +540,8 @@ final class PluginSyncService: ObservableObject {
             if enabled, let serverUrl, !serverUrl.isEmpty {
                 seerr.set(serverUrl, forKey: SeerrPreferences.serverUrl.key)
             }
+
+            logger.debug("Jellyseerr config synced: variant=\(variant, privacy: .public) enabled=\(enabled, privacy: .public)")
         } catch {
             print("[PluginSync] Jellyseerr config fetch failed: \(error.localizedDescription)")
         }

@@ -17,7 +17,7 @@ struct ExpandableToolbarButton: View {
                         .renderingMode(.template)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 26, height: 26)
+                        .frame(width: 30, height: 30)
                 } else {
                     Image(systemName: icon)
                         .font(.system(size: 26))

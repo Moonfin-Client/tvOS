@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import os
 
 @MainActor
 final class NavbarViewModel: ObservableObject {
@@ -14,14 +15,15 @@ final class NavbarViewModel: ObservableObject {
     @Published var showSyncPlay: Bool = false
     @Published var showSeerrInNavigation: Bool = false
     @Published var showSeerrInToolbar: Bool = false
-    @Published var seerrDisplayName: String = "Jellyseerr"
-    @Published var seerrIconName: String = "jellyseerr"
+    @Published var seerrDisplayName: String = "Seerr"
+    @Published var seerrIconName: String = "seerr"
 
     @Published var overlayColor: Color = MediaBarOverlayColor.gray.color
     @Published var overlayOpacity: Double = 0.5
 
     private let container: AppContainer
     private var cancellables = Set<AnyCancellable>()
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "NavbarViewModel")
 
     init(container: AppContainer) {
         self.container = container
@@ -95,20 +97,51 @@ final class NavbarViewModel: ObservableObject {
     private func refreshSeerrVisibility() {
         let available = container.seerrRepository.isAvailable.value
         if let seerrPrefs = container.seerrRepository.getPreferences() {
-            let enabled = seerrPrefs[SeerrPreferences.enabled]
-            showSeerrInNavigation = enabled && available && seerrPrefs[SeerrPreferences.showInNavigation]
-            showSeerrInToolbar = enabled && available && seerrPrefs[SeerrPreferences.showInToolbar]
+            let enabled = seerrPrefs[SeerrPreferences.enabled] || available
+            let authenticated = isSeerrAuthenticated(seerrPrefs, available: available)
+            let showInNavigationPref = seerrPrefs[SeerrPreferences.showInNavigation]
+            let showInToolbarPref = seerrPrefs[SeerrPreferences.showInToolbar]
+            showSeerrInNavigation = enabled && available && authenticated && showInNavigationPref
+            showSeerrInToolbar = enabled && available && authenticated && showInToolbarPref
 
-            let variant = seerrPrefs[SeerrPreferences.moonfinVariant]
+            let variant = SeerrPreferences.normalizeVariant(seerrPrefs[SeerrPreferences.moonfinVariant])
             let dn = seerrPrefs[SeerrPreferences.moonfinDisplayName]
             seerrDisplayName = dn.isEmpty ? (variant == "seerr" ? "Seerr" : "Jellyseerr") : dn
             seerrIconName = variant == "seerr" ? "seerr" : "jellyseerr"
+
+            logger.debug("seerr visibility: available=\(available, privacy: .public) auth=\(authenticated, privacy: .public) show=[nav:\(self.showSeerrInNavigation, privacy: .public) toolbar:\(self.showSeerrInToolbar, privacy: .public)] variant=\(variant, privacy: .public)")
         } else {
             showSeerrInNavigation = false
             showSeerrInToolbar = false
-            seerrDisplayName = "Jellyseerr"
-            seerrIconName = "jellyseerr"
+            seerrDisplayName = "Seerr"
+            seerrIconName = "seerr"
+            logger.debug("seerr visibility unavailable: preferences not found for current user")
         }
+    }
+
+    private func isSeerrAuthenticated(_ prefs: SeerrPreferences, available: Bool) -> Bool {
+        let authMethod = prefs[SeerrPreferences.authMethod]
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        // In Moonfin mode, repository availability already reflects auth state.
+        if prefs[SeerrPreferences.moonfinMode] || authMethod == "moonfin" {
+            return true
+        }
+
+        guard !authMethod.isEmpty else { return false }
+
+        if authMethod.contains("apikey") {
+            return !prefs[SeerrPreferences.apiKey]
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .isEmpty
+        }
+
+        if authMethod == "jellyfin" || authMethod == "local" {
+            return prefs[SeerrPreferences.lastConnectionSuccess] || available
+        }
+
+        return available
     }
 
     private func loadUserImage(user: ServerUser) {
