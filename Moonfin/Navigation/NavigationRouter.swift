@@ -116,7 +116,15 @@ final class NavigationRouter: ObservableObject {
         item.itemType == .photo
     }
 
+    private static let detailFolderTypes: Set<ItemType> = [
+        .series, .season, .musicAlbum, .musicArtist, .albumArtist, .boxSet, .playlist, .photoAlbum
+    ]
+
     private func isFolderLike(_ item: ServerItem) -> Bool {
+        if Self.detailFolderTypes.contains(item.type) {
+            return false
+        }
+
         if item.isFolder == true {
             return true
         }
