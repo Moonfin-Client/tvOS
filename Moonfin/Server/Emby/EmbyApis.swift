@@ -1,5 +1,30 @@
 import Foundation
 
+private func embyUserIdCandidates(_ userId: String?) -> [String] {
+    guard let userId, !userId.isEmpty else { return [] }
+
+    var candidates: [String] = []
+
+    func append(_ value: String) {
+        guard !value.isEmpty else { return }
+        if !candidates.contains(value) {
+            candidates.append(value)
+        }
+    }
+
+    append(userId)
+
+    let compact = userId.replacingOccurrences(of: "-", with: "")
+    append(compact)
+
+    if compact.allSatisfy({ $0.isNumber }) {
+        let trimmed = String(compact.drop { $0 == "0" })
+        append(trimmed)
+    }
+
+    return candidates
+}
+
 // MARK: - Auth
 
 struct EmbyAuthApi: ServerAuthApi {
@@ -64,8 +89,6 @@ struct EmbyItemsApi: ServerItemsApi {
     let client: HttpClient
 
     func getItems(request: GetItemsRequest) async throws -> ItemsResult {
-        let userId = request.userId ?? client.userId
-        let path = userId != nil ? "/Users/\(userId!)/Items" : "/Items"
         let query = buildQuery([
             ("StartIndex", request.startIndex.map(String.init)),
             ("Limit", request.limit.map(String.init)),
@@ -95,7 +118,22 @@ struct EmbyItemsApi: ServerItemsApi {
             ("CollapseBoxSetItems", request.collapseBoxSetItems.map(String.init)),
             ("EnableTotalRecordCount", request.enableTotalRecordCount.map(String.init)),
         ])
-        return try await client.request(path, queryItems: query)
+
+        let userIdCandidates = embyUserIdCandidates(request.userId ?? client.userId)
+        if userIdCandidates.isEmpty {
+            return try await client.request("/Items", queryItems: query)
+        }
+
+        var lastError: Error?
+        for userId in userIdCandidates {
+            do {
+                return try await client.request("/Users/\(userId)/Items", queryItems: query)
+            } catch {
+                lastError = error
+            }
+        }
+
+        throw lastError ?? ServerError.invalidResponse
     }
 
     func getPlaylistItems(itemId: String, userId: String?) async throws -> ItemsResult {
@@ -109,7 +147,6 @@ struct EmbyItemsApi: ServerItemsApi {
     }
 
     func getResumeItems(request: GetResumeItemsRequest) async throws -> ItemsResult {
-        let userId = request.userId ?? client.userId ?? ""
         let query = buildQuery([
             ("StartIndex", request.startIndex.map(String.init)),
             ("Limit", request.limit.map(String.init)),
@@ -121,11 +158,21 @@ struct EmbyItemsApi: ServerItemsApi {
             ("EnableImages", request.enableImages.map(String.init)),
             ("ImageTypeLimit", request.imageTypeLimit.map(String.init)),
         ])
-        return try await client.request("/Users/\(userId)/Items/Resume", queryItems: query)
+
+        let userIdCandidates = embyUserIdCandidates(request.userId ?? client.userId)
+        var lastError: Error?
+        for userId in userIdCandidates {
+            do {
+                return try await client.request("/Users/\(userId)/Items/Resume", queryItems: query)
+            } catch {
+                lastError = error
+            }
+        }
+
+        throw lastError ?? ServerError.invalidResponse
     }
 
     func getLatestMedia(request: GetLatestMediaRequest) async throws -> [ServerItem] {
-        let userId = request.userId ?? client.userId ?? ""
         let query = buildQuery([
             ("ParentId", request.parentId),
             ("Fields", request.fields?.map(\.rawValue).joined(separator: ",")),
@@ -134,21 +181,42 @@ struct EmbyItemsApi: ServerItemsApi {
             ("GroupItems", request.groupItems.map(String.init)),
             ("ImageTypeLimit", request.imageTypeLimit.map(String.init)),
         ])
-        return try await client.request("/Users/\(userId)/Items/Latest", queryItems: query)
+
+        let userIdCandidates = embyUserIdCandidates(request.userId ?? client.userId)
+        var lastError: Error?
+        for userId in userIdCandidates {
+            do {
+                return try await client.request("/Users/\(userId)/Items/Latest", queryItems: query)
+            } catch {
+                lastError = error
+            }
+        }
+
+        throw lastError ?? ServerError.invalidResponse
     }
 
     func getNextUp(request: GetNextUpRequest) async throws -> ItemsResult {
-        let userId = request.userId ?? client.userId ?? ""
-        let query = buildQuery([
-            ("UserId", userId),
-            ("StartIndex", request.startIndex.map(String.init)),
-            ("Limit", request.limit.map(String.init)),
-            ("Fields", request.fields?.map(\.rawValue).joined(separator: ",")),
-            ("SeriesId", request.seriesId),
-            ("EnableImages", request.enableImages.map(String.init)),
-            ("ImageTypeLimit", request.imageTypeLimit.map(String.init)),
-        ])
-        return try await client.request("/Shows/NextUp", queryItems: query)
+        let userIdCandidates = embyUserIdCandidates(request.userId ?? client.userId)
+        var lastError: Error?
+
+        for userId in userIdCandidates {
+            let query = buildQuery([
+                ("UserId", userId),
+                ("StartIndex", request.startIndex.map(String.init)),
+                ("Limit", request.limit.map(String.init)),
+                ("Fields", request.fields?.map(\.rawValue).joined(separator: ",")),
+                ("SeriesId", request.seriesId),
+                ("EnableImages", request.enableImages.map(String.init)),
+                ("ImageTypeLimit", request.imageTypeLimit.map(String.init)),
+            ])
+            do {
+                return try await client.request("/Shows/NextUp", queryItems: query)
+            } catch {
+                lastError = error
+            }
+        }
+
+        throw lastError ?? ServerError.invalidResponse
     }
 
     func getSimilarItems(itemId: String, limit: Int?) async throws -> ItemsResult {
@@ -333,8 +401,23 @@ struct EmbyUserViewsApi: ServerUserViewsApi {
 
     func getUserViews(userId: String) async throws -> [ServerItem] {
         struct ViewsResponse: Decodable { let Items: [ServerItem] }
-        let response: ViewsResponse = try await client.request("/Users/\(userId)/Views")
-        return response.Items
+
+        let userIdCandidates = embyUserIdCandidates(userId)
+        var lastError: Error?
+
+        for candidate in userIdCandidates {
+            do {
+                let response: ViewsResponse = try await client.request(
+                    "/Users/\(candidate)/Views",
+                    queryItems: [URLQueryItem(name: "includeExternalContent", value: "true")]
+                )
+                return response.Items
+            } catch {
+                lastError = error
+            }
+        }
+
+        throw lastError ?? ServerError.invalidResponse
     }
 }
 

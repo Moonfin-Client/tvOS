@@ -41,10 +41,9 @@ struct ServerScreen: View {
             case .authenticated:
                 guard mainFlowTransitionTask == nil else { return }
                 mainFlowTransitionTask = Task {
-                    await container.pluginSyncService.syncOnStartup()
-                    guard !Task.isCancelled else { return }
                     router.switchFlow(to: .main)
                     container.serverConnectionMonitor.startMonitoring()
+                    Task { await container.pluginSyncService.syncOnStartup() }
                 }
             case .requireSignIn:
                 if let server = viewModel.server {

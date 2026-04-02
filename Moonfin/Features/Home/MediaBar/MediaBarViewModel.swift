@@ -99,11 +99,13 @@ final class MediaBarViewModel: ObservableObject {
 
         if container.pluginSyncService.isPluginAvailable,
            var serverItems = try? await fetchFromPlugin(client: client) {
-            let missingProviderIds = serverItems.contains { $0.providerIds == nil || $0.providerIds?.isEmpty == true }
-            if missingProviderIds {
-                serverItems = await enrichWithProviderIds(items: serverItems, client: client)
+            if !serverItems.isEmpty {
+                let missingProviderIds = serverItems.contains { $0.providerIds == nil || $0.providerIds?.isEmpty == true }
+                if missingProviderIds {
+                    serverItems = await enrichWithProviderIds(items: serverItems, client: client)
+                }
+                return serverItems
             }
-            return serverItems
         }
 
         return try await fetchFromClient(client: client, userViews: userViews)

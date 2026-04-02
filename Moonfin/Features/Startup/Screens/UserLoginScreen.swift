@@ -92,10 +92,9 @@ struct UserLoginScreen: View {
             if state == .authenticated {
                 guard mainFlowTransitionTask == nil else { return }
                 mainFlowTransitionTask = Task {
-                    await container.pluginSyncService.syncOnStartup()
-                    guard !Task.isCancelled else { return }
                     router.switchFlow(to: .main)
                     container.serverConnectionMonitor.startMonitoring()
+                    Task { await container.pluginSyncService.syncOnStartup() }
                 }
             }
         }

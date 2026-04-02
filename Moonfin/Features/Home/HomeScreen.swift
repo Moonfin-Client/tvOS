@@ -131,6 +131,10 @@ struct HomeScreen: View {
     }
 
     private func syncTopNavbarSuppression() {
+        guard viewModel.hasFocusableContent else {
+            suppressTopNavbarInRows = false
+            return
+        }
         let mediaBarEnabled = viewModel.mediaBarViewModel.isEnabled
         suppressTopNavbarInRows = mediaBarEnabled && (!isMediaBarMode || suppressTopNavbarUntilMediaBarFocus)
     }
@@ -198,6 +202,7 @@ struct HomeScreen: View {
                         .opacity(mediaBarPresented ? 0 : 1)
                         .focusSection()
                         .zIndex(0)
+
                 }
             }
         }
@@ -237,6 +242,15 @@ struct HomeScreen: View {
                 requestMediaBarFocus()
             }
         }
+        .onChange(of: viewModel.isInitialLoad) { loading in
+            guard !loading else { return }
+            if !contentReady { contentReady = true }
+            if !viewModel.hasFocusableContent {
+                isMediaBarMode = false
+                suppressTopNavbarUntilMediaBarFocus = false
+                syncTopNavbarSuppression()
+            }
+        }
         .onChange(of: isMediaBarMode) { mode in
             syncTopNavbarSuppression()
         }
@@ -252,6 +266,10 @@ struct HomeScreen: View {
                         scheduleSidebarRowRestore(delay: 100_000_000)
                     }
                 }
+            } else if !viewModel.isInitialLoad {
+                if !contentReady { contentReady = true }
+                suppressTopNavbarUntilMediaBarFocus = false
+                syncTopNavbarSuppression()
             }
         }
         .onChange(of: sidebarHandoffToken) { _ in

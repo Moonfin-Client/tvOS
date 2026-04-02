@@ -33,9 +33,8 @@ final class PluginSyncService: ObservableObject {
 
     func syncOnStartup() async {
         let syncEnabled = defaults.bool(forKey: UserPreferences.pluginSyncEnabled.key)
-        let autoDetected = defaults.bool(forKey: UserPreferences.pluginSyncAutoDetected.key)
 
-        if !syncEnabled && autoDetected {
+        if !syncEnabled {
             unregisterChangeListener()
             return
         }
@@ -44,15 +43,6 @@ final class PluginSyncService: ObservableObject {
 
         let available = await ping(client: client)
         isPluginAvailable = available
-
-        if !syncEnabled && !autoDetected {
-            defaults.set(true, forKey: UserPreferences.pluginSyncAutoDetected.key)
-            if !available {
-                return
-            }
-            defaults.set(true, forKey: UserPreferences.pluginSyncEnabled.key)
-            clearSnapshot()
-        }
 
         guard available else { return }
 

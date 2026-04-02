@@ -21,6 +21,23 @@ struct NameIdPair: Codable, Hashable {
         case name = "Name"
         case id = "Id"
     }
+
+    init(name: String? = nil, id: String? = nil) {
+        self.name = name
+        self.id = id
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try? container.decodeIfPresent(String.self, forKey: .name)
+        if let stringId = try? container.decodeIfPresent(String.self, forKey: .id) {
+            id = stringId
+        } else if let intId = try? container.decodeIfPresent(Int.self, forKey: .id) {
+            id = String(intId)
+        } else {
+            id = nil
+        }
+    }
 }
 
 struct UserItemData: Codable {
@@ -31,7 +48,7 @@ struct UserItemData: Codable {
     let isFavorite: Bool
     let lastPlayedDate: Date?
     let played: Bool
-    let key: String
+    let key: String?
     let itemId: String?
 
     enum CodingKeys: String, CodingKey {
@@ -44,6 +61,19 @@ struct UserItemData: Codable {
         case played = "Played"
         case key = "Key"
         case itemId = "ItemId"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        playedPercentage = try container.decodeIfPresent(Double.self, forKey: .playedPercentage)
+        unplayedItemCount = try container.decodeIfPresent(Int.self, forKey: .unplayedItemCount)
+        playbackPositionTicks = (try? container.decodeIfPresent(Int64.self, forKey: .playbackPositionTicks)) ?? 0
+        playCount = (try? container.decodeIfPresent(Int.self, forKey: .playCount)) ?? 0
+        isFavorite = (try? container.decodeIfPresent(Bool.self, forKey: .isFavorite)) ?? false
+        lastPlayedDate = try? container.decodeIfPresent(Date.self, forKey: .lastPlayedDate)
+        played = (try? container.decodeIfPresent(Bool.self, forKey: .played)) ?? false
+        key = try? container.decodeIfPresent(String.self, forKey: .key)
+        itemId = try container.decodeIfPresent(String.self, forKey: .itemId)
     }
 }
 
@@ -73,6 +103,15 @@ struct ServerPerson: Codable {
         case role = "Role"
         case type = "Type"
         case primaryImageTag = "PrimaryImageTag"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+        name = (try? container.decodeIfPresent(String.self, forKey: .name)) ?? ""
+        role = try container.decodeIfPresent(String.self, forKey: .role)
+        type = (try? container.decode(PersonType.self, forKey: .type)) ?? .unknown
+        primaryImageTag = try container.decodeIfPresent(String.self, forKey: .primaryImageTag)
     }
 }
 
@@ -126,6 +165,33 @@ struct ServerMediaStream: Codable {
         case videoRangeType = "VideoRangeType"
         case channelLayout = "ChannelLayout"
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        index = (try? container.decode(Int.self, forKey: .index)) ?? 0
+        type = (try? container.decode(StreamType.self, forKey: .type)) ?? .unknown
+        codec = try container.decodeIfPresent(String.self, forKey: .codec)
+        language = try container.decodeIfPresent(String.self, forKey: .language)
+        displayTitle = try container.decodeIfPresent(String.self, forKey: .displayTitle)
+        isDefault = (try? container.decodeIfPresent(Bool.self, forKey: .isDefault)) ?? false
+        isForced = (try? container.decodeIfPresent(Bool.self, forKey: .isForced)) ?? false
+        isExternal = (try? container.decodeIfPresent(Bool.self, forKey: .isExternal)) ?? false
+        path = try container.decodeIfPresent(String.self, forKey: .path)
+        width = try container.decodeIfPresent(Int.self, forKey: .width)
+        height = try container.decodeIfPresent(Int.self, forKey: .height)
+        channels = try container.decodeIfPresent(Int.self, forKey: .channels)
+        sampleRate = try container.decodeIfPresent(Int.self, forKey: .sampleRate)
+        bitRate = try container.decodeIfPresent(Int.self, forKey: .bitRate)
+        bitDepth = try container.decodeIfPresent(Int.self, forKey: .bitDepth)
+        isTextSubtitleStream = (try? container.decodeIfPresent(Bool.self, forKey: .isTextSubtitleStream)) ?? false
+        deliveryUrl = try container.decodeIfPresent(String.self, forKey: .deliveryUrl)
+        profile = try container.decodeIfPresent(String.self, forKey: .profile)
+        level = try container.decodeIfPresent(Double.self, forKey: .level)
+        realFrameRate = try container.decodeIfPresent(Float.self, forKey: .realFrameRate)
+        videoRange = try container.decodeIfPresent(String.self, forKey: .videoRange)
+        videoRangeType = try container.decodeIfPresent(String.self, forKey: .videoRangeType)
+        channelLayout = try container.decodeIfPresent(String.self, forKey: .channelLayout)
+    }
 }
 
 struct ServerMediaSource: Codable {
@@ -161,6 +227,25 @@ struct ServerMediaSource: Codable {
         case mediaStreams = "MediaStreams"
         case defaultAudioStreamIndex = "DefaultAudioStreamIndex"
         case defaultSubtitleStreamIndex = "DefaultSubtitleStreamIndex"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.container = try container.decodeIfPresent(String.self, forKey: .container)
+        `protocol` = (try? container.decode(MediaProtocol.self, forKey: .protocol)) ?? .unknown
+        supportsDirectPlay = (try? container.decodeIfPresent(Bool.self, forKey: .supportsDirectPlay)) ?? false
+        supportsDirectStream = (try? container.decodeIfPresent(Bool.self, forKey: .supportsDirectStream)) ?? false
+        supportsTranscoding = (try? container.decodeIfPresent(Bool.self, forKey: .supportsTranscoding)) ?? false
+        transcodingUrl = try container.decodeIfPresent(String.self, forKey: .transcodingUrl)
+        eTag = try container.decodeIfPresent(String.self, forKey: .eTag)
+        liveStreamId = try container.decodeIfPresent(String.self, forKey: .liveStreamId)
+        isRemote = (try? container.decodeIfPresent(Bool.self, forKey: .isRemote)) ?? false
+        bitrate = try container.decodeIfPresent(Int.self, forKey: .bitrate)
+        mediaStreams = (try? container.decodeIfPresent([ServerMediaStream].self, forKey: .mediaStreams)) ?? []
+        defaultAudioStreamIndex = try container.decodeIfPresent(Int.self, forKey: .defaultAudioStreamIndex)
+        defaultSubtitleStreamIndex = try container.decodeIfPresent(Int.self, forKey: .defaultSubtitleStreamIndex)
     }
 }
 
@@ -374,6 +459,13 @@ struct ItemsResult: Codable {
         self.items = items
         self.totalRecordCount = totalRecordCount
         self.startIndex = startIndex
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        items = (try? container.decodeIfPresent([ServerItem].self, forKey: .items)) ?? []
+        totalRecordCount = (try? container.decodeIfPresent(Int.self, forKey: .totalRecordCount)) ?? 0
+        startIndex = (try? container.decodeIfPresent(Int.self, forKey: .startIndex)) ?? 0
     }
 }
 

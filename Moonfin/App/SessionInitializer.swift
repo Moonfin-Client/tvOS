@@ -30,10 +30,10 @@ final class SessionInitializer: ObservableObject {
 
             if container.sessionRepository.isAuthenticated,
                container.userRepository.currentUser.value != nil {
-                await container.pluginSyncService.syncOnStartup()
                 router.switchFlow(to: .main)
                 configureCrashReportEndpoint()
                 container.serverConnectionMonitor.startMonitoring()
+                Task { await container.pluginSyncService.syncOnStartup() }
                 return
             }
 

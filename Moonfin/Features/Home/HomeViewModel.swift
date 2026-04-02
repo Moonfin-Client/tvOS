@@ -134,6 +134,8 @@ final class HomeViewModel: ObservableObject {
             defer { finishLoad() }
             guard let client else {
                 await mediaBarViewModel.load()
+                rows = []
+                isInitialLoad = false
                 return
             }
 
@@ -181,6 +183,8 @@ final class HomeViewModel: ObservableObject {
                 let lateRowIds = Set(dataSources.keys).subtracting(earlyRowIds)
                 await loadRows(lateRowIds, client: client)
             }
+
+            ensureFallbackLibraryRowIfNeeded()
 
             refreshTopShelfCache()
 
@@ -335,9 +339,29 @@ final class HomeViewModel: ObservableObject {
             await loadRows(rowIds, client: client)
         }
 
+        ensureFallbackLibraryRowIfNeeded()
+
         refreshTopShelfCache()
 
         indexForSpotlight()
+    }
+
+    private func ensureFallbackLibraryRowIfNeeded() {
+        guard !userViews.isEmpty else { return }
+        let hasHomeContent = rows.contains { !$0.items.isEmpty }
+        guard !hasHomeContent else { return }
+
+        let fallbackId = "fallback_libraries"
+        guard !rows.contains(where: { $0.id == fallbackId }) else { return }
+
+        rows.append(
+            makeStaticRow(
+                id: fallbackId,
+                title: "Libraries",
+                rowType: .myMedia,
+                items: userViews
+            )
+        )
     }
 
     private func makeStaticRow(
@@ -355,8 +379,15 @@ final class HomeViewModel: ObservableObject {
         guard !raw.isEmpty else {
             return HomeSectionType.defaults.filter(\.enabled).map(\.type)
         }
-        return raw.split(separator: ",")
+        let parsed = raw.split(separator: ",")
             .compactMap { HomeSectionType(rawValue: String($0).trimmingCharacters(in: .whitespaces)) }
+            .filter { $0 != .none }
+
+        if parsed.isEmpty {
+            return HomeSectionType.defaults.filter(\.enabled).map(\.type)
+        }
+
+        return parsed
     }
 
     private func buildRowDefinitions(for section: HomeSectionType) -> [HomeRow] {
