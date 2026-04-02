@@ -166,6 +166,7 @@ struct MainNavigationView: View {
                 .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
 
             navigationOverlay
+                .opacity(container.inactivityTracker.isScreensaverVisible ? 0 : 1)
                 .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
 
             clockOverlay

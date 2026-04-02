@@ -11,6 +11,9 @@ import UIKit
 @MainActor
 final class PreviewPlayerManager: ObservableObject {
 
+    private static let maxPreviewPlays = 2
+    private static let previewLoopIntervalNanoseconds: UInt64 = 30_000_000_000
+
     // MARK: - Public observable state
 
     /// The `id` of the item currently being previewed, or nil when idle.
@@ -25,10 +28,11 @@ final class PreviewPlayerManager: ObservableObject {
     // MARK: - Private state
 
     private var currentTask: Task<Void, Never>?
-    private var loopTimer: Timer?
+    private var loopTask: Task<Void, Never>?
     private var currentStreamUrl: URL?
     private var currentSeekPosition: TimeInterval = 0
     private var currentMuted: Bool = true
+    private var currentPlayCount: Int = 0
     private var stateObserver: AnyCancellable?
 
     // MARK: - Init / deinit
@@ -43,7 +47,7 @@ final class PreviewPlayerManager: ObservableObject {
                     self.isVisible = true
                 case .ended:
                     self.isVisible = false
-                    Task { await self.restartPlayback() }
+                    Task { await self.handlePlaybackEnded() }
                 default:
                     self.isVisible = false
                 }
@@ -87,10 +91,11 @@ final class PreviewPlayerManager: ObservableObject {
     // MARK: - Private helpers
 
     private func stopInternal() {
-        loopTimer?.invalidate()
-        loopTimer = nil
+        loopTask?.cancel()
+        loopTask = nil
         currentStreamUrl = nil
         currentSeekPosition = 0
+        currentPlayCount = 0
         currentItemId = nil
         isVisible = false
         player.stop()
@@ -100,16 +105,36 @@ final class PreviewPlayerManager: ObservableObject {
         stop()
     }
 
-    private func scheduleLoopTimer() {
-        loopTimer?.invalidate()
-        loopTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { [weak self] _ in
-            Task { @MainActor [weak self] in await self?.restartPlayback() }
+    private func scheduleLoopRestart() {
+        loopTask?.cancel()
+        guard currentPlayCount < Self.maxPreviewPlays else { return }
+        loopTask = Task { [weak self] in
+            do { try await Task.sleep(nanoseconds: Self.previewLoopIntervalNanoseconds) } catch { return }
+            guard !Task.isCancelled else { return }
+            await self?.restartPlayback()
         }
+    }
+
+    private func handlePlaybackEnded() async {
+        guard currentStreamUrl != nil else { return }
+        loopTask?.cancel()
+        loopTask = nil
+        guard currentPlayCount < Self.maxPreviewPlays else {
+            stop()
+            return
+        }
+        await restartPlayback()
     }
 
     private func restartPlayback() async {
         guard let url = currentStreamUrl else { return }
-        scheduleLoopTimer()
+        guard currentPlayCount < Self.maxPreviewPlays else {
+            stop()
+            return
+        }
+
+        currentPlayCount += 1
+        scheduleLoopRestart()
         await player.play(streamUrl: url.absoluteString, startPosition: currentSeekPosition)
         player.mediaPlayer?.audio?.isMuted = currentMuted
     }
@@ -134,9 +159,10 @@ final class PreviewPlayerManager: ObservableObject {
 
             currentStreamUrl = url
             currentSeekPosition = seekPosition
+            currentPlayCount = 1
             currentItemId = item.id
 
-            scheduleLoopTimer()
+            scheduleLoopRestart()
             await player.play(streamUrl: url.absoluteString, startPosition: seekPosition)
             player.mediaPlayer?.audio?.isMuted = currentMuted
 

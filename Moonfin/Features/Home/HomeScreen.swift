@@ -12,6 +12,7 @@ struct HomeScreen: View {
 
     @StateObject private var viewModel: HomeViewModel
     @EnvironmentObject var container: AppContainer
+    @EnvironmentObject var previewManager: PreviewPlayerManager
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     let mainNamespace: Namespace.ID
@@ -253,6 +254,10 @@ struct HomeScreen: View {
         }
         .onChange(of: isMediaBarMode) { mode in
             syncTopNavbarSuppression()
+            if mode { previewManager.stop() }
+        }
+        .onChange(of: container.inactivityTracker.isScreensaverVisible) { visible in
+            if visible { previewManager.stop() }
         }
         .onChange(of: viewModel.hasFocusableContent) { ready in
             if ready {
