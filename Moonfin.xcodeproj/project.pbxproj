@@ -26,7 +26,6 @@
 		131295AFF0C20D9BA793CB36 /* AudioNowPlayingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4477DE8CA9E01077E2A8E5 /* AudioNowPlayingViewModel.swift */; };
 		139EF05143A46C8751511836 /* UserViewsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327474406D1FBDDC07A6B559 /* UserViewsService.swift */; };
 		13AA935D6BB99581DF6A3ED7 /* PlayerSeekBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C93AFA31BD221AFA4D0257 /* PlayerSeekBar.swift */; };
-		150640C2F4034EC6D8DADE5D /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 68524802B870A9AFEC440A9C /* Pods_Moonfin.framework */; };
 		15F3DC70128565BFF2270889 /* VLCPlayerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC987604BAE75373ABA7889 /* VLCPlayerWrapper.swift */; };
 		16A42DD162E3DA3C12CE3F5F /* SupportedLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28727709AB22C5FAD93DB4C /* SupportedLocale.swift */; };
 		180127D423D36F0B0B80EA63 /* SettingsPickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98784D7402B2F3DB94726461 /* SettingsPickerScreen.swift */; };
@@ -55,6 +54,7 @@
 		2BDE593C2AA04389364E5A4D /* SuggestedScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA7D041A8EF59843C97A3BD /* SuggestedScreen.swift */; };
 		2E19EF36F7763CFC157BA2F3 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C33518745EEEEE15D7C873DA /* AudioManager.swift */; };
 		2E555FDF4BB16845668C6C2E /* SSLTrustDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F9E7FCE39C15D9BACD3A4B8 /* SSLTrustDelegate.swift */; };
+		2FCE681482B214E74D66F75E /* SettingsAuthenticationAutoSignInScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049B574F2EA34D822020A472 /* SettingsAuthenticationAutoSignInScreen.swift */; };
 		3363A53733BC3A4924F09B5C /* AuthStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD6EC7EDCB86BC9F390E211 /* AuthStates.swift */; };
 		33DB333A3FF91465569C910D /* MediaBarRatingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A9F2B2B56FBC679D6866F6 /* MediaBarRatingsViewModel.swift */; };
 		34645416232B328D42B8F6A6 /* UserLoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 927459B8F417AB449B24C1F2 /* UserLoginViewModel.swift */; };
@@ -150,6 +150,7 @@
 		815AB68C2743C895FA808388 /* ColorTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07C8A91EC4A411E6D508CF41 /* ColorTokens.swift */; };
 		82451D7208563267D1B9CDD1 /* SettingsListButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A87B60A668EFA251CA87BE91 /* SettingsListButton.swift */; };
 		83B9D4D1726CFCFD7D8C631F /* RecordingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147623620B42CB4995CA6255 /* RecordingsView.swift */; };
+		848BEB90490B17E044CEFBC6 /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C766291358B450E29226F5A4 /* Pods_Moonfin.framework */; };
 		85CEB5E1711C8F7D6FF7C932 /* ActionButtonsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82EC437968B9AE166138987 /* ActionButtonsRow.swift */; };
 		87CC28D4B3586526C0E231E0 /* MediaServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7B40972308862B6CCB20F4 /* MediaServerClient.swift */; };
 		8A2C73D367C81AF8AA452059 /* SettingsPlaybackAdvancedScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8ED88662802FBD73A9A433 /* SettingsPlaybackAdvancedScreen.swift */; };
@@ -309,6 +310,7 @@
 		029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeMusicPlayer.swift; sourceTree = "<group>"; };
 		0491A1B49F0F5B7E4C4256DE /* PluginSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginSyncService.swift; sourceTree = "<group>"; };
 		049723F642FD3A50FFD849EC /* NavigationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationRouter.swift; sourceTree = "<group>"; };
+		049B574F2EA34D822020A472 /* SettingsAuthenticationAutoSignInScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAuthenticationAutoSignInScreen.swift; sourceTree = "<group>"; };
 		05B3037B871C504ECEF3004D /* SeerrDiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrDiscoverView.swift; sourceTree = "<group>"; };
 		074468E8521DA23AB817B560 /* ServerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerError.swift; sourceTree = "<group>"; };
 		07C8A91EC4A411E6D508CF41 /* ColorTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTokens.swift; sourceTree = "<group>"; };
@@ -317,6 +319,7 @@
 		0D4477DE8CA9E01077E2A8E5 /* AudioNowPlayingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioNowPlayingViewModel.swift; sourceTree = "<group>"; };
 		0F91BCAC2868F2231BC3267E /* EmbyApis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyApis.swift; sourceTree = "<group>"; };
 		0FBBAFFE10B2CFDF1FD8D32E /* DeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfo.swift; sourceTree = "<group>"; };
+		108212F02B32A396987E02BD /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
 		112499C198A05F78A779F663 /* Navbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Navbar.swift; sourceTree = "<group>"; };
 		11587113D0F4FDC088012D67 /* bn */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bn; path = bn.lproj/Localizable.strings; sourceTree = "<group>"; };
 		11674095CFE09823AD765A33 /* NetworkErrorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkErrorHandler.swift; sourceTree = "<group>"; };
@@ -449,7 +452,6 @@
 		681B5D321FDDC52F49B7EFB7 /* LoginBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginBackground.swift; sourceTree = "<group>"; };
 		6821766A120B1EB560ED5EF0 /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = hr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		6837F0F4B36CBD6A4774229B /* SeerrPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrPreferences.swift; sourceTree = "<group>"; };
-		68524802B870A9AFEC440A9C /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		68AC9AB298E561DC071CAD60 /* EmbyConnectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectService.swift; sourceTree = "<group>"; };
 		68D4848242EED9AD876A7730 /* SettingsToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsToggleButton.swift; sourceTree = "<group>"; };
 		691AF53D69FE77B9B45DCC0E /* eo */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = eo; path = eo.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -507,11 +509,9 @@
 		84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackManager.swift; sourceTree = "<group>"; };
 		853E6DEE22DC8A300940D5DF /* EmbyLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyLogo.swift; sourceTree = "<group>"; };
 		85D0018B887BA412742A8F93 /* SettingsLicensesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLicensesScreen.swift; sourceTree = "<group>"; };
-		86D3BF1DAB7490257E96CC36 /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
 		87F337E1EA8A9A452F9A6E97 /* SettingsMaxBitrateScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMaxBitrateScreen.swift; sourceTree = "<group>"; };
 		88B6C16743063B47C88FAEA3 /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
 		88E66AD9B6A360A875F0EE44 /* SettingsPluginIntegrationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginIntegrationsScreen.swift; sourceTree = "<group>"; };
-		89C7281A373F7C0F7EDA5E52 /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
 		8A60F06FD18AE36838A1F00E /* ItemPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemPreview.swift; sourceTree = "<group>"; };
 		8AC153185AA86A0600FF5D61 /* SettingsScreensaverScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreensaverScreen.swift; sourceTree = "<group>"; };
 		8B0571DEA564D22C56A0E7C6 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
@@ -614,6 +614,7 @@
 		C7174976F817669A40E47226 /* ResolutionHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolutionHelper.swift; sourceTree = "<group>"; };
 		C73D2F15693134A15639B26D /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		C74CC96234788DE74A4527C1 /* mk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = mk; path = mk.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C766291358B450E29226F5A4 /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C772EC3167038800B94DBFE9 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = ru; path = ru.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		C7B55924700C5EF2907FC728 /* SeerrDiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrDiscoverViewModel.swift; sourceTree = "<group>"; };
 		C836C1331FD6EA6089E579BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -634,6 +635,7 @@
 		D350319305B10BAA1D1404CC /* RowDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowDataSource.swift; sourceTree = "<group>"; };
 		D3F31279E854ADD3052D8537 /* LocalServerDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalServerDiscovery.swift; sourceTree = "<group>"; };
 		D48FAA50D07455C28266BD50 /* hi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hi; path = hi.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D4C611C7A5BA06D3778FD9D9 /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
 		D5E3D778427819F891587396 /* te */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = te; path = te.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D633491E2E3C22A82AE90F1A /* SimpleInfoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleInfoRow.swift; sourceTree = "<group>"; };
 		D82EC437968B9AE166138987 /* ActionButtonsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonsRow.swift; sourceTree = "<group>"; };
@@ -698,7 +700,7 @@
 				555AFC2DDF8B010AEDF450AF /* Nuke in Frameworks */,
 				0D1E59B7FA6065C5EB3ACA78 /* KeychainAccess in Frameworks */,
 				6D6DACBFE202887C15BFBD12 /* MPVKit in Frameworks */,
-				150640C2F4034EC6D8DADE5D /* Pods_Moonfin.framework in Frameworks */,
+				848BEB90490B17E044CEFBC6 /* Pods_Moonfin.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -758,8 +760,8 @@
 				EC8EF81012D6A9F511E67D90 /* Moonfin */,
 				7737AEA69D88AC7CE51C6E80 /* MoonfinTopShelf */,
 				D189A2B18468536429738151 /* Products */,
-				B03E16360A3221C1665D744E /* Pods */,
-				BF0FCE5C86E05BDA813F8B5E /* Frameworks */,
+				DB48E996C1543660EA7D5548 /* Pods */,
+				7C5BE160168BDBC536EDD1C9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1000,6 +1002,7 @@
 			isa = PBXGroup;
 			children = (
 				B5A47538C7C003A0A0368BEF /* SettingsAboutScreen.swift */,
+				049B574F2EA34D822020A472 /* SettingsAuthenticationAutoSignInScreen.swift */,
 				BA6436C126ED88EEFEDCF93D /* SettingsAuthenticationScreen.swift */,
 				7A7E85C27B4CDBD48229FF2F /* SettingsAuthPinCodeScreen.swift */,
 				3931864E47A7032AFC95477F /* SettingsAuthServerScreen.swift */,
@@ -1077,6 +1080,14 @@
 			path = Seerr;
 			sourceTree = "<group>";
 		};
+		7C5BE160168BDBC536EDD1C9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C766291358B450E29226F5A4 /* Pods_Moonfin.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		869F7DCA9E4534B1A718A506 /* TopShelf */ = {
 			isa = PBXGroup;
 			children = (
@@ -1151,16 +1162,6 @@
 			path = Jellyfin;
 			sourceTree = "<group>";
 		};
-		B03E16360A3221C1665D744E /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				86D3BF1DAB7490257E96CC36 /* Pods-Moonfin.debug.xcconfig */,
-				89C7281A373F7C0F7EDA5E52 /* Pods-Moonfin.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		B0493131A53B9BA1616E3DF2 /* LiveTV */ = {
 			isa = PBXGroup;
 			children = (
@@ -1228,14 +1229,6 @@
 			path = Preferences;
 			sourceTree = "<group>";
 		};
-		BF0FCE5C86E05BDA813F8B5E /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				68524802B870A9AFEC440A9C /* Pods_Moonfin.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		C4684A4A81B614E127A42551 /* Networking */ = {
 			isa = PBXGroup;
 			children = (
@@ -1299,6 +1292,16 @@
 				232395F3F60D2CEB01626EF1 /* MoonfinTopShelf.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		DB48E996C1543660EA7D5548 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				108212F02B32A396987E02BD /* Pods-Moonfin.debug.xcconfig */,
+				D4C611C7A5BA06D3778FD9D9 /* Pods-Moonfin.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		E1F297A6F6008E56533EC737 /* Design */ = {
@@ -1384,12 +1387,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27492BE8AEF59CC3B0E24072 /* Build configuration list for PBXNativeTarget "Moonfin" */;
 			buildPhases = (
-				FA9CDB4A26327C57D8B820DB /* [CP] Check Pods Manifest.lock */,
+				879DEE0E5A4EC61BB79FE1C1 /* [CP] Check Pods Manifest.lock */,
 				7772703707EE7DD8FA8C7D63 /* Sources */,
 				02EDCD9F5CB60B47801BD4ED /* Resources */,
 				DBD8DE1F616DE17837EFC577 /* Frameworks */,
 				D086A9091B643496E6F2B660 /* Embed Foundation Extensions */,
-				393F20B607C8F3B99C79B5D4 /* [CP] Embed Pods Frameworks */,
+				F8A33FDE7088B4D0991909D5 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1544,24 +1547,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		393F20B607C8F3B99C79B5D4 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		FA9CDB4A26327C57D8B820DB /* [CP] Check Pods Manifest.lock */ = {
+		879DEE0E5A4EC61BB79FE1C1 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1581,6 +1567,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F8A33FDE7088B4D0991909D5 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1778,6 +1781,7 @@
 				CB9916AC7A845E608C44A827 /* SettingsAuthPinCodeScreen.swift in Sources */,
 				79DB9454338AF0254503CB16 /* SettingsAuthServerScreen.swift in Sources */,
 				7AD67B0B5C0D50E13B833CFE /* SettingsAuthServerUserScreen.swift in Sources */,
+				2FCE681482B214E74D66F75E /* SettingsAuthenticationAutoSignInScreen.swift in Sources */,
 				D9A2C6B70B1A9A3FC998FE7C /* SettingsAuthenticationScreen.swift in Sources */,
 				5EE8232949CE383F086241EC /* SettingsCustomizationScreen.swift in Sources */,
 				E9433EF4E0859DD3B3649467 /* SettingsDeveloperScreen.swift in Sources */,
@@ -2002,7 +2006,7 @@
 /* Begin XCBuildConfiguration section */
 		3692D4DC0894416555EE45DC /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 89C7281A373F7C0F7EDA5E52 /* Pods-Moonfin.release.xcconfig */;
+			baseConfigurationReference = D4C611C7A5BA06D3778FD9D9 /* Pods-Moonfin.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -2040,7 +2044,7 @@
 		};
 		63305EDE78CAE1C908A0F58F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 86D3BF1DAB7490257E96CC36 /* Pods-Moonfin.debug.xcconfig */;
+			baseConfigurationReference = 108212F02B32A396987E02BD /* Pods-Moonfin.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;

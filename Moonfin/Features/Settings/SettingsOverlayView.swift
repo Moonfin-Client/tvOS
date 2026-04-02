@@ -90,14 +90,7 @@ struct SettingsOverlayView: View {
                 displayName: \.displayName
             )
         case .authenticationAutoSignIn:
-            SettingsPickerScreen(
-                title: "Auto Sign In",
-                selection: Binding(
-                    get: { container.authPreferences.autoLoginBehavior },
-                    set: { container.authPreferences.autoLoginBehavior = $0 }
-                ),
-                displayName: \.displayName
-            )
+            SettingsAuthenticationAutoSignInScreen()
         case .authenticationPinCode:
             SettingsAuthPinCodeScreen()
         case .authenticationServer(let serverId):
