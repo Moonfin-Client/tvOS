@@ -4,7 +4,7 @@ import TVServices
 #endif
 
 enum TopShelfShared {
-    static let appGroupIdentifier = "group.com.moonfin.tv"
+    static let appGroupIdentifier = "group.org.moonfin.app"
     static let defaultsKey = "topshelf.cache.v1"
 }
 

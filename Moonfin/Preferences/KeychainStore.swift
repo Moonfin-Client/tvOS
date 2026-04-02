@@ -4,7 +4,7 @@ import KeychainAccess
 final class KeychainStore {
     private let keychain: Keychain
 
-    init(service: String = "com.moonfin.tv") {
+    init(service: String = "org.moonfin.app") {
         self.keychain = Keychain(service: service)
             .accessibility(.afterFirstUnlock)
     }

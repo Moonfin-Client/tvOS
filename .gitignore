@@ -3,3 +3,10 @@ xcuserdata/
 
 # CocoaPods
 Pods/
+
+# Local build secrets
+build-tvos.private.env
+
+# Generated build artifacts
+build/
+Moonfin_tvOS_v*.ipa

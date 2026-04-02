@@ -4,7 +4,7 @@ import UIKit
 enum AppConstants {
     static let appName = "Moonfin"
     static let clientName = "Moonfin Apple TV"
-    static let clientVersion = "1.0.0"
+    static let clientVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     static let deviceName = UIDevice.current.name
     static let deviceId: String = {
         let key = "moonfin_device_id"

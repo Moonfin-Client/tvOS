@@ -22,6 +22,10 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string></string>
 	<key>NSLocalNetworkUsageDescription</key>
@@ -33,13 +37,13 @@
 	</dict>
 	<key>NSUserActivityTypes</key>
 	<array>
-		<string>com.moonfin.tv.viewItem</string>
+		<string>org.moonfin.app.viewItem</string>
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.moonfin.tv</string>
+			<string>org.moonfin.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>moonfin</string>

@@ -2,7 +2,7 @@ import Foundation
 
 @MainActor
 final class SpotlightIndexer {
-    static let activityType = "com.moonfin.tv.viewItem"
+    static let activityType = "org.moonfin.app.viewItem"
     static let itemIdKey = "itemId"
     static let serverIdKey = "serverId"
 
