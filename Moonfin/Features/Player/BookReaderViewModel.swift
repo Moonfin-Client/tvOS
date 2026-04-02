@@ -1,5 +1,4 @@
 import Foundation
-import PDFKit
 import SwiftUI
 import ZIPFoundation
 
@@ -32,13 +31,13 @@ final class BookReaderViewModel: ObservableObject {
     }
 
     private enum PageProvider {
-        case pdf(PDFDocument)
+        case pdf(CGPDFDocument)
         case images([Data])
 
         var count: Int {
             switch self {
             case .pdf(let document):
-                return document.pageCount
+                return document.numberOfPages
             case .images(let pages):
                 return pages.count
             }
@@ -225,7 +224,9 @@ final class BookReaderViewModel: ObservableObject {
     private func buildProvider(format: BookFormat, data: Data) throws -> PageProvider {
         switch format {
         case .pdf:
-            guard let document = PDFDocument(data: data), document.pageCount > 0 else {
+            guard let provider = CGDataProvider(data: data as CFData),
+                  let document = CGPDFDocument(provider),
+                  document.numberOfPages > 0 else {
                 throw NSError(domain: "BookReader", code: -102, userInfo: [NSLocalizedDescriptionKey: "Invalid PDF data"])
             }
             return .pdf(document)
@@ -315,14 +316,45 @@ final class BookReaderViewModel: ObservableObject {
 
         switch provider {
         case .pdf(let document):
-            guard let page = document.page(at: currentIndex) else {
+            guard let page = document.page(at: currentIndex + 1) else {
                 currentImage = nil
                 return
             }
-            currentImage = page.thumbnail(of: CGSize(width: thumbnailWidth, height: thumbnailHeight), for: PDFDisplayBox.mediaBox)
+            currentImage = renderPDFPage(page, maxSize: CGSize(width: thumbnailWidth, height: thumbnailHeight))
 
         case .images(let pages):
             currentImage = pages.indices.contains(currentIndex) ? UIImage(data: pages[currentIndex]) : nil
+        }
+    }
+
+    private func renderPDFPage(_ page: CGPDFPage, maxSize: CGSize) -> UIImage? {
+        let mediaBox = page.getBoxRect(.mediaBox)
+        guard mediaBox.width > 0, mediaBox.height > 0 else { return nil }
+
+        let aspectRatio = mediaBox.width / mediaBox.height
+        let targetAspect = maxSize.width / maxSize.height
+        let width: CGFloat
+        let height: CGFloat
+        if aspectRatio > targetAspect {
+            width = min(maxSize.width, mediaBox.width)
+            height = width / aspectRatio
+        } else {
+            height = min(maxSize.height, mediaBox.height)
+            width = height * aspectRatio
+        }
+
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: width, height: height), format: format)
+        return renderer.image { ctx in
+            let cgCtx = ctx.cgContext
+            cgCtx.setFillColor(UIColor.white.cgColor)
+            cgCtx.fill(CGRect(origin: .zero, size: CGSize(width: width, height: height)))
+            cgCtx.translateBy(x: 0, y: height)
+            cgCtx.scaleBy(x: 1, y: -1)
+            cgCtx.scaleBy(x: width / mediaBox.width, y: height / mediaBox.height)
+            cgCtx.translateBy(x: -mediaBox.origin.x, y: -mediaBox.origin.y)
+            cgCtx.drawPDFPage(page)
         }
     }
 
