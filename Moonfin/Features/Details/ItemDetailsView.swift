@@ -18,7 +18,7 @@ struct ItemDetailsView: View {
     @State private var showFullBio = false
     @State private var showTrackSelector: TrackSelectorMode?
     @State private var showAddToPlaylist = false
-    @State private var showDeletePlaylistConfirmation = false
+    @State private var showDeleteConfirmation = false
     @State private var playlistDialogItemIds: [String] = []
     @State private var selectedAudioIndex: Int?
     @State private var selectedSubtitleIndex: Int?
@@ -208,13 +208,13 @@ struct ItemDetailsView: View {
             }
         }
         .confirmationDialog(
-            "Delete Playlist?",
-            isPresented: $showDeletePlaylistConfirmation,
+            "Delete Item?",
+            isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
                 Task {
-                    let deleted = await viewModel.deleteCurrentPlaylist()
+                    let deleted = await viewModel.deleteItem()
                     if deleted {
                         router.goBack()
                     }
@@ -222,7 +222,7 @@ struct ItemDetailsView: View {
             }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("This playlist will be permanently deleted.")
+            Text("This item will be permanently deleted from the server.")
         }
     }
 
@@ -694,7 +694,7 @@ struct ItemDetailsView: View {
         let isReadableBook = item.type == .book || item.mediaType == .book
         let canPlay = isMusicType || isReadableBook || [ItemType.movie, .episode, .video, .series, .season].contains(item.type)
         let showGoToSeries = item.type == .episode && item.seriesId != nil
-        let canDeletePlaylist = item.type == .playlist && (item.canDelete ?? false)
+        let canDelete = item.canDelete ?? false
         let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
         let hasMultipleVersions = (item.mediaSources?.count ?? 0) > 1
         let hasTrailers = item.type == .movie
@@ -768,8 +768,8 @@ struct ItemDetailsView: View {
                     playlistDialogItemIds = [item.id]
                     showAddToPlaylist = true
                 } : nil,
-                onDelete: canDeletePlaylist ? {
-                    showDeletePlaylistConfirmation = true
+                onDelete: canDelete ? {
+                    showDeleteConfirmation = true
                 } : nil
             )
         }
