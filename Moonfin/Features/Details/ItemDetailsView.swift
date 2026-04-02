@@ -19,6 +19,7 @@ struct ItemDetailsView: View {
     @State private var showTrackSelector: TrackSelectorMode?
     @State private var showAddToPlaylist = false
     @State private var showDeleteConfirmation = false
+    @State private var showSubtitleDownload = false
     @State private var playlistDialogItemIds: [String] = []
     @State private var selectedAudioIndex: Int?
     @State private var selectedSubtitleIndex: Int?
@@ -94,20 +95,31 @@ struct ItemDetailsView: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .topLeading) {
-                backdropLayer
-                gradientOverlay
-
-                if viewModel.isLoading {
-                    loadingView
-                } else if let item = viewModel.item {
-                    detailContent(item: item, screenHeight: geo.size.height)
-                } else {
-                    errorView
+        configuredScreen
+        .overlay { addToPlaylistOverlay }
+        .overlay { subtitleDownloadOverlay }
+        .confirmationDialog(
+            "Delete Item?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                Task {
+                    let deleted = await deleteCurrentItem()
+                    if deleted {
+                        router.goBack()
+                    }
                 }
             }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This item will be permanently deleted from the server.")
         }
+    }
+
+    private var configuredScreen: AnyView {
+        AnyView(
+            baseScreen
         .ignoresSafeArea()
         .onAppear {
             focusTrace("ItemDetailsView appeared itemId=\(viewModel.item?.id ?? "loading")")
@@ -181,48 +193,107 @@ struct ItemDetailsView: View {
                             }
                             showTrackSelector = nil
                         },
-                        onDismiss: { showTrackSelector = nil }
+                        onDismiss: { showTrackSelector = nil },
+                        onDownloadSubtitles: mode == .subtitle && subtitleClient()?.serverType == .jellyfin ? {
+                            showTrackSelector = nil
+                            showSubtitleDownload = true
+                        } : nil
                     )
                 }
             }
         }
-        .overlay {
-            if showAddToPlaylist {
-                ZStack {
-                    Color.black.opacity(0.8)
-                        .ignoresSafeArea()
+        )
+    }
 
-                    AddToPlaylistDialog(
-                        itemIds: playlistDialogItemIds,
-                        onDismiss: {
-                            showAddToPlaylist = false
-                            playlistDialogItemIds = []
-                        },
-                        onAdded: {
-                            showAddToPlaylist = false
-                            playlistDialogItemIds = []
-                        }
-                    )
+    private var baseScreen: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                backdropLayer
+                gradientOverlay
+
+                if viewModel.isLoading {
+                    loadingView
+                } else if let item = viewModel.item {
+                    detailContent(item: item, screenHeight: geo.size.height)
+                } else {
+                    errorView
                 }
-                .focusSection()
             }
         }
-        .confirmationDialog(
-            "Delete Item?",
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Delete", role: .destructive) {
-                Task {
-                    let deleted = await viewModel.deleteItem()
-                    if deleted {
-                        router.goBack()
+    }
+
+    @ViewBuilder
+    private var addToPlaylistOverlay: some View {
+        if showAddToPlaylist {
+            ZStack {
+                Color.black.opacity(0.8)
+                    .ignoresSafeArea()
+
+                AddToPlaylistDialog(
+                    itemIds: playlistDialogItemIds,
+                    onDismiss: {
+                        showAddToPlaylist = false
+                        playlistDialogItemIds = []
+                    },
+                    onAdded: {
+                        showAddToPlaylist = false
+                        playlistDialogItemIds = []
                     }
-                }
+                )
             }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("This item will be permanently deleted from the server.")
+            .focusSection()
+        }
+    }
+
+    @ViewBuilder
+    private var subtitleDownloadOverlay: some View {
+        if showSubtitleDownload {
+            ZStack {
+                Color.black.opacity(0.8)
+                    .ignoresSafeArea()
+
+                SubtitleDownloadDialog(
+                    defaultLanguage: subtitleSearchLanguage(for: _viewModel.wrappedValue.item),
+                    onSearch: searchRemoteSubtitles,
+                    onDownload: downloadRemoteSubtitle,
+                    onDismiss: { showSubtitleDownload = false },
+                    onDownloaded: { showSubtitleDownload = false }
+                )
+            }
+            .focusSection()
+        }
+    }
+
+    private func searchRemoteSubtitles(language: String) async throws -> [RemoteSubtitleResult] {
+        guard let item = _viewModel.wrappedValue.item,
+              let client = subtitleClient() else { throw URLError(.cancelled) }
+        return try await client.userLibraryApi.searchRemoteSubtitles(itemId: item.id, language: language)
+    }
+
+    private func downloadRemoteSubtitle(subtitleId: String) async throws {
+        guard let item = _viewModel.wrappedValue.item,
+              let client = subtitleClient() else { throw URLError(.cancelled) }
+        try await client.userLibraryApi.downloadRemoteSubtitle(itemId: item.id, subtitleId: subtitleId)
+        _viewModel.wrappedValue.loadItem()
+    }
+
+    private func subtitleClient() -> MediaServerClient? {
+        guard let server = container.serverRepository.currentServer.value else { return nil }
+        return container.serverClientFactory.client(for: server)
+    }
+
+    private func deleteCurrentItem() async -> Bool {
+        guard let item = _viewModel.wrappedValue.item,
+              (item.canDelete ?? false),
+              let client = subtitleClient() else {
+            return false
+        }
+
+        do {
+            try await client.userLibraryApi.deleteItem(itemId: item.id)
+            return true
+        } catch {
+            return false
         }
     }
 
@@ -243,6 +314,13 @@ struct ItemDetailsView: View {
             return sources[selectedMediaSourceIndex].mediaStreams
         }
         return item.mediaStreams ?? item.mediaSources?.first?.mediaStreams ?? []
+    }
+
+    private func subtitleSearchLanguage(for item: ServerItem?) -> String {
+        let streams = item?.mediaSources?.first?.mediaStreams ?? []
+        if let lang = streams.first(where: { $0.type == .subtitle })?.language, !lang.isEmpty { return lang }
+        if let lang = streams.first(where: { $0.type == .audio })?.language, !lang.isEmpty { return lang }
+        return "eng"
     }
 
     private var backdropLayer: some View {
@@ -695,7 +773,6 @@ struct ItemDetailsView: View {
         let canPlay = isMusicType || isReadableBook || [ItemType.movie, .episode, .video, .series, .season].contains(item.type)
         let showGoToSeries = item.type == .episode && item.seriesId != nil
         let canDelete = item.canDelete ?? false
-        let hasNextEpisode = item.type == .episode && viewModel.nextEpisode != nil
         let hasMultipleVersions = (item.mediaSources?.count ?? 0) > 1
         let hasTrailers = item.type == .movie
             || item.type == .series
@@ -704,6 +781,13 @@ struct ItemDetailsView: View {
         let streams = resolvedStreams(for: item)
         let hasAudioStreams = streams.contains { $0.type == .audio }
         let hasSubtitleStreams = streams.contains { $0.type == .subtitle }
+        let isJellyfin = subtitleClient()?.serverType == .jellyfin
+        let canDownloadSubtitles = isJellyfin
+            && hasSubtitleStreams
+            && !(item.mediaSources ?? []).isEmpty
+            && item.type != .photo
+            && item.type != .book
+            && item.type != .musicArtist
 
         if item.type != .person, canPlay || item.userData != nil {
             ActionButtonsRow(
@@ -742,11 +826,7 @@ struct ItemDetailsView: View {
                         playAudio(items: viewModel.instantMixItems)
                     }
                 } : nil,
-                onNextEpisode: hasNextEpisode ? {
-                    if let nextEp = viewModel.nextEpisode {
-                        router.navigate(to: .itemDetails(itemId: nextEp.id, serverId: nextEp.serverId))
-                    }
-                } : nil,
+                onNextEpisode: nil,
                 onSelectVersion: hasMultipleVersions ? {
                     showTrackSelector = .version
                 } : nil,
@@ -755,6 +835,9 @@ struct ItemDetailsView: View {
                 } : nil,
                 onSubtitleTrack: hasSubtitleStreams ? {
                     showTrackSelector = .subtitle
+                } : nil,
+                onDownloadSubtitles: canDownloadSubtitles ? {
+                    showSubtitleDownload = true
                 } : nil,
                 onTrailer: hasTrailers ? {
                     Task { await playTrailer(item: item) }

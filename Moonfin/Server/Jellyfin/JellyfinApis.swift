@@ -224,6 +224,14 @@ struct JellyfinUserLibraryApi: ServerUserLibraryApi {
         try await client.requestVoid("/Items/\(itemId)", method: "DELETE")
     }
 
+    func searchRemoteSubtitles(itemId: String, language: String) async throws -> [RemoteSubtitleResult] {
+        return try await client.request("/Items/\(itemId)/RemoteSearch/Subtitles/\(language)")
+    }
+
+    func downloadRemoteSubtitle(itemId: String, subtitleId: String) async throws {
+        try await client.requestVoid("/Items/\(itemId)/RemoteSearch/Subtitles/\(subtitleId)", method: "POST")
+    }
+
     func markFavorite(itemId: String, userId: String) async throws -> UserItemData {
         try await client.request("/Users/\(userId)/FavoriteItems/\(itemId)", method: "POST")
     }

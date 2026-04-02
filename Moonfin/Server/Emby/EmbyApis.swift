@@ -296,6 +296,14 @@ struct EmbyUserLibraryApi: ServerUserLibraryApi {
     func unmarkPlayed(itemId: String, userId: String) async throws -> UserItemData {
         try await client.request("/Users/\(userId)/PlayedItems/\(itemId)", method: "DELETE")
     }
+
+    func searchRemoteSubtitles(itemId: String, language: String) async throws -> [RemoteSubtitleResult] {
+        throw URLError(.unsupportedURL)
+    }
+
+    func downloadRemoteSubtitle(itemId: String, subtitleId: String) async throws {
+        throw URLError(.unsupportedURL)
+    }
 }
 
 // MARK: - Playback

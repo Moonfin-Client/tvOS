@@ -488,3 +488,52 @@ struct MediaUrl: Codable {
         case name = "Name"
     }
 }
+
+// MARK: - Remote Subtitle Search
+
+struct RemoteSubtitleResult: Decodable, Identifiable {
+    let id: String
+    let name: String?
+    let language: String?
+    let providerName: String?
+    let format: String?
+    let communityRating: Double?
+    let downloadCount: Int?
+    let isHashMatch: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id = "Id"
+        case name = "Name"
+        case language = "ThreeLetterISOLanguageName"
+        case providerName = "ProviderName"
+        case format = "Format"
+        case communityRating = "CommunityRating"
+        case downloadCount = "DownloadCount"
+        case isHashMatch = "IsHashMatch"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        name = try? c.decode(String.self, forKey: .name)
+        language = try? c.decode(String.self, forKey: .language)
+        providerName = try? c.decode(String.self, forKey: .providerName)
+        format = try? c.decode(String.self, forKey: .format)
+        communityRating = try? c.decode(Double.self, forKey: .communityRating)
+        downloadCount = try? c.decode(Int.self, forKey: .downloadCount)
+        isHashMatch = (try? c.decode(Bool.self, forKey: .isHashMatch)) ?? false
+    }
+
+    var displayName: String { name ?? id }
+
+    var subtitleDetail: String? {
+        var parts: [String] = []
+        if let lang = language?.uppercased() { parts.append(lang) }
+        if let provider = providerName { parts.append(provider) }
+        if let fmt = format?.uppercased() { parts.append(fmt) }
+        if let rating = communityRating { parts.append(String(format: "%.1f*", rating)) }
+        if let count = downloadCount { parts.append("\(count) dl") }
+        if isHashMatch { parts.append("Perfect match") }
+        return parts.isEmpty ? nil : parts.joined(separator: " | ")
+    }
+}

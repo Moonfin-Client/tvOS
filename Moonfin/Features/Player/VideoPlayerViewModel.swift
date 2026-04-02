@@ -10,6 +10,7 @@ final class VideoPlayerViewModel: ObservableObject {
     @Published var chapterSelectionVisible = false
     @Published var castListVisible = false
     @Published var playbackInfoVisible = false
+    @Published var subtitleDownloadVisible = false
     @Published var subtitleDelay: TimeInterval = 0
     @Published var isScrubbing = false
     @Published var scrubPosition: Float = 0
@@ -40,6 +41,12 @@ final class VideoPlayerViewModel: ObservableObject {
     private var _cachedCast: [ServerPerson] = []
     private var _cachedEntryId: String?
     private var _castResolvedItemId: String?
+
+    var canDownloadSubtitles: Bool {
+        guard let item = playbackManager.currentEntry?.item else { return false }
+        return playbackManager.serverType == .jellyfin
+            && !(item.mediaSources ?? []).isEmpty
+    }
 
     var player: VLCPlayerWrapper { playbackManager.player }
 
@@ -376,6 +383,19 @@ final class VideoPlayerViewModel: ObservableObject {
 
     func hidePlaybackInfo() {
         playbackInfoVisible = false
+        overlayVisible = true
+        resetHideTimer()
+    }
+
+    func showSubtitleDownload() {
+        overlayVisible = false
+        hideTask?.cancel()
+        subtitleSelectionVisible = false
+        subtitleDownloadVisible = true
+    }
+
+    func hideSubtitleDownload() {
+        subtitleDownloadVisible = false
         overlayVisible = true
         resetHideTimer()
     }

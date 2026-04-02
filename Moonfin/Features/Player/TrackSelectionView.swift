@@ -8,7 +8,7 @@ enum TrackSelectionTab: String {
 
 // MARK: - Dialog Shell
 
-private struct PlayerDialogShell<Content: View>: View {
+struct PlayerDialogShell<Content: View>: View {
     let title: String
     let onDismiss: () -> Void
     @ViewBuilder let content: Content
@@ -91,6 +91,20 @@ struct PlayerSubtitleTrackDialog: View {
             Divider().background(Color.white.opacity(0.2))
 
             subtitleDelayControls
+
+            if viewModel.canDownloadSubtitles {
+                Divider().background(Color.white.opacity(0.2))
+
+                FocusableTrackSelectorRow(
+                    label: "Download subtitles...",
+                    detail: "Search using OpenSubtitles",
+                    isSelected: false,
+                    action: {
+                        viewModel.hideTrackSelection()
+                        viewModel.showSubtitleDownload()
+                    }
+                )
+            }
         }
     }
 

@@ -64,6 +64,22 @@ struct VideoPlayerScreen: View {
                 }
             }
 
+            if viewModel.subtitleDownloadVisible {
+                trackDialogOverlay {
+                    SubtitleDownloadDialog(
+                        defaultLanguage: viewModel.playbackManager.currentEntry.flatMap { entry in
+                            let streams = entry.item.mediaSources?.first?.mediaStreams ?? []
+                            return streams.first(where: { $0.type == .subtitle })?.language
+                                ?? streams.first(where: { $0.type == .audio })?.language
+                        } ?? "eng",
+                        onSearch: { lang in try await viewModel.playbackManager.searchRemoteSubtitles(language: lang) },
+                        onDownload: { id in try await viewModel.playbackManager.downloadRemoteSubtitle(subtitleId: id) },
+                        onDismiss: { viewModel.hideSubtitleDownload() },
+                        onDownloaded: { viewModel.hideSubtitleDownload() }
+                    )
+                }
+            }
+
             if !viewModel.isLiveTV, let action = segmentHandler.activeSkipPrompt {
                 SkipSegmentOverlay(
                     action: action,
@@ -108,6 +124,7 @@ struct VideoPlayerScreen: View {
         .animation(.easeInOut(duration: 0.25), value: viewModel.chapterSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.castListVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.playbackInfoVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.subtitleDownloadVisible)
         .animation(.easeInOut(duration: 0.3), value: segmentHandler.activeSkipPrompt != nil)
         .animation(.easeInOut(duration: 0.3), value: nextUpManager.promptState)
         .onAppear {
@@ -121,12 +138,13 @@ struct VideoPlayerScreen: View {
         .onChange(of: viewModel.chapterSelectionVisible) { _ in restoreFocusIfNeeded() }
         .onChange(of: viewModel.castListVisible) { _ in restoreFocusIfNeeded() }
         .onChange(of: viewModel.playbackInfoVisible) { _ in restoreFocusIfNeeded() }
+        .onChange(of: viewModel.subtitleDownloadVisible) { _ in restoreFocusIfNeeded() }
     }
 
     private func restoreFocusIfNeeded() {
         let anyVisible = viewModel.overlayVisible || viewModel.trackSelectionVisible
             || viewModel.chapterSelectionVisible || viewModel.castListVisible
-            || viewModel.playbackInfoVisible
+            || viewModel.playbackInfoVisible || viewModel.subtitleDownloadVisible
         if !anyVisible {
             reclaimGestureFocus()
         }
@@ -149,7 +167,7 @@ struct VideoPlayerScreen: View {
             .contentShape(Rectangle())
             .focusable()
             .focused($gestureLayerFocused)
-            .disabled(viewModel.overlayVisible || viewModel.trackSelectionVisible || viewModel.chapterSelectionVisible || viewModel.castListVisible || viewModel.playbackInfoVisible)
+            .disabled(viewModel.overlayVisible || viewModel.trackSelectionVisible || viewModel.chapterSelectionVisible || viewModel.castListVisible || viewModel.playbackInfoVisible || viewModel.subtitleDownloadVisible)
             .onPlayPauseCommand {
                 viewModel.togglePlayPause()
                 if !viewModel.overlayVisible { viewModel.showOverlay() }
@@ -171,6 +189,8 @@ struct VideoPlayerScreen: View {
                     viewModel.hideCastList()
                 } else if viewModel.playbackInfoVisible {
                     viewModel.hidePlaybackInfo()
+                } else if viewModel.subtitleDownloadVisible {
+                    viewModel.hideSubtitleDownload()
                 } else if viewModel.trackSelectionVisible {
                     viewModel.hideTrackSelection()
                 } else if viewModel.overlayVisible {

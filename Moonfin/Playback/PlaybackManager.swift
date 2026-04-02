@@ -79,6 +79,18 @@ final class PlaybackManager: ObservableObject {
         try? await client.userLibraryApi.getItem(itemId: itemId)
     }
 
+    var serverType: ServerType { client.serverType }
+
+    func searchRemoteSubtitles(language: String) async throws -> [RemoteSubtitleResult] {
+        guard let itemId = currentEntry?.item.id else { throw URLError(.cancelled) }
+        return try await client.userLibraryApi.searchRemoteSubtitles(itemId: itemId, language: language)
+    }
+
+    func downloadRemoteSubtitle(subtitleId: String) async throws {
+        guard let itemId = currentEntry?.item.id else { throw URLError(.cancelled) }
+        try await client.userLibraryApi.downloadRemoteSubtitle(itemId: itemId, subtitleId: subtitleId)
+    }
+
     init(
         player: VLCPlayerWrapper,
         client: MediaServerClient,

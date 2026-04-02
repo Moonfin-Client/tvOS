@@ -11,6 +11,7 @@ struct TrackSelectorDialog: View {
     let selectedIndex: Int?
     let onSelect: (Int?) -> Void
     let onDismiss: () -> Void
+    var onDownloadSubtitles: (() -> Void)? = nil
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var focusedIndex: Int?
@@ -52,6 +53,18 @@ struct TrackSelectorDialog: View {
                             action: { onSelect(stream.index) }
                         )
                         .focused($focusedIndex, equals: stream.index)
+                    }
+
+                    if let onDownloadSubtitles {
+                        Divider().background(Color.white.opacity(0.2))
+                            .padding(.vertical, SpaceTokens.spaceXs)
+
+                        FocusableTrackSelectorRow(
+                            label: "Download subtitles...",
+                            detail: "Search using OpenSubtitles",
+                            isSelected: false,
+                            action: onDownloadSubtitles
+                        )
                     }
                 }
                 .padding(.horizontal, SpaceTokens.spaceSm)

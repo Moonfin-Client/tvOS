@@ -2,7 +2,7 @@ import SwiftUI
 
 enum ActionButtonID: Hashable {
     case resume, play, shuffle, instantMix, nextEpisode, selectVersion
-    case audioTrack, subtitleTrack, trailer, watched, favorite, addToPlaylist, goToSeries, delete
+    case audioTrack, subtitleTrack, downloadSubtitles, trailer, watched, favorite, addToPlaylist, goToSeries, delete
 }
 
 struct ActionButtonsRow: View {
@@ -22,6 +22,7 @@ struct ActionButtonsRow: View {
     let onSelectVersion: (() -> Void)?
     let onAudioTrack: (() -> Void)?
     let onSubtitleTrack: (() -> Void)?
+    let onDownloadSubtitles: (() -> Void)?
     let onTrailer: (() -> Void)?
     let onGoToSeries: (() -> Void)?
     let onAddToPlaylist: (() -> Void)?
@@ -99,6 +100,15 @@ struct ActionButtonsRow: View {
                     action: onSubtitleTrack
                 )
                 .focused(focusedButton, equals: .subtitleTrack)
+            }
+
+            if let onDownloadSubtitles {
+                ActionButton(
+                    label: "Get Subtitles",
+                    icon: "square.and.arrow.down",
+                    action: onDownloadSubtitles
+                )
+                .focused(focusedButton, equals: .downloadSubtitles)
             }
 
             if let onTrailer {
