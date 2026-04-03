@@ -23,6 +23,7 @@ struct HomeScreen: View {
     let onRequestTopNavbarHomeFocus: (() -> Void)?
     @State private var isMediaBarMode = true
     @State private var sentinelEnabled = false
+    @State private var sentinelEnablePending = false
     @State private var focusedRowId: String?
     @State private var scrollTrigger: Int = 0
     @State private var lastFocusedRowId: String?
@@ -31,7 +32,6 @@ struct HomeScreen: View {
     @State private var isRestoringPosition = false
     @State private var mediaBarRequestFocus = false
     @State private var focusTask: Task<Void, Never>?
-    @State private var sentinelTask: Task<Void, Never>?
     @State private var mediaBarTrailerPreviewTask: Task<Void, Never>?
     @State private var lastPreviewedMediaBarItemId: String?
     @StateObject private var inlineTrailerPlayer: VLCPlayerWrapper
@@ -169,24 +169,24 @@ struct HomeScreen: View {
                         onNavigateDown: {
                             cancelMediaBarTrailerPreview()
                             sentinelEnabled = false
+                            sentinelEnablePending = false
                             isMediaBarMode = false
                             let firstVisibleRowId = viewModel.rows.first(where: { !$0.isEmpty })?.id
                             lastFocusedRowId = firstVisibleRowId
                             focusedRowId = firstVisibleRowId
-                            sentinelTask?.cancel()
-                            sentinelTask = Task {
-                                try? await Task.sleep(nanoseconds: 600_000_000)
-                                guard !Task.isCancelled else { return }
-                                sentinelEnabled = true
-                            }
-                            resolveFocus(delay: 150_000_000)
-                            scheduleSidebarRowRestore(delay: 250_000_000)
+                            lastFocusedItemId = nil
+                            resolveFocus(delay: 50_000_000)
+                            scheduleSidebarRowRestore(delay: 150_000_000)
                         },
                         onNavigateUp: {
                             onRequestTopNavbarHomeFocus?()
                         },
                         requestFocus: $mediaBarRequestFocus
                     )
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .top)),
+                        removal: .opacity.combined(with: .move(edge: .top))
+                    ))
                     .zIndex(1)
                 }
 
@@ -201,11 +201,13 @@ struct HomeScreen: View {
                     rowsContent(screenHeight: geo.size.height)
                         .disabled(mediaBarPresented)
                         .opacity(mediaBarPresented ? 0 : 1)
+                        .offset(y: mediaBarPresented ? 28 : 0)
                         .focusSection()
                         .zIndex(0)
 
                 }
             }
+            .animation(.interactiveSpring(response: 0.55, dampingFraction: 0.9, blendDuration: 0.3), value: mediaBarPresented)
         }
         .ignoresSafeArea()
         .environmentObject(viewModel.backgroundService)
@@ -223,6 +225,7 @@ struct HomeScreen: View {
                 isRestoringPosition = true
                 hasInitiallyFocusedFirstRow = true
                 sentinelEnabled = false
+                sentinelEnablePending = false
                 resolveFocus(delay: 100_000_000)
             } else if viewModel.isMediaBarActive {
                 isMediaBarMode = true
@@ -231,7 +234,7 @@ struct HomeScreen: View {
         }
         .onDisappear {
             focusTask?.cancel()
-            sentinelTask?.cancel()
+            sentinelEnablePending = false
             cancelMediaBarTrailerPreview()
             viewModel.mediaBarViewModel.cleanup()
             suppressTopNavbarUntilMediaBarFocus = false
@@ -496,9 +499,21 @@ struct HomeScreen: View {
                                     onRowFocused: {
                                         let isNewRow = focusedRowId != row.id
                                         focusedRowId = row.id
+
+                                        if !sentinelEnabled && !sentinelEnablePending && !isMediaBarMode && viewModel.isMediaBarActive {
+                                            sentinelEnablePending = true
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                                sentinelEnablePending = false
+                                                if !isMediaBarMode {
+                                                    sentinelEnabled = true
+                                                }
+                                            }
+                                        }
+
                                         if isRestoringPosition {
                                             if row.id == lastFocusedRowId {
                                                 isRestoringPosition = false
+                                                sentinelEnablePending = false
                                                 sentinelEnabled = viewModel.isMediaBarActive
                                             }
                                         } else if isNewRow {
@@ -750,6 +765,7 @@ private class SentinelFocusView: UIView {
             passingThrough = true
             DispatchQueue.main.async { [weak self] in
                 self?.setNeedsFocusUpdate()
+                self?.updateFocusIfNeeded()
                 self?.passingThrough = false
             }
         }

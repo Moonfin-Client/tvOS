@@ -55,6 +55,11 @@ struct ContentRow: View {
         return base * posterSize.scaleFactor
     }
 
+    private var validRestoredItemId: String? {
+        guard let restoredItemId else { return nil }
+        return row.items.contains(where: { $0.id == restoredItemId }) ? restoredItemId : nil
+    }
+
     var body: some View {
         if row.isLoading {
             loadingRow
@@ -94,7 +99,7 @@ struct ContentRow: View {
             rowTitle
 
             ScrollViewReader { scrollProxy in
-                FocusFirstRow(firstItemId: row.items.first?.id, restoredItemId: restoredItemId, focusTrigger: focusTrigger) { focusBinding in
+                FocusFirstRow(firstItemId: row.items.first?.id, restoredItemId: validRestoredItemId, focusTrigger: focusTrigger) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                             cardView(for: item)
