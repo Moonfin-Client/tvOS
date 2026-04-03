@@ -35,6 +35,7 @@ final class PlaybackCoordinator: ObservableObject {
         subtitleStreamIndex: Int? = nil,
         mediaSourceIndex: Int? = nil
     ) async {
+        await stopAudioPlayback()
         await stopVideoPlayback(shouldClearLiveTvContext: false)
         guard let client else { return }
         let player = makePlayer()
@@ -77,6 +78,7 @@ final class PlaybackCoordinator: ObservableObject {
     }
 
     func startAudioPlayback(items: [ServerItem], startIndex: Int = 0, shuffle: Bool = false) async {
+        await stopVideoPlayback()
         await stopAudioPlayback()
         guard let client else { return }
         let player = makePlayer()
