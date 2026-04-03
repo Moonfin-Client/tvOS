@@ -16,6 +16,13 @@ struct SettingsSyncPlayValueScreen: View {
 
     var body: some View {
         SettingsScreenLayout(title: title) {
+            Text("Current: \(currentValue)\(suffix)")
+                .font(.captionSm)
+                .foregroundColor(theme.colorScheme.listCaption)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, SpaceTokens.spaceMd)
+                .padding(.bottom, SpaceTokens.space2xs)
+
             ForEach(options, id: \.self) { value in
                 Button {
                     container.userPreferences[preference] = value
@@ -55,5 +62,10 @@ private struct SyncPlayValueOptionContent: View {
         }
         .padding(.horizontal, SpaceTokens.spaceMd)
         .padding(.vertical, SpaceTokens.spaceSm)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
+                .fill(isFocused ? theme.colorScheme.listButtonFocused : theme.colorScheme.listButton)
+        )
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }
