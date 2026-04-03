@@ -8,6 +8,7 @@ final class ServerStreamResolver: StreamResolver {
 
     private var lastResolvedItemId: String?
     private var lastResolvedSourceId: String?
+    private var lastResolvedStartTimeTicks: Int64?
     private var lastResolvedStream: StreamInfo?
 
     init(client: MediaServerClient, requestedBackend: PlaybackBackendDirective) {
@@ -26,7 +27,8 @@ final class ServerStreamResolver: StreamResolver {
     ) async throws -> StreamInfo {
         if let cached = lastResolvedStream,
            lastResolvedItemId == item.id,
-           lastResolvedSourceId == mediaSourceId {
+              lastResolvedSourceId == mediaSourceId,
+              lastResolvedStartTimeTicks == startTimeTicks {
             clearCache()
             return cached
         }
@@ -247,6 +249,7 @@ final class ServerStreamResolver: StreamResolver {
 
         lastResolvedItemId = item.id
         lastResolvedSourceId = mediaSourceId
+        lastResolvedStartTimeTicks = startTimeTicks
         lastResolvedStream = streamInfo
 
         return streamInfo
@@ -255,6 +258,7 @@ final class ServerStreamResolver: StreamResolver {
     func clearCache() {
         lastResolvedItemId = nil
         lastResolvedSourceId = nil
+        lastResolvedStartTimeTicks = nil
         lastResolvedStream = nil
     }
 
