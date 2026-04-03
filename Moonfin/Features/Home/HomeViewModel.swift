@@ -747,6 +747,35 @@ final class HomeViewModel: ObservableObject {
                 tag: tag
             )
         }
+        if let parentTags = item.parentBackdropImageTags,
+           let parentId = item.parentBackdropItemId,
+           let tag = parentTags.first {
+            return api.getItemImageUrl(
+                itemId: parentId,
+                imageType: .backdrop,
+                maxWidth: 480,
+                maxHeight: nil,
+                tag: tag
+            )
+        }
+        if let seriesId = item.seriesId {
+            return api.getItemImageUrl(
+                itemId: seriesId,
+                imageType: .primary,
+                maxWidth: 480,
+                maxHeight: nil,
+                tag: nil
+            )
+        }
+        if let channelId = item.channelId {
+            return api.getItemImageUrl(
+                itemId: channelId,
+                imageType: .primary,
+                maxWidth: 480,
+                maxHeight: nil,
+                tag: nil
+            )
+        }
         return posterImageUrl(for: item)
     }
 
