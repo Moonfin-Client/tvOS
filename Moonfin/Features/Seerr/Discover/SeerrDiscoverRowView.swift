@@ -38,34 +38,43 @@ struct SeerrDiscoverRowView: View {
     private var loadingRow: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             rowTitle
-            ScrollView(.horizontal, showsIndicators: false) {
+            FocusFirstRow(firstItemId: "loading-\(row.id)-0") { focusBinding in
                 LazyHStack(spacing: SpaceTokens.spaceMd) {
-                    ForEach(0..<6, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: RadiusTokens.small)
-                            .fill(theme.colorScheme.surface.opacity(0.2))
-                            .aspectRatio(2.0 / 3.0, contentMode: .fit)
-                            .frame(width: 150)
-                            .shimmering()
+                    ForEach(0..<6, id: \.self) { index in
+                        Button(action: {}) {
+                            RoundedRectangle(cornerRadius: RadiusTokens.small)
+                                .fill(theme.colorScheme.surface.opacity(0.2))
+                                .aspectRatio(2.0 / 3.0, contentMode: .fit)
+                                .frame(width: 150)
+                                .shimmering()
+                        }
+                        .buttonStyle(CleanButtonStyle())
+                        .id("loading-\(row.id)-\(index)")
+                        .focused(focusBinding, equals: "loading-\(row.id)-\(index)")
                     }
                 }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
             }
         }
     }
 
     private var itemRow: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+        let firstItemFocusId = row.items.first.map { "item-\(row.id)-0-\($0.id)" }
+        return VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             rowTitle
-            FocusFirstRow(firstItemId: String(row.items.first?.id ?? 0)) { focusBinding in
+            FocusFirstRow(firstItemId: firstItemFocusId) { focusBinding in
                 LazyHStack(spacing: SpaceTokens.spaceMd) {
-                    ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
+                    ForEach(Array(row.items.enumerated()), id: \.offset) { index, item in
+                        let focusId = "item-\(row.id)-\(index)-\(item.id)"
                         SeerrItemCard(
                             item: item,
                             posterUrl: viewModel.posterUrl(for: item),
                             onFocused: { viewModel.onItemFocused(item) },
                             onSelect: { onItemSelected?(item) }
                         )
-                        .id(String(item.id))
-                        .focused(focusBinding, equals: String(item.id))
+                        .id(focusId)
+                        .focused(focusBinding, equals: focusId)
                         .onAppear { viewModel.loadMoreIfNeeded(row: row, currentIndex: index) }
                     }
                 }
@@ -224,40 +233,6 @@ struct SeerrItemCard: View {
             .frame(width: cardWidth, height: cardHeight)
     }
 
-    @ViewBuilder
-    private var statusBadge: some View {
-        if let status = item.requestStatus {
-            let (icon, color, text) = Self.requestStatusStyle(status)
-            HStack(spacing: 3) {
-                Image(systemName: icon)
-                    .font(.system(size: 10, weight: .bold))
-                Text(text)
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .foregroundColor(.white)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 3)
-            .background(color.opacity(0.85))
-            .clipShape(Capsule())
-            .padding(6)
-        } else if item.isAvailable {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.caption2)
-                .foregroundColor(.colorGreen500)
-                .padding(6)
-        }
-    }
-
-    private static func requestStatusStyle(_ status: Int) -> (String, Color, String) {
-        switch status {
-        case SeerrRequestDto.statusPending: return ("clock.fill", .orange, "Pending")
-        case SeerrRequestDto.statusApproved: return ("checkmark.circle.fill", .colorBlue500, "Approved")
-        case SeerrRequestDto.statusDeclined: return ("xmark.circle.fill", .colorRed500, "Declined")
-        case SeerrRequestDto.statusAvailable: return ("checkmark.circle.fill", .colorGreen500, "Available")
-        default: return ("questionmark.circle.fill", .gray, "Unknown")
-        }
-    }
-
     private func extractYear(from item: SeerrDiscoverItemDto) -> String? {
         let date = item.releaseDate ?? item.firstAirDate
         guard let date, date.count >= 4 else { return nil }
@@ -300,35 +275,33 @@ struct SeerrPosterBadgeOverlay: View {
     @ViewBuilder
     private var statusBadge: some View {
         if item.isAvailable {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.caption2)
-                .foregroundColor(.colorGreen500)
-                .padding(6)
+            circularStatusBadge(glyph: "checkmark", color: .colorGreen500)
         } else if let status = item.requestStatus {
-            let (icon, color, text) = seerrRequestStatusStyle(status)
-            HStack(spacing: 3) {
-                Image(systemName: icon)
-                    .font(.system(size: 10, weight: .bold))
-                Text(text)
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .foregroundColor(.white)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 3)
-            .background(color.opacity(0.85))
-            .clipShape(Capsule())
-            .padding(6)
+            let (glyph, color) = seerrRequestStatusStyle(status)
+            circularStatusBadge(glyph: glyph, color: color)
         }
+    }
+
+    private func circularStatusBadge(glyph: String, color: Color) -> some View {
+        ZStack {
+            Circle()
+                .fill(color)
+            Image(systemName: glyph)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(.white)
+        }
+        .frame(width: 18, height: 18)
+        .padding(6)
     }
 }
 
-private func seerrRequestStatusStyle(_ status: Int) -> (String, Color, String) {
+private func seerrRequestStatusStyle(_ status: Int) -> (String, Color) {
     switch status {
-    case SeerrRequestDto.statusPending: return ("clock.fill", .orange, "Pending")
-    case SeerrRequestDto.statusApproved: return ("checkmark.circle.fill", .colorBlue500, "Approved")
-    case SeerrRequestDto.statusDeclined: return ("xmark.circle.fill", .colorRed500, "Declined")
-    case SeerrRequestDto.statusAvailable: return ("checkmark.circle.fill", .colorGreen500, "Available")
-    default: return ("questionmark.circle.fill", .gray, "Unknown")
+    case SeerrRequestDto.statusPending: return ("clock.fill", .orange)
+    case SeerrRequestDto.statusApproved: return ("checkmark", .colorBlue500)
+    case SeerrRequestDto.statusDeclined: return ("xmark", .colorRed500)
+    case SeerrRequestDto.statusAvailable: return ("checkmark", .colorGreen500)
+    default: return ("questionmark", .gray)
     }
 }
 

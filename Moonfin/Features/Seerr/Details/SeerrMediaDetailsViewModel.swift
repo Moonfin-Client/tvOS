@@ -278,6 +278,26 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
         }
     }
 
+    func qualityOptionLabel(is4k: Bool) -> String {
+        let prefix = is4k ? "4K" : "HD"
+        let status = is4k ? mediaInfo?.status4k : mediaInfo?.status
+
+        switch status {
+        case SeerrMediaInfoDto.statusPending:
+            return "\(prefix) (Pending)"
+        case SeerrMediaInfoDto.statusProcessing:
+            return "\(prefix) (Processing)"
+        case SeerrMediaInfoDto.statusPartiallyAvailable:
+            return "Request More \(prefix)"
+        case SeerrMediaInfoDto.statusAvailable:
+            return "\(prefix) (Available)"
+        case SeerrMediaInfoDto.statusBlacklisted:
+            return "\(prefix) (Blacklisted)"
+        default:
+            return "Request \(prefix)"
+        }
+    }
+
     func beginRequest(is4k: Bool) {
         pendingIs4k = is4k
         showQualityPicker = false

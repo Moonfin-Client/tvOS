@@ -51,9 +51,28 @@ struct SeerrMediaDetailsView: View {
                 viewModel.setServerClient(client)
             }
         }
+        .onExitCommand {
+            handleExitCommand()
+        }
         .sheet(isPresented: $viewModel.showSeasonPicker) { seasonPickerSheet }
         .sheet(isPresented: $viewModel.showAdvancedOptions) { advancedOptionsSheet }
         .sheet(isPresented: $viewModel.showQualityPicker) { qualityPickerSheet }
+    }
+
+    private func handleExitCommand() {
+        if viewModel.showQualityPicker {
+            viewModel.showQualityPicker = false
+            return
+        }
+        if viewModel.showAdvancedOptions {
+            viewModel.showAdvancedOptions = false
+            return
+        }
+        if viewModel.showSeasonPicker {
+            viewModel.showSeasonPicker = false
+            return
+        }
+        router.goBack()
     }
 
     private var loadingView: some View {
@@ -656,35 +675,72 @@ struct SeerrMediaDetailsView: View {
                 .font(.titleLg).fontWeight(.bold)
                 .foregroundColor(theme.colorScheme.onBackground)
 
-            HStack(spacing: SpaceTokens.spaceLg) {
+            VStack(spacing: SpaceTokens.spaceMd) {
                 if viewModel.canRequestHd {
-                    Button(action: { viewModel.beginRequest(is4k: false) }) {
-                        VStack(spacing: SpaceTokens.spaceSm) {
-                            Image(systemName: "film")
-                                .font(.system(size: 36))
-                            Text("Standard")
-                                .font(.titleMd).fontWeight(.semibold)
-                        }
-                        .frame(width: 200, height: 120)
-                    }
-                    .buttonStyle(.bordered)
+                    qualityOptionButton(
+                        icon: "film",
+                        title: viewModel.qualityOptionLabel(is4k: false),
+                        subtitle: "Standard quality request",
+                        action: { viewModel.beginRequest(is4k: false) }
+                    )
                 }
+
                 if viewModel.canRequest4k {
-                    Button(action: { viewModel.beginRequest(is4k: true) }) {
-                        VStack(spacing: SpaceTokens.spaceSm) {
-                            Image(systemName: "4k.tv")
-                                .font(.system(size: 36))
-                            Text("4K")
-                                .font(.titleMd).fontWeight(.semibold)
-                        }
-                        .frame(width: 200, height: 120)
-                    }
-                    .buttonStyle(.bordered)
+                    qualityOptionButton(
+                        icon: "4k.tv",
+                        title: viewModel.qualityOptionLabel(is4k: true),
+                        subtitle: "Ultra HD request",
+                        action: { viewModel.beginRequest(is4k: true) }
+                    )
+                }
+
+                if !viewModel.canRequestHd && !viewModel.canRequest4k {
+                    Text("No request qualities are currently available.")
+                        .font(.bodySm)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.65))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, SpaceTokens.spaceSm)
                 }
             }
+            .frame(maxWidth: 560)
+
+            Button("Cancel") {
+                viewModel.showQualityPicker = false
+            }
+            .buttonStyle(.bordered)
         }
         .padding(40)
         .background(theme.colorScheme.background)
+    }
+
+    private func qualityOptionButton(icon: String, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: SpaceTokens.spaceMd) {
+                Image(systemName: icon)
+                    .font(.system(size: 28, weight: .semibold))
+                    .frame(width: 36)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.titleMd).fontWeight(.semibold)
+                        .lineLimit(1)
+                    Text(subtitle)
+                        .font(.bodySm)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.65))
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .foregroundColor(theme.colorScheme.onBackground)
+            .padding(.horizontal, SpaceTokens.spaceMd)
+            .padding(.vertical, SpaceTokens.spaceMd)
+            .frame(maxWidth: .infinity, minHeight: 78)
+            .background(theme.colorScheme.surface.opacity(0.25))
+            .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
+        }
+        .buttonStyle(CleanButtonStyle())
     }
 
     private func formatDate(_ dateString: String) -> String {
