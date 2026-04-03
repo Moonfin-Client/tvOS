@@ -191,7 +191,7 @@ struct LibraryBrowseScreen: View {
 
         return ScrollView {
             LazyVGrid(columns: columns, spacing: 20) {
-                ForEach(Array(viewModel.items.enumerated()), id: \.element.id) { index, item in
+                ForEach(Array(viewModel.items.enumerated()), id: \.offset) { index, item in
                     LibraryPosterCard(
                         item: item,
                         imageUrl: viewModel.imageUrl(for: item),
