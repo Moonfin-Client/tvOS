@@ -60,7 +60,7 @@ struct MediaBarRatingRow: View {
     var body: some View {
         if source == "stars" {
             HStack(spacing: 4) {
-                Text("")
+                Text("★")
                     .font(.system(size: 20))
                     .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
                 Text(String(format: "%.1f", value))
@@ -138,7 +138,7 @@ struct MediaBarRatingsRow: View {
 
     var body: some View {
         let filtered = ratings.filter { source, _ in
-            if !enableAdditionalRatings && source != "stars" && source != "tomatoes" { return false }
+            if !enableAdditionalRatings && source != "stars" && source != "tomatoes" && source != "tmdb_episode" { return false }
             return true
         }
 

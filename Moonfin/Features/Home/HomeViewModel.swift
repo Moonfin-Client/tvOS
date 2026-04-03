@@ -42,6 +42,7 @@ final class HomeViewModel: ObservableObject {
         self.mediaBarViewModel = MediaBarViewModel(container: container)
         self.mediaBarRatingsViewModel = MediaBarRatingsViewModel(
             mdbListRepository: container.mdbListRepository,
+            tmdbRepository: container.tmdbRepository,
             userPreferences: container.userPreferences
         )
         backgroundService.configure(preferences: container.userPreferences)

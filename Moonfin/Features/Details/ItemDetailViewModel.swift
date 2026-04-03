@@ -53,6 +53,7 @@ final class ItemDetailViewModel: ObservableObject {
     private var loadTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
     private var lastEnableAdditionalRatings: Bool = true
+    private var lastEnableEpisodeRatings: Bool = false
 
     init(container: AppContainer, itemId: String, serverId: String?) {
         self.container = container
@@ -61,6 +62,7 @@ final class ItemDetailViewModel: ObservableObject {
         self.showRatingLabels = container.userPreferences[UserPreferences.showRatingLabels]
         self.enableEpisodeRatings = container.userPreferences[UserPreferences.enableEpisodeRatings]
         self.lastEnableAdditionalRatings = container.userPreferences[UserPreferences.enableAdditionalRatings]
+        self.lastEnableEpisodeRatings = container.userPreferences[UserPreferences.enableEpisodeRatings]
         backgroundService.configure(preferences: container.userPreferences)
 
         // Throttle background service updates to max 1 per 300ms to avoid
@@ -91,7 +93,15 @@ final class ItemDetailViewModel: ObservableObject {
     private func refreshPreferences() {
         let prefs = container.userPreferences
         showRatingLabels = prefs[UserPreferences.showRatingLabels]
-        enableEpisodeRatings = prefs[UserPreferences.enableEpisodeRatings]
+        let newEnableEpisode = prefs[UserPreferences.enableEpisodeRatings]
+        enableEpisodeRatings = newEnableEpisode
+
+        if newEnableEpisode != lastEnableEpisodeRatings {
+            lastEnableEpisodeRatings = newEnableEpisode
+            if let item {
+                Task { await loadRatings(for: item) }
+            }
+        }
 
         let newEnableAdditional = prefs[UserPreferences.enableAdditionalRatings]
         if newEnableAdditional != lastEnableAdditionalRatings {
@@ -702,11 +712,23 @@ final class ItemDetailViewModel: ObservableObject {
         let criticRating = item.criticRating
         let tmdbId = item.providerIds?["Tmdb"]
         let enableAdditional = container.userPreferences[UserPreferences.enableAdditionalRatings]
+        let enableEpisodeRatings = container.userPreferences[UserPreferences.enableEpisodeRatings]
+        let isEpisode = item.type == .episode
 
         var result: [(String, Float)] = []
+        func appendUnique(_ source: String, _ value: Float) {
+            if !result.contains(where: { $0.0 == source }) {
+                result.append((source, value))
+            }
+        }
+        var episodeRating: Float?
+
+        if enableEpisodeRatings && isEpisode {
+            episodeRating = await container.tmdbRepository.getEpisodeRating(item: item)
+        }
 
         if let community = communityRating, community > 0 {
-            result.append(("stars", Float(community)))
+            appendUnique("stars", Float(community))
         }
 
         if enableAdditional, let tmdbId {
@@ -714,16 +736,20 @@ final class ItemDetailViewModel: ObservableObject {
             if let apiRatings {
                 for (source, value) in apiRatings {
                     if source == "tomatoes" && criticRating != nil { continue }
+                    if source == "tmdb" && isEpisode && enableEpisodeRatings && episodeRating != nil { continue }
                     let normalized = RatingSource(rawValue: source)?.normalize(value) ?? (value / 100.0)
-                    result.append((source, normalized))
+                    appendUnique(source, normalized)
                 }
             }
         }
 
-        if !result.contains(where: { $0.0 == "tomatoes" }),
-           let critic = criticRating, critic > 0 {
+        if let critic = criticRating, critic > 0 {
             let normalized = RatingSource.tomatoes.normalize(Float(critic))
-            result.append(("tomatoes", normalized))
+            appendUnique("tomatoes", normalized)
+        }
+
+        if let episodeRating, episodeRating > 0 {
+            appendUnique("tmdb_episode", episodeRating / 10.0)
         }
 
         ratings = result

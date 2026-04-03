@@ -18,6 +18,7 @@ struct LibraryBrowseScreen: View {
         ))
         _ratingsViewModel = StateObject(wrappedValue: MediaBarRatingsViewModel(
             mdbListRepository: container.mdbListRepository,
+            tmdbRepository: container.tmdbRepository,
             userPreferences: container.userPreferences
         ))
     }
