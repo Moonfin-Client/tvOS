@@ -120,7 +120,7 @@ final class ServerStreamResolver: StreamResolver {
             maxAudioChannels: maxAudioChannels
         )
 
-        let capabilities = VideoCapabilityDetector.current()
+        let capabilities = await MainActor.run { VideoCapabilityDetector.current() }
         let dynamicRange = VideoDynamicRangePolicy.detectRange(videoStream: videoStream)
         let videoPolicy = VideoDynamicRangePolicy.decide(
             requestedBackend: requestedBackend,
@@ -152,11 +152,13 @@ final class ServerStreamResolver: StreamResolver {
 
         let preferTranscodedAudioForLyrics = item.mediaType == .audio && item.hasLyrics == true
 
-        if source.supportsDirectPlay && !isLiveTv && !(preferTranscodedAudioForLyrics && source.transcodingUrl != nil) && !shouldForceTranscodeForRange {
+        if source.supportsDirectPlay && !(preferTranscodedAudioForLyrics && source.transcodingUrl != nil) && !shouldForceTranscodeForRange {
             let params = StreamParams(
                 userId: userId,
                 mediaSourceId: source.id,
                 playSessionId: playSessionId,
+                liveStreamId: source.liveStreamId,
+                isLiveTv: isLiveTv,
                 deviceId: deviceId,
                 container: container,
                 audioStreamIndex: audioStreamIndex ?? source.defaultAudioStreamIndex,
@@ -187,7 +189,11 @@ final class ServerStreamResolver: StreamResolver {
             )
         } else if let transcodingUrl = source.transcodingUrl {
             let method: PlayMethod = source.supportsDirectStream ? .directStream : .transcode
-            let url = buildTranscodingUrl(transcodingUrl)
+            var url = buildTranscodingUrl(transcodingUrl)
+            if isLiveTv, let liveStreamId = source.liveStreamId, !liveStreamId.isEmpty {
+                let separator = url.contains("?") ? "&" : "?"
+                url += "\(separator)LiveStreamId=\(liveStreamId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? liveStreamId)"
+            }
             streamInfo = StreamInfo(
                 url: url,
                 playSessionId: playSessionId,
@@ -201,13 +207,15 @@ final class ServerStreamResolver: StreamResolver {
                 dynamicRange: dynamicRange,
                 preferredBackend: .mpv,
                 fallbackReason: fallbackReason,
-                diagnostics: combinedDiagnostics + ["resolved_via=transcode"]
+                diagnostics: combinedDiagnostics + [isLiveTv ? "resolved_via=livetv_transcode" : "resolved_via=transcode"]
             )
         } else if isLiveTv {
             let params = StreamParams(
                 userId: userId,
                 mediaSourceId: source.id,
                 playSessionId: playSessionId,
+                liveStreamId: source.liveStreamId,
+                isLiveTv: true,
                 deviceId: deviceId,
                 container: container,
                 audioStreamIndex: audioStreamIndex ?? source.defaultAudioStreamIndex,
@@ -217,11 +225,12 @@ final class ServerStreamResolver: StreamResolver {
             )
 
             let url = client.playbackApi.getVideoStreamUrl(itemId: item.id, params: params)
+            let liveTvPlayMethod: PlayMethod = source.supportsDirectStream ? .directStream : .directPlay
             streamInfo = StreamInfo(
                 url: url,
                 playSessionId: playSessionId,
                 mediaSourceId: source.id,
-                playMethod: .directPlay,
+                playMethod: liveTvPlayMethod,
                 container: container,
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
@@ -252,8 +261,10 @@ final class ServerStreamResolver: StreamResolver {
     private func buildLiveTvFallbackStream(item: ServerItem, userId: String) -> StreamInfo {
         let params = StreamParams(
             userId: userId,
-            mediaSourceId: item.id,
+            mediaSourceId: "",
             playSessionId: "",
+            liveStreamId: nil,
+            isLiveTv: true,
             deviceId: deviceId,
             container: "ts",
             audioStreamIndex: nil,

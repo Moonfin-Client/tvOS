@@ -17,6 +17,8 @@ final class VideoPlayerViewModel: ObservableObject {
 
     let playbackManager: PlaybackManager
     let isLiveTV: Bool
+    private let onLiveTvChannelUp: (() async -> Void)?
+    private let onLiveTvChannelDown: (() async -> Void)?
 
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
@@ -78,9 +80,16 @@ final class VideoPlayerViewModel: ObservableObject {
         return "Ends at \(endTimeFormatter.string(from: endDate))"
     }
 
-    init(playbackManager: PlaybackManager, isLiveTV: Bool = false) {
+    init(
+        playbackManager: PlaybackManager,
+        isLiveTV: Bool = false,
+        onLiveTvChannelUp: (() async -> Void)? = nil,
+        onLiveTvChannelDown: (() async -> Void)? = nil
+    ) {
         self.playbackManager = playbackManager
         self.isLiveTV = isLiveTV
+        self.onLiveTvChannelUp = onLiveTvChannelUp
+        self.onLiveTvChannelDown = onLiveTvChannelDown
 
         playbackManager.player.$state
             .removeDuplicates()
@@ -143,6 +152,16 @@ final class VideoPlayerViewModel: ObservableObject {
             .store(in: &cancellables)
 
         prefetchCastForCurrentItem()
+    }
+
+    func channelUp() {
+        guard isLiveTV else { return }
+        Task { await onLiveTvChannelUp?() }
+    }
+
+    func channelDown() {
+        guard isLiveTV else { return }
+        Task { await onLiveTvChannelDown?() }
     }
 
     private func ensureItemCache() {

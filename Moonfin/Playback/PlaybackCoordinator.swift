@@ -5,6 +5,8 @@ import Combine
 final class PlaybackCoordinator: ObservableObject {
     @Published private(set) var videoPlayerManager: PlaybackManager?
     @Published private(set) var audioManager: AudioManager?
+    @Published private(set) var liveTvChannels: [ServerItem] = []
+    @Published private(set) var liveTvCurrentIndex: Int = 0
 
     private let serverClientFactory: MediaServerClientFactory
     private let serverRepository: ServerRepositoryProtocol
@@ -33,7 +35,7 @@ final class PlaybackCoordinator: ObservableObject {
         subtitleStreamIndex: Int? = nil,
         mediaSourceIndex: Int? = nil
     ) async {
-        await stopVideoPlayback()
+        await stopVideoPlayback(shouldClearLiveTvContext: false)
         guard let client else { return }
         let player = makePlayer()
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
@@ -48,9 +50,30 @@ final class PlaybackCoordinator: ObservableObject {
         )
     }
 
-    func stopVideoPlayback() async {
+    func setLiveTvContext(channels: [ServerItem], currentIndex: Int) {
+        liveTvChannels = channels
+        liveTvCurrentIndex = max(0, min(currentIndex, max(0, channels.count - 1)))
+    }
+
+    func clearLiveTvContext() {
+        liveTvChannels = []
+        liveTvCurrentIndex = 0
+    }
+
+    func stepLiveTvChannel(by delta: Int) -> ServerItem? {
+        guard !liveTvChannels.isEmpty else { return nil }
+        let count = liveTvChannels.count
+        let next = (liveTvCurrentIndex + delta % count + count) % count
+        liveTvCurrentIndex = next
+        return liveTvChannels[next]
+    }
+
+    func stopVideoPlayback(shouldClearLiveTvContext: Bool = true) async {
         await videoPlayerManager?.stop()
         videoPlayerManager = nil
+        if shouldClearLiveTvContext {
+            clearLiveTvContext()
+        }
     }
 
     func startAudioPlayback(items: [ServerItem], startIndex: Int = 0, shuffle: Bool = false) async {

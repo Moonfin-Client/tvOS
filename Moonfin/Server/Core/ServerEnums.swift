@@ -6,7 +6,9 @@ enum ItemType: String, Codable, CaseIterable {
     case albumArtist = "AlbumArtist"
     case playlist, photo, photoAlbum
     case boxSet, channel, program
-    case recording, liveTvChannel, liveTvProgram
+    case recording
+    case liveTvChannel = "TvChannel"
+    case liveTvProgram = "TvProgram"
     case book, trailer, video
     case person, studio, genre, musicGenre
     case userView, collectionFolder, folder, basePluginFolder

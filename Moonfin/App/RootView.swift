@@ -443,7 +443,12 @@ struct MainNavigationView: View {
     @ViewBuilder
     private func liveTvPlayerDestination(channelId: String) -> some View {
         if let manager = container.playbackCoordinator.videoPlayerManager {
-            VideoPlayerScreen(playbackManager: manager, isLiveTV: true)
+            VideoPlayerScreen(
+                playbackManager: manager,
+                isLiveTV: true,
+                onLiveTvChannelUp: { await switchLiveTvChannel(by: -1) },
+                onLiveTvChannelDown: { await switchLiveTvChannel(by: 1) }
+            )
                 .onAppear { router.pushNavbarHidden() }
                 .onDisappear {
                     router.popNavbarHidden()
@@ -452,6 +457,12 @@ struct MainNavigationView: View {
         } else {
             PlaceholderView(title: "Live TV Player")
         }
+    }
+
+    private func switchLiveTvChannel(by delta: Int) async {
+        guard let nextChannel = container.playbackCoordinator.stepLiveTvChannel(by: delta),
+              let manager = container.playbackCoordinator.videoPlayerManager else { return }
+        await manager.play(items: [nextChannel])
     }
 }
 

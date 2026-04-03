@@ -146,6 +146,8 @@ struct StreamParams {
     let userId: String
     let mediaSourceId: String
     let playSessionId: String
+    let liveStreamId: String?
+    let isLiveTv: Bool
     let deviceId: String
     let container: String
     let audioStreamIndex: Int?

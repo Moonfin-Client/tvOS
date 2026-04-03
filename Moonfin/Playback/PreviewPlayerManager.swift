@@ -289,6 +289,8 @@ final class PreviewPlayerManager: ObservableObject {
             userId: client.userId ?? "",
             mediaSourceId: mediaSource.id,
             playSessionId: playbackResult.playSessionId ?? "",
+            liveStreamId: mediaSource.liveStreamId,
+            isLiveTv: false,
             deviceId: UIDevice.current.identifierForVendor?.uuidString ?? "preview",
             container: "mp4",
             audioStreamIndex: nil,

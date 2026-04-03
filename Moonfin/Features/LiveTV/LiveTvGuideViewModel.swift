@@ -37,10 +37,15 @@ final class LiveTvGuideViewModel: ObservableObject {
     private var preferences: UserPreferences { container.userPreferences }
 
     var filteredChannels: [ServerItem] {
-        if showFavoritesOnly {
-            return channels.filter { $0.userData?.isFavorite == true }
+        let base = showFavoritesOnly
+            ? channels.filter { $0.userData?.isFavorite == true }
+            : channels
+
+        guard hasProgramTypeFiltersEnabled else { return base }
+        return base.filter { channel in
+            let programs = programsByChannel[channel.id] ?? []
+            return programs.contains(where: matchesProgramTypeFilter)
         }
-        return channels
     }
 
     init(container: AppContainer) {
@@ -170,14 +175,16 @@ final class LiveTvGuideViewModel: ObservableObject {
     }
 
     func programs(for channelId: String) -> [ServerItem] {
-        programsByChannel[channelId] ?? []
+        let programs = programsByChannel[channelId] ?? []
+        guard hasProgramTypeFiltersEnabled else { return programs }
+        return programs.filter(matchesProgramTypeFilter)
     }
 
     func programWidth(for program: ServerItem) -> CGFloat {
         let start = max(program.startDate ?? program.premiereDate ?? guideStartTime, guideStartTime)
         let end = min(program.endDate ?? guideEndTime, guideEndTime)
-        let minutes = end.timeIntervalSince(start) / 60
-        return max(CGFloat(minutes) * Self.pixelsPerMinute, 40)
+        let minutes = max(end.timeIntervalSince(start) / 60, 0)
+        return max(CGFloat(minutes) * Self.pixelsPerMinute, 1)
     }
 
     func programOffset(for program: ServerItem) -> CGFloat {
@@ -225,6 +232,38 @@ final class LiveTvGuideViewModel: ObservableObject {
             current = cal.date(byAdding: .minute, value: 30, to: current) ?? current
         }
         timeSlots = slots
+    }
+
+    private var hasProgramTypeFiltersEnabled: Bool {
+        preferences[UserPreferences.liveTvFilterMovies]
+            || preferences[UserPreferences.liveTvFilterSeries]
+            || preferences[UserPreferences.liveTvFilterNews]
+            || preferences[UserPreferences.liveTvFilterKids]
+            || preferences[UserPreferences.liveTvFilterSports]
+            || preferences[UserPreferences.liveTvFilterPremiere]
+    }
+
+    private func matchesProgramTypeFilter(_ program: ServerItem) -> Bool {
+        var matched = false
+        if preferences[UserPreferences.liveTvFilterMovies] {
+            matched = matched || (program.isMovie == true)
+        }
+        if preferences[UserPreferences.liveTvFilterSeries] {
+            matched = matched || (program.isSeries == true)
+        }
+        if preferences[UserPreferences.liveTvFilterNews] {
+            matched = matched || (program.isNews == true)
+        }
+        if preferences[UserPreferences.liveTvFilterKids] {
+            matched = matched || (program.isKids == true)
+        }
+        if preferences[UserPreferences.liveTvFilterSports] {
+            matched = matched || (program.isSports == true)
+        }
+        if preferences[UserPreferences.liveTvFilterPremiere] {
+            matched = matched || (program.isPremiere == true)
+        }
+        return matched
     }
 
 }

@@ -260,26 +260,41 @@ struct JellyfinPlaybackApi: ServerPlaybackApi {
 
     func getVideoStreamUrl(itemId: String, params: StreamParams) -> String {
         guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else { return "" }
-        var url = "\(base)/Videos/\(itemId)/stream.\(params.container)"
-        url += "?Static=true"
-        url += "&MediaSourceId=\(params.mediaSourceId)"
-        url += "&PlaySessionId=\(params.playSessionId)"
-        url += "&DeviceId=\(params.deviceId)"
-        if let idx = params.audioStreamIndex { url += "&AudioStreamIndex=\(idx)" }
-        if let idx = params.subtitleStreamIndex { url += "&SubtitleStreamIndex=\(idx)" }
-        if let token = client.accessToken { url += "&api_key=\(token)" }
-        return url
+        let path = (!params.isLiveTv && params.liveStreamId == nil)
+            ? "/Videos/\(itemId)/stream.\(params.container)"
+            : "/Videos/\(itemId)/stream"
+        guard var components = URLComponents(string: "\(base)\(path)") else {
+            return "\(base)\(path)"
+        }
+
+        var queryItems: [URLQueryItem] = [URLQueryItem(name: "Static", value: "true")]
+        if !params.mediaSourceId.isEmpty { queryItems.append(URLQueryItem(name: "MediaSourceId", value: params.mediaSourceId)) }
+        if !params.playSessionId.isEmpty { queryItems.append(URLQueryItem(name: "PlaySessionId", value: params.playSessionId)) }
+        if let liveStreamId = params.liveStreamId, !liveStreamId.isEmpty {
+            queryItems.append(URLQueryItem(name: "LiveStreamId", value: liveStreamId))
+        }
+        queryItems.append(URLQueryItem(name: "DeviceId", value: params.deviceId))
+        if let idx = params.audioStreamIndex { queryItems.append(URLQueryItem(name: "AudioStreamIndex", value: String(idx))) }
+        if let idx = params.subtitleStreamIndex { queryItems.append(URLQueryItem(name: "SubtitleStreamIndex", value: String(idx))) }
+        if let token = client.accessToken, !token.isEmpty { queryItems.append(URLQueryItem(name: "api_key", value: token)) }
+
+        components.queryItems = queryItems
+        return components.url?.absoluteString ?? "\(base)\(path)"
     }
 
     func getAudioStreamUrl(itemId: String, params: StreamParams) -> String {
         guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else { return "" }
-        var url = "\(base)/Audio/\(itemId)/stream.\(params.container)"
-        url += "?Static=true"
-        url += "&MediaSourceId=\(params.mediaSourceId)"
-        url += "&PlaySessionId=\(params.playSessionId)"
-        url += "&DeviceId=\(params.deviceId)"
-        if let token = client.accessToken { url += "&api_key=\(token)" }
-        return url
+        let path = "\(base)/Audio/\(itemId)/stream.\(params.container)"
+        guard var components = URLComponents(string: path) else { return path }
+
+        var queryItems: [URLQueryItem] = [URLQueryItem(name: "Static", value: "true")]
+        if !params.mediaSourceId.isEmpty { queryItems.append(URLQueryItem(name: "MediaSourceId", value: params.mediaSourceId)) }
+        if !params.playSessionId.isEmpty { queryItems.append(URLQueryItem(name: "PlaySessionId", value: params.playSessionId)) }
+        queryItems.append(URLQueryItem(name: "DeviceId", value: params.deviceId))
+        if let token = client.accessToken, !token.isEmpty { queryItems.append(URLQueryItem(name: "api_key", value: token)) }
+
+        components.queryItems = queryItems
+        return components.url?.absoluteString ?? path
     }
 
     func reportPlaybackStart(info: PlaybackStartReport) async throws {

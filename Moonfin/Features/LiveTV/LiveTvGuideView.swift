@@ -4,6 +4,7 @@ struct LiveTvGuideView: View {
     @StateObject private var viewModel: LiveTvGuideViewModel
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
+    @State private var isStartingPlayback = false
 
     private let container: AppContainer
 
@@ -132,9 +133,11 @@ struct LiveTvGuideView: View {
             HStack(alignment: .top, spacing: 0) {
                 channelColumn
 
-                VStack(alignment: .leading, spacing: 0) {
-                    timelineRow
-                    programGrid
+                ScrollView(.horizontal, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        timelineRow
+                        programGrid
+                    }
                 }
             }
         }
@@ -169,49 +172,45 @@ struct LiveTvGuideView: View {
     }
 
     private var timelineRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                ForEach(viewModel.timeSlots) { slot in
-                    Text(slot.label)
-                        .font(.captionXs)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-                        .frame(width: 30 * LiveTvGuideViewModel.pixelsPerMinute, alignment: .leading)
-                        .padding(.leading, SpaceTokens.spaceXs)
-                }
+        HStack(spacing: 0) {
+            ForEach(viewModel.timeSlots) { slot in
+                Text(slot.label)
+                    .font(.captionXs)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    .frame(width: 30 * LiveTvGuideViewModel.pixelsPerMinute, alignment: .leading)
+                    .padding(.leading, SpaceTokens.spaceXs)
             }
-            .frame(height: 32)
         }
+        .frame(height: 32)
     }
 
     private func programRow(for channel: ServerItem) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            let programs = viewModel.programs(for: channel.id)
-            ZStack(alignment: .leading) {
-                let totalWidth = CGFloat(LiveTvGuideViewModel.visibleHours * 60) * LiveTvGuideViewModel.pixelsPerMinute
-                Color.clear.frame(width: totalWidth, height: LiveTvGuideViewModel.rowHeight)
+        let programs = viewModel.programs(for: channel.id)
+        return ZStack(alignment: .leading) {
+            let totalWidth = CGFloat(LiveTvGuideViewModel.visibleHours * 60) * LiveTvGuideViewModel.pixelsPerMinute
+            Color.clear.frame(width: totalWidth, height: LiveTvGuideViewModel.rowHeight)
 
-                if programs.isEmpty {
-                    noProgramDataCell(width: totalWidth)
-                } else {
-                    ForEach(programs) { program in
-                        let width = viewModel.programWidth(for: program)
-                        let offset = viewModel.programOffset(for: program)
+            if programs.isEmpty {
+                noProgramDataCell(width: totalWidth)
+            } else {
+                ForEach(programs) { program in
+                    let width = viewModel.programWidth(for: program)
+                    let offset = viewModel.programOffset(for: program)
 
-                        ProgramGridCell(
-                            program: program,
-                            width: width,
-                            isAiring: viewModel.isCurrentlyAiring(program),
-                            categoryColor: viewModel.programCategoryColor(program),
-                            hasTimer: program.timerId != nil,
-                            showHD: container.userPreferences[UserPreferences.liveTvShowHDIndicator] && program.isHD == true,
-                            showNew: container.userPreferences[UserPreferences.liveTvShowNewIndicator] && program.isPremiere == true,
-                            showRepeat: container.userPreferences[UserPreferences.liveTvShowRepeatIndicator] && program.isRepeat == true,
-                            showLive: container.userPreferences[UserPreferences.liveTvShowLiveIndicator] && program.isLive == true,
-                            onSelect: { viewModel.selectProgram(program) }
-                        )
-                        .environmentObject(theme)
-                        .offset(x: offset)
-                    }
+                    ProgramGridCell(
+                        program: program,
+                        width: width,
+                        isAiring: viewModel.isCurrentlyAiring(program),
+                        categoryColor: viewModel.programCategoryColor(program),
+                        hasTimer: program.timerId != nil,
+                        showHD: container.userPreferences[UserPreferences.liveTvShowHDIndicator] && program.isHD == true,
+                        showNew: container.userPreferences[UserPreferences.liveTvShowNewIndicator] && program.isPremiere == true,
+                        showRepeat: container.userPreferences[UserPreferences.liveTvShowRepeatIndicator] && program.isRepeat == true,
+                        showLive: container.userPreferences[UserPreferences.liveTvShowLiveIndicator] && program.isLive == true,
+                        onSelect: { viewModel.selectProgram(program) }
+                    )
+                    .environmentObject(theme)
+                    .offset(x: offset)
                 }
             }
         }
@@ -262,16 +261,16 @@ struct LiveTvGuideView: View {
     }
 
     private func playChannel(_ channelId: String) {
+        guard !isStartingPlayback else { return }
+        isStartingPlayback = true
         Task {
-            guard let server = container.serverRepository.currentServer.value else { return }
-            let client = container.serverClientFactory.client(for: server)
-            do {
-                let item = try await client.userLibraryApi.getItem(itemId: channelId)
-                await container.playbackCoordinator.startVideoPlayback(items: [item])
-                router.navigate(to: .liveTvPlayer(channelId: channelId))
-            } catch {
-                viewModel.error = "Failed to start playback: \(error.localizedDescription)"
-            }
+            defer { isStartingPlayback = false }
+            let channels = viewModel.filteredChannels
+            guard let idx = channels.firstIndex(where: { $0.id == channelId }) else { return }
+            let item = channels[idx]
+            container.playbackCoordinator.setLiveTvContext(channels: channels, currentIndex: idx)
+            await container.playbackCoordinator.startVideoPlayback(items: [item])
+            router.navigate(to: .liveTvPlayer(channelId: channelId))
         }
     }
 
@@ -396,6 +395,7 @@ struct ProgramGridCell: View {
             }
             .padding(.horizontal, SpaceTokens.spaceXs)
             .frame(width: width, height: LiveTvGuideViewModel.rowHeight)
+            .clipped()
             .background(cellBackground)
             .overlay(cellBorder)
         }

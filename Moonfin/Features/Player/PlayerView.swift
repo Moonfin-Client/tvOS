@@ -8,8 +8,18 @@ struct VideoPlayerScreen: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var gestureLayerFocused: Bool
 
-    init(playbackManager: PlaybackManager, isLiveTV: Bool = false) {
-        _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(playbackManager: playbackManager, isLiveTV: isLiveTV))
+    init(
+        playbackManager: PlaybackManager,
+        isLiveTV: Bool = false,
+        onLiveTvChannelUp: (() async -> Void)? = nil,
+        onLiveTvChannelDown: (() async -> Void)? = nil
+    ) {
+        _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(
+            playbackManager: playbackManager,
+            isLiveTV: isLiveTV,
+            onLiveTvChannelUp: onLiveTvChannelUp,
+            onLiveTvChannelDown: onLiveTvChannelDown
+        ))
         _segmentHandler = ObservedObject(wrappedValue: playbackManager.segmentHandler)
         _nextUpManager = ObservedObject(wrappedValue: playbackManager.nextUpManager)
     }
@@ -172,7 +182,21 @@ struct VideoPlayerScreen: View {
                 viewModel.togglePlayPause()
                 if !viewModel.overlayVisible { viewModel.showOverlay() }
             }
-            .onMoveCommand { _ in
+            .onMoveCommand { direction in
+                if viewModel.isLiveTV {
+                    switch direction {
+                    case .up:
+                        viewModel.channelUp()
+                        if !viewModel.overlayVisible { viewModel.showOverlay() }
+                        return
+                    case .down:
+                        viewModel.channelDown()
+                        if !viewModel.overlayVisible { viewModel.showOverlay() }
+                        return
+                    default:
+                        break
+                    }
+                }
                 if !viewModel.overlayVisible {
                     viewModel.showOverlay()
                 }
