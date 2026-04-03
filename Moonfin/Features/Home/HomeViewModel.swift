@@ -181,6 +181,7 @@ final class HomeViewModel: ObservableObject {
                 .flatMap { buildRowDefinitions(for: $0) }
             if !lateRows.isEmpty {
                 rows.append(contentsOf: lateRows)
+                reorderRowsBySection(sections)
                 let lateRowIds = Set(dataSources.keys).subtracting(earlyRowIds)
                 await loadRows(lateRowIds, client: client)
             }
@@ -381,14 +382,20 @@ final class HomeViewModel: ObservableObject {
             return HomeSectionType.defaults.filter(\.enabled).map(\.type)
         }
         let parsed = raw.split(separator: ",")
-            .compactMap { HomeSectionType(rawValue: String($0).trimmingCharacters(in: .whitespaces)) }
+            .compactMap { rawValue -> HomeSectionType? in
+                let value = String(rawValue).trimmingCharacters(in: .whitespaces)
+                return HomeSectionType(rawValue: value) ?? HomeSectionType.from(serverName: value)
+            }
             .filter { $0 != .none }
 
-        if parsed.isEmpty {
+        var seenSections = Set<HomeSectionType>()
+        let uniqueParsed = parsed.filter { seenSections.insert($0).inserted }
+
+        if uniqueParsed.isEmpty {
             return HomeSectionType.defaults.filter(\.enabled).map(\.type)
         }
 
-        return parsed
+        return uniqueParsed
     }
 
     private func buildRowDefinitions(for section: HomeSectionType) -> [HomeRow] {
@@ -665,6 +672,45 @@ final class HomeViewModel: ObservableObject {
             posterImageURL: { [weak self] item in self?.posterImageUrl(for: item) },
             thumbImageURL: { [weak self] item in self?.thumbImageUrl(for: item) }
         )
+    }
+
+    private func reorderRowsBySection(_ sections: [HomeSectionType]) {
+        var sectionOrder: [HomeSectionType: Int] = [:]
+        for (index, section) in sections.enumerated() where sectionOrder[section] == nil {
+            sectionOrder[section] = index
+        }
+
+        rows = rows.enumerated()
+            .sorted { lhs, rhs in
+                let lhsOrder = sectionOrder[homeSection(for: lhs.element.rowType)] ?? Int.max
+                let rhsOrder = sectionOrder[homeSection(for: rhs.element.rowType)] ?? Int.max
+                if lhsOrder == rhsOrder {
+                    return lhs.offset < rhs.offset
+                }
+                return lhsOrder < rhsOrder
+            }
+            .map(\.element)
+    }
+
+    private func homeSection(for rowType: HomeRowType) -> HomeSectionType {
+        switch rowType {
+        case .continueWatching:
+            return .resume
+        case .nextUp:
+            return .nextUp
+        case .latestMedia:
+            return .latestMedia
+        case .myMedia:
+            return .myMedia
+        case .myMediaSmall:
+            return .myMediaSmall
+        case .resumeAudio:
+            return .resumeAudio
+        case .playlists:
+            return .playlists
+        case .liveTvButtons, .liveTvOnNow, .liveTvComingUp:
+            return .liveTv
+        }
     }
 
     private func filterHomeRowItems(_ items: [ServerItem], for rowType: HomeRowType) -> [ServerItem] {

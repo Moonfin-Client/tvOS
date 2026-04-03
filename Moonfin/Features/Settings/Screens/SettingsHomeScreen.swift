@@ -82,10 +82,15 @@ struct SettingsHomeScreen: View {
             }
         } else {
             let active = raw.split(separator: ",")
-                .compactMap { HomeSectionType(rawValue: String($0).trimmingCharacters(in: .whitespaces)) }
-            var result: [HomeSectionEntry] = active.map { HomeSectionEntry(type: $0, enabled: true) }
+                .compactMap { rawValue -> HomeSectionType? in
+                    let value = String(rawValue).trimmingCharacters(in: .whitespaces)
+                    return HomeSectionType(rawValue: value) ?? HomeSectionType.from(serverName: value)
+                }
+            var seenSections = Set<HomeSectionType>()
+            let uniqueActive = active.filter { seenSections.insert($0).inserted }
+            var result: [HomeSectionEntry] = uniqueActive.map { HomeSectionEntry(type: $0, enabled: true) }
             for def in HomeSectionType.defaults {
-                if !active.contains(def.type) {
+                if !uniqueActive.contains(def.type) {
                     result.append(HomeSectionEntry(type: def.type, enabled: false))
                 }
             }
