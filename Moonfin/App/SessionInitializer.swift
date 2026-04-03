@@ -14,19 +14,9 @@ final class SessionInitializer: ObservableObject {
 
     func initialize(router: NavigationRouter) {
         Task {
-            let restoreTask = Task {
-                await container.sessionRepository.restoreSession(destroyOnly: false)
-            }
-
-            let timeoutTask = Task {
-                try await Task.sleep(nanoseconds: Self.sessionTimeoutNs)
-                restoreTask.cancel()
-            }
-
-            // Wait for whichever finishes first, plus minimum splash delay
+            let restoreCompleted = await raceSessionRestoreAgainstTimeout()
             async let minDelay: Void = Task.sleep(nanoseconds: 2_500_000_000)
-            _ = await (restoreTask.value, try? minDelay)
-            timeoutTask.cancel()
+            _ = try? await minDelay
 
             if container.sessionRepository.isAuthenticated,
                container.userRepository.currentUser.value != nil {
@@ -37,11 +27,48 @@ final class SessionInitializer: ObservableObject {
                 return
             }
 
-            if let lastServerId = UUID(uuidString: container.authPreferences.lastServerId) {
-                restoredServerId = lastServerId
+            if !restoreCompleted {
+                container.sessionRepository.destroyCurrentSession()
+            }
+
+            if let preferredServerId = preferredStartupServerId() {
+                restoredServerId = preferredServerId
             }
             router.switchFlow(to: .startup)
         }
+    }
+
+    private func raceSessionRestoreAgainstTimeout() async -> Bool {
+        await withTaskGroup(of: Bool.self) { group in
+            group.addTask {
+                await self.container.sessionRepository.restoreSession(destroyOnly: false)
+                return true
+            }
+
+            group.addTask {
+                try? await Task.sleep(nanoseconds: Self.sessionTimeoutNs)
+                return false
+            }
+
+            let completed = await group.next() ?? false
+            group.cancelAll()
+            return completed
+        }
+    }
+
+    private func preferredStartupServerId() -> UUID? {
+        switch container.authPreferences.autoLoginBehavior {
+        case .specificUser:
+            if let serverId = UUID(uuidString: container.authPreferences.autoLoginServerId) {
+                return serverId
+            }
+        case .lastUser:
+            break
+        case .disabled:
+            break
+        }
+
+        return UUID(uuidString: container.authPreferences.lastServerId)
     }
 
     func handleDeepLink(url: URL, router: NavigationRouter) {

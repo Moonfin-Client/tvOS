@@ -90,6 +90,7 @@ struct MainNavigationView: View {
     @State private var preferContentFocusDuringHandoff = false
     @State private var isCurrentDestinationDetails = false
     @State private var contentHandoffResetTask: Task<Void, Never>?
+    @State private var showExitConfirmation = false
 
     private var navbarPosition: NavbarPosition {
         container.userPreferences[UserPreferences.navbarPosition]
@@ -163,11 +164,11 @@ struct MainNavigationView: View {
             mainContent
                 .focusSection()
                 .prefersDefaultFocus(contentShouldPreferDefaultFocus, in: mainNamespace)
-                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
+                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible || showExitConfirmation)
 
             navigationOverlay
                 .opacity(container.inactivityTracker.isScreensaverVisible ? 0 : 1)
-                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible)
+                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible || showExitConfirmation)
 
             clockOverlay
 
@@ -190,6 +191,18 @@ struct MainNavigationView: View {
                 .focusSection()
                 .onExitCommand { container.inactivityTracker.notifyInteraction() }
             }
+
+            if showExitConfirmation {
+                theme.colorScheme.scrim
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
+                ExitConfirmationDialog(
+                    onConfirm: closeApp,
+                    onDismiss: { showExitConfirmation = false }
+                )
+                .zIndex(2)
+            }
         }
         .ignoresSafeArea()
         .focusScope(mainNamespace)
@@ -199,6 +212,7 @@ struct MainNavigationView: View {
             container.inactivityTracker.notifyInteraction()
             if presented {
                 container.inactivityTracker.addLock()
+                showExitConfirmation = false
                 DispatchQueue.main.async {
                     resetFocus(in: mainNamespace)
                 }
@@ -234,6 +248,28 @@ struct MainNavigationView: View {
                 container.inactivityTracker.notifyInteraction()
             }
         }
+        .onExitCommand {
+            if showExitConfirmation {
+                showExitConfirmation = false
+                return
+            }
+
+            if !router.path.isEmpty {
+                router.goBack()
+                return
+            }
+
+            guard !container.inactivityTracker.isScreensaverVisible,
+                  !settingsRouter.isPresented,
+                  router.path.isEmpty else { return }
+
+            container.inactivityTracker.notifyInteraction()
+            showExitConfirmation = true
+        }
+    }
+
+    private func closeApp() {
+        exit(0)
     }
 
     private var mainContent: some View {
@@ -463,6 +499,56 @@ struct MainNavigationView: View {
         guard let nextChannel = container.playbackCoordinator.stepLiveTvChannel(by: delta),
               let manager = container.playbackCoordinator.videoPlayerManager else { return }
         await manager.play(items: [nextChannel])
+    }
+}
+
+private struct ExitConfirmationDialog: View {
+    let onConfirm: () -> Void
+    let onDismiss: () -> Void
+
+    private enum DialogFocusTarget: Hashable {
+        case cancel
+        case exit
+    }
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedTarget: DialogFocusTarget?
+
+    var body: some View {
+        VStack(spacing: SpaceTokens.spaceLg) {
+            Image(systemName: "rectangle.portrait.and.arrow.right")
+                .font(.system(size: 40))
+                .foregroundColor(theme.accent)
+
+            Text(Strings.exitConfirmTitle)
+                .font(.titleMd)
+                .foregroundColor(theme.colorScheme.onBackground)
+
+            Text(Strings.exitConfirmMessage)
+                .font(.bodyMd)
+                .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: SpaceTokens.spaceMd) {
+                FocusableDialogButton(title: Strings.cancel, action: onDismiss)
+                    .focused($focusedTarget, equals: .cancel)
+                FocusableDialogButton(title: Strings.exit, action: onConfirm)
+                    .focused($focusedTarget, equals: .exit)
+            }
+        }
+        .padding(SpaceTokens.spaceXl)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .fill(theme.colorScheme.surface)
+        )
+        .frame(maxWidth: 500)
+        .focusSection()
+        .onAppear {
+            DispatchQueue.main.async {
+                focusedTarget = .cancel
+            }
+        }
+        .onExitCommand(perform: onDismiss)
     }
 }
 

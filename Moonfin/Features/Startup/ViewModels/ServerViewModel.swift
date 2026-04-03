@@ -10,6 +10,7 @@ final class ServerViewModel: ObservableObject {
     @Published var pinUser: (any User)? = nil
     @Published var authenticatingUser: (any User)? = nil
     @Published var notification: String? = nil
+    private var didAttemptAutomaticLogin = false
 
     private let serverId: UUID
     private let serverRepository: ServerRepositoryProtocol
@@ -80,6 +81,40 @@ final class ServerViewModel: ObservableObject {
             return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
         }
         users = merged
+        attemptAutomaticLoginIfNeeded(server: server, storedUsers: stored)
+    }
+
+    private func attemptAutomaticLoginIfNeeded(server: Server, storedUsers: [PrivateUser]) {
+        guard !didAttemptAutomaticLogin else { return }
+        guard !authPreferences.alwaysAuthenticate else { return }
+
+        let targetUser: PrivateUser?
+        switch authPreferences.autoLoginBehavior {
+        case .disabled:
+            return
+        case .lastUser:
+            guard authPreferences.lastServerId == server.id.uuidString,
+                  let userId = UUID(uuidString: authPreferences.lastUserId) else {
+                return
+            }
+            targetUser = storedUsers.first { $0.id == userId && hasStoredToken($0) }
+        case .specificUser:
+            guard authPreferences.autoLoginServerId == server.id.uuidString,
+                  let userId = UUID(uuidString: authPreferences.autoLoginUserId) else {
+                return
+            }
+            targetUser = storedUsers.first { $0.id == userId && hasStoredToken($0) }
+        }
+
+        guard let targetUser else { return }
+
+        didAttemptAutomaticLogin = true
+        authenticate(user: targetUser)
+    }
+
+    private func hasStoredToken(_ user: PrivateUser) -> Bool {
+        guard let token = user.accessToken else { return false }
+        return !token.isEmpty
     }
 
     func authenticate(user: any User) {
