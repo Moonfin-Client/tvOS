@@ -23,7 +23,7 @@ final class UserPreferences {
     static let liveTvDirectPlay = Preference(key: "playback_livetv_direct_play", defaultValue: true)
     static let videoStartDelay = Preference(key: "playback_video_start_delay", defaultValue: 0)
     static let cinemaModeEnabled = Preference(key: "cinema_mode_enabled", defaultValue: true)
-    static let playbackPlayerBackend = Preference(key: "playback_player_backend", defaultValue: PlaybackPlayerBackend.tvvlcKit)
+    static let playbackPlayerBackend = Preference(key: "playback_player_backend", defaultValue: PlaybackPlayerBackend.mpv)
     static let playbackMpvCanaryStage = Preference(key: "playback_mpv_canary_stage", defaultValue: PlaybackMpvCanaryStage.optInProduction)
     static let playbackMpvKillSwitchEnabled = Preference(key: "playback_mpv_kill_switch_enabled", defaultValue: false)
 
@@ -191,7 +191,7 @@ enum PlaybackPlayerBackend: String, StringRepresentableEnum, CaseIterable {
     var displayName: String {
         switch self {
         case .tvvlcKit: return "TVVLCKit"
-        case .mpv: return "MPV (Experimental)"
+        case .mpv: return "MPV"
         }
     }
 

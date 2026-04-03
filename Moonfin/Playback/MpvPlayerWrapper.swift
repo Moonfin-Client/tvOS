@@ -591,7 +591,7 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
 
     static func makePreferredPlayer(defaults: UserDefaults = .standard) -> VLCPlayerWrapper {
         let raw = defaults.string(forKey: UserPreferences.playbackPlayerBackend.key)
-        let requested = PlaybackPlayerBackend(rawValue: raw ?? "") ?? .tvvlcKit
+        let requested = PlaybackPlayerBackend(rawValue: raw ?? "") ?? .mpv
         let active = PlaybackBackendSupport.resolve(for: requested).active
 
         switch active {
