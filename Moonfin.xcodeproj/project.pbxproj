@@ -2011,6 +2011,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2028,6 +2029,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = MoonfinTopShelf/MoonfinTopShelf.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MoonfinTopShelf/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2049,6 +2051,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2191,6 +2194,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = MoonfinTopShelf/MoonfinTopShelf.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
+				ENABLE_DEBUG_DYLIB = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MoonfinTopShelf/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

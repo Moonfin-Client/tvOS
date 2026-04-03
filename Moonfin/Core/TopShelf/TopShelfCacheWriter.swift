@@ -5,7 +5,15 @@ import TVServices
 
 enum TopShelfShared {
     static let appGroupIdentifier = "group.org.moonfin.app"
-    static let defaultsKey = "topshelf.cache.v1"
+    static let cacheFileName = "topshelf_cache.json"
+
+    static var cacheFileURL: URL? {
+        guard let container = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else { return nil }
+        let dir = container.appendingPathComponent("Library/Caches", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent(cacheFileName)
+    }
 }
 
 struct TopShelfCachePayload: Codable {
@@ -13,6 +21,7 @@ struct TopShelfCachePayload: Codable {
         let id: String
         let title: String
         let items: [Item]
+        let landscape: Bool
     }
 
     struct Item: Codable {
@@ -30,74 +39,85 @@ struct TopShelfCachePayload: Codable {
 struct TopShelfCacheWriter {
     private static let maxItemsPerSection = 12
 
-    func write(rows: [HomeRow], imageURL: (ServerItem) -> String?) {
+    func write(
+        rows: [HomeRow],
+        posterImageURL: (ServerItem) -> String?,
+        thumbImageURL: (ServerItem) -> String?
+    ) {
         var sections: [TopShelfCachePayload.Section] = []
 
         if let continueWatchingRow = rows.first(where: { $0.rowType == .continueWatching }) {
             let items = continueWatchingRow.items
                 .prefix(Self.maxItemsPerSection)
-                .compactMap { makeItem(from: $0, imageURL: imageURL($0)) }
+                .compactMap { makeItem(from: $0, imageURL: thumbImageURL($0)) }
             if !items.isEmpty {
                 sections.append(
                     TopShelfCachePayload.Section(
                         id: "continue_watching",
                         title: continueWatchingRow.title,
-                        items: items
+                        items: items,
+                        landscape: true
                     )
                 )
             }
         }
 
-        if let latestRow = rows.first(where: {
-            if case .latestMedia = $0.rowType { return true }
-            return false
-        }) {
+        for latestRow in rows.filter({ if case .latestMedia = $0.rowType { return true }; return false }) {
             let items = latestRow.items
                 .prefix(Self.maxItemsPerSection)
-                .compactMap { makeItem(from: $0, imageURL: imageURL($0)) }
+                .compactMap { makeItem(from: $0, imageURL: posterImageURL($0)) }
             if !items.isEmpty {
                 sections.append(
                     TopShelfCachePayload.Section(
-                        id: "latest_media",
+                        id: "latest_\(latestRow.id)",
                         title: latestRow.title,
-                        items: items
+                        items: items,
+                        landscape: false
                     )
                 )
             }
         }
 
-        guard let defaults = UserDefaults(suiteName: TopShelfShared.appGroupIdentifier) else { return }
+        guard let fileURL = TopShelfShared.cacheFileURL else { return }
 
         if sections.isEmpty {
-            defaults.removeObject(forKey: TopShelfShared.defaultsKey)
+            try? FileManager.default.removeItem(at: fileURL)
             notifyTopShelfChanged()
             return
         }
 
         let payload = TopShelfCachePayload(sections: sections)
         let encoder = JSONEncoder()
-        guard let encoded = try? encoder.encode(payload) else { return }
-        defaults.set(encoded, forKey: TopShelfShared.defaultsKey)
+        do {
+            let encoded = try encoder.encode(payload)
+            try encoded.write(to: fileURL, options: .atomic)
+        } catch {
+            return
+        }
         notifyTopShelfChanged()
     }
 
     private func notifyTopShelfChanged() {
 #if canImport(TVServices)
-        TVTopShelfContentProvider.topShelfContentDidChange()
+        DispatchQueue.main.async {
+            TVTopShelfContentProvider.topShelfContentDidChange()
+            NotificationCenter.default.post(
+                name: .TVTopShelfItemsDidChange,
+                object: nil
+            )
+        }
 #endif
     }
 
     private func makeItem(from item: ServerItem, imageURL: String?) -> TopShelfCachePayload.Item? {
-        guard let displayURL = deepLink(for: item), let playURL = deepLink(for: item) else {
-            return nil
-        }
-
+        guard let link = deepLink(for: item) else { return nil }
+        let linkString = link.absoluteString
         return TopShelfCachePayload.Item(
             id: item.id,
             title: item.name,
             imageURL: imageURL,
-            displayURL: displayURL.absoluteString,
-            playURL: playURL.absoluteString,
+            displayURL: linkString,
+            playURL: linkString,
             playbackProgress: playbackProgress(for: item)
         )
     }

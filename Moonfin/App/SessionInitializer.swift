@@ -5,6 +5,7 @@ final class SessionInitializer: ObservableObject {
     @Published var restoredServerId: UUID?
 
     private let container: AppContainer
+    private var pendingDestination: Destination?
 
     init(container: AppContainer) {
         self.container = container
@@ -21,6 +22,7 @@ final class SessionInitializer: ObservableObject {
             if container.sessionRepository.isAuthenticated,
                container.userRepository.currentUser.value != nil {
                 router.switchFlow(to: .main)
+                processPendingDestinationIfPossible(router: router)
                 configureCrashReportEndpoint()
                 container.serverConnectionMonitor.startMonitoring()
                 Task { await container.pluginSyncService.syncOnStartup() }
@@ -72,29 +74,47 @@ final class SessionInitializer: ObservableObject {
     }
 
     func handleDeepLink(url: URL, router: NavigationRouter) {
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
-              components.scheme == "moonfin" else { return }
+        guard let destination = destination(from: url) else { return }
+        navigateOrQueue(destination: destination, router: router)
+    }
 
-        guard container.sessionRepository.isAuthenticated else { return }
+    func handleUserActivity(_ activity: NSUserActivity, router: NavigationRouter) {
+        guard let parsed = SpotlightIndexer.parseUserActivity(activity) else { return }
+        navigateOrQueue(destination: .itemDetails(itemId: parsed.itemId, serverId: parsed.serverId), router: router)
+    }
+
+    private func destination(from url: URL) -> Destination? {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true),
+              components.scheme == "moonfin" else { return nil }
 
         switch components.host {
         case "search":
             let query = components.queryItems?.first(where: { $0.name == "query" })?.value
-            router.navigate(to: .search(query: query))
+            return .search(query: query)
         case "item":
-            if let itemId = components.queryItems?.first(where: { $0.name == "id" })?.value {
-                let serverId = components.queryItems?.first(where: { $0.name == "serverId" })?.value
-                router.navigate(to: .itemDetails(itemId: itemId, serverId: serverId))
-            }
+            guard let itemId = components.queryItems?.first(where: { $0.name == "id" })?.value else { return nil }
+            let serverId = components.queryItems?.first(where: { $0.name == "serverId" })?.value
+            return .itemDetails(itemId: itemId, serverId: serverId)
         default:
-            break
+            return nil
         }
     }
 
-    func handleUserActivity(_ activity: NSUserActivity, router: NavigationRouter) {
-        guard container.sessionRepository.isAuthenticated else { return }
-        guard let parsed = SpotlightIndexer.parseUserActivity(activity) else { return }
-        router.navigate(to: .itemDetails(itemId: parsed.itemId, serverId: parsed.serverId))
+    private func navigateOrQueue(destination: Destination, router: NavigationRouter) {
+        guard container.sessionRepository.isAuthenticated,
+              container.userRepository.currentUser.value != nil else {
+            pendingDestination = destination
+            return
+        }
+        router.navigate(to: destination)
+    }
+
+    private func processPendingDestinationIfPossible(router: NavigationRouter) {
+        guard let destination = pendingDestination,
+              container.sessionRepository.isAuthenticated,
+              container.userRepository.currentUser.value != nil else { return }
+        pendingDestination = nil
+        router.navigate(to: destination)
     }
 
     private func configureCrashReportEndpoint() {

@@ -660,9 +660,11 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func refreshTopShelfCache() {
-        topShelfCacheWriter.write(rows: rows) { [weak self] item in
-            self?.thumbImageUrl(for: item)
-        }
+        topShelfCacheWriter.write(
+            rows: rows,
+            posterImageURL: { [weak self] item in self?.posterImageUrl(for: item) },
+            thumbImageURL: { [weak self] item in self?.thumbImageUrl(for: item) }
+        )
     }
 
     private func filterHomeRowItems(_ items: [ServerItem], for rowType: HomeRowType) -> [ServerItem] {

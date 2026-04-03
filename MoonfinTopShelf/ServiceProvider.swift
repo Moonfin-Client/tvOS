@@ -2,7 +2,15 @@ import TVServices
 
 private enum TopShelfShared {
     static let appGroupIdentifier = "group.org.moonfin.app"
-    static let defaultsKey = "topshelf.cache.v1"
+    static let cacheFileName = "topshelf_cache.json"
+
+    static var cacheFileURL: URL? {
+        guard let container = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) else { return nil }
+        return container
+            .appendingPathComponent("Library/Caches", isDirectory: true)
+            .appendingPathComponent(cacheFileName)
+    }
 }
 
 private struct TopShelfCachePayload: Codable {
@@ -10,6 +18,7 @@ private struct TopShelfCachePayload: Codable {
         let id: String
         let title: String
         let items: [Item]
+        let landscape: Bool?
     }
 
     struct Item: Codable {
@@ -25,25 +34,25 @@ private struct TopShelfCachePayload: Codable {
 }
 
 final class ServiceProvider: TVTopShelfContentProvider {
-    override func loadTopShelfContent(completionHandler: @escaping (TVTopShelfContent?) -> Void) {
-        guard
-            let defaults = UserDefaults(suiteName: TopShelfShared.appGroupIdentifier),
-            let data = defaults.data(forKey: TopShelfShared.defaultsKey)
-        else {
-            completionHandler(nil)
-            return
-        }
 
-        guard let payload = try? JSONDecoder().decode(TopShelfCachePayload.self, from: data) else {
-            completionHandler(nil)
-            return
-        }
+    override func loadTopShelfContent(completionHandler: @escaping ((any TVTopShelfContent)?) -> Void) {
+        completionHandler(buildContent())
+    }
+
+    private func buildContent() -> TVTopShelfContent? {
+        guard let fileURL = TopShelfShared.cacheFileURL else { return nil }
+
+        guard let data = try? Data(contentsOf: fileURL) else { return nil }
+
+        guard let payload = try? JSONDecoder().decode(TopShelfCachePayload.self, from: data) else { return nil }
 
         let sections: [TVTopShelfItemCollection<TVTopShelfSectionedItem>] = payload.sections.compactMap { section in
+            let shape: TVTopShelfSectionedItem.ImageShape = (section.landscape == true) ? .hdtv : .poster
+
             let items: [TVTopShelfSectionedItem] = section.items.compactMap { cachedItem in
                 let item = TVTopShelfSectionedItem(identifier: cachedItem.id)
                 item.title = cachedItem.title
-                item.imageShape = .poster
+                item.imageShape = shape
 
                 if let progress = cachedItem.playbackProgress {
                     item.playbackProgress = max(0, min(1, progress))
@@ -71,11 +80,8 @@ final class ServiceProvider: TVTopShelfContentProvider {
             return collection
         }
 
-        guard !sections.isEmpty else {
-            completionHandler(nil)
-            return
-        }
+        guard !sections.isEmpty else { return nil }
 
-        completionHandler(TVTopShelfSectionedContent(sections: sections))
+        return TVTopShelfSectionedContent(sections: sections)
     }
 }

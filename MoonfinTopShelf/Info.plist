@@ -26,17 +26,8 @@
 	</array>
 	<key>NSExtension</key>
 	<dict>
-		<key>NSExtensionAttributes</key>
-		<dict>
-			<key>TVExtensionProtocols</key>
-			<array>
-				<string>TVTopShelfContentProvider</string>
-			</array>
-			<key>TVTopShelfContentStyle</key>
-			<string>TVTopShelfSectionedContent</string>
-		</dict>
 		<key>NSExtensionPointIdentifier</key>
-		<string>com.apple.tv-services</string>
+		<string>com.apple.tv-top-shelf</string>
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).ServiceProvider</string>
 	</dict>
