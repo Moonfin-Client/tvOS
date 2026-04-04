@@ -332,7 +332,7 @@ final class PlaybackManager: ObservableObject {
             player.configurePreferredBackendForNextPlayback(stream.preferredBackend, fallbackReason: stream.fallbackReason)
 
             let startSeconds: TimeInterval
-            if entry.startPositionTicks > 0 && stream.playMethod != .transcode {
+            if entry.startPositionTicks > 0 {
                 let raw = TimeInterval(entry.startPositionTicks) / 10_000_000
                 let preRoll = TimeInterval(preferences[UserPreferences.resumeSubtractDuration])
                 startSeconds = max(raw - preRoll, 0)

@@ -32,6 +32,7 @@ struct ItemDetailsView: View {
     @State private var restoreContentFocusTrigger: Int = 0
     @State private var restoredEpisodeId: String?
     @State private var restoreEpisodeFocusTrigger: Int = 0
+    private let routeServerId: String?
 
     private func focusTrace(_ message: String) {
         _ = message
@@ -90,6 +91,7 @@ struct ItemDetailsView: View {
             itemId: itemId,
             serverId: serverId
         ))
+        self.routeServerId = serverId
         self.sidebarEntryToken = sidebarEntryToken
         self.sidebarHandoffToken = sidebarHandoffToken
     }
@@ -278,6 +280,12 @@ struct ItemDetailsView: View {
     }
 
     private func subtitleClient() -> MediaServerClient? {
+        if let routeServerId,
+           let parsedId = UUID.from(rawId: routeServerId),
+           let server = container.serverRepository.storedServers.value.first(where: { $0.id == parsedId }) {
+            return container.serverClientFactory.client(for: server)
+        }
+
         guard let server = container.serverRepository.currentServer.value else { return nil }
         return container.serverClientFactory.client(for: server)
     }
@@ -875,7 +883,11 @@ struct ItemDetailsView: View {
         case .series:
             if let nextUpEpisode = viewModel.nextUp.first {
                 items = [nextUpEpisode]
-                startPosition = TimeInterval(nextUpEpisode.userData?.playbackPositionTicks ?? 0) / 10_000_000
+                if positionTicks > 0 {
+                    startPosition = TimeInterval(nextUpEpisode.userData?.playbackPositionTicks ?? 0) / 10_000_000
+                } else {
+                    startPosition = 0
+                }
             } else {
                 return
             }
@@ -897,6 +909,7 @@ struct ItemDetailsView: View {
                 items: items,
                 startIndex: startIndex,
                 startPosition: startPosition,
+                serverId: routeServerId ?? item.effectiveServerId,
                 audioStreamIndex: selectedAudioIndex,
                 subtitleStreamIndex: selectedSubtitleIndex,
                 mediaSourceIndex: selectedMediaSourceIndex > 0 ? selectedMediaSourceIndex : nil
@@ -911,6 +924,7 @@ struct ItemDetailsView: View {
             await container.playbackCoordinator.startAudioPlayback(
                 items: items,
                 startIndex: startIndex,
+                serverId: routeServerId,
                 shuffle: shuffle
             )
             router.navigate(to: .nowPlaying)
@@ -918,7 +932,15 @@ struct ItemDetailsView: View {
     }
 
     private func playTrailer(item: ServerItem) async {
-        guard let server = container.serverRepository.currentServer.value else { return }
+        let server: Server?
+        if let routeServerId,
+           let parsedId = UUID.from(rawId: routeServerId) {
+            server = container.serverRepository.storedServers.value.first(where: { $0.id == parsedId })
+        } else {
+            server = container.serverRepository.currentServer.value
+        }
+
+        guard let server else { return }
         let client = container.serverClientFactory.client(for: server)
         _ = await TrailerPlaybackHelper.playTrailer(
             for: item,

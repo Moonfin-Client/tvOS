@@ -90,6 +90,8 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
     private var tracksNeedRefresh = true
     private var audioSessionActive = false
     private var pendingSeekPosition: TimeInterval?
+    private var pendingSeekAttempts = 0
+    private let maxPendingSeekAttempts = 40
 
     private(set) var playbackBackendIdentifier: String = "tvvlckit"
     private(set) var playbackFallbackReason: String?
@@ -128,7 +130,7 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
         } catch {}
     }
 
-    func play(url: URL) async {
+    func play(url: URL, startPosition: TimeInterval = 0) async {
         stop()
         configureAudioSession()
 
@@ -150,6 +152,8 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
         mediaPlayer = player
         tracksNeedRefresh = true
         state = .opening
+        pendingSeekPosition = startPosition > 0 ? startPosition : nil
+        pendingSeekAttempts = 0
 
         player.play()
     }
@@ -158,11 +162,7 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
         guard let url = URL(string: streamUrl) else {
             return
         }
-        await play(url: url)
-        // Set AFTER play(url:) so stop() inside it doesn't clear the pending seek
-        if startPosition > 0 {
-            pendingSeekPosition = startPosition
-        }
+        await play(url: url, startPosition: startPosition)
     }
 
     func pause() {
@@ -194,6 +194,7 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
         tracksNeedRefresh = true
         audioSessionActive = false
         pendingSeekPosition = nil
+        pendingSeekAttempts = 0
     }
 
     func seek(to seconds: TimeInterval) {
@@ -320,6 +321,8 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
             refreshTracks()
         }
 
+        applyPendingSeekIfReady(player)
+
         let newTime = TimeInterval(player.time.intValue) / 1000.0
         let newDuration = TimeInterval(abs(player.media?.length.intValue ?? 0)) / 1000.0
         let newPosition = player.position
@@ -327,6 +330,29 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
         if abs(newTime - currentTime) > 0.01 { currentTime = newTime }
         if abs(newDuration - duration) > 0.1 { duration = newDuration }
         if abs(newPosition - position) > 0.0001 { position = newPosition }
+    }
+
+    private func applyPendingSeekIfReady(_ player: VLCMediaPlayer) {
+        guard let seekPos = pendingSeekPosition else { return }
+        guard player.state != .opening else { return }
+
+        let ms = Int32(seekPos * 1000)
+        let currentMs = player.time.intValue
+
+        if abs(currentMs - ms) <= 1500 {
+            pendingSeekPosition = nil
+            pendingSeekAttempts = 0
+            return
+        }
+
+        guard pendingSeekAttempts < maxPendingSeekAttempts else {
+            pendingSeekPosition = nil
+            pendingSeekAttempts = 0
+            return
+        }
+
+        pendingSeekAttempts += 1
+        player.time = VLCTime(int: ms)
     }
 }
 
@@ -350,11 +376,7 @@ extension VLCPlayerWrapper: VLCMediaPlayerDelegate {
                 newState = .playing
                 tracksNeedRefresh = true
                 refreshTracks()
-                if let seekPos = pendingSeekPosition, player.isSeekable {
-                    pendingSeekPosition = nil
-                    let ms = Int32(seekPos * 1000)
-                    player.time = VLCTime(int: ms)
-                }
+                applyPendingSeekIfReady(player)
             case .paused:
                 newState = .paused
             case .stopped:

@@ -113,6 +113,12 @@ final class ItemDetailViewModel: ObservableObject {
     }
 
     private var client: MediaServerClient? {
+        if let serverId,
+           let parsedId = UUID.from(rawId: serverId),
+           let server = container.serverRepository.storedServers.value.first(where: { $0.id == parsedId }) {
+            return container.serverClientFactory.client(for: server)
+        }
+
         guard let server = container.serverRepository.currentServer.value else { return nil }
         return container.serverClientFactory.client(for: server)
     }

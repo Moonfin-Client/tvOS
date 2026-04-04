@@ -63,7 +63,7 @@ final class MultiServerRepository: MultiServerRepositoryProtocol {
                let token = user.accessToken, !token.isEmpty {
                 userId = cs.userId
                 accessToken = token
-            } else if let (uid, token) = firstUserWithToken(storeUsers) {
+            } else if let (uid, token) = mostRecentUserWithToken(storeUsers) {
                 userId = uid
                 accessToken = token
             } else {
@@ -236,12 +236,26 @@ final class MultiServerRepository: MultiServerRepositoryProtocol {
         return Array(sorted.prefix(limit))
     }
 
-    private func firstUserWithToken(_ users: [String: AuthenticationStore.AuthStoreUser]) -> (UUID, String)? {
+    private func mostRecentUserWithToken(_ users: [String: AuthenticationStore.AuthStoreUser]) -> (UUID, String)? {
+        var bestMatch: (uuid: UUID, token: String, lastUsed: Date)?
+
         for (key, user) in users {
-            if let token = user.accessToken, !token.isEmpty, let uuid = UUID(uuidString: key) {
-                return (uuid, token)
+            guard let token = user.accessToken,
+                  !token.isEmpty,
+                  let uuid = UUID(uuidString: key) else {
+                continue
+            }
+
+            let candidateLastUsed = user.lastUsed ?? .distantPast
+            if let currentBest = bestMatch {
+                if candidateLastUsed > currentBest.lastUsed {
+                    bestMatch = (uuid, token, candidateLastUsed)
+                }
+            } else {
+                bestMatch = (uuid, token, candidateLastUsed)
             }
         }
-        return nil
+
+        return bestMatch.map { ($0.uuid, $0.token) }
     }
 }

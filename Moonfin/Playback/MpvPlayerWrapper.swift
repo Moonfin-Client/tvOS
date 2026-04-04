@@ -26,6 +26,11 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
     private var mpvSubtitleOptions: [String: Any] = [:]
     private var forcedBackendForNextPlayback: PlaybackBackendDirective?
     private var forcedFallbackReasonForNextPlayback: String?
+    private var pendingMpvStartPosition: TimeInterval?
+    private var pendingMpvSeekAttempts = 0
+    private var pendingMpvSeekLastAttemptAt: CFAbsoluteTime = 0
+    private let maxPendingMpvSeekAttempts = 60
+    private let minPendingMpvSeekRetryInterval: CFAbsoluteTime = 0.2
 
     override init() {
         super.init()
@@ -48,17 +53,17 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
         videoSurface.attach(to: view)
     }
 
-    override func play(url: URL) async {
+    override func play(url: URL, startPosition: TimeInterval = 0) async {
         if forcedBackendForNextPlayback == .tvvlcKit {
             usesMpvBackend = false
             updatePlaybackBackend(identifier: PlaybackBackendDirective.tvvlcKit.rawValue, fallbackReason: forcedFallbackReasonForNextPlayback)
             forcedBackendForNextPlayback = nil
             forcedFallbackReasonForNextPlayback = nil
-            await super.play(url: url)
+            await super.play(url: url, startPosition: startPosition)
             return
         }
 
-        if startMpvPlayback(url.absoluteString, startPosition: nil) {
+        if startMpvPlayback(url.absoluteString, startPosition: startPosition > 0 ? startPosition : nil) {
             forcedBackendForNextPlayback = nil
             forcedFallbackReasonForNextPlayback = nil
             return
@@ -66,7 +71,7 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
 
         usesMpvBackend = false
         updatePlaybackBackend(identifier: PlaybackBackendDirective.tvvlcKit.rawValue, fallbackReason: "mpv_load_failed")
-        await super.play(url: url)
+        await super.play(url: url, startPosition: startPosition)
     }
 
     override func configureSubtitleAppearance(_ options: [String: Any]) {
@@ -127,6 +132,9 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
             _ = engine?.stopPlayback()
             stopRenderScheduler()
             usesMpvBackend = false
+            pendingMpvStartPosition = nil
+            pendingMpvSeekAttempts = 0
+            pendingMpvSeekLastAttemptAt = 0
             state = .idle
             position = 0
             currentTime = 0
@@ -210,10 +218,11 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
     }
 
     private func startMpvPlayback(_ url: String, startPosition: TimeInterval?) -> Bool {
+        pendingMpvStartPosition = (startPosition ?? 0) > 0 ? startPosition : nil
+        pendingMpvSeekAttempts = 0
+        pendingMpvSeekLastAttemptAt = 0
+
         if ensureEngine(profile: .metal), engine?.loadFile(url) == true {
-            if let startPosition, startPosition > 0 {
-                _ = engine?.seekAbsolute(startPosition)
-            }
             engine?.applySubtitleStyle(mpvSubtitleOptions)
             usesMpvBackend = true
             updatePlaybackBackend(identifier: "mpv", fallbackReason: nil)
@@ -225,9 +234,6 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
         resetEngine()
 
         if ensureEngine(profile: .software), engine?.loadFile(url) == true {
-            if let startPosition, startPosition > 0 {
-                _ = engine?.seekAbsolute(startPosition)
-            }
             engine?.applySubtitleStyle(mpvSubtitleOptions)
             usesMpvBackend = true
             updatePlaybackBackend(identifier: "mpv", fallbackReason: "metal_renderer_unavailable")
@@ -237,7 +243,40 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
         }
 
         resetEngine()
+        pendingMpvStartPosition = nil
+        pendingMpvSeekAttempts = 0
+        pendingMpvSeekLastAttemptAt = 0
         return false
+    }
+
+    private func applyPendingMpvStartPositionIfNeeded() {
+        guard usesMpvBackend, let startPosition = pendingMpvStartPosition, startPosition > 0, let engine else { return }
+
+        if let current = engine.getDoubleProperty("time-pos"), current.isFinite {
+            if abs(current - startPosition) <= 1.5 {
+                pendingMpvStartPosition = nil
+                pendingMpvSeekAttempts = 0
+                pendingMpvSeekLastAttemptAt = 0
+                return
+            }
+        }
+
+        guard pendingMpvSeekAttempts < maxPendingMpvSeekAttempts else {
+            pendingMpvStartPosition = nil
+            pendingMpvSeekAttempts = 0
+            pendingMpvSeekLastAttemptAt = 0
+            return
+        }
+
+        let now = CFAbsoluteTimeGetCurrent()
+        guard pendingMpvSeekLastAttemptAt == 0 || (now - pendingMpvSeekLastAttemptAt) >= minPendingMpvSeekRetryInterval else {
+            return
+        }
+
+        if engine.seekAbsolute(startPosition) {
+            pendingMpvSeekAttempts += 1
+            pendingMpvSeekLastAttemptAt = now
+        }
     }
 
     private func ensureEngine(profile: MPVRenderProfile) -> Bool {
@@ -316,8 +355,10 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
             state = .opening
         case MPVEngine.EventID.fileLoaded.rawValue:
             state = .buffering(0.25)
+            applyPendingMpvStartPositionIfNeeded()
             refreshTracksFromMpv()
         case MPVEngine.EventID.playbackRestart.rawValue:
+            applyPendingMpvStartPositionIfNeeded()
             state = .playing
             refreshTracksFromMpv()
         case MPVEngine.EventID.endFile.rawValue:
@@ -401,6 +442,8 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
 
     private func updateFromMpvProperties() {
         guard let engine else { return }
+
+        applyPendingMpvStartPositionIfNeeded()
 
         if let pos = engine.getDoubleProperty("time-pos") {
             currentTime = pos

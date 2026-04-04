@@ -17,6 +17,16 @@ final class PlaybackCoordinator: ObservableObject {
         return serverClientFactory.client(for: server)
     }
 
+    private func client(for serverId: String?) -> MediaServerClient? {
+        if let serverId,
+           let parsedId = UUID.from(rawId: serverId),
+           let server = serverRepository.storedServers.value.first(where: { $0.id == parsedId }) {
+            return serverClientFactory.client(for: server)
+        }
+
+        return client
+    }
+
     init(
         serverClientFactory: MediaServerClientFactory,
         serverRepository: ServerRepositoryProtocol,
@@ -31,13 +41,15 @@ final class PlaybackCoordinator: ObservableObject {
         items: [ServerItem],
         startIndex: Int = 0,
         startPosition: TimeInterval = 0,
+        serverId: String? = nil,
         audioStreamIndex: Int? = nil,
         subtitleStreamIndex: Int? = nil,
         mediaSourceIndex: Int? = nil
     ) async {
         await stopAudioPlayback()
         await stopVideoPlayback(shouldClearLiveTvContext: false)
-        guard let client else { return }
+        let startItem = items.indices.contains(startIndex) ? items[startIndex] : nil
+        guard let client = client(for: serverId ?? startItem?.effectiveServerId) else { return }
         let player = makePlayer()
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
         videoPlayerManager = manager
@@ -77,10 +89,11 @@ final class PlaybackCoordinator: ObservableObject {
         }
     }
 
-    func startAudioPlayback(items: [ServerItem], startIndex: Int = 0, shuffle: Bool = false) async {
+    func startAudioPlayback(items: [ServerItem], startIndex: Int = 0, serverId: String? = nil, shuffle: Bool = false) async {
         await stopVideoPlayback()
         await stopAudioPlayback()
-        guard let client else { return }
+        let startItem = items.indices.contains(startIndex) ? items[startIndex] : nil
+        guard let client = client(for: serverId ?? startItem?.effectiveServerId) else { return }
         let player = makePlayer()
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
         let audio = AudioManager(playbackManager: manager, client: client)
