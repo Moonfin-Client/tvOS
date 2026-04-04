@@ -234,12 +234,13 @@ struct MainNavigationView: View {
             contentHandoffResetTask?.cancel()
         }
         .onChange(of: router.path.count) { count in
-            guard count == 0 else { return }
-            if router.hideNavbar {
-                router.resetNavbarVisibility()
-            }
-            if suppressTopNavbarInRows {
-                suppressTopNavbarInRows = false
+            if count == 0 {
+                DispatchQueue.main.async {
+                    router.resetNavbarVisibility()
+                    if suppressTopNavbarInRows {
+                        suppressTopNavbarInRows = false
+                    }
+                }
             }
         }
         .onMoveCommand { _ in
