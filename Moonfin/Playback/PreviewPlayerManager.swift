@@ -23,7 +23,7 @@ final class PreviewPlayerManager: ObservableObject {
     @Published private(set) var isVisible: Bool = false
 
     /// The shared player. Cards observe this directly via VLCPlayerView.
-    let player = VLCPlayerWrapper()
+    let player = MpvPlayerWrapper.makePlayer()
 
     // MARK: - Private state
 
@@ -254,10 +254,10 @@ final class PreviewPlayerManager: ObservableObject {
         let request = PlaybackInfoRequest(
             userId: client.userId ?? "",
             startTimeTicks: episode.userData?.playbackPositionTicks,
-            enableDirectPlay: true,
-            enableDirectStream: true,
+            enableDirectPlay: false,
+            enableDirectStream: false,
             enableTranscoding: true,
-            allowVideoStreamCopy: true,
+            allowVideoStreamCopy: false,
             allowAudioStreamCopy: true
         )
         let playbackResult = try await client.playbackApi.getPlaybackInfo(itemId: episode.id, request: request)
@@ -285,24 +285,10 @@ final class PreviewPlayerManager: ObservableObject {
             if let url = URL(string: urlString) { return url }
         }
 
-        let params = StreamParams(
-            userId: client.userId ?? "",
-            mediaSourceId: mediaSource.id,
-            playSessionId: playbackResult.playSessionId ?? "",
-            liveStreamId: mediaSource.liveStreamId,
-            isLiveTv: false,
-            deviceId: UIDevice.current.identifierForVendor?.uuidString ?? "preview",
-            container: "mp4",
-            audioStreamIndex: nil,
-            subtitleStreamIndex: nil,
-            maxStreamingBitrate: nil,
-            startTimeTicks: nil
+        throw NSError(
+            domain: "PreviewPlayer",
+            code: -4,
+            userInfo: [NSLocalizedDescriptionKey: "No transcoding preview stream available"]
         )
-        let urlString = client.playbackApi.getVideoStreamUrl(itemId: episode.id, params: params)
-        guard let url = URL(string: urlString) else {
-            throw NSError(domain: "PreviewPlayer", code: -2,
-                          userInfo: [NSLocalizedDescriptionKey: "Invalid stream URL"])
-        }
-        return url
     }
 }

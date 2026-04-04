@@ -103,10 +103,6 @@ final class PlaybackCoordinator: ObservableObject {
             localKillSwitch: killSwitch
         )
 
-        if resolution.fallbackReason == .mpvNotLinked && resolution.active != requested {
-            preferences[UserPreferences.playbackPlayerBackend] = resolution.active
-        }
-
         switch resolution.active {
         case .tvvlcKit:
             let player = VLCPlayerWrapper()

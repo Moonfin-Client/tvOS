@@ -171,7 +171,7 @@ struct VideoDynamicRangePolicy {
             return (.mpv, nil, diagnostics)
         case .hdr10:
             if capabilities.supportsHDR10 {
-                return (.mpv, nil, diagnostics)
+                return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
             }
             if canTranscode {
                 return (.mpv, "hdr10_requires_transcode", diagnostics)
@@ -179,7 +179,7 @@ struct VideoDynamicRangePolicy {
             return (.tvvlcKit, "mpv_hdr10_uncertain", diagnostics)
         case .hlg:
             if capabilities.supportsHLG {
-                return (.mpv, nil, diagnostics)
+                return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
             }
             if canTranscode {
                 return (.mpv, "hlg_requires_transcode", diagnostics)
@@ -187,22 +187,19 @@ struct VideoDynamicRangePolicy {
             return (.tvvlcKit, "mpv_hlg_uncertain", diagnostics)
         case .hdr10Plus:
             if capabilities.supportsHDR10Plus {
-                return (.mpv, nil, diagnostics)
+                return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
             }
             if canTranscode {
                 return (.mpv, "hdr10_plus_requires_transcode", diagnostics)
             }
             return (.tvvlcKit, "mpv_hdr10_plus_uncertain", diagnostics)
         case .dolbyVision:
-            if capabilities.supportsDolbyVision {
-                return (.mpv, nil, diagnostics)
-            }
             if canTranscode {
                 return (.mpv, "dolby_vision_requires_transcode", diagnostics)
             }
             return (.tvvlcKit, "mpv_dolby_vision_uncertain", diagnostics)
         case .unknown:
-            return (.tvvlcKit, "mpv_dynamic_range_unknown", diagnostics)
+            return (.mpv, "mpv_dynamic_range_unknown", diagnostics)
         }
     }
 }

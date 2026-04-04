@@ -73,7 +73,7 @@ struct HomeScreen: View {
         onRequestTopNavbarHomeFocus: (() -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
-        _inlineTrailerPlayer = StateObject(wrappedValue: MpvPlayerWrapper.makePreferredPlayer())
+        _inlineTrailerPlayer = StateObject(wrappedValue: MpvPlayerWrapper.makePlayer())
         self.mainNamespace = mainNamespace
         self._contentReady = contentReady
         self.sidebarEntryToken = sidebarEntryToken

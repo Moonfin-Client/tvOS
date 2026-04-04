@@ -1,8 +1,6 @@
 import Foundation
 import SwiftUI
-#if canImport(MPVKit)
-import MPVKit
-#endif
+import Darwin
 
 final class UserPreferences {
     private var store: PreferenceStore
@@ -230,11 +228,7 @@ enum PlaybackBackendSupport {
     }
 
     static var isMpvLinked: Bool {
-#if canImport(MPVKit)
-        true
-#else
-        false
-#endif
+        dlsym(UnsafeMutableRawPointer(bitPattern: -2), "mpv_create") != nil
     }
 
     static func resolve(for requested: PlaybackPlayerBackend) -> Resolution {

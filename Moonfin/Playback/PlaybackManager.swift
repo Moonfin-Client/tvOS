@@ -330,12 +330,6 @@ final class PlaybackManager: ObservableObject {
             lastEvaluatedSecond = -1
 
             player.configurePreferredBackendForNextPlayback(stream.preferredBackend, fallbackReason: stream.fallbackReason)
-            if !stream.diagnostics.isEmpty {
-                let details = stream.diagnostics.joined(separator: ",")
-                logger.info(
-                    "video_range_decision range=\(stream.dynamicRange.rawValue, privacy: .public) preferred_backend=\(stream.preferredBackend.rawValue, privacy: .public) fallback_reason=\((stream.fallbackReason ?? "none"), privacy: .public) diagnostics=\(details, privacy: .public)"
-                )
-            }
 
             let startSeconds: TimeInterval
             if entry.startPositionTicks > 0 && stream.playMethod != .transcode {
@@ -531,7 +525,7 @@ final class PlaybackManager: ObservableObject {
 
     private func reportPlaybackProgress() async {
         guard let entry = currentEntry, let stream = currentStreamInfo else { return }
-        let ticks = Int64(player.currentTime * 10_000_000)
+        let ticks = Int64(player.snapshotPlaybackPosition() * 10_000_000)
         let reportedTracks = resolveReportedTrackIndexes(entry: entry, stream: stream)
         let report = PlaybackProgressReport(
             itemId: entry.item.id,
@@ -581,7 +575,7 @@ final class PlaybackManager: ObservableObject {
 
     private func reportPlaybackStopped(failed: Bool) async {
         guard let entry = currentEntry, let stream = currentStreamInfo else { return }
-        let ticks = Int64(player.currentTime * 10_000_000)
+        let ticks = Int64(player.snapshotPlaybackPosition() * 10_000_000)
         let report = PlaybackStopReport(
             itemId: entry.item.id,
             playSessionId: stream.playSessionId,

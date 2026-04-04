@@ -66,17 +66,17 @@ struct VLCTrack: Identifiable, Equatable {
 
 @MainActor
 class VLCPlayerWrapper: NSObject, ObservableObject {
-    @Published internal(set) var state: VLCPlayerState = .idle
-    @Published internal(set) var position: Float = 0
-    @Published internal(set) var currentTime: TimeInterval = 0
-    @Published internal(set) var duration: TimeInterval = 0
-    @Published internal(set) var bufferProgress: Float = 0
+    @Published var state: VLCPlayerState = .idle
+    @Published var position: Float = 0
+    @Published var currentTime: TimeInterval = 0
+    @Published var duration: TimeInterval = 0
+    @Published var bufferProgress: Float = 0
     @Published private(set) var isSeekable: Bool = false
-    @Published internal(set) var audioTracks: [VLCTrack] = []
-    @Published internal(set) var subtitleTracks: [VLCTrack] = []
-    @Published internal(set) var currentAudioTrackIndex: Int32 = -1
-    @Published internal(set) var currentSubtitleTrackIndex: Int32 = -1
-    @Published internal(set) var rate: Float = 1.0
+    @Published var audioTracks: [VLCTrack] = []
+    @Published var subtitleTracks: [VLCTrack] = []
+    @Published var currentAudioTrackIndex: Int32 = -1
+    @Published var currentSubtitleTrackIndex: Int32 = -1
+    @Published var rate: Float = 1.0
     @Published private(set) var zoomMode: ZoomMode = .fit
 
     private(set) var mediaPlayer: VLCMediaPlayer?
@@ -180,9 +180,9 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
     }
 
     func stop() {
-        mediaPlayer?.stop()
-        mediaPlayer?.delegate = nil
         mediaPlayer?.drawable = nil
+        mediaPlayer?.delegate = nil
+        mediaPlayer?.stop()
         mediaPlayer = nil
         state = .idle
         position = 0
@@ -262,6 +262,15 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
 
     func cycleZoomMode() {
         setZoomMode(zoomMode.next)
+    }
+
+    func snapshotPlaybackPosition() -> TimeInterval {
+        guard let player = mediaPlayer else { return currentTime }
+        let preciseSeconds = TimeInterval(player.time.intValue) / 1000.0
+        if preciseSeconds.isFinite, preciseSeconds >= 0 {
+            return preciseSeconds
+        }
+        return currentTime
     }
 
     private func refreshTracks() {

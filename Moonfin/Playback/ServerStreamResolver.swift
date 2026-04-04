@@ -207,7 +207,7 @@ final class ServerStreamResolver: StreamResolver {
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
                 dynamicRange: dynamicRange,
-                preferredBackend: .mpv,
+                preferredBackend: preferredBackend,
                 fallbackReason: fallbackReason,
                 diagnostics: combinedDiagnostics + [isLiveTv ? "resolved_via=livetv_transcode" : "resolved_via=transcode"]
             )

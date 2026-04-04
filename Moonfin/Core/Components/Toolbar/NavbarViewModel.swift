@@ -1,6 +1,5 @@
 import SwiftUI
 import Combine
-import os
 
 @MainActor
 final class NavbarViewModel: ObservableObject {
@@ -23,7 +22,6 @@ final class NavbarViewModel: ObservableObject {
 
     private let container: AppContainer
     private var cancellables = Set<AnyCancellable>()
-    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "NavbarViewModel")
 
     init(container: AppContainer) {
         self.container = container
@@ -101,21 +99,39 @@ final class NavbarViewModel: ObservableObject {
             let authenticated = isSeerrAuthenticated(seerrPrefs, available: available)
             let showInNavigationPref = seerrPrefs[SeerrPreferences.showInNavigation]
             let showInToolbarPref = seerrPrefs[SeerrPreferences.showInToolbar]
-            showSeerrInNavigation = enabled && available && authenticated && showInNavigationPref
-            showSeerrInToolbar = enabled && available && authenticated && showInToolbarPref
+            let nextShowInNavigation = enabled && available && authenticated && showInNavigationPref
+            let nextShowInToolbar = enabled && available && authenticated && showInToolbarPref
 
             let variant = SeerrPreferences.normalizeVariant(seerrPrefs[SeerrPreferences.moonfinVariant])
             let dn = seerrPrefs[SeerrPreferences.moonfinDisplayName]
-            seerrDisplayName = dn.isEmpty ? (variant == "seerr" ? "Seerr" : "Jellyseerr") : dn
-            seerrIconName = variant == "seerr" ? "seerr" : "jellyseerr"
+            let nextDisplayName = dn.isEmpty ? (variant == "seerr" ? "Seerr" : "Jellyseerr") : dn
+            let nextIconName = variant == "seerr" ? "seerr" : "jellyseerr"
 
-            logger.debug("seerr visibility: available=\(available, privacy: .public) auth=\(authenticated, privacy: .public) show=[nav:\(self.showSeerrInNavigation, privacy: .public) toolbar:\(self.showSeerrInToolbar, privacy: .public)] variant=\(variant, privacy: .public)")
+            if showSeerrInNavigation != nextShowInNavigation {
+                showSeerrInNavigation = nextShowInNavigation
+            }
+            if showSeerrInToolbar != nextShowInToolbar {
+                showSeerrInToolbar = nextShowInToolbar
+            }
+            if seerrDisplayName != nextDisplayName {
+                seerrDisplayName = nextDisplayName
+            }
+            if seerrIconName != nextIconName {
+                seerrIconName = nextIconName
+            }
         } else {
-            showSeerrInNavigation = false
-            showSeerrInToolbar = false
-            seerrDisplayName = "Seerr"
-            seerrIconName = "seerr"
-            logger.debug("seerr visibility unavailable: preferences not found for current user")
+            if showSeerrInNavigation {
+                showSeerrInNavigation = false
+            }
+            if showSeerrInToolbar {
+                showSeerrInToolbar = false
+            }
+            if seerrDisplayName != "Seerr" {
+                seerrDisplayName = "Seerr"
+            }
+            if seerrIconName != "seerr" {
+                seerrIconName = "seerr"
+            }
         }
     }
 

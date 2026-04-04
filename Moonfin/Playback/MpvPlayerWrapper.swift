@@ -285,19 +285,29 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
 
     @objc private func handleRenderTick() {
         guard usesMpvBackend else { return }
-        guard renderUpdatePending else {
-            videoSurface.updateLayout()
-            return
-        }
-        renderUpdatePending = false
-        engine?.drainPendingEvents { [weak self] event in
-            guard let self else { return }
-            Task { @MainActor in
-                self.applyEvent(event)
+        if renderUpdatePending {
+            renderUpdatePending = false
+            engine?.drainPendingEvents { [weak self] event in
+                guard let self else { return }
+                Task { @MainActor in
+                    self.applyEvent(event)
+                }
             }
         }
         updateFromMpvProperties()
         videoSurface.updateLayout()
+    }
+
+    override func snapshotPlaybackPosition() -> TimeInterval {
+        guard usesMpvBackend, let engine else {
+            return super.snapshotPlaybackPosition()
+        }
+
+        if let pos = engine.getDoubleProperty("time-pos"), pos.isFinite, pos >= 0 {
+            return pos
+        }
+
+        return super.snapshotPlaybackPosition()
     }
 
     private func applyEvent(_ event: MPVEngine.Event) {
@@ -778,7 +788,7 @@ private final class MPVEngine {
 
         if let drawableHandle {
             var layerHandle = Int64(bitPattern: drawableHandle)
-            _ = setOption("wid", format: Format.int64, value: &layerHandle, on: created)
+            _ = setInt64Option("wid", value: &layerHandle, on: created)
         }
 
         _ = setOptionString("subs-match-os-language", value: "yes", on: created)
@@ -786,6 +796,15 @@ private final class MPVEngine {
         _ = setOptionString("vo", value: "gpu-next", on: created)
         _ = setOptionString("gpu-api", value: "vulkan", on: created)
         _ = setOptionString("gpu-context", value: "moltenvk", on: created)
+        _ = setOptionString("hwdec-codecs", value: "all", on: created)
+        _ = setOptionString("target-colorspace-hint", value: "auto", on: created)
+        _ = setOptionString("target-colorspace-hint-mode", value: "auto", on: created)
+        _ = setOptionString("tone-mapping", value: "auto", on: created)
+        _ = setOptionString("hdr-compute-peak", value: "yes", on: created)
+        _ = setOptionString("allow-delayed-peak-detect", value: "yes", on: created)
+        _ = setOptionString("deband", value: "yes", on: created)
+        _ = setOptionString("temporal-dither", value: "yes", on: created)
+        _ = setOptionString("vd-lavc-film-grain", value: "gpu", on: created)
         _ = setOptionString("video-rotate", value: "no", on: created)
 
         switch renderProfile {
@@ -1046,10 +1065,10 @@ private final class MPVEngine {
         return result >= 0
     }
 
-    private func setOption<T>(_ name: String, format: Int32, value: inout T, on handle: UnsafeMutableRawPointer?) -> Bool {
+    private func setInt64Option(_ name: String, value: inout Int64, on handle: UnsafeMutableRawPointer?) -> Bool {
         guard let handle, let setOptionFn else { return false }
         let result = name.withCString { cName in
-            setOptionFn(handle, cName, format, &value)
+            setOptionFn(handle, cName, Format.int64, &value)
         }
         return result >= 0
     }
