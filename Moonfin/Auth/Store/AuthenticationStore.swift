@@ -54,10 +54,32 @@ final class AuthenticationStore {
     }
 
     init() {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
-        self.fileURL = appSupport.appendingPathComponent("authentication_store.json")
+        let resolvedDir = Self.resolveWritableDirectory()
+        self.fileURL = resolvedDir.appendingPathComponent("authentication_store.json")
         self.data = Self.load(from: fileURL)
+    }
+
+    private static func resolveWritableDirectory() -> URL {
+        let fm = FileManager.default
+        let candidates = [
+            fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
+            fm.urls(for: .cachesDirectory, in: .userDomainMask).first,
+            Optional(fm.temporaryDirectory)
+        ].compactMap { $0 }
+
+        for dir in candidates {
+            do {
+                try fm.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
+                let probe = dir.appendingPathComponent(".auth_probe")
+                try Data([0x01]).write(to: probe)
+                try? fm.removeItem(at: probe)
+                return dir
+            } catch {
+                continue
+            }
+        }
+
+        return URL(fileURLWithPath: NSTemporaryDirectory())
     }
 
     private static func load(from url: URL) -> AuthStoreData {
@@ -70,7 +92,11 @@ final class AuthenticationStore {
 
     private func save() {
         guard let encoded = try? JSONEncoder().encode(data) else { return }
-        try? encoded.write(to: fileURL)
+        do {
+            try encoded.write(to: fileURL, options: .atomic)
+        } catch {
+            try? encoded.write(to: fileURL)
+        }
     }
 
     func getServers() -> [String: AuthStoreServer] { data.servers }

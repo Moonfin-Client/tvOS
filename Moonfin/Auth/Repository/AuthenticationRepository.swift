@@ -172,6 +172,9 @@ final class AuthenticationRepository: AuthenticationRepositoryProtocol {
     }
 
     private func authenticateFinish(server: Server, userId: UUID, userInfo: ServerUser, accessToken: String) {
+        authPreferences.lastServerId = server.id.uuidString
+        authPreferences.lastUserId = userId.uuidString
+
         let existing = authenticationStore.getUser(server.id, userId)
 
         let updated = AuthenticationStore.AuthStoreUser(
@@ -180,7 +183,7 @@ final class AuthenticationRepository: AuthenticationRepositoryProtocol {
             imageTag: userInfo.primaryImageTag ?? existing?.imageTag,
             accessToken: accessToken
         )
-        authenticationStore.putUser(server.id, userId, updated)
+        _ = authenticationStore.putUser(server.id, userId, updated)
 
         if var storeServer = authenticationStore.getServer(server.id) {
             storeServer.lastUsed = Date()

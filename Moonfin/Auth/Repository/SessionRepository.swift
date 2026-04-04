@@ -99,7 +99,9 @@ final class SessionRepository: SessionRepositoryProtocol {
     @discardableResult
     private func setCurrentSession(_ session: Session?) async -> Bool {
         if let session {
-            if currentSession.value?.userId == session.userId { return true }
+            if currentSession.value?.userId == session.userId {
+                return true
+            }
 
             authPreferences.lastServerId = session.serverId.uuidString
             authPreferences.lastUserId = session.userId.uuidString
@@ -132,11 +134,43 @@ final class SessionRepository: SessionRepositoryProtocol {
     }
 
     private func createLastUserSession() -> Session? {
-        guard let serverId = UUID(uuidString: authPreferences.lastServerId),
-              let userId = UUID(uuidString: authPreferences.lastUserId) else {
-            return nil
+        if let serverId = UUID(uuidString: authPreferences.lastServerId),
+           let userId = UUID(uuidString: authPreferences.lastUserId),
+           let session = createUserSession(serverId: serverId, userId: userId) {
+            return session
         }
-        return createUserSession(serverId: serverId, userId: userId)
+
+        return createMostRecentStoredSession()
+    }
+
+    private func createMostRecentStoredSession() -> Session? {
+        let servers = authenticationStore.getServers()
+        var bestMatch: (session: Session, date: Date)?
+
+        for (serverIdRaw, serverEntry) in servers {
+            guard let serverId = UUID(uuidString: serverIdRaw) else { continue }
+
+            for (userIdRaw, userEntry) in serverEntry.users {
+                guard let userId = UUID(uuidString: userIdRaw),
+                      let token = userEntry.accessToken,
+                      !token.isEmpty else {
+                    continue
+                }
+
+                let candidate = Session(userId: userId, serverId: serverId, accessToken: token)
+                let candidateDate = userEntry.lastUsed ?? serverEntry.lastUsed ?? .distantPast
+
+                if let currentBest = bestMatch {
+                    if candidateDate > currentBest.date {
+                        bestMatch = (candidate, candidateDate)
+                    }
+                } else {
+                    bestMatch = (candidate, candidateDate)
+                }
+            }
+        }
+
+        return bestMatch?.session
     }
 
     private func createUserSession(serverId: UUID, userId: UUID) -> Session? {
