@@ -272,8 +272,8 @@ private struct SearchResultCard: View {
     private var isCircle: Bool { item.type == .person }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: onTap) {
                 ZStack(alignment: .bottomLeading) {
                     cardImage
                     cardOverlays
@@ -287,26 +287,26 @@ private struct SearchResultCard: View {
                         .stroke(Color.white, lineWidth: isFocused ? 3 : 0)
                         .animation(.easeInOut(duration: 0.15), value: isFocused)
                 )
-
-                Text(item.name)
-                    .font(.captionXs)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-
-                if !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.6))
-                        .lineLimit(1)
-                }
             }
-            .frame(width: cardWidth)
+            .buttonStyle(SearchCardButtonStyle(isFocused: isFocused))
+            .focused($isFocused)
+            .onChange(of: isFocused) { focused in
+                if focused { onFocused() }
+            }
+
+            Text(item.name)
+                .font(.captionXs)
+                .foregroundColor(.white)
+                .lineLimit(1)
+
+            if !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(1)
+            }
         }
-        .buttonStyle(SearchCardButtonStyle(isFocused: isFocused))
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-            if focused { onFocused() }
-        }
+        .frame(width: cardWidth)
     }
 
     @ViewBuilder
@@ -472,8 +472,8 @@ private struct SeerrSearchCard: View {
     private let cardHeight: CGFloat = 225
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: onTap) {
                 Group {
                     if let path = item.posterPath, let url = URL(string: SeerrImageUrl.poster(path)) {
                         AsyncImage(url: url) { phase in
@@ -494,21 +494,21 @@ private struct SeerrSearchCard: View {
                         .stroke(Color.white, lineWidth: isFocused ? 3 : 0)
                         .animation(.easeInOut(duration: 0.15), value: isFocused)
                 )
-
-                Text(item.displayTitle)
-                    .font(.captionXs)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-
-                Text(item.mediaType == "tv" ? "TV Show" : "Movie")
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.6))
-                    .lineLimit(1)
             }
-            .frame(width: cardWidth)
+            .buttonStyle(SearchCardButtonStyle(isFocused: isFocused))
+            .focused($isFocused)
+
+            Text(item.displayTitle)
+                .font(.captionXs)
+                .foregroundColor(.white)
+                .lineLimit(1)
+
+            Text(item.mediaType == "tv" ? "TV Show" : "Movie")
+                .font(.system(size: 11))
+                .foregroundColor(.white.opacity(0.6))
+                .lineLimit(1)
         }
-        .buttonStyle(SearchCardButtonStyle(isFocused: isFocused))
-        .focused($isFocused)
+        .frame(width: cardWidth)
     }
 
     private var placeholder: some View {

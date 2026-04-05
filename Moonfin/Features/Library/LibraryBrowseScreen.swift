@@ -292,8 +292,8 @@ private struct LibraryPosterCard: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 5) {
+            Button(action: onTap) {
                 ZStack(alignment: .bottom) {
                     posterImage
                         .frame(width: cardWidth, height: cardHeight)
@@ -332,28 +332,30 @@ private struct LibraryPosterCard: View {
                 .frame(width: cardWidth, height: cardHeight)
                 .background(Color.white.opacity(0.06))
                 .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
+                .padding(6)
+            }
+            .buttonStyle(LibraryCardButtonStyle(isFocused: isFocused, focusBorderColor: theme.focusBorder.color))
+            .focused($isFocused)
+            .onChange(of: isFocused) { focused in
+                if focused { onFocused(item) }
+            }
 
-                if showLabels {
-                    Text(item.name)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white)
+            if showLabels {
+                Text(item.name)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .padding(.top, 2)
+                    .frame(width: cardWidth, alignment: .leading)
+
+                if !metadata.isEmpty {
+                    Text(metadata)
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.5))
                         .lineLimit(1)
-
-                    if !metadata.isEmpty {
-                        Text(metadata)
-                            .font(.system(size: 11))
-                            .foregroundColor(.white.opacity(0.5))
-                            .lineLimit(1)
-                    }
+                        .frame(width: cardWidth, alignment: .leading)
                 }
             }
-            .frame(width: cardWidth)
-            .padding(6)
-        }
-        .buttonStyle(LibraryCardButtonStyle(isFocused: isFocused, focusBorderColor: theme.focusBorder.color))
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-            if focused { onFocused(item) }
         }
     }
 

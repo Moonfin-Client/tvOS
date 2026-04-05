@@ -270,34 +270,34 @@ private struct FolderItemCard: View {
     private var cardHeight: CGFloat { cardWidth / aspectRatio }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: onTap) {
                 ZStack(alignment: .bottomLeading) {
                     cardImage
                     cardOverlays
                 }
                 .frame(width: cardWidth, height: cardHeight)
                 .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
-
-                Text(item.name)
-                    .font(.captionXs)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-
-                if !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.6))
-                        .lineLimit(1)
-                }
             }
-            .frame(width: cardWidth)
+            .buttonStyle(FolderCardButtonStyle(isFocused: isFocused))
+            .focused($isFocused)
+            .onChange(of: isFocused) { focused in
+                if focused { onFocused() }
+            }
+
+            Text(item.name)
+                .font(.captionXs)
+                .foregroundColor(.white)
+                .lineLimit(1)
+
+            if !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.6))
+                    .lineLimit(1)
+            }
         }
-        .buttonStyle(FolderCardButtonStyle(isFocused: isFocused))
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-            if focused { onFocused() }
-        }
+        .frame(width: cardWidth)
     }
 
     @ViewBuilder

@@ -39,8 +39,8 @@ struct FocusableItemCard: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+            Button(action: onSelect) {
                 ZStack {
                     CachedImage(urlString: imageUrl)
                         .frame(width: cardWidth, height: cardHeight)
@@ -54,23 +54,23 @@ struct FocusableItemCard: View {
                     RoundedRectangle(cornerRadius: RadiusTokens.small)
                         .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
                 )
+            }
+            .buttonStyle(CleanButtonStyle())
+            .focused($isFocused)
+            .onChange(of: isFocused) { focused in
+                if focused {
+                    onFocused?()
+                }
+            }
+            .scaleEffect(isFocused ? 1.05 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: isFocused)
 
-                Text(item.name)
-                    .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground)
-                    .lineLimit(1)
-                    .frame(width: cardWidth, alignment: .leading)
-            }
+            Text(item.name)
+                .font(.bodySm)
+                .foregroundColor(theme.colorScheme.onBackground)
+                .lineLimit(1)
+                .frame(width: cardWidth, alignment: .leading)
         }
-        .buttonStyle(CleanButtonStyle())
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-            if focused {
-                onFocused?()
-            }
-        }
-        .scaleEffect(isFocused ? 1.05 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }
 
