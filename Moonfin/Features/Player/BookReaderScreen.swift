@@ -2,7 +2,6 @@ import SwiftUI
 
 struct BookReaderScreen: View {
     @StateObject private var viewModel: BookReaderViewModel
-    @EnvironmentObject private var router: NavigationRouter
 
     init(container: AppContainer, itemId: String, serverId: String?) {
         _viewModel = StateObject(wrappedValue: BookReaderViewModel(
@@ -49,13 +48,6 @@ struct BookReaderScreen: View {
         }
         .onPlayPauseCommand {
             viewModel.showOverlay()
-        }
-        .onExitCommand {
-            if !router.path.isEmpty {
-                router.goBack()
-            } else {
-                router.reset(to: .home)
-            }
         }
         .task {
             await viewModel.load()

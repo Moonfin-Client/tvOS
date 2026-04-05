@@ -254,11 +254,6 @@ struct MainNavigationView: View {
                 return
             }
 
-            if !router.path.isEmpty {
-                router.goBack()
-                return
-            }
-
             guard !container.inactivityTracker.isScreensaverVisible,
                   !settingsRouter.isPresented,
                   router.path.isEmpty else { return }
@@ -683,7 +678,6 @@ struct TrailerPlayerScreen: View {
             playbackWatchdogTask?.cancel()
             player.stop()
             nativePlayer?.pause()
-            router.goBack()
         }
     }
 

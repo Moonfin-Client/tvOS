@@ -3,7 +3,6 @@ import SwiftUI
 struct PhotoPlayerScreen: View {
     @StateObject private var viewModel: PhotoPlayerViewModel
     @EnvironmentObject private var theme: MoonfinTheme
-    @EnvironmentObject private var router: NavigationRouter
     @FocusState private var focusedControl: ControlFocus?
 
     enum ControlFocus: Hashable {
@@ -45,13 +44,6 @@ struct PhotoPlayerScreen: View {
             default: break
             }
             viewModel.showOverlay()
-        }
-        .onExitCommand {
-            if !router.path.isEmpty {
-                router.goBack()
-            } else {
-                router.reset(to: .home)
-            }
         }
         .task { await viewModel.load() }
         .onDisappear { viewModel.cleanup() }
