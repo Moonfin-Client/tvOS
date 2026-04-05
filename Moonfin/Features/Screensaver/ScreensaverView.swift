@@ -4,6 +4,7 @@ import NukeUI
 struct ScreensaverView: View {
     @EnvironmentObject var container: AppContainer
     @StateObject private var viewModel: ScreensaverViewModel
+    @FocusState private var dismissSurfaceFocused: Bool
     let onDismiss: () -> Void
 
     init(container: AppContainer, onDismiss: @escaping () -> Void) {
@@ -52,10 +53,18 @@ struct ScreensaverView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(CleanButtonStyle())
+            .focused($dismissSurfaceFocused)
         }
         .ignoresSafeArea()
-        .onAppear { viewModel.start() }
+        .defaultFocus($dismissSurfaceFocused, true)
+        .onAppear {
+            viewModel.start()
+            DispatchQueue.main.async {
+                dismissSurfaceFocused = true
+            }
+        }
         .onDisappear { viewModel.stop() }
+        .onExitCommand { onDismiss() }
         .onMoveCommand { _ in onDismiss() }
         .onPlayPauseCommand { onDismiss() }
     }
