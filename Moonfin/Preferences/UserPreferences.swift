@@ -89,6 +89,7 @@ final class UserPreferences {
     static let subtitlesTextSize = Preference(key: "subtitles_text_size", defaultValue: 24)
     static let subtitlesOffsetPosition = Preference(key: "subtitles_offset_position", defaultValue: 8)
     static let subtitlesDefaultToNone = Preference(key: "subtitles_default_to_none", defaultValue: false)
+    static let subtitlesOverrideASSStyles = Preference(key: "subtitles_override_ass_styles", defaultValue: false)
 
     static let stillWatchingThreshold = Preference(key: "still_watching_threshold", defaultValue: 3)
 

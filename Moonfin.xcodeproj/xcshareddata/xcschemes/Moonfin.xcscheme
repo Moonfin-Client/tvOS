@@ -21,20 +21,6 @@
                ReferencedContainer = "container:Moonfin.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B8C07AD24AD4FBE225476F50"
-               BuildableName = "MoonfinTopShelf.appex"
-               BlueprintName = "MoonfinTopShelf"
-               ReferencedContainer = "container:Moonfin.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

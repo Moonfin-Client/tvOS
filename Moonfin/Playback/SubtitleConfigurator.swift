@@ -38,6 +38,8 @@ struct SubtitleConfigurator {
             options["sub-margin"] = offset * 10
         }
 
+        options["sub-ass-override"] = preferences[UserPreferences.subtitlesOverrideASSStyles] ? "force" : "no"
+
         return options
     }
 

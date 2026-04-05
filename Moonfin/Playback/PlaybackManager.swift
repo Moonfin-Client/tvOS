@@ -40,6 +40,8 @@ final class PlaybackManager: ObservableObject {
     private var startupBeganAt: Date?
     private var startupLatencyMs: Int?
     private var hasSeenFirstPlayingState = false
+    private var dynamicRangeTelemetryEmitted = false
+    private var dynamicRangeTelemetryTask: Task<Void, Never>?
     private var stallCount = 0
     private var terminalOutcome = "stopped"
     private var lastBoundaryProgressReportAt: CFAbsoluteTime = 0
@@ -330,6 +332,12 @@ final class PlaybackManager: ObservableObject {
             lastEvaluatedSecond = -1
 
             player.configurePreferredBackendForNextPlayback(stream.preferredBackend, fallbackReason: stream.fallbackReason)
+            let sinkCapabilities = await MainActor.run { VideoCapabilityDetector.current() }
+            player.configureDynamicRangeIntent(
+                contentRange: stream.dynamicRange,
+                sinkIsHdrCapable: sinkCapabilities.sinkProfile.isHdrCapable
+            )
+            await MainActor.run { DisplayCriteriaManager.shared.apply(stream: stream) }
 
             let startSeconds: TimeInterval
             if entry.startPositionTicks > 0 {
@@ -354,6 +362,9 @@ final class PlaybackManager: ObservableObject {
             startupBeganAt = Date()
             startupLatencyMs = nil
             hasSeenFirstPlayingState = false
+            dynamicRangeTelemetryEmitted = false
+            dynamicRangeTelemetryTask?.cancel()
+            dynamicRangeTelemetryTask = nil
             stallCount = 0
             terminalOutcome = "stopped"
 
@@ -423,6 +434,13 @@ final class PlaybackManager: ObservableObject {
                         if let started = self.startupBeganAt {
                             self.startupLatencyMs = Int(Date().timeIntervalSince(started) * 1000)
                         }
+                        self.dynamicRangeTelemetryTask?.cancel()
+                        self.dynamicRangeTelemetryTask = Task { [weak self] in
+                            try? await Task.sleep(for: .seconds(2))
+                            await MainActor.run {
+                                self?.emitDynamicRangeTelemetryIfNeeded()
+                            }
+                        }
                     }
                     self.playbackState = .playing
                 case .paused:
@@ -465,6 +483,8 @@ final class PlaybackManager: ObservableObject {
         reportingTask = nil
         prefetchTask?.cancel()
         prefetchTask = nil
+        dynamicRangeTelemetryTask?.cancel()
+        dynamicRangeTelemetryTask = nil
         prefetchedStreamInfo = nil
         prefetchedItemId = nil
         segmentHandler.reset()
@@ -474,6 +494,7 @@ final class PlaybackManager: ObservableObject {
         emitPlaybackTelemetry(failed: failed)
         currentStreamInfo = nil
         player.stop()
+        await MainActor.run { DisplayCriteriaManager.shared.reset() }
     }
 
     private func emitPlaybackTelemetry(failed: Bool) {
@@ -491,6 +512,29 @@ final class PlaybackManager: ObservableObject {
 
         logger.info(
             "playback_telemetry backend=\(backend, privacy: .public) fallback_reason=\(fallbackReason, privacy: .public) startup_latency_ms=\(startup) stall_count=\(self.stallCount) terminal_outcome=\(self.terminalOutcome, privacy: .public)"
+        )
+    }
+
+    private func emitDynamicRangeTelemetryIfNeeded() {
+        guard !dynamicRangeTelemetryEmitted else { return }
+        guard preferences[UserPreferences.telemetryEnabled] else { return }
+        guard let stream = currentStreamInfo else { return }
+
+        dynamicRangeTelemetryEmitted = true
+
+        let streamTelemetry = [
+            "stream_dynamic_range=\(stream.dynamicRange.rawValue)",
+            "stream_play_method=\(stream.playMethod.rawValue)",
+            "stream_backend=\(stream.preferredBackend.rawValue)",
+            "stream_fallback_reason=\(stream.fallbackReason ?? "none")"
+        ]
+
+        let outputTelemetry = player.dynamicRangeTelemetrySnapshot()
+            .map { "\($0.key)=\($0.value)" }
+            .sorted()
+
+        logger.info(
+            "playback_dynamic_range \((streamTelemetry + outputTelemetry).joined(separator: " "), privacy: .public)"
         )
     }
 

@@ -128,7 +128,8 @@ final class ServerStreamResolver: StreamResolver {
             requestedBackend: requestedBackend,
             dynamicRange: dynamicRange,
             capabilities: capabilities,
-            canTranscode: source.transcodingUrl != nil
+            canTranscode: source.transcodingUrl != nil,
+            videoStream: videoStream
         )
 
         let preferredBackend: PlaybackBackendDirective =
@@ -137,9 +138,9 @@ final class ServerStreamResolver: StreamResolver {
         let combinedDiagnostics = videoPolicy.diagnostics + audioPolicy.diagnostics
 
         let forceTranscodeReasons: Set<String> = [
-            "hdr10_requires_transcode",
-            "hlg_requires_transcode",
-            "hdr10_plus_requires_transcode",
+            "hdr10_requires_tone_mapping",
+            "hlg_requires_tone_mapping",
+            "hdr10_plus_requires_tone_mapping",
             "dolby_vision_requires_transcode",
             "downmix_to_stereo_requires_transcode",
             "truehd_requires_transcode",
@@ -182,6 +183,7 @@ final class ServerStreamResolver: StreamResolver {
                 container: container,
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
+                videoStream: videoStream,
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
                 dynamicRange: dynamicRange,
@@ -204,6 +206,7 @@ final class ServerStreamResolver: StreamResolver {
                 container: container,
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
+                videoStream: videoStream,
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
                 dynamicRange: dynamicRange,
@@ -236,6 +239,7 @@ final class ServerStreamResolver: StreamResolver {
                 container: container,
                 audioStreams: audioStreams,
                 subtitleStreams: subtitleStreams,
+                videoStream: videoStream,
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
                 dynamicRange: .unknown,
@@ -286,6 +290,7 @@ final class ServerStreamResolver: StreamResolver {
             container: "ts",
             audioStreams: [],
             subtitleStreams: [],
+            videoStream: nil,
             defaultAudioStreamIndex: nil,
             defaultSubtitleStreamIndex: nil,
             dynamicRange: .unknown,

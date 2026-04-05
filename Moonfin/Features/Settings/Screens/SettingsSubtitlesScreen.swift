@@ -64,6 +64,13 @@ struct SettingsSubtitlesScreen: View {
                 caption: "Start playback without subtitles",
                 isOn: prefs.binding(for: UserPreferences.subtitlesDefaultToNone)
             )
+
+            SettingsToggleButton(
+                icon: "textformat.alt",
+                heading: "Override ASS Styles",
+                caption: "Apply your style settings to ASS/SSA subtitles",
+                isOn: prefs.binding(for: UserPreferences.subtitlesOverrideASSStyles)
+            )
         }
         .restoresFocus($focusedRoute)
     }

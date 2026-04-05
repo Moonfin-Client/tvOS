@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import AVFoundation
 import Darwin
+import os
 #if canImport(Metal)
 import Metal
 #endif
@@ -14,6 +15,7 @@ import MPVKit
 
 @MainActor
 final class MpvPlayerWrapper: VLCPlayerWrapper {
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "MpvPlayer")
     nonisolated(unsafe) private var lifecycleObservers: [NSObjectProtocol] = []
     private var wasPlayingBeforeBackground = false
     private var wasPlayingBeforeInterruption = false
@@ -23,6 +25,7 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
     private var activeProfile: MPVRenderProfile = .metal
     private var renderUpdatePending = false
     private var renderDisplayLink: CADisplayLink?
+    private var renderTickCounter: UInt = 0
     private var mpvSubtitleOptions: [String: Any] = [:]
     private var forcedBackendForNextPlayback: PlaybackBackendDirective?
     private var forcedFallbackReasonForNextPlayback: String?
@@ -31,6 +34,12 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
     private var pendingMpvSeekLastAttemptAt: CFAbsoluteTime = 0
     private let maxPendingMpvSeekAttempts = 60
     private let minPendingMpvSeekRetryInterval: CFAbsoluteTime = 0.2
+    private var requestedContentRange: VideoDynamicRange = .unknown
+    private var sinkIsHdrCapable = false
+    private var activeToneMappingMode = "auto"
+    private var lastRenderTimestamp: CFAbsoluteTime = 0
+    private var lastWatchdogWarningAt: CFAbsoluteTime = 0
+    private var renderWatchdogTimer: Timer?
 
     override init() {
         super.init()
@@ -107,6 +116,44 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
         if backend == .tvvlcKit {
             updatePlaybackBackend(identifier: backend.rawValue, fallbackReason: fallbackReason)
         }
+    }
+
+    override func configureDynamicRangeIntent(contentRange: VideoDynamicRange, sinkIsHdrCapable: Bool) {
+        requestedContentRange = contentRange
+        self.sinkIsHdrCapable = sinkIsHdrCapable
+
+        guard usesMpvBackend else { return }
+        applyDynamicRangeIntent()
+    }
+
+    override func dynamicRangeTelemetrySnapshot() -> [String: String] {
+        guard usesMpvBackend, let engine else {
+            return [
+                "mpv_dynamic_range_telemetry": "unavailable",
+                "mpv_intent_content_range": requestedContentRange.rawValue,
+                "mpv_intent_sink_hdr_capable": sinkIsHdrCapable ? "true" : "false",
+                "mpv_intent_tone_mapping": activeToneMappingMode
+            ]
+        }
+
+        let inputPrimaries = engine.getStringProperty("video-params/primaries") ?? "unknown"
+        let inputTransfer = engine.getStringProperty("video-params/gamma") ?? "unknown"
+        let outputPrimaries = engine.getStringProperty("video-out-params/primaries") ?? "unknown"
+        let outputTransfer = engine.getStringProperty("video-out-params/gamma") ?? "unknown"
+        let inputPeak = engine.getDoubleProperty("video-params/sig-peak")
+            .map { String(format: "%.2f", $0) } ?? "unknown"
+
+        return [
+            "mpv_dynamic_range_telemetry": "available",
+            "mpv_intent_content_range": requestedContentRange.rawValue,
+            "mpv_intent_sink_hdr_capable": sinkIsHdrCapable ? "true" : "false",
+            "mpv_intent_tone_mapping": activeToneMappingMode,
+            "mpv_input_primaries": inputPrimaries,
+            "mpv_input_transfer": inputTransfer,
+            "mpv_input_sig_peak": inputPeak,
+            "mpv_output_primaries": outputPrimaries,
+            "mpv_output_transfer": outputTransfer
+        ]
     }
 
     override func pause() {
@@ -217,6 +264,53 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
         super.disableSubtitles()
     }
 
+    override func setSubtitleDelay(_ interval: TimeInterval) {
+        if usesMpvBackend {
+            _ = engine?.command(["set", "sub-delay", String(interval)])
+            return
+        }
+        super.setSubtitleDelay(interval)
+    }
+
+    override func setAudioDelay(_ interval: TimeInterval) {
+        if usesMpvBackend {
+            _ = engine?.command(["set", "audio-delay", String(interval)])
+            return
+        }
+        super.setAudioDelay(interval)
+    }
+
+    override func addSubtitle(url: URL) {
+        if usesMpvBackend {
+            _ = engine?.command(["sub-add", url.absoluteString])
+            return
+        }
+        super.addSubtitle(url: url)
+    }
+
+    override func setZoomMode(_ mode: ZoomMode) {
+        if usesMpvBackend {
+            switch mode {
+            case .fit:
+                _ = engine?.command(["set", "video-aspect-override", "-1"])
+                _ = engine?.command(["set", "panscan", "0"])
+            case .autoCrop:
+                _ = engine?.command(["set", "video-aspect-override", "-1"])
+                _ = engine?.command(["set", "panscan", "1.0"])
+            case .stretch:
+                _ = engine?.command(["set", "video-aspect-override", "16:9"])
+                _ = engine?.command(["set", "panscan", "0"])
+            }
+            zoomMode = mode
+            return
+        }
+        super.setZoomMode(mode)
+    }
+
+    override func cycleZoomMode() {
+        setZoomMode(zoomMode.next)
+    }
+
     private func startMpvPlayback(_ url: String, startPosition: TimeInterval?) -> Bool {
         pendingMpvStartPosition = (startPosition ?? 0) > 0 ? startPosition : nil
         pendingMpvSeekAttempts = 0
@@ -224,6 +318,7 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
 
         if ensureEngine(profile: .metal), engine?.loadFile(url) == true {
             engine?.applySubtitleStyle(mpvSubtitleOptions)
+            applyDynamicRangeIntent()
             usesMpvBackend = true
             updatePlaybackBackend(identifier: "mpv", fallbackReason: nil)
             state = .opening
@@ -231,12 +326,15 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
             return true
         }
 
+        let metalError = engine?.lastInitError
         resetEngine()
 
         if ensureEngine(profile: .software), engine?.loadFile(url) == true {
             engine?.applySubtitleStyle(mpvSubtitleOptions)
+            applyDynamicRangeIntent()
             usesMpvBackend = true
-            updatePlaybackBackend(identifier: "mpv", fallbackReason: "metal_renderer_unavailable")
+            let reason = metalError.map { "metal_renderer_unavailable:\($0)" } ?? "metal_renderer_unavailable"
+            updatePlaybackBackend(identifier: "mpv", fallbackReason: reason)
             state = .opening
             startRenderScheduler()
             return true
@@ -309,17 +407,64 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
         engine = nil
     }
 
+    private func applyDynamicRangeIntent() {
+        guard let engine else { return }
+
+        let isHdrContent: Bool = {
+            switch requestedContentRange {
+            case .hdr10, .hlg, .hdr10Plus, .dolbyVision:
+                return true
+            case .sdr, .unknown:
+                return false
+            }
+        }()
+
+        if isHdrContent && sinkIsHdrCapable {
+            activeToneMappingMode = "clip"
+            _ = engine.setRuntimeOption("tone-mapping", value: "clip")
+            _ = engine.setRuntimeOption("hdr-compute-peak", value: "no")
+        } else if isHdrContent {
+            activeToneMappingMode = "bt.2390"
+            _ = engine.setRuntimeOption("tone-mapping", value: "bt.2390")
+            _ = engine.setRuntimeOption("hdr-compute-peak", value: "yes")
+        } else {
+            activeToneMappingMode = "auto"
+            _ = engine.setRuntimeOption("tone-mapping", value: "auto")
+            _ = engine.setRuntimeOption("hdr-compute-peak", value: "yes")
+        }
+    }
+
     private func startRenderScheduler() {
         stopRenderScheduler()
+        renderTickCounter = 0
+        lastRenderTimestamp = CFAbsoluteTimeGetCurrent()
+        lastWatchdogWarningAt = 0
         let link = CADisplayLink(target: self, selector: #selector(handleRenderTick))
         link.add(to: .main, forMode: .common)
         renderDisplayLink = link
+        renderWatchdogTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkRenderWatchdog()
+            }
+        }
     }
 
     private func stopRenderScheduler() {
         renderDisplayLink?.invalidate()
         renderDisplayLink = nil
+        renderWatchdogTimer?.invalidate()
+        renderWatchdogTimer = nil
         renderUpdatePending = false
+    }
+
+    private func checkRenderWatchdog() {
+        guard usesMpvBackend, state == .playing else { return }
+        let now = CFAbsoluteTimeGetCurrent()
+        let elapsed = now - lastRenderTimestamp
+        if elapsed > 2, now - lastWatchdogWarningAt > 15 {
+            lastWatchdogWarningAt = now
+            logger.warning("render_watchdog stall detected: no render update for \(String(format: "%.1f", elapsed))s")
+        }
     }
 
     @objc private func handleRenderTick() {
@@ -328,12 +473,14 @@ final class MpvPlayerWrapper: VLCPlayerWrapper {
             renderUpdatePending = false
             engine?.drainPendingEvents { [weak self] event in
                 guard let self else { return }
-                Task { @MainActor in
-                    self.applyEvent(event)
-                }
+                self.applyEvent(event)
             }
+            lastRenderTimestamp = CFAbsoluteTimeGetCurrent()
         }
-        updateFromMpvProperties()
+        renderTickCounter &+= 1
+        if renderTickCounter % 30 == 0 {
+            updateFromMpvProperties()
+        }
         videoSurface.updateLayout()
     }
 
@@ -790,6 +937,8 @@ private final class MPVEngine {
     private typealias MPVGetPropertyFn = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?, Int32, UnsafeMutableRawPointer?) -> Int32
     private typealias MPVWaitEventFn = @convention(c) (UnsafeMutableRawPointer?, Double) -> UnsafeMutableRawPointer?
     private typealias MPVObservePropertyFn = @convention(c) (UnsafeMutableRawPointer?, UInt64, UnsafePointer<CChar>?, Int32) -> Int32
+    private typealias MPVSetPropertyStringFn = @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> Int32
+    private typealias MPVErrorStringFn = @convention(c) (Int32) -> UnsafePointer<CChar>?
 
     private enum Format {
         static let string: Int32 = 1
@@ -808,11 +957,14 @@ private final class MPVEngine {
     private let getPropertyFn: MPVGetPropertyFn?
     private let waitEventFn: MPVWaitEventFn?
     private let observePropertyFn: MPVObservePropertyFn?
+    private let setPropertyStringFn: MPVSetPropertyStringFn?
+    private let errorStringFn: MPVErrorStringFn?
 
     private var handle: UnsafeMutableRawPointer?
     private var wakeupHandler: (() -> Void)?
 
     var isReady: Bool { handle != nil }
+    private(set) var lastInitError: String?
 
     init(renderProfile: MPVRenderProfile, drawableHandle: UInt64?, updateHandler: @escaping () -> Void) {
         createFn = Self.resolveSymbol("mpv_create", as: MPVCreateFn.self)
@@ -825,6 +977,8 @@ private final class MPVEngine {
         getPropertyFn = Self.resolveSymbol("mpv_get_property", as: MPVGetPropertyFn.self)
         waitEventFn = Self.resolveSymbol("mpv_wait_event", as: MPVWaitEventFn.self)
         observePropertyFn = Self.resolveSymbol("mpv_observe_property", as: MPVObservePropertyFn.self)
+        setPropertyStringFn = Self.resolveSymbol("mpv_set_property_string", as: MPVSetPropertyStringFn.self)
+        errorStringFn = Self.resolveSymbol("mpv_error_string", as: MPVErrorStringFn.self)
 
         guard let createFn, let initializeFn else { return }
         let created = createFn()
@@ -850,6 +1004,11 @@ private final class MPVEngine {
         _ = setOptionString("vd-lavc-film-grain", value: "gpu", on: created)
         _ = setOptionString("video-rotate", value: "no", on: created)
 
+        _ = setOptionString("demuxer-max-bytes", value: "250MiB", on: created)
+        _ = setOptionString("demuxer-max-back-bytes", value: "75MiB", on: created)
+        _ = setOptionString("cache", value: "yes", on: created)
+        _ = setOptionString("cache-secs", value: "120", on: created)
+
         switch renderProfile {
         case .metal:
             _ = setOptionString("hwdec", value: "videotoolbox", on: created)
@@ -858,7 +1017,11 @@ private final class MPVEngine {
             _ = setOptionString("gpu-sw", value: "yes", on: created)
         }
 
-        guard initializeFn(created) >= 0 else {
+        let initResult = initializeFn(created)
+        guard initResult >= 0 else {
+            if let errorStringFn, let cStr = errorStringFn(initResult) {
+                lastInitError = String(cString: cStr)
+            }
             terminateDestroyFn?(created)
             return
         }
@@ -910,16 +1073,58 @@ private final class MPVEngine {
         command(["set", "sid", "no"])
     }
 
+    func setRuntimeOption(_ name: String, value: String) -> Bool {
+        guard let handle, let setPropertyStringFn else { return false }
+        let result = name.withCString { cName in
+            value.withCString { cValue in
+                setPropertyStringFn(handle, cName, cValue)
+            }
+        }
+        return result >= 0
+    }
+
     func applySubtitleStyle(_ options: [String: Any]) {
         let mappings: [(String, String)] = [
             ("freetype-rel-fontsize", "sub-font-size"),
-            ("sub-margin", "sub-margin-y")
+            ("sub-margin", "sub-margin-y"),
+            ("freetype-outline-thickness", "sub-border-size")
         ]
 
         for (sourceKey, targetKey) in mappings {
             guard let value = options[sourceKey] else { continue }
             _ = setOptionString(targetKey, value: String(describing: value), on: handle)
         }
+
+        if let color = options["freetype-color"] as? Int {
+            _ = setOptionString("sub-color", value: vlcColorToMpv(color, alpha: 255), on: handle)
+        }
+
+        if let outlineColor = options["freetype-outline-color"] as? Int {
+            _ = setOptionString("sub-border-color", value: vlcColorToMpv(outlineColor, alpha: 255), on: handle)
+        }
+
+        let bgOpacity = options["freetype-background-opacity"] as? Int ?? 0
+        if let bgColor = options["freetype-background-color"] as? Int {
+            _ = setOptionString("sub-back-color", value: vlcColorToMpv(bgColor, alpha: bgOpacity), on: handle)
+        } else {
+            _ = setOptionString("sub-back-color", value: vlcColorToMpv(0, alpha: bgOpacity), on: handle)
+        }
+
+        if let bold = options["freetype-bold"] as? Bool {
+            _ = setOptionString("sub-bold", value: bold ? "yes" : "no", on: handle)
+        }
+
+        if let assOverride = options["sub-ass-override"] as? String {
+            _ = setOptionString("sub-ass-override", value: assOverride, on: handle)
+        }
+    }
+
+    private func vlcColorToMpv(_ rgb: Int, alpha: Int) -> String {
+        let r = (rgb >> 16) & 0xFF
+        let g = (rgb >> 8) & 0xFF
+        let b = rgb & 0xFF
+        let a = min(max(alpha, 0), 255)
+        return String(format: "#%02X%02X%02X%02X", a, r, g, b)
     }
 
     func getDoubleProperty(_ name: String) -> Double? {
@@ -1086,7 +1291,7 @@ private final class MPVEngine {
         owner.wakeupHandler?()
     }
 
-    private func command(_ args: [String]) -> Bool {
+    fileprivate func command(_ args: [String]) -> Bool {
         guard let handle, let commandFn else { return false }
 
         let cArgs = args.map { strdup($0) }

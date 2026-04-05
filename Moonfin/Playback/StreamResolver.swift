@@ -35,6 +35,7 @@ struct StreamInfo {
     let container: String
     let audioStreams: [ServerMediaStream]
     let subtitleStreams: [ServerMediaStream]
+    let videoStream: ServerMediaStream?
     let defaultAudioStreamIndex: Int?
     let defaultSubtitleStreamIndex: Int?
     let dynamicRange: VideoDynamicRange

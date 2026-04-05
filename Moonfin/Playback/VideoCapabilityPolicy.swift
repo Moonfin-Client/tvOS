@@ -16,6 +16,16 @@ struct VideoCapabilityDetector {
         let supportsHLG: Bool
         let supportsHDR10Plus: Bool
         let supportsDolbyVision: Bool
+        let sinkProfile: SinkProfile
+        let diagnostics: [String]
+    }
+
+    struct SinkProfile {
+        let screenLabel: String
+        let displayGamut: String
+        let currentMode: String
+        let maximumFramesPerSecond: Int
+        let isHdrCapable: Bool
         let diagnostics: [String]
     }
 
@@ -24,6 +34,7 @@ struct VideoCapabilityDetector {
         let generation = generationForModel(modelIdentifier)
         let os = ProcessInfo.processInfo.operatingSystemVersion
         let osLabel = "\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)"
+        let activeScreen = resolveActiveScreen()
         let connectedScreens = Set(
             UIApplication.shared.connectedScenes
                 .compactMap { ($0 as? UIWindowScene)?.screen }
@@ -64,6 +75,12 @@ struct VideoCapabilityDetector {
             supportsDolbyVision = false
         }
 
+        let sinkProfile = resolveSinkProfile(
+            screen: activeScreen,
+            generation: generation,
+            supportsHDR10: supportsHDR10
+        )
+
         let diagnostics = [
             "os=\(osLabel)",
             "model=\(modelIdentifier)",
@@ -73,7 +90,7 @@ struct VideoCapabilityDetector {
             "hlg=\(supportsHLG)",
             "hdr10_plus=\(supportsHDR10Plus)",
             "dolby_vision=\(supportsDolbyVision)"
-        ]
+        ] + sinkProfile.diagnostics
 
         return Capabilities(
             generation: generation,
@@ -81,6 +98,61 @@ struct VideoCapabilityDetector {
             supportsHLG: supportsHLG,
             supportsHDR10Plus: supportsHDR10Plus,
             supportsDolbyVision: supportsDolbyVision,
+            sinkProfile: sinkProfile,
+            diagnostics: diagnostics
+        )
+    }
+
+    private static func resolveActiveScreen() -> UIScreen {
+        if let sceneScreen = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive })?
+            .screen {
+            return sceneScreen
+        }
+        return UIScreen.main
+    }
+
+    private static func resolveSinkProfile(
+        screen: UIScreen,
+        generation: AppleTVGeneration,
+        supportsHDR10: Bool
+    ) -> SinkProfile {
+        let modeSize = screen.currentMode?.size
+        let modeLabel: String
+        if let modeSize {
+            modeLabel = "\(Int(modeSize.width))x\(Int(modeSize.height))"
+        } else {
+            modeLabel = "unknown"
+        }
+
+        let gamutLabel: String
+        switch screen.traitCollection.displayGamut {
+        case .P3:
+            gamutLabel = "p3"
+        case .SRGB:
+            gamutLabel = "srgb"
+        default:
+            gamutLabel = "unspecified"
+        }
+
+        let isHdrCapable = supportsHDR10 && gamutLabel == "p3"
+
+        let diagnostics = [
+            "sink_screen=\(screen === UIScreen.main ? "main" : "external")",
+            "sink_generation=\(generation.rawValue)",
+            "sink_mode=\(modeLabel)",
+            "sink_gamut=\(gamutLabel)",
+            "sink_max_fps=\(screen.maximumFramesPerSecond)",
+            "sink_hdr_capable=\(isHdrCapable)"
+        ]
+
+        return SinkProfile(
+            screenLabel: screen === UIScreen.main ? "main" : "external",
+            displayGamut: gamutLabel,
+            currentMode: modeLabel,
+            maximumFramesPerSecond: screen.maximumFramesPerSecond,
+            isHdrCapable: isHdrCapable,
             diagnostics: diagnostics
         )
     }
@@ -155,7 +227,8 @@ struct VideoDynamicRangePolicy {
         requestedBackend: PlaybackBackendDirective,
         dynamicRange: VideoDynamicRange,
         capabilities: VideoCapabilityDetector.Capabilities,
-        canTranscode: Bool
+        canTranscode: Bool,
+        videoStream: ServerMediaStream? = nil
     ) -> (backend: PlaybackBackendDirective, reason: String?, diagnostics: [String]) {
         var diagnostics = capabilities.diagnostics
         diagnostics.append("dynamic_range=\(dynamicRange.rawValue)")
@@ -170,36 +243,54 @@ struct VideoDynamicRangePolicy {
         case .sdr:
             return (.mpv, nil, diagnostics)
         case .hdr10:
-            if capabilities.supportsHDR10 {
+            if capabilities.sinkProfile.isHdrCapable {
                 return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
             }
             if canTranscode {
-                return (.mpv, "hdr10_requires_transcode", diagnostics)
+                return (.mpv, "hdr10_requires_tone_mapping", diagnostics)
             }
             return (.tvvlcKit, "mpv_hdr10_uncertain", diagnostics)
         case .hlg:
-            if capabilities.supportsHLG {
+            if capabilities.sinkProfile.isHdrCapable && capabilities.supportsHLG {
                 return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
             }
             if canTranscode {
-                return (.mpv, "hlg_requires_transcode", diagnostics)
+                return (.mpv, "hlg_requires_tone_mapping", diagnostics)
             }
             return (.tvvlcKit, "mpv_hlg_uncertain", diagnostics)
         case .hdr10Plus:
-            if capabilities.supportsHDR10Plus {
+            if capabilities.sinkProfile.isHdrCapable && capabilities.supportsHDR10Plus {
                 return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
             }
             if canTranscode {
-                return (.mpv, "hdr10_plus_requires_transcode", diagnostics)
+                return (.mpv, "hdr10_plus_requires_tone_mapping", diagnostics)
             }
             return (.tvvlcKit, "mpv_hdr10_plus_uncertain", diagnostics)
         case .dolbyVision:
-            if canTranscode {
+            if isDolbyVisionProfile5(videoStream: videoStream) {
+                return (.tvvlcKit, "dolby_vision_profile5_prefer_vlc", diagnostics)
+            }
+            if capabilities.sinkProfile.isHdrCapable && canTranscode {
                 return (.mpv, "dolby_vision_requires_transcode", diagnostics)
             }
             return (.tvvlcKit, "mpv_dolby_vision_uncertain", diagnostics)
         case .unknown:
             return (.mpv, "mpv_dynamic_range_unknown", diagnostics)
         }
+    }
+
+    private static func isDolbyVisionProfile5(videoStream: ServerMediaStream?) -> Bool {
+        guard let stream = videoStream else { return false }
+        let codec = stream.codec?.lowercased() ?? ""
+        let profile = stream.profile?.lowercased() ?? ""
+        let rangeType = stream.videoRangeType?.lowercased() ?? ""
+        let combined = [codec, profile, rangeType].joined(separator: " ")
+        if combined.contains("dvhe.05") || combined.contains("dvh1.05") {
+            return true
+        }
+        if rangeType == "dovi" && !combined.contains("hdr10") {
+            return true
+        }
+        return false
     }
 }

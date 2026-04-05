@@ -77,7 +77,7 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
     @Published var currentAudioTrackIndex: Int32 = -1
     @Published var currentSubtitleTrackIndex: Int32 = -1
     @Published var rate: Float = 1.0
-    @Published private(set) var zoomMode: ZoomMode = .fit
+    @Published internal(set) var zoomMode: ZoomMode = .fit
 
     private(set) var mediaPlayer: VLCMediaPlayer?
     private(set) var videoView: UIView?
@@ -105,6 +105,12 @@ class VLCPlayerWrapper: NSObject, ObservableObject {
 
     func configurePreferredBackendForNextPlayback(_ backend: PlaybackBackendDirective, fallbackReason: String?) {
         updatePlaybackBackend(identifier: backend.rawValue, fallbackReason: fallbackReason)
+    }
+
+    func configureDynamicRangeIntent(contentRange: VideoDynamicRange, sinkIsHdrCapable: Bool) {}
+
+    func dynamicRangeTelemetrySnapshot() -> [String: String] {
+        [:]
     }
 
     func attachVideoView(_ view: UIView) {
