@@ -35,9 +35,10 @@ struct PlayerOverlayView: View {
         .padding(.horizontal, 80)
         .padding(.vertical, 60)
         .transition(.opacity)
-        .onAppear { focusedControl = .playPause }
-        .defaultFocus($focusedControl, .playPause)
+        .onAppear { focusedControl = .seekbar }
+        .defaultFocus($focusedControl, .seekbar)
         .onExitCommand {
+            viewModel.markExitCommandHandled()
             if viewModel.isScrubbing {
                 viewModel.cancelScrub()
             } else {
@@ -157,11 +158,11 @@ struct PlayerOverlayView: View {
             switch direction {
             case .left:
                 if !viewModel.isScrubbing { viewModel.beginScrub() }
-                viewModel.updateScrub(by: -0.02)
+                viewModel.updateScrub(bySeconds: -viewModel.skipBackSeconds)
                 viewModel.resetHideTimer()
             case .right:
                 if !viewModel.isScrubbing { viewModel.beginScrub() }
-                viewModel.updateScrub(by: 0.02)
+                viewModel.updateScrub(bySeconds: viewModel.skipForwardSeconds)
                 viewModel.resetHideTimer()
             default:
                 break
@@ -173,6 +174,10 @@ struct PlayerOverlayView: View {
             } else {
                 viewModel.togglePlayPause()
             }
+        }
+        .onTapGesture {
+            viewModel.togglePlayPause()
+            viewModel.resetHideTimer()
         }
     }
 

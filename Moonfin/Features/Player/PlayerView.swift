@@ -202,11 +202,13 @@ struct VideoPlayerScreen: View {
                 }
             }
             .onTapGesture {
-                if !viewModel.overlayVisible {
-                    viewModel.showOverlay()
-                }
+                viewModel.togglePlayPause()
+                viewModel.showOverlay()
             }
             .onExitCommand {
+                if viewModel.wasExitCommandHandledRecently() {
+                    return
+                }
                 if viewModel.chapterSelectionVisible {
                     viewModel.hideChapterSelection()
                 } else if viewModel.castListVisible {

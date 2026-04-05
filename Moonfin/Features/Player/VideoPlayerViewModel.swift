@@ -23,6 +23,7 @@ final class VideoPlayerViewModel: ObservableObject {
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
     private var castPrefetchTask: Task<Void, Never>?
+    private var lastExitCommandHandledAt: CFAbsoluteTime = 0
     private var cancellables = Set<AnyCancellable>()
     private let overlayTimeout: TimeInterval = 5
     private let endTimeFormatter: DateFormatter = {
@@ -245,6 +246,12 @@ final class VideoPlayerViewModel: ObservableObject {
         debouncedSeek()
     }
 
+    func updateScrub(bySeconds deltaSeconds: TimeInterval) {
+        let duration = max(player.duration, 1)
+        let delta = Float(deltaSeconds / duration)
+        updateScrub(by: delta)
+    }
+
     private func debouncedSeek() {
         scrubSeekTask?.cancel()
         scrubSeekTask = Task {
@@ -268,6 +275,14 @@ final class VideoPlayerViewModel: ObservableObject {
         scrubSeekTask?.cancel()
         isScrubbing = false
         resetHideTimer()
+    }
+
+    func markExitCommandHandled() {
+        lastExitCommandHandledAt = CFAbsoluteTimeGetCurrent()
+    }
+
+    func wasExitCommandHandledRecently(within interval: CFTimeInterval = 0.25) -> Bool {
+        CFAbsoluteTimeGetCurrent() - lastExitCommandHandledAt < interval
     }
 
     func showTrackSelection(tab: TrackSelectionTab = .audio) {
