@@ -4,12 +4,13 @@ struct SettingsPickerScreen<T: Hashable & CaseIterable>: View where T.AllCases: 
     let title: String
     @Binding var selection: T
     let displayName: (T) -> String
+    var options: [T]?
 
     @EnvironmentObject var settingsRouter: SettingsRouter
 
     var body: some View {
         SettingsScreenLayout(title: title) {
-            ForEach(Array(T.allCases), id: \.self) { option in
+            ForEach(options ?? Array(T.allCases), id: \.self) { option in
                 PickerOptionButton(
                     label: displayName(option),
                     isSelected: selection == option

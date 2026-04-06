@@ -18,12 +18,21 @@ struct ContentRow: View {
     }
 
     private var imageDisplayType: ImageDisplayType {
-        container.userPreferences[UserPreferences.homeRowsImageType]
+        switch row.rowType {
+        case .continueWatching:
+            return container.userPreferences[UserPreferences.homeImageTypeContinueWatching]
+        case .nextUp:
+            return container.userPreferences[UserPreferences.homeImageTypeNextUp]
+        case .liveTvOnNow, .liveTvComingUp:
+            return container.userPreferences[UserPreferences.homeImageTypeLiveTv]
+        default:
+            return container.userPreferences[UserPreferences.homeImageTypeLibraries]
+        }
     }
 
     private var isCustomizableRow: Bool {
         switch row.rowType {
-        case .continueWatching, .nextUp, .liveTvButtons, .liveTvOnNow, .liveTvComingUp:
+        case .liveTvButtons:
             return false
         default:
             return true
@@ -177,16 +186,11 @@ struct ContentRow: View {
             return viewModel.thumbImageUrl(for: item)
         }
 
-        switch row.rowType {
-        case .continueWatching, .nextUp, .liveTvOnNow, .liveTvComingUp:
+        switch imageDisplayType {
+        case .thumb:
             return viewModel.thumbImageUrl(for: item)
         default:
-            switch imageDisplayType {
-            case .thumb:
-                return viewModel.thumbImageUrl(for: item)
-            default:
-                return viewModel.posterImageUrl(for: item)
-            }
+            return viewModel.posterImageUrl(for: item)
         }
     }
 

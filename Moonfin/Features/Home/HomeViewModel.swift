@@ -585,9 +585,9 @@ final class HomeViewModel: ObservableObject {
         case "movies":
             return [.movie]
         case "photos":
-            return [.photoAlbum]
+            return [.photo]
         case "mixed":
-            return [.movie, .series, .musicAlbum, .photoAlbum]
+            return [.movie, .series, .musicAlbum, .photo]
         default:
             return nil
         }
@@ -765,6 +765,30 @@ final class HomeViewModel: ObservableObject {
 
     func posterImageUrl(for item: ServerItem) -> String? {
         guard let api = imageApi(for: item) else { return nil }
+
+        if let seriesId = item.seriesId {
+            let useSeriesImage = container.userPreferences[UserPreferences.homeImageUseSeriesImage]
+            if useSeriesImage {
+                return api.getItemImageUrl(
+                    itemId: seriesId,
+                    imageType: .primary,
+                    maxWidth: 300,
+                    maxHeight: nil,
+                    tag: nil
+                )
+            }
+            if let tag = item.imageTags?["Primary"] {
+                return api.getItemImageUrl(
+                    itemId: item.id,
+                    imageType: .primary,
+                    maxWidth: 300,
+                    maxHeight: nil,
+                    tag: tag
+                )
+            }
+            return thumbImageUrl(for: item)
+        }
+
         let tag = item.imageTags?["Primary"]
         return api.getItemImageUrl(
             itemId: item.id,

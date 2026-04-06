@@ -73,6 +73,11 @@ enum PluginSyncConstants {
         SyncablePreference(key: "details_background_blur", type: .int, serverKey: "detailsScreenBlur", defaultValue: 10),
         SyncablePreference(key: "browsing_background_blur", type: .int, serverKey: "browsingBlur", defaultValue: 10),
         SyncablePreference(key: "home_rows_image_type", type: .enum, serverKey: "homeRowsImageType", defaultValue: "poster"),
+        SyncablePreference(key: "home_image_type_continue_watching", type: .enum, serverKey: "homeImageTypeContinueWatching", defaultValue: "thumb"),
+        SyncablePreference(key: "home_image_type_next_up", type: .enum, serverKey: "homeImageTypeNextUp", defaultValue: "thumb"),
+        SyncablePreference(key: "home_image_type_libraries", type: .enum, serverKey: "homeImageTypeLibraries", defaultValue: "poster"),
+        SyncablePreference(key: "home_image_type_live_tv", type: .enum, serverKey: "homeImageTypeLiveTv", defaultValue: "thumb"),
+        SyncablePreference(key: "home_image_use_series_image", type: .boolean, serverKey: "homeImageUseSeriesImage", defaultValue: false),
 
         SyncablePreference(key: "enable_additional_ratings", type: .boolean, serverKey: "mdblistEnabled", defaultValue: false),
         SyncablePreference(key: "enable_episode_ratings", type: .boolean, serverKey: "tmdbEpisodeRatingsEnabled", defaultValue: false),

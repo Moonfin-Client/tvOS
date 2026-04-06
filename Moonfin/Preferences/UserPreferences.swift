@@ -32,6 +32,11 @@ final class UserPreferences {
     static let homeSections = Preference(key: "home_active_sections", defaultValue: "")
     static let homePosterSize = Preference(key: "home_poster_size", defaultValue: PosterSize.medium)
     static let homeRowsImageType = Preference(key: "home_rows_image_type", defaultValue: ImageDisplayType.poster)
+    static let homeImageTypeContinueWatching = Preference(key: "home_image_type_continue_watching", defaultValue: ImageDisplayType.thumb)
+    static let homeImageTypeNextUp = Preference(key: "home_image_type_next_up", defaultValue: ImageDisplayType.thumb)
+    static let homeImageTypeLibraries = Preference(key: "home_image_type_libraries", defaultValue: ImageDisplayType.poster)
+    static let homeImageTypeLiveTv = Preference(key: "home_image_type_live_tv", defaultValue: ImageDisplayType.thumb)
+    static let homeImageUseSeriesImage = Preference(key: "home_image_use_series_image", defaultValue: false)
 
     static let screensaverEnabled = Preference(key: "screensaver_enabled", defaultValue: true)
     static let screensaverTimeout = Preference(key: "screensaver_timeout", defaultValue: 5)
@@ -324,6 +329,8 @@ enum ImageDisplayType: String, StringRepresentableEnum, CaseIterable {
         case .square: return 1.0
         }
     }
+
+    static let homeRowOptions: [ImageDisplayType] = [.poster, .thumb, .banner]
 }
 
 enum ScreensaverMode: String, StringRepresentableEnum, CaseIterable {

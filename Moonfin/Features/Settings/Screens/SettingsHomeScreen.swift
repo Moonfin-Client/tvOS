@@ -25,7 +25,6 @@ struct SettingsHomeScreen: View {
                 icon: "photo",
                 heading: "Image Type",
                 caption: "Type of image shown on cards",
-                trailingText: prefs[UserPreferences.homeRowsImageType].displayName,
                 action: { settingsRouter.navigate(to: .homeRowsImageType) }
             )
             .focused($focusedRoute, equals: .homeRowsImageType)

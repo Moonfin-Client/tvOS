@@ -31,6 +31,10 @@ enum SettingsRoute: Hashable {
     case homeSection(index: Int)
     case homePosterSize
     case homeRowsImageType
+    case homeImageTypeContinueWatching
+    case homeImageTypeNextUp
+    case homeImageTypeLibraries
+    case homeImageTypeLiveTv
 
     case libraries
     case librariesDisplay(itemId: String, displayPreferencesId: String, serverId: String, userId: String)

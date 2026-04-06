@@ -157,10 +157,34 @@ struct SettingsOverlayView: View {
                 displayName: \.displayName
             )
         case .homeRowsImageType:
+            SettingsHomeImageTypeScreen()
+        case .homeImageTypeContinueWatching:
             SettingsPickerScreen(
-                title: "Image Type",
-                selection: container.userPreferences.binding(for: UserPreferences.homeRowsImageType),
-                displayName: \.displayName
+                title: "Continue Watching",
+                selection: container.userPreferences.binding(for: UserPreferences.homeImageTypeContinueWatching),
+                displayName: \.displayName,
+                options: ImageDisplayType.homeRowOptions
+            )
+        case .homeImageTypeNextUp:
+            SettingsPickerScreen(
+                title: "Next Up",
+                selection: container.userPreferences.binding(for: UserPreferences.homeImageTypeNextUp),
+                displayName: \.displayName,
+                options: ImageDisplayType.homeRowOptions
+            )
+        case .homeImageTypeLibraries:
+            SettingsPickerScreen(
+                title: "Libraries",
+                selection: container.userPreferences.binding(for: UserPreferences.homeImageTypeLibraries),
+                displayName: \.displayName,
+                options: ImageDisplayType.homeRowOptions
+            )
+        case .homeImageTypeLiveTv:
+            SettingsPickerScreen(
+                title: "Live TV",
+                selection: container.userPreferences.binding(for: UserPreferences.homeImageTypeLiveTv),
+                displayName: \.displayName,
+                options: ImageDisplayType.homeRowOptions
             )
         case .libraries:
             SettingsLibrariesScreen()
