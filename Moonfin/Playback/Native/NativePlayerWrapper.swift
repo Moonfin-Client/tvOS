@@ -88,7 +88,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
     // MARK: - Play
 
-    override func play(url: URL, startPosition: TimeInterval = 0) async {
+    override func play(url: URL, startPosition: TimeInterval = 0, audioOnly: Bool = false) async {
         if nativeBackendRequested {
             nativeBackendRequested = false
             if startNativePlayback(url.absoluteString, startPosition: startPosition) {
@@ -96,10 +96,10 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             }
             nativeLogger.warning("native playback failed, falling back")
         }
-        await super.play(url: url, startPosition: startPosition)
+        await super.play(url: url, startPosition: startPosition, audioOnly: audioOnly)
     }
 
-    override func play(streamUrl: String, startPosition: TimeInterval = 0) async {
+    override func play(streamUrl: String, startPosition: TimeInterval = 0, audioOnly: Bool = false) async {
         if nativeBackendRequested {
             nativeBackendRequested = false
             if startNativePlayback(streamUrl, startPosition: startPosition) {
@@ -107,7 +107,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             }
             nativeLogger.warning("native playback failed, falling back")
         }
-        await super.play(streamUrl: streamUrl, startPosition: startPosition)
+        await super.play(streamUrl: streamUrl, startPosition: startPosition, audioOnly: audioOnly)
     }
 
     // MARK: - Transport controls

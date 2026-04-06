@@ -74,6 +74,7 @@ final class AudioNowPlayingViewModel: ObservableObject {
         observeTrackChanges()
         observePlayerUpdates()
         clearLyricsState()
+        loadLyricsForCurrentTrack(autoShow: true)
     }
 
     func toggleQueue() {
@@ -184,10 +185,10 @@ final class AudioNowPlayingViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.showLyrics = false
                 self.cancelScrub()
                 self.syncCurrentItemState()
                 self.clearLyricsState()
+                self.loadLyricsForCurrentTrack(autoShow: true)
                 self.objectWillChange.send()
             }
     }

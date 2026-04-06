@@ -172,6 +172,16 @@ struct MainNavigationView: View {
 
             clockOverlay
 
+            if let audio = container.playbackCoordinator.audioManager,
+               !router.hideNavbar,
+               !settingsRouter.isPresented,
+               !container.inactivityTracker.isScreensaverVisible {
+                VStack {
+                    Spacer()
+                    MiniAudioPlayerView(audioManager: audio)
+                }
+            }
+
             if settingsRouter.isPresented {
                 theme.colorScheme.scrim
                     .ignoresSafeArea()
@@ -208,6 +218,8 @@ struct MainNavigationView: View {
         .focusScope(mainNamespace)
         .animation(.easeInOut(duration: 0.4), value: settingsRouter.isPresented)
         .animation(.easeInOut(duration: 1.0), value: container.inactivityTracker.isScreensaverVisible)
+        .animation(.easeInOut(duration: 0.3), value: container.playbackCoordinator.audioManager != nil)
+        .animation(.easeInOut(duration: 0.3), value: router.hideNavbar)
         .onChange(of: settingsRouter.isPresented) { presented in
             container.inactivityTracker.notifyInteraction()
             if presented {

@@ -174,9 +174,11 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         }
     }
 
-    func play(url: URL, startPosition: TimeInterval = 0) async {
-        await waitForSurface()
-        if !startMpvPlayback(url.absoluteString, startPosition: startPosition > 0 ? startPosition : nil) {
+    func play(url: URL, startPosition: TimeInterval = 0, audioOnly: Bool = false) async {
+        if !audioOnly {
+            await waitForSurface()
+        }
+        if !startMpvPlayback(url.absoluteString, startPosition: startPosition > 0 ? startPosition : nil, audioOnly: audioOnly) {
             logger.error("mpv failed to start playback for \(url.lastPathComponent)")
             state = .error
         }
@@ -188,9 +190,11 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         engine?.applySubtitleStyle(options)
     }
 
-    func play(streamUrl: String, startPosition: TimeInterval = 0) async {
-        await waitForSurface()
-        if !startMpvPlayback(streamUrl, startPosition: startPosition > 0 ? startPosition : nil) {
+    func play(streamUrl: String, startPosition: TimeInterval = 0, audioOnly: Bool = false) async {
+        if !audioOnly {
+            await waitForSurface()
+        }
+        if !startMpvPlayback(streamUrl, startPosition: startPosition > 0 ? startPosition : nil, audioOnly: audioOnly) {
             logger.error("mpv failed to start playback for stream")
             state = .error
         }
@@ -378,13 +382,31 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         } catch {}
     }
 
-    private func startMpvPlayback(_ url: String, startPosition: TimeInterval?) -> Bool {
+    private func startMpvPlayback(_ url: String, startPosition: TimeInterval?, audioOnly: Bool = false) -> Bool {
         pendingMpvStartPosition = (startPosition ?? 0) > 0 ? startPosition : nil
         pendingMpvSeekAttempts = 0
         pendingMpvSeekLastAttemptAt = 0
 
         let intent = resolveOutputIntent()
         activeToneMappingMode = intent == .sdr ? "spline" : (intent == .hdr ? "clip" : "auto")
+
+        if audioOnly {
+            if ensureEngine(profile: .metal, outputIntent: intent, audioOnly: true) {
+                if engine?.loadFile(url) == true {
+                    logger.info("mpv: audio-only engine started")
+                    updatePlaybackBackend(identifier: "mpv", fallbackReason: nil)
+                    state = .opening
+                    startRenderScheduler()
+                    return true
+                }
+            }
+            resetEngine()
+            pendingMpvStartPosition = nil
+            pendingMpvSeekAttempts = 0
+            pendingMpvSeekLastAttemptAt = 0
+            return false
+        }
+
         videoSurface.configureColorSpace(forSDR: intent != .hdr)
 
         if ensureEngine(profile: .metal, outputIntent: intent) {
@@ -464,7 +486,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         }
     }
 
-    private func ensureEngine(profile: MPVRenderProfile, outputIntent: MPVOutputIntent = .auto) -> Bool {
+    private func ensureEngine(profile: MPVRenderProfile, outputIntent: MPVOutputIntent = .auto, audioOnly: Bool = false) -> Bool {
         if let engine, activeProfile == profile, activeOutputIntent == outputIntent {
             return engine.isReady
         }
@@ -474,7 +496,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         let created = MPVEngine(
             renderProfile: profile,
             outputIntent: outputIntent,
-            drawableHandle: videoSurface.drawableHandle,
+            drawableHandle: audioOnly ? nil : videoSurface.drawableHandle,
             updateHandler: { [weak self] in
                 DispatchQueue.main.async {
                     self?.renderUpdatePending = true
@@ -1008,51 +1030,56 @@ private final class MPVEngine {
         if let drawableHandle {
             var layerHandle = Int64(bitPattern: drawableHandle)
             _ = setInt64Option("wid", value: &layerHandle, on: created)
+            _ = setOptionString("vo", value: "gpu-next", on: created)
+            _ = setOptionString("gpu-api", value: "vulkan", on: created)
+            _ = setOptionString("gpu-context", value: "moltenvk", on: created)
+            _ = setOptionString("hwdec-codecs", value: "all", on: created)
+        } else {
+            _ = setOptionString("vo", value: "null", on: created)
+            _ = setOptionString("vid", value: "no", on: created)
         }
 
         _ = setOptionString("subs-match-os-language", value: "yes", on: created)
         _ = setOptionString("subs-fallback", value: "yes", on: created)
-        _ = setOptionString("vo", value: "gpu-next", on: created)
-        _ = setOptionString("gpu-api", value: "vulkan", on: created)
-        _ = setOptionString("gpu-context", value: "moltenvk", on: created)
-        _ = setOptionString("hwdec-codecs", value: "all", on: created)
 
         initDiagnostics["output_intent"] = "\(outputIntent)"
 
-        func setTracked(_ name: String, _ value: String) {
-            let ok = setOptionString(name, value: value, on: created)
-            initDiagnostics["opt_\(name)"] = ok ? "ok" : "FAIL"
-        }
+        if drawableHandle != nil {
+            func setTracked(_ name: String, _ value: String) {
+                let ok = setOptionString(name, value: value, on: created)
+                initDiagnostics["opt_\(name)"] = ok ? "ok" : "FAIL"
+            }
 
-        switch outputIntent {
-        case .sdr:
-            setTracked("target-colorspace-hint", "no")
-            setTracked("target-prim", "bt.709")
-            setTracked("target-trc", "bt.1886")
-            setTracked("tone-mapping", "spline")
-            setTracked("gamut-mapping-mode", "perceptual")
-            setTracked("hdr-compute-peak", "yes")
-        case .hdr:
-            setTracked("target-colorspace-hint", "auto")
-            setTracked("target-prim", "auto")
-            setTracked("target-trc", "auto")
-            setTracked("tone-mapping", "clip")
-            setTracked("gamut-mapping-mode", "auto")
-            setTracked("hdr-compute-peak", "no")
-        case .auto:
-            setTracked("target-colorspace-hint", "no")
-            setTracked("target-prim", "auto")
-            setTracked("target-trc", "auto")
-            setTracked("tone-mapping", "auto")
-            setTracked("gamut-mapping-mode", "auto")
-            setTracked("hdr-compute-peak", "yes")
-        }
+            switch outputIntent {
+            case .sdr:
+                setTracked("target-colorspace-hint", "no")
+                setTracked("target-prim", "bt.709")
+                setTracked("target-trc", "bt.1886")
+                setTracked("tone-mapping", "spline")
+                setTracked("gamut-mapping-mode", "perceptual")
+                setTracked("hdr-compute-peak", "yes")
+            case .hdr:
+                setTracked("target-colorspace-hint", "auto")
+                setTracked("target-prim", "auto")
+                setTracked("target-trc", "auto")
+                setTracked("tone-mapping", "clip")
+                setTracked("gamut-mapping-mode", "auto")
+                setTracked("hdr-compute-peak", "no")
+            case .auto:
+                setTracked("target-colorspace-hint", "no")
+                setTracked("target-prim", "auto")
+                setTracked("target-trc", "auto")
+                setTracked("tone-mapping", "auto")
+                setTracked("gamut-mapping-mode", "auto")
+                setTracked("hdr-compute-peak", "yes")
+            }
 
-        _ = setOptionString("allow-delayed-peak-detect", value: "yes", on: created)
-        _ = setOptionString("deband", value: "yes", on: created)
-        _ = setOptionString("temporal-dither", value: "yes", on: created)
-        _ = setOptionString("vd-lavc-film-grain", value: "gpu", on: created)
-        _ = setOptionString("video-rotate", value: "no", on: created)
+            _ = setOptionString("allow-delayed-peak-detect", value: "yes", on: created)
+            _ = setOptionString("deband", value: "yes", on: created)
+            _ = setOptionString("temporal-dither", value: "yes", on: created)
+            _ = setOptionString("vd-lavc-film-grain", value: "gpu", on: created)
+            _ = setOptionString("video-rotate", value: "no", on: created)
+        }
 
         _ = setOptionString("demuxer-max-bytes", value: "250MiB", on: created)
         _ = setOptionString("demuxer-max-back-bytes", value: "75MiB", on: created)
@@ -1061,14 +1088,19 @@ private final class MPVEngine {
 
         switch renderProfile {
         case .metal:
+            if drawableHandle == nil {
+                break
+            }
 #if targetEnvironment(simulator)
             _ = setOptionString("hwdec", value: "no", on: created)
 #else
             _ = setOptionString("hwdec", value: "auto", on: created)
 #endif
         case .software:
-            _ = setOptionString("hwdec", value: "no", on: created)
-            _ = setOptionString("gpu-sw", value: "yes", on: created)
+            if drawableHandle != nil {
+                _ = setOptionString("hwdec", value: "no", on: created)
+                _ = setOptionString("gpu-sw", value: "yes", on: created)
+            }
         }
 
         let initResult = mpv_initialize(created)

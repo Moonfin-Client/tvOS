@@ -372,7 +372,7 @@ final class PlaybackManager: ObservableObject {
             stallCount = 0
             terminalOutcome = "stopped"
 
-            await player.play(streamUrl: stream.url, startPosition: startSeconds)
+            await player.play(streamUrl: stream.url, startPosition: startSeconds, audioOnly: isAudioItem)
 
             let defaultZoom = preferences[UserPreferences.playerZoomMode]
             if defaultZoom != .fit {
