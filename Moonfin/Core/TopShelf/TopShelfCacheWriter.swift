@@ -41,38 +41,40 @@ struct TopShelfCacheWriter {
 
     func write(
         rows: [HomeRow],
-        posterImageURL: (ServerItem) -> String?,
-        thumbImageURL: (ServerItem) -> String?
+        imageURL: (ServerItem, HomeRowType) -> String?,
+        isLandscape: (HomeRowType) -> Bool
     ) {
         var sections: [TopShelfCachePayload.Section] = []
 
         if let continueWatchingRow = rows.first(where: { $0.rowType == .continueWatching }) {
+            let landscape = isLandscape(.continueWatching)
             let items = continueWatchingRow.items
                 .prefix(Self.maxItemsPerSection)
-                .compactMap { makeItem(from: $0, imageURL: thumbImageURL($0)) }
+                .compactMap { makeItem(from: $0, imageURL: imageURL($0, .continueWatching)) }
             if !items.isEmpty {
                 sections.append(
                     TopShelfCachePayload.Section(
                         id: "continue_watching",
                         title: continueWatchingRow.title,
                         items: items,
-                        landscape: true
+                        landscape: landscape
                     )
                 )
             }
         }
 
         for latestRow in rows.filter({ if case .latestMedia = $0.rowType { return true }; return false }) {
+            let landscape = isLandscape(latestRow.rowType)
             let items = latestRow.items
                 .prefix(Self.maxItemsPerSection)
-                .compactMap { makeItem(from: $0, imageURL: posterImageURL($0)) }
+                .compactMap { makeItem(from: $0, imageURL: imageURL($0, latestRow.rowType)) }
             if !items.isEmpty {
                 sections.append(
                     TopShelfCachePayload.Section(
                         id: "latest_\(latestRow.id)",
                         title: latestRow.title,
                         items: items,
-                        landscape: false
+                        landscape: landscape
                     )
                 )
             }

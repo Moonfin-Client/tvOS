@@ -667,10 +667,31 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func refreshTopShelfCache() {
+        let prefs = container.userPreferences
+        let cwType = prefs[UserPreferences.homeImageTypeContinueWatching]
+        let libType = prefs[UserPreferences.homeImageTypeLibraries]
+
+        let displayType: (HomeRowType) -> ImageDisplayType = { rowType in
+            switch rowType {
+            case .continueWatching: return cwType
+            default: return libType
+            }
+        }
+
         topShelfCacheWriter.write(
             rows: rows,
-            posterImageURL: { [weak self] item in self?.posterImageUrl(for: item) },
-            thumbImageURL: { [weak self] item in self?.thumbImageUrl(for: item) }
+            imageURL: { [weak self] item, rowType in
+                guard let self else { return nil }
+                switch displayType(rowType) {
+                case .thumb, .banner:
+                    return self.topShelfThumbImageUrl(for: item)
+                default:
+                    return self.topShelfPosterImageUrl(for: item)
+                }
+            },
+            isLandscape: { rowType in
+                displayType(rowType).aspectRatio >= 1.0
+            }
         )
     }
 
@@ -768,16 +789,7 @@ final class HomeViewModel: ObservableObject {
 
         if let seriesId = item.seriesId {
             let useSeriesImage = container.userPreferences[UserPreferences.homeImageUseSeriesImage]
-            if useSeriesImage {
-                return api.getItemImageUrl(
-                    itemId: seriesId,
-                    imageType: .primary,
-                    maxWidth: 300,
-                    maxHeight: nil,
-                    tag: nil
-                )
-            }
-            if let tag = item.imageTags?["Primary"] {
+            if !useSeriesImage, let tag = item.imageTags?["Primary"] {
                 return api.getItemImageUrl(
                     itemId: item.id,
                     imageType: .primary,
@@ -786,7 +798,13 @@ final class HomeViewModel: ObservableObject {
                     tag: tag
                 )
             }
-            return thumbImageUrl(for: item)
+            return api.getItemImageUrl(
+                itemId: seriesId,
+                imageType: .primary,
+                maxWidth: 300,
+                maxHeight: nil,
+                tag: nil
+            )
         }
 
         let tag = item.imageTags?["Primary"]
@@ -849,6 +867,98 @@ final class HomeViewModel: ObservableObject {
             )
         }
         return posterImageUrl(for: item)
+    }
+
+    private func topShelfPosterImageUrl(for item: ServerItem) -> String? {
+        guard let api = imageApi(for: item) else { return nil }
+
+        if let seriesId = item.seriesId {
+            let useSeriesImage = container.userPreferences[UserPreferences.homeImageUseSeriesImage]
+            if !useSeriesImage, let tag = item.imageTags?["Primary"] {
+                return api.getItemImageUrl(
+                    itemId: item.id,
+                    imageType: .primary,
+                    maxWidth: 800,
+                    maxHeight: nil,
+                    tag: tag
+                )
+            }
+            return api.getItemImageUrl(
+                itemId: seriesId,
+                imageType: .primary,
+                maxWidth: 800,
+                maxHeight: nil,
+                tag: nil
+            )
+        }
+
+        let tag = item.imageTags?["Primary"]
+        return api.getItemImageUrl(
+            itemId: item.id,
+            imageType: .primary,
+            maxWidth: 800,
+            maxHeight: nil,
+            tag: tag
+        )
+    }
+
+    private func topShelfThumbImageUrl(for item: ServerItem) -> String? {
+        guard let api = imageApi(for: item) else { return nil }
+        if let tag = item.imageTags?["Thumb"] {
+            return api.getItemImageUrl(
+                itemId: item.id,
+                imageType: .thumb,
+                maxWidth: 1920,
+                maxHeight: nil,
+                tag: tag
+            )
+        }
+        if let tags = item.backdropImageTags, let tag = tags.first {
+            return api.getItemImageUrl(
+                itemId: item.id,
+                imageType: .backdrop,
+                maxWidth: 1920,
+                maxHeight: nil,
+                tag: tag
+            )
+        }
+        if let parentTags = item.parentBackdropImageTags,
+           let parentId = item.parentBackdropItemId,
+           let tag = parentTags.first {
+            return api.getItemImageUrl(
+                itemId: parentId,
+                imageType: .backdrop,
+                maxWidth: 1920,
+                maxHeight: nil,
+                tag: tag
+            )
+        }
+        if let seriesId = item.seriesId {
+            return api.getItemImageUrl(
+                itemId: seriesId,
+                imageType: .primary,
+                maxWidth: 1920,
+                maxHeight: nil,
+                tag: nil
+            )
+        }
+        if let channelId = item.channelId {
+            return api.getItemImageUrl(
+                itemId: channelId,
+                imageType: .primary,
+                maxWidth: 1920,
+                maxHeight: nil,
+                tag: nil
+            )
+        }
+        let tag = item.imageTags?["Primary"]
+        return api.getItemImageUrl(
+            itemId: item.id,
+            imageType: .primary,
+            maxWidth: 1920,
+            maxHeight: nil,
+            tag: tag
+        )
     }
 
     private func buildSelectedState(for item: ServerItem) -> SelectedItemState {
