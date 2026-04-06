@@ -442,7 +442,7 @@ struct HomeScreen: View {
 
             ZStack(alignment: .topLeading) {
                 Text(viewModel.selectedItemState.summary)
-                    .font(.titleXl)
+                    .font(.bodyMd)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                     .lineLimit(4)
             }

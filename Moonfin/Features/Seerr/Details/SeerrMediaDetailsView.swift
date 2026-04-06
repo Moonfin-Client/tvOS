@@ -321,7 +321,7 @@ struct SeerrMediaDetailsView: View {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
                 if let overview = viewModel.overview, !overview.isEmpty {
                     Text(overview)
-                        .font(.titleMd)
+                        .font(.bodyMd)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.85))
                         .lineLimit(8)
                         .frame(maxWidth: .infinity, alignment: .leading)

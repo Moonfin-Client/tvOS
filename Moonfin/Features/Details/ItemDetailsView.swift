@@ -485,9 +485,9 @@ struct ItemDetailsView: View {
 
                         if let overview = item.overview, !overview.isEmpty {
                             Text(overview)
-                                .font(.titleXl)
+                                .font(.bodyMd)
                                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                                .lineLimit(5)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, SpaceTokens.spaceXs)
                         }
                     }
@@ -565,10 +565,10 @@ struct ItemDetailsView: View {
 
                 if let overview = item.overview, !overview.isEmpty {
                     Text(overview)
-                        .font(.titleXl)
+                        .font(.bodyMd)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                        .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.center)
-                        .lineLimit(5)
                         .frame(maxWidth: 900)
                         .padding(.top, SpaceTokens.spaceXs)
                 }

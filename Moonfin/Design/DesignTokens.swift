@@ -23,27 +23,27 @@ enum RadiusTokens {
 }
 
 enum TypographyTokens {
-    static let fontSize2xs: CGFloat = 10
-    static let fontSizeXs: CGFloat = 12
-    static let fontSizeSm: CGFloat = 14
-    static let fontSizeMd: CGFloat = 16
-    static let fontSizeLg: CGFloat = 18
-    static let fontSizeXl: CGFloat = 20
-    static let fontSize2xl: CGFloat = 24
-    static let fontSize3xl: CGFloat = 32
+    static let fontSize2xs: CGFloat = 18
+    static let fontSizeXs: CGFloat = 22
+    static let fontSizeSm: CGFloat = 26
+    static let fontSizeMd: CGFloat = 29
+    static let fontSizeLg: CGFloat = 32
+    static let fontSizeXl: CGFloat = 36
+    static let fontSize2xl: CGFloat = 42
+    static let fontSize3xl: CGFloat = 52
 }
 
 extension Font {
     static let caption2xs = Font.system(size: TypographyTokens.fontSize2xs)
     static let captionXs = Font.system(size: TypographyTokens.fontSizeXs)
-    static let captionSm = Font.system(size: 13)
+    static let captionSm = Font.system(size: TypographyTokens.fontSizeSm)
     static let bodySm = Font.system(size: TypographyTokens.fontSizeSm)
     static let bodyMd = Font.system(size: TypographyTokens.fontSizeMd)
     static let bodyLg = Font.system(size: TypographyTokens.fontSizeLg)
     static let titleSm = Font.system(size: TypographyTokens.fontSizeMd, weight: .semibold)
     static let titleMd = Font.system(size: TypographyTokens.fontSizeLg, weight: .semibold)
-    static let titleLg = Font.system(size: 22, weight: .semibold)
-    static let titleXl = Font.system(size: TypographyTokens.fontSizeXl, weight: .semibold)
+    static let titleLg = Font.system(size: TypographyTokens.fontSizeXl, weight: .semibold)
+    static let titleXl = Font.system(size: TypographyTokens.fontSize2xl, weight: .semibold)
     static let title2xl = Font.system(size: TypographyTokens.fontSize2xl, weight: .bold)
     static let title3xl = Font.system(size: TypographyTokens.fontSize3xl, weight: .bold)
 

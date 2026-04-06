@@ -34,7 +34,7 @@ final class HomeViewModel: ObservableObject {
     private static let multiServerLimit = 30
 
     private static let defaultFields: [ItemField] = [
-        .overview, .genres, .providerIds
+        .overview, .genres, .providerIds, .mediaSources, .mediaStreams
     ]
 
     init(container: AppContainer) {

@@ -273,7 +273,7 @@ struct MediaBarView: View {
                 }
 
                 Text(item.overview ?? " ")
-                    .font(.titleXl)
+                    .font(.bodyMd)
                     .foregroundColor(.white.opacity(0.85))
                     .lineLimit(3)
                     .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
@@ -300,28 +300,37 @@ struct MediaBarView: View {
             }
 
             if let rating = item.officialRating, !rating.isEmpty {
+                metadataSeparator
                 metadataBadge(rating)
             }
 
             if let runtime = item.runtime {
+                metadataSeparator
                 metadataText(runtime)
             }
 
             if !item.genres.isEmpty {
+                metadataSeparator
                 metadataText(item.genres.prefix(3).joined(separator: ", "))
             }
         }
     }
 
+    private var metadataSeparator: some View {
+        Text("\u{2022}")
+            .font(.bodySm)
+            .foregroundColor(.white.opacity(0.4))
+    }
+
     private func metadataText(_ text: String) -> some View {
         Text(text)
-            .font(.bodyLg)
+            .font(.bodySm)
             .foregroundColor(.white.opacity(0.7))
     }
 
     private func metadataBadge(_ text: String) -> some View {
         Text(text)
-            .font(.bodyLg)
+            .font(.bodySm)
             .foregroundColor(.white.opacity(0.8))
             .padding(.horizontal, SpaceTokens.spaceXs)
             .padding(.vertical, 1)

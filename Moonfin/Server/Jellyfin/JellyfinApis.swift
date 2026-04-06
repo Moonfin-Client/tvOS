@@ -184,6 +184,12 @@ struct JellyfinItemsApi: ServerItemsApi {
         ])
         return try await client.request("/Shows/\(seriesId)/Episodes", queryItems: query)
     }
+
+    func getAncestors(itemId: String) async throws -> [ServerItem] {
+        let userId = client.userId ?? ""
+        let query = buildQuery([("UserId", userId)])
+        return try await client.request("/Items/\(itemId)/Ancestors", queryItems: query)
+    }
 }
 
 // MARK: - User Library

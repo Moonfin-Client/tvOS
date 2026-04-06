@@ -61,6 +61,7 @@ protocol ServerItemsApi {
     func getSimilarItems(itemId: String, limit: Int?) async throws -> ItemsResult
     func getSeasons(seriesId: String, userId: String) async throws -> ItemsResult
     func getEpisodes(seriesId: String, seasonId: String, userId: String) async throws -> ItemsResult
+    func getAncestors(itemId: String) async throws -> [ServerItem]
 }
 
 // MARK: - User Library

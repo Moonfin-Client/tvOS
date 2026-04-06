@@ -65,11 +65,26 @@ struct FocusableItemCard: View {
             .scaleEffect(isFocused ? 1.05 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isFocused)
 
-            Text(item.name)
-                .font(.bodySm)
-                .foregroundColor(theme.colorScheme.onBackground)
-                .lineLimit(1)
-                .frame(width: cardWidth, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                MarqueeText(
+                    text: item.name,
+                    font: .bodySm,
+                    color: theme.colorScheme.onBackground,
+                    maxWidth: cardWidth,
+                    isFocused: isFocused
+                )
+
+                if !item.cardSubtitle.isEmpty {
+                    MarqueeText(
+                        text: item.cardSubtitle,
+                        font: .captionXs,
+                        color: theme.colorScheme.onBackground.opacity(0.6),
+                        maxWidth: cardWidth,
+                        isFocused: isFocused
+                    )
+                }
+            }
+            .frame(width: cardWidth, alignment: .leading)
         }
     }
 }

@@ -98,21 +98,21 @@ struct SeerrDiscoverView: View {
                 HStack(spacing: SpaceTokens.spaceMd) {
                     if !viewModel.selectedItem.mediaType.isEmpty {
                         Text(viewModel.selectedItem.mediaType)
-                            .font(.titleMd)
+                            .font(.bodySm)
                             .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
                     }
                     if !viewModel.selectedItem.year.isEmpty {
                         Text(viewModel.selectedItem.year)
-                            .font(.titleMd)
+                            .font(.bodySm)
                             .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
                     }
                     if viewModel.selectedItem.voteAverage > 0 {
                         HStack(spacing: 4) {
                             Image(systemName: "star.fill")
-                                .font(.titleSm)
+                                .font(.captionXs)
                                 .foregroundColor(.yellow)
                             Text(String(format: "%.1f", viewModel.selectedItem.voteAverage))
-                                .font(.titleMd)
+                                .font(.bodySm)
                                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
                         }
                     }
@@ -121,7 +121,7 @@ struct SeerrDiscoverView: View {
 
             if !viewModel.selectedItem.overview.isEmpty {
                 Text(viewModel.selectedItem.overview)
-                    .font(.titleXl)
+                    .font(.bodyMd)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                     .lineLimit(3)
             }

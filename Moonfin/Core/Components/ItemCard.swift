@@ -15,6 +15,7 @@ struct ItemCard: View {
     var serverName: String?
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
+    var onFocusChange: ((Bool) -> Void)? = nil
 
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var container: AppContainer
@@ -52,6 +53,7 @@ struct ItemCard: View {
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
             if focused { onFocused?(item) }
+            onFocusChange?(focused)
         }
     }
     

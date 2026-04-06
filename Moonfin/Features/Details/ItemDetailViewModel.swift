@@ -9,6 +9,7 @@ struct MediaBadge: Identifiable, Equatable {
 @MainActor
 final class ItemDetailViewModel: ObservableObject {
     private static let parentCollectionMediaTypes: [ItemType] = [.movie, .series, .video, .trailer]
+    private static let cardMetadataFields: [ItemField] = [.mediaSources, .mediaStreams]
 
     // Core
     @Published private(set) var isLoading: Bool = true
@@ -432,7 +433,7 @@ final class ItemDetailViewModel: ObservableObject {
     private func loadSimilar(itemId: String, client: MediaServerClient) async {
         do {
             let result = try await client.itemsApi.getSimilarItems(itemId: itemId, limit: 16)
-            similar = result.items
+            similar = await enrichItemsForCardMetadata(items: result.items, client: client)
         } catch { }
     }
 
@@ -444,6 +445,7 @@ final class ItemDetailViewModel: ObservableObject {
                     includeItemTypes: [.movie, .series],
                     sortBy: [.premiereDate],
                     sortOrder: .descending,
+                    fields: Self.cardMetadataFields,
                     limit: 50,
                     personIds: [personId],
                     enableUserData: true
@@ -472,6 +474,7 @@ final class ItemDetailViewModel: ObservableObject {
             let result = try await client.itemsApi.getItems(
                 request: GetItemsRequest(
                     parentId: itemId,
+                    fields: Self.cardMetadataFields,
                     limit: 120,
                     enableUserData: true
                 )
@@ -609,72 +612,144 @@ final class ItemDetailViewModel: ObservableObject {
     private func loadSpecialFeatures(itemId: String, client: MediaServerClient) async {
         do {
             let items = try await client.userLibraryApi.getSpecialFeatures(itemId: itemId)
-            specialFeatures = items
+            specialFeatures = await enrichItemsForCardMetadata(items: items, client: client)
         } catch { }
     }
 
     private func loadParentCollection(itemId: String, client: MediaServerClient) async {
         do {
-            let collapsed = try await client.itemsApi.getItems(
-                request: GetItemsRequest(
-                    recursive: true,
-                    includeItemTypes: [.movie, .series, .boxSet],
-                    ids: [itemId],
-                    collapseBoxSetItems: true
-                )
-            )
-            if let boxSet = collapsed.items.first(where: { $0.type == ItemType.boxSet }) {
-                let members = try await client.itemsApi.getItems(
-                    request: GetItemsRequest(
-                        parentId: boxSet.id,
-                        includeItemTypes: Self.parentCollectionMediaTypes,
-                        sortBy: [.premiereDate, .sortName],
-                        sortOrder: .ascending,
-                        limit: 120,
-                        enableUserData: true
-                    )
-                )
-                parentCollectionName = boxSet.name
-                parentCollectionItems = members.items
-                return
-            }
+            var resolvedBoxSetId: String?
+            var resolvedBoxSetName: String?
 
-            let candidateBoxSets = try await client.itemsApi.getItems(
-                request: GetItemsRequest(
-                    recursive: true,
-                    includeItemTypes: [.boxSet],
-                    sortBy: [.sortName],
-                    fields: [.childCount],
-                    limit: 75
-                )
-            )
-
-            for boxSet in candidateBoxSets.items where (boxSet.childCount ?? 0) > 0 {
-                let members = try await client.itemsApi.getItems(
-                    request: GetItemsRequest(
-                        parentId: boxSet.id,
-                        includeItemTypes: Self.parentCollectionMediaTypes,
-                        limit: 1,
-                        ids: [itemId]
-                    )
-                )
-                if !members.items.isEmpty {
-                    let sortedMembers = try await client.itemsApi.getItems(
-                        request: GetItemsRequest(
-                            parentId: boxSet.id,
-                            includeItemTypes: Self.parentCollectionMediaTypes,
-                            sortBy: [.premiereDate, .sortName],
-                            sortOrder: .ascending,
-                            limit: 120,
-                            enableUserData: true
-                        )
-                    )
-                    parentCollectionName = boxSet.name
-                    parentCollectionItems = sortedMembers.items
-                    return
+            let ancestors = try await client.itemsApi.getAncestors(itemId: itemId)
+            if let boxSetAncestor = ancestors.first(where: { $0.type == .boxSet }) {
+                if await boxSetContainsItem(boxSetId: boxSetAncestor.id, itemId: itemId, client: client) {
+                    resolvedBoxSetId = boxSetAncestor.id
+                    resolvedBoxSetName = boxSetAncestor.name
                 }
             }
+
+            if resolvedBoxSetId == nil {
+                let collapsed = try await client.itemsApi.getItems(
+                    request: GetItemsRequest(
+                        recursive: true,
+                        includeItemTypes: [.movie, .series, .boxSet],
+                        ids: [itemId],
+                        collapseBoxSetItems: true
+                    )
+                )
+                if let boxSet = collapsed.items.first(where: { $0.type == ItemType.boxSet }) {
+                    if await boxSetContainsItem(boxSetId: boxSet.id, itemId: itemId, client: client) {
+                        resolvedBoxSetId = boxSet.id
+                        resolvedBoxSetName = boxSet.name
+                    }
+                }
+            }
+
+            if resolvedBoxSetId == nil {
+                resolvedBoxSetId = await findBoxSetByScanning(itemId: itemId, client: client)
+            }
+
+            guard let boxSetId = resolvedBoxSetId else { return }
+
+            let members = try await client.itemsApi.getItems(
+                request: GetItemsRequest(
+                    parentId: boxSetId,
+                    includeItemTypes: Self.parentCollectionMediaTypes,
+                    sortBy: [.premiereDate, .sortName],
+                    sortOrder: .ascending,
+                    fields: Self.cardMetadataFields,
+                    limit: 120,
+                    enableUserData: true
+                )
+            )
+
+            if resolvedBoxSetName == nil {
+                let boxSetItem = try? await client.userLibraryApi.getItem(itemId: boxSetId)
+                resolvedBoxSetName = boxSetItem?.name
+            }
+
+            parentCollectionName = resolvedBoxSetName
+            parentCollectionItems = members.items
         } catch { }
+    }
+
+    private func boxSetContainsItem(boxSetId: String, itemId: String, client: MediaServerClient) async -> Bool {
+        do {
+            let members = try await client.itemsApi.getItems(
+                request: GetItemsRequest(
+                    parentId: boxSetId,
+                    limit: 200
+                )
+            )
+            return members.items.contains(where: { $0.id == itemId })
+        } catch {
+            return false
+        }
+    }
+
+    private func findBoxSetByScanning(itemId: String, client: MediaServerClient) async -> String? {
+        do {
+            var startIndex = 0
+            let pageSize = 200
+
+            while true {
+                let page = try await client.itemsApi.getItems(
+                    request: GetItemsRequest(
+                        recursive: true,
+                        includeItemTypes: [.boxSet],
+                        sortBy: [.sortName],
+                        limit: pageSize,
+                        startIndex: startIndex,
+                        enableTotalRecordCount: true
+                    )
+                )
+
+                for boxSet in page.items {
+                    let members = try await client.itemsApi.getItems(
+                        request: GetItemsRequest(
+                            parentId: boxSet.id,
+                            limit: 200
+                        )
+                    )
+                    if members.items.contains(where: { $0.id == itemId }) {
+                        return boxSet.id
+                    }
+                }
+
+                if page.items.count < pageSize { break }
+                startIndex += page.items.count
+            }
+        } catch { }
+        return nil
+    }
+
+    private func enrichItemsForCardMetadata(items: [ServerItem], client: MediaServerClient) async -> [ServerItem] {
+        let missingIds = items
+            .filter { item in
+                let hasMediaStreams = !(item.mediaStreams?.isEmpty ?? true)
+                let hasMediaSources = !(item.mediaSources?.isEmpty ?? true)
+                return !(hasMediaStreams || hasMediaSources)
+            }
+            .map(\.id)
+
+        guard !missingIds.isEmpty else { return items }
+
+        do {
+            let enriched = try await client.itemsApi.getItems(
+                request: GetItemsRequest(
+                    fields: Self.cardMetadataFields,
+                    limit: missingIds.count,
+                    ids: missingIds,
+                    enableUserData: true
+                )
+            )
+
+            let byId: [String: ServerItem] = Dictionary(uniqueKeysWithValues: enriched.items.map { ($0.id, $0) })
+            return items.map { byId[$0.id] ?? $0 }
+        } catch {
+            return items
+        }
     }
 
     private func buildMediaBadges(for item: ServerItem) -> [MediaBadge] {

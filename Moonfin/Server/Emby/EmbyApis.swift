@@ -240,6 +240,11 @@ struct EmbyItemsApi: ServerItemsApi {
         ])
         return try await client.request("/Shows/\(seriesId)/Episodes", queryItems: query)
     }
+
+    func getAncestors(itemId: String) async throws -> [ServerItem] {
+        let query = buildQuery([("UserId", client.userId)])
+        return try await client.request("/Items/\(itemId)/Ancestors", queryItems: query)
+    }
 }
 
 // MARK: - User Library
