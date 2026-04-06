@@ -3,6 +3,7 @@ import Foundation
 final class ServerStreamResolver: StreamResolver {
     private let client: MediaServerClient
     private let requestedBackend: PlaybackBackendDirective
+    private let nativeDvEnabled: Bool
 
     private lazy var deviceId: String = AppConstants.deviceId
 
@@ -11,9 +12,10 @@ final class ServerStreamResolver: StreamResolver {
     private var lastResolvedStartTimeTicks: Int64?
     private var lastResolvedStream: StreamInfo?
 
-    init(client: MediaServerClient, requestedBackend: PlaybackBackendDirective) {
+    init(client: MediaServerClient, requestedBackend: PlaybackBackendDirective, nativeDvEnabled: Bool = true) {
         self.client = client
         self.requestedBackend = requestedBackend
+        self.nativeDvEnabled = nativeDvEnabled
     }
 
     func resolve(
@@ -129,11 +131,19 @@ final class ServerStreamResolver: StreamResolver {
             dynamicRange: dynamicRange,
             capabilities: capabilities,
             canTranscode: source.transcodingUrl != nil,
-            videoStream: videoStream
+            videoStream: videoStream,
+            nativeDvEnabled: nativeDvEnabled
         )
 
-        let preferredBackend: PlaybackBackendDirective =
-            (videoPolicy.backend == .tvvlcKit || audioPolicy.backend == .tvvlcKit) ? .tvvlcKit : .mpv
+        let preferredBackend: PlaybackBackendDirective
+        let isDolbyVision = dynamicRange == .dolbyVision
+        if videoPolicy.backend == .native {
+            preferredBackend = .native
+        } else if isDolbyVision {
+            preferredBackend = videoPolicy.backend
+        } else {
+            preferredBackend = .mpv
+        }
         let fallbackReason = audioPolicy.reason ?? videoPolicy.reason
         let combinedDiagnostics = videoPolicy.diagnostics + audioPolicy.diagnostics
 

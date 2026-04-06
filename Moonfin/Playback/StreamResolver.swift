@@ -10,8 +10,8 @@ enum VideoDynamicRange: String {
 }
 
 enum PlaybackBackendDirective: String {
-    case tvvlcKit = "tvvlckit"
     case mpv
+    case native
 }
 
 struct QueueEntry: Identifiable, Equatable {

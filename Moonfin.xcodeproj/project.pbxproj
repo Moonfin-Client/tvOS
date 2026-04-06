@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -26,9 +26,9 @@
 		131295AFF0C20D9BA793CB36 /* AudioNowPlayingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4477DE8CA9E01077E2A8E5 /* AudioNowPlayingViewModel.swift */; };
 		139EF05143A46C8751511836 /* UserViewsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327474406D1FBDDC07A6B559 /* UserViewsService.swift */; };
 		13AA935D6BB99581DF6A3ED7 /* PlayerSeekBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C93AFA31BD221AFA4D0257 /* PlayerSeekBar.swift */; };
-		15F3DC70128565BFF2270889 /* VLCPlayerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC987604BAE75373ABA7889 /* VLCPlayerWrapper.swift */; };
 		16A42DD162E3DA3C12CE3F5F /* SupportedLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28727709AB22C5FAD93DB4C /* SupportedLocale.swift */; };
 		180127D423D36F0B0B80EA63 /* SettingsPickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98784D7402B2F3DB94726461 /* SettingsPickerScreen.swift */; };
+		1A91A6B65647E2B9EC1146EC /* NativeVideoSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C1E2FBABA0F471666513F8 /* NativeVideoSurface.swift */; };
 		1B265C3EF52436BF21C0B9BB /* LyricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CABD3CD4B909CCEE8EAE42F /* LyricsView.swift */; };
 		1B3799F847B730273FABEFC4 /* DeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBBAFFE10B2CFDF1FD8D32E /* DeviceInfo.swift */; };
 		1B7D1E19083A8CD14D0AFF94 /* StillWatchingSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10256EC8BACAA177ADD2AC0 /* StillWatchingSettingsScreen.swift */; };
@@ -62,6 +62,7 @@
 		34AE77021F4280ED397150B3 /* ServerEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A3039D72FC265C3A86801E /* ServerEnums.swift */; };
 		3691F2BA3751A8BE31CDB057 /* EmbyApis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F91BCAC2868F2231BC3267E /* EmbyApis.swift */; };
 		382288BD55A9D7ECDC42F70A /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73D2F15693134A15639B26D /* KeychainStore.swift */; };
+		39A4CE71574277DB34E60CA1 /* AudioRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2740819BB6B30453279DFF /* AudioRenderer.swift */; };
 		3C4527038B786F96F2E8A735 /* NextUpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7436E1F1DC4C5F651963B721 /* NextUpManager.swift */; };
 		3CC48062335763C011114E68 /* SettingsMediaSegmentsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BEB9DAAC25AB5526B2DB7 /* SettingsMediaSegmentsScreen.swift */; };
 		3D0623B0E9B95CD7AE63E810 /* DetailCardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2AF5E3DFDEC74514265F3FF /* DetailCardComponents.swift */; };
@@ -92,8 +93,8 @@
 		53AEF2773FD2AC9D316199E0 /* ConnectHelpScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F50F8BE2C98C1C0C3E4DDF4 /* ConnectHelpScreen.swift */; };
 		5518ED9BC8AF6AA2DE4DBBC4 /* ItemPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A60F06FD18AE36838A1F00E /* ItemPreview.swift */; };
 		555AFC2DDF8B010AEDF450AF /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 3FA238B35BE531020273CC47 /* Nuke */; };
+		56136629E620823766D663FE /* PlaybackSurfaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB1F8E8156ECA5E8F1345363 /* PlaybackSurfaceView.swift */; };
 		56729D90CB52173D793C3EA9 /* SuggestedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73E8EF262A6FD657DAC31F6 /* SuggestedViewModel.swift */; };
-		586DFBFA7AA95BC08E71E035 /* VLCPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502F18502DD946DEA5888231 /* VLCPlayerView.swift */; };
 		58B2FEB879281C327AA158AD /* EmbyServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2523CF196DD63575C61CB15E /* EmbyServerClient.swift */; };
 		58DE4A7AE81C04232CDDB785 /* RTLSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B50E23E56D2FA2DB1A28E0 /* RTLSupport.swift */; };
 		58F6064FF66BB601A96ED555 /* ServerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0134334AD83E19655459900 /* ServerScreen.swift */; };
@@ -174,6 +175,7 @@
 		92B6A867405C618441CFBB03 /* SeerrApiModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED9846443665851400FF0E3 /* SeerrApiModels.swift */; };
 		9369F0CE4C647452BEE42370 /* MpvPlayerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA6C3B9D21C70461867A2E19 /* MpvPlayerWrapper.swift */; };
 		9371FB8730176B61184F8CCC /* MoonfinApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26B00488A156C151C0CD62A /* MoonfinApp.swift */; };
+		95B3288EE0BB585D1D252F61 /* VTDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE42F444485F1B601E64CC5 /* VTDecoder.swift */; };
 		95C28FED1CFFCFDFAB08B4FC /* SubtitleDownloadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31559FCAE6E15A3710AEAA45 /* SubtitleDownloadView.swift */; };
 		95F316DC7B4ABC5D52E5B35F /* JellyfinServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBEE4F3BBDB81FE8A31535C /* JellyfinServerClient.swift */; };
 		96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D4DD05CBC00A79C149DD76 /* SettingsRouter.swift */; };
@@ -209,6 +211,7 @@
 		AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D633491E2E3C22A82AE90F1A /* SimpleInfoRow.swift */; };
 		AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 443241810250EC1AB21DA8F9 /* LoginCard.swift */; };
 		AEF10B94D7C04E71D90E08BA /* TmdbRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A554C71793F4265E794FAD /* TmdbRepository.swift */; };
+		B1BB1830FDB681364FE526C7 /* SubtitleOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 603AC080E4828C08EFDB08EA /* SubtitleOverlay.swift */; };
 		B273DC84F80FBB5876CCD0F8 /* ServerWebSocketMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D817B3079DB381F66B8EBE6 /* ServerWebSocketMessage.swift */; };
 		B2F75D0516E9396365E3D32E /* SettingsMaxBitrateScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F337E1EA8A9A452F9A6E97 /* SettingsMaxBitrateScreen.swift */; };
 		B4E1B228F1DF6703825F0403 /* RatingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9474CF2A1C7088470F5E05C4 /* RatingViews.swift */; };
@@ -223,6 +226,7 @@
 		C00C251AB57AB8DD679E433A /* ServerStreamResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E13C8282BC93E97F87F7D3B5 /* ServerStreamResolver.swift */; };
 		C11E2B548EA494CCBA95C1D1 /* TrackSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A37A5B797B86E6122B645143 /* TrackSelectionView.swift */; };
 		C2963965576698A62734FEF9 /* GenreBrowseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80036105BF71163FC29A172D /* GenreBrowseScreen.swift */; };
+		C2FCBEE89B01FE53B59FF1E2 /* NativePlayerWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30A61329E254A81382FA266E /* NativePlayerWrapper.swift */; };
 		C3196E7D876BD01CF010F3E1 /* AudioNowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FEE041FE9698B6ECB704A5E /* AudioNowPlayingView.swift */; };
 		C78A9F9C05A8245AED3DC0B8 /* CastListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B084B9480678704502B6011 /* CastListView.swift */; };
 		C86AD434E3BF12AB863FFF4A /* TimeSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C42088A8F589D865EC2229C3 /* TimeSyncManager.swift */; };
@@ -231,6 +235,7 @@
 		C98E781319B9FE156C2C7A5D /* SettingsSubtitleColorPickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F685AFC9A981613AEBEDFC9E /* SettingsSubtitleColorPickerScreen.swift */; };
 		CB9916AC7A845E608C44A827 /* SettingsAuthPinCodeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7E85C27B4CDBD48229FF2F /* SettingsAuthPinCodeScreen.swift */; };
 		CB9BB8184531C28106697918 /* SyncPlayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 207D7B97AF9819D4AF2B610E /* SyncPlayModels.swift */; };
+		CC17F66DE3DFD3BCD250FC48 /* FFDemuxer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E8B40432E8DB471D3952B9 /* FFDemuxer.swift */; };
 		CC5946EBEE0483E3D3CF414F /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FB992932D9FF916978F6A /* NetworkError.swift */; };
 		CE591F2305133083B1C019B1 /* ServerRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FEB9DCB39B5C4AF061AF748 /* ServerRepository.swift */; };
 		CE61B52711F2E70348248571 /* ServerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A61F4E72236D1D4D7833D6B /* ServerModels.swift */; };
@@ -257,6 +262,7 @@
 		E0508E37CBAF94D4FDBC91E8 /* NextUpOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BADD1E336F548E1C3183FFC /* NextUpOverlay.swift */; };
 		E0B9E447B34D0A10975F53A8 /* ScreensaverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1E45F6106D562D9C513ABE6 /* ScreensaverView.swift */; };
 		E33C3A41393A0163F0B89AEC /* FocusBorderButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B73FA206F8A4DF144150EDF /* FocusBorderButtonStyle.swift */; };
+		E5DBF695D3B1C20836F73592 /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FD4F3EC40CF02AA4AB88AEA /* Pods_Moonfin.framework */; };
 		E9212B3E5D93D67A93EDBC7F /* ItemDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60A57D73E27E7F1BBA5E387 /* ItemDetailViewModel.swift */; };
 		E92A177D873E4AFE076A7C7B /* FeatureDegradationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D2DFB4CDD3B761E1209B192 /* FeatureDegradationManager.swift */; };
 		E9433EF4E0859DD3B3649467 /* SettingsDeveloperScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A135055E6D1F2DB8B674DC /* SettingsDeveloperScreen.swift */; };
@@ -269,12 +275,12 @@
 		EF7DF8ADC72954304A9ED8D5 /* ServerQueryHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF728FA7DAC888DE730C3CC3 /* ServerQueryHelpers.swift */; };
 		F1C0DD535459B37BDE6CD7DD /* SeerrHttpClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 346AD60702A751C6BBA53A49 /* SeerrHttpClient.swift */; };
 		F27FC644EA67854A8B70924D /* ServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A01D1F576F0C41A53ECB16 /* ServiceProvider.swift */; };
-		F2A788D4C9330160C989BD28 /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B8A846B9AC692AEF2B4A7E79 /* Pods_Moonfin.framework */; };
 		F3A45AB09B898ECA8E8D6BF0 /* Navbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112499C198A05F78A779F663 /* Navbar.swift */; };
 		F43E7B713287BBBD4B72CE15 /* SyncPlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A2ABF92E68CA858C820159F /* SyncPlayScreen.swift */; };
 		F48E3E2FFED3D932DCB175A2 /* LocalizationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553D9132985E8186BD273665 /* LocalizationPreferences.swift */; };
 		F6635A47F59537CE23A1B0F7 /* SettingsTelemetryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */; };
 		F695BE1C0B1984B1D35873F5 /* SeerrBrowseByViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269C2AE578D735E14C13184C /* SeerrBrowseByViewModel.swift */; };
+		F872F61A76BB3C05129D6A9F /* SubtitleDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2137FFC469CA450D30D6AB92 /* SubtitleDecoder.swift */; };
 		FA0888C6B508098C61D3C093 /* SyncPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24051174A7D551EB4CBB14D /* SyncPlayManager.swift */; };
 		FAA9362203F394F8C16A88E0 /* MusicBrowseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7539F7F9B1DF246DC2B1D54D /* MusicBrowseScreen.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
@@ -348,15 +354,16 @@
 		1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAddViewModel.swift; sourceTree = "<group>"; };
 		1D8429DA7A55F0D2A8C8589B /* SettingsScreenLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreenLayout.swift; sourceTree = "<group>"; };
 		1E1FA00408C9FB598421F7DF /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = he; path = he.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		1F13AEA1576AE3859376FBC4 /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
 		1FEF85081B859EC243DB434B /* es-AR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-AR"; path = "es-AR.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		20249DB4CBADB314F64A2489 /* ml */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ml; path = ml.lproj/Localizable.strings; sourceTree = "<group>"; };
 		206B8ADD21DE4BBDDC9A4902 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
 		207D7B97AF9819D4AF2B610E /* SyncPlayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPlayModels.swift; sourceTree = "<group>"; };
 		20E0B02F72125CF492D2CAC8 /* kn */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = kn; path = kn.lproj/Localizable.strings; sourceTree = "<group>"; };
 		212D6C789279AF967B37CE6B /* SeerrDiscoverRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrDiscoverRowView.swift; sourceTree = "<group>"; };
-		222272223B36377520B16500 /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
+		2137FFC469CA450D30D6AB92 /* SubtitleDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleDecoder.swift; sourceTree = "<group>"; };
 		22C876AEAE701F3D41940D2F /* th */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = th; path = th.lproj/Localizable.strings; sourceTree = "<group>"; };
-		232395F3F60D2CEB01626EF1 /* MoonfinTopShelf.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoonfinTopShelf.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		232395F3F60D2CEB01626EF1 /* MoonfinTopShelf.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoonfinTopShelf.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		23E1D7F1E37858902AEBB058 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = vi; path = vi.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLoginScreen.swift; sourceTree = "<group>"; };
 		2523CF196DD63575C61CB15E /* EmbyServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyServerClient.swift; sourceTree = "<group>"; };
@@ -368,9 +375,11 @@
 		2C45C3ED4CF1B58F6693CC53 /* ServerConnectionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConnectionMonitor.swift; sourceTree = "<group>"; };
 		2CA92E4943C66A700242A879 /* FilterOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterOptions.swift; sourceTree = "<group>"; };
 		2D7DAD20426F96F052F9D238 /* SettingsMediaBarOpacityScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaBarOpacityScreen.swift; sourceTree = "<group>"; };
+		2E2740819BB6B30453279DFF /* AudioRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRenderer.swift; sourceTree = "<group>"; };
 		2E8FD77D17697D20510FDA9D /* fa */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fa; path = fa.lproj/Localizable.strings; sourceTree = "<group>"; };
 		2FC6ED1D69F4C92B17DB2FA5 /* EmbyConnectViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectViewModel.swift; sourceTree = "<group>"; };
 		308C76B8168C2222C5B1798B /* sr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = sr; path = sr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		30A61329E254A81382FA266E /* NativePlayerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePlayerWrapper.swift; sourceTree = "<group>"; };
 		30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerWebSocketClient.swift; sourceTree = "<group>"; };
 		31559FCAE6E15A3710AEAA45 /* SubtitleDownloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleDownloadView.swift; sourceTree = "<group>"; };
 		31F8038B299E18CDF0BDC9A5 /* FolderBrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderBrowseScreen.swift; sourceTree = "<group>"; };
@@ -389,6 +398,7 @@
 		394CCE77FFFDDFD9278308B8 /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = hu; path = hu.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		39FB08870D76B932543FCFC8 /* Moonfin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Moonfin.entitlements; sourceTree = "<group>"; };
 		3A08E2DB890F6D9077611BC5 /* SettingsLicenseDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLicenseDetailScreen.swift; sourceTree = "<group>"; };
+		3BB7433AF31721F246A18290 /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
 		3C368CDA2FC6C1709CC5F22D /* RatingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingModels.swift; sourceTree = "<group>"; };
 		3C72F20A47DD2A40EE40925E /* SelectServerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectServerViewModel.swift; sourceTree = "<group>"; };
 		3CABD3CD4B909CCEE8EAE42F /* LyricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsView.swift; sourceTree = "<group>"; };
@@ -424,7 +434,6 @@
 		4F2F3E54369AC54B115D471F /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = id; path = id.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		4F9E7FCE39C15D9BACD3A4B8 /* SSLTrustDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSLTrustDelegate.swift; sourceTree = "<group>"; };
 		4FD6506358E44853E69CD715 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
-		502F18502DD946DEA5888231 /* VLCPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLCPlayerView.swift; sourceTree = "<group>"; };
 		50561E2E88B654B33FA55BB1 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = nl; path = nl.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		5117782083200D9A590F3AF6 /* CrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporter.swift; sourceTree = "<group>"; };
 		5244AA4B527E42C085EE573F /* lv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = lv; path = lv.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -443,8 +452,10 @@
 		5E66A84C747D367236452A40 /* EmbyConnectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectScreen.swift; sourceTree = "<group>"; };
 		5E69F68CBF0C643F9262D155 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = sv; path = sv.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		5EE2A95948B4950DD5D7D235 /* GenreBrowseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenreBrowseViewModel.swift; sourceTree = "<group>"; };
+		5FD4F3EC40CF02AA4AB88AEA /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FFF5BF5976CE6CE91FFCD33 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = pl; path = pl.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		6000FDA121A62E2A5E33FE10 /* SettingsSubtitleValueScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSubtitleValueScreens.swift; sourceTree = "<group>"; };
+		603AC080E4828C08EFDB08EA /* SubtitleOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleOverlay.swift; sourceTree = "<group>"; };
 		6194CE9C28CEDB6615316AD1 /* MediaSegmentRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSegmentRepository.swift; sourceTree = "<group>"; };
 		61D54C68F798DB2A649ADB83 /* BookReaderScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReaderScreen.swift; sourceTree = "<group>"; };
 		634C718BADDB00E36F5891D6 /* StillWatchingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StillWatchingOverlay.swift; sourceTree = "<group>"; };
@@ -457,6 +468,7 @@
 		68AC9AB298E561DC071CAD60 /* EmbyConnectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyConnectService.swift; sourceTree = "<group>"; };
 		68D4848242EED9AD876A7730 /* SettingsToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsToggleButton.swift; sourceTree = "<group>"; };
 		691AF53D69FE77B9B45DCC0E /* eo */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = eo; path = eo.lproj/Localizable.strings; sourceTree = "<group>"; };
+		69E8B40432E8DB471D3952B9 /* FFDemuxer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFDemuxer.swift; sourceTree = "<group>"; };
 		69F44D0DB6C2561F204F1F95 /* af */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = af; path = af.lproj/Localizable.strings; sourceTree = "<group>"; };
 		6A2ABF92E68CA858C820159F /* SyncPlayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPlayScreen.swift; sourceTree = "<group>"; };
 		6BADD1E336F548E1C3183FFC /* NextUpOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextUpOverlay.swift; sourceTree = "<group>"; };
@@ -506,7 +518,7 @@
 		828D86CE5B1B0CB5AD4FBE67 /* UserRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRepository.swift; sourceTree = "<group>"; };
 		8291D25FD1C3C2E9276E9E71 /* SettingsSeerrRowsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSeerrRowsScreen.swift; sourceTree = "<group>"; };
 		838ACBBD4AAFD821179099C9 /* es-DO */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-DO"; path = "es-DO.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		838B6DDE822EEB98311172D6 /* Moonfin.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Moonfin.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		838B6DDE822EEB98311172D6 /* Moonfin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moonfin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		84351FB844308F8CE1733E97 /* JellyfinLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinLogo.swift; sourceTree = "<group>"; };
 		84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackManager.swift; sourceTree = "<group>"; };
 		853E6DEE22DC8A300940D5DF /* EmbyLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyLogo.swift; sourceTree = "<group>"; };
@@ -550,6 +562,7 @@
 		A0287A8BB7F449C14785A019 /* SettingsLiveTvGuideOptionsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLiveTvGuideOptionsScreen.swift; sourceTree = "<group>"; };
 		A0602C204B92FDB43F318D38 /* es-MX */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "es-MX"; path = "es-MX.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
 		A091CA9F93704A73B83E8E19 /* es-MX */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-MX"; path = "es-MX.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		A1C1E2FBABA0F471666513F8 /* NativeVideoSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeVideoSurface.swift; sourceTree = "<group>"; };
 		A239B13DD42C2F5E078D0C81 /* MoonfinTopShelf.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoonfinTopShelf.entitlements; sourceTree = "<group>"; };
 		A261C64FB9294C4DB482BD24 /* LibraryBrowseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryBrowseScreen.swift; sourceTree = "<group>"; };
 		A28727709AB22C5FAD93DB4C /* SupportedLocale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedLocale.swift; sourceTree = "<group>"; };
@@ -582,7 +595,6 @@
 		B5F3FE4870832192F104F371 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B73D54C6BC13701909A90C65 /* ca */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ca; path = ca.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B864F1E3CB31F4464A9659E4 /* SettingsPluginPreviewsMusicScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginPreviewsMusicScreen.swift; sourceTree = "<group>"; };
-		B8A846B9AC692AEF2B4A7E79 /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B93335B0C9ABCC9E20064C65 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = nb; path = nb.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		B94722BC7ADD0914A190024A /* ServerFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerFeatures.swift; sourceTree = "<group>"; };
 		B9C58086D0A8D8554A32C0D8 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -593,7 +605,6 @@
 		BB710D6D17C4F601820D4977 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		BB7B40972308862B6CCB20F4 /* MediaServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServerClient.swift; sourceTree = "<group>"; };
 		BB9041F256EFB635B85F27ED /* RuntimeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeFormatter.swift; sourceTree = "<group>"; };
-		BBC987604BAE75373ABA7889 /* VLCPlayerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLCPlayerWrapper.swift; sourceTree = "<group>"; };
 		BC2835C69455EABD2EECAA4C /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
 		BC58364B116FF22E2A2D2D0F /* ug */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ug; path = ug.lproj/Localizable.strings; sourceTree = "<group>"; };
 		BC58E88339A0A0CDEC4D1F39 /* SettingsOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsOverlayView.swift; sourceTree = "<group>"; };
@@ -645,6 +656,7 @@
 		D8E7AE30259328B5CBC08F34 /* be */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = be; path = be.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		D9F50D11079EEB018393FAEA /* SeerrView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrView.swift; sourceTree = "<group>"; };
 		DA79A0A2AF7B5D30923217F1 /* RatingIconProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingIconProvider.swift; sourceTree = "<group>"; };
+		DAE42F444485F1B601E64CC5 /* VTDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VTDecoder.swift; sourceTree = "<group>"; };
 		DB0600CB1761D7B18F86054B /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DB664C8BC81C7125AF33BC73 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = it; path = it.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		DBBAFEB231637AF0C3257C86 /* SettingsSyncPlayValueScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSyncPlayValueScreen.swift; sourceTree = "<group>"; };
@@ -667,7 +679,7 @@
 		E81804D76C55705DF5406F5A /* PersonAvatarShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonAvatarShape.swift; sourceTree = "<group>"; };
 		EA52CD4F73CDB1FAE8DE7DB8 /* ItemCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemCard.swift; sourceTree = "<group>"; };
 		EB155021D30FE0D971566E3C /* Migration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Migration.swift; sourceTree = "<group>"; };
-		EB6641D0100E4FC4783593E0 /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
+		EB1F8E8156ECA5E8F1345363 /* PlaybackSurfaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackSurfaceView.swift; sourceTree = "<group>"; };
 		EBC459B0D609A9F2851F4152 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		EC27D154B218F9E811141A43 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = pt; path = pt.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		EC9F9CC8E71DC2A8672CC3DE /* PhotoPlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPlayerViewModel.swift; sourceTree = "<group>"; };
@@ -704,7 +716,7 @@
 				555AFC2DDF8B010AEDF450AF /* Nuke in Frameworks */,
 				0D1E59B7FA6065C5EB3ACA78 /* KeychainAccess in Frameworks */,
 				6D6DACBFE202887C15BFBD12 /* MPVKit in Frameworks */,
-				F2A788D4C9330160C989BD28 /* Pods_Moonfin.framework in Frameworks */,
+				E5DBF695D3B1C20836F73592 /* Pods_Moonfin.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -764,8 +776,8 @@
 				EC8EF81012D6A9F511E67D90 /* Moonfin */,
 				7737AEA69D88AC7CE51C6E80 /* MoonfinTopShelf */,
 				D189A2B18468536429738151 /* Products */,
-				D2FED795765E2226ADD9332E /* Pods */,
-				51D774DD7B28D026905856B3 /* Frameworks */,
+				6A3DAE738861D23CC808B3AD /* Pods */,
+				1280A13D82B1BB49C03AEACC /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -791,6 +803,14 @@
 				2523CF196DD63575C61CB15E /* EmbyServerClient.swift */,
 			);
 			path = Emby;
+			sourceTree = "<group>";
+		};
+		1280A13D82B1BB49C03AEACC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5FD4F3EC40CF02AA4AB88AEA /* Pods_Moonfin.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		13CEC8995388452AE88085A7 /* App */ = {
@@ -836,6 +856,20 @@
 				BC58E88339A0A0CDEC4D1F39 /* SettingsOverlayView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		23AA0D2B744E7F0078FDB439 /* Native */ = {
+			isa = PBXGroup;
+			children = (
+				2E2740819BB6B30453279DFF /* AudioRenderer.swift */,
+				69E8B40432E8DB471D3952B9 /* FFDemuxer.swift */,
+				30A61329E254A81382FA266E /* NativePlayerWrapper.swift */,
+				A1C1E2FBABA0F471666513F8 /* NativeVideoSurface.swift */,
+				2137FFC469CA450D30D6AB92 /* SubtitleDecoder.swift */,
+				603AC080E4828C08EFDB08EA /* SubtitleOverlay.swift */,
+				DAE42F444485F1B601E64CC5 /* VTDecoder.swift */,
+			);
+			path = Native;
 			sourceTree = "<group>";
 		};
 		27036A711A3797E96F3282AF /* Components */ = {
@@ -953,14 +987,6 @@
 			path = Toolbar;
 			sourceTree = "<group>";
 		};
-		51D774DD7B28D026905856B3 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				B8A846B9AC692AEF2B4A7E79 /* Pods_Moonfin.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		58D8EADEDAC655BCDB4A73B8 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -978,6 +1004,7 @@
 			isa = PBXGroup;
 			children = (
 				49AA4FA33D282BFE233A8D06 /* MediaSegments */,
+				23AA0D2B744E7F0078FDB439 /* Native */,
 				BF003B267C85FF1D6480BA5D /* AudioCapabilityPolicy.swift */,
 				C33518745EEEEE15D7C873DA /* AudioManager.swift */,
 				BDB8F28B92CABD88BE5EC234 /* DisplayCriteriaManager.swift */,
@@ -986,14 +1013,13 @@
 				F109668B4B1DF4DBE304AD87 /* PlaybackCoordinator.swift */,
 				84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */,
 				947DA967952F29198CA33814 /* PlaybackRolloutPolicy.swift */,
+				EB1F8E8156ECA5E8F1345363 /* PlaybackSurfaceView.swift */,
 				EFAA84EA48DD957F041873D7 /* PreviewPlayerManager.swift */,
 				E13C8282BC93E97F87F7D3B5 /* ServerStreamResolver.swift */,
 				C8D9DC6E3197C8498F141404 /* StreamResolver.swift */,
 				CDB9E437270C796B41CB3B96 /* SubtitleConfigurator.swift */,
 				029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */,
 				0999A9F52A4E51F806C863EA /* VideoCapabilityPolicy.swift */,
-				502F18502DD946DEA5888231 /* VLCPlayerView.swift */,
-				BBC987604BAE75373ABA7889 /* VLCPlayerWrapper.swift */,
 			);
 			path = Playback;
 			sourceTree = "<group>";
@@ -1068,6 +1094,15 @@
 				C7B55924700C5EF2907FC728 /* SeerrDiscoverViewModel.swift */,
 			);
 			path = Discover;
+			sourceTree = "<group>";
+		};
+		6A3DAE738861D23CC808B3AD /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				3BB7433AF31721F246A18290 /* Pods-Moonfin.debug.xcconfig */,
+				1F13AEA1576AE3859376FBC4 /* Pods-Moonfin.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		7737AEA69D88AC7CE51C6E80 /* MoonfinTopShelf */ = {
@@ -1300,16 +1335,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		D2FED795765E2226ADD9332E /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				EB6641D0100E4FC4783593E0 /* Pods-Moonfin.debug.xcconfig */,
-				222272223B36377520B16500 /* Pods-Moonfin.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		E1F297A6F6008E56533EC737 /* Design */ = {
 			isa = PBXGroup;
 			children = (
@@ -1393,12 +1418,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27492BE8AEF59CC3B0E24072 /* Build configuration list for PBXNativeTarget "Moonfin" */;
 			buildPhases = (
-				A70859B517678444CA6CD49F /* [CP] Check Pods Manifest.lock */,
+				C9C66C1056A5E9A59FAFDE4B /* [CP] Check Pods Manifest.lock */,
+				8AA6B4D6C4D493A6BD1EFD08 /* Patch MPVKit Module Maps */,
 				7772703707EE7DD8FA8C7D63 /* Sources */,
 				02EDCD9F5CB60B47801BD4ED /* Resources */,
 				DBD8DE1F616DE17837EFC577 /* Frameworks */,
 				D086A9091B643496E6F2B660 /* Embed Foundation Extensions */,
-				98396295BFA4BE18671AD375 /* [CP] Embed Pods Frameworks */,
+				6FD593661FC95818FCCD23FD /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1439,14 +1465,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
-				TargetAttributes = {
-					1D833D69C33E00EBBB97E86E = {
-						DevelopmentTeam = "";
-					};
-					B8C07AD24AD4FBE225476F50 = {
-						DevelopmentTeam = "";
-					};
-				};
 			};
 			buildConfigurationList = BE273067B4ADFBB28BDFF246 /* Build configuration list for PBXProject "Moonfin" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -1527,7 +1545,6 @@
 				A27147E7F35030E722AF2F84 /* XCRemoteSwiftPackageReference "MPVKit" */,
 				B2B8E58CA71B599381066E71 /* XCRemoteSwiftPackageReference "Nuke" */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = D189A2B18468536429738151 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1553,7 +1570,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		98396295BFA4BE18671AD375 /* [CP] Embed Pods Frameworks */ = {
+		6FD593661FC95818FCCD23FD /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1561,16 +1578,39 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A70859B517678444CA6CD49F /* [CP] Check Pods Manifest.lock */ = {
+		8AA6B4D6C4D493A6BD1EFD08 /* Patch MPVKit Module Maps */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Patch MPVKit Module Maps";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/scripts/patch-modulemaps.sh\"\n";
+		};
+		C9C66C1056A5E9A59FAFDE4B /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1615,6 +1655,7 @@
 				2E19EF36F7763CFC157BA2F3 /* AudioManager.swift in Sources */,
 				C3196E7D876BD01CF010F3E1 /* AudioNowPlayingView.swift in Sources */,
 				131295AFF0C20D9BA793CB36 /* AudioNowPlayingViewModel.swift in Sources */,
+				39A4CE71574277DB34E60CA1 /* AudioRenderer.swift in Sources */,
 				3363A53733BC3A4924F09B5C /* AuthStates.swift in Sources */,
 				523C091BE2752ADC33800E25 /* AuthenticationPreferences.swift in Sources */,
 				659117FFF2FEE58885DFDFBB /* AuthenticationRepository.swift in Sources */,
@@ -1647,6 +1688,7 @@
 				A7373C59083DD6A838B4E380 /* ErrorViews.swift in Sources */,
 				EF3338B76D9FDB7E5C2BDD5D /* ExpandableLibrariesButton.swift in Sources */,
 				8E23DC82575F15240016EC32 /* ExpandableToolbarButton.swift in Sources */,
+				CC17F66DE3DFD3BCD250FC48 /* FFDemuxer.swift in Sources */,
 				9CCA52F9ED0EE2F7A720B640 /* FavoritesScreen.swift in Sources */,
 				4A145C122DD60B25A04DE2FE /* FavoritesViewModel.swift in Sources */,
 				E92A177D873E4AFE076A7C7B /* FeatureDegradationManager.swift in Sources */,
@@ -1706,6 +1748,8 @@
 				B9B3E56C703FE28E36FF3A25 /* MultiServerRepository.swift in Sources */,
 				FAA9362203F394F8C16A88E0 /* MusicBrowseScreen.swift in Sources */,
 				9783E9F46CFB9ACEEB4E0A62 /* MusicBrowseViewModel.swift in Sources */,
+				C2FCBEE89B01FE53B59FF1E2 /* NativePlayerWrapper.swift in Sources */,
+				1A91A6B65647E2B9EC1146EC /* NativeVideoSurface.swift in Sources */,
 				F3A45AB09B898ECA8E8D6BF0 /* Navbar.swift in Sources */,
 				BB8A8389816DAB9F4A557AA4 /* NavbarViewModel.swift in Sources */,
 				2AC4802334AE8E8949708E15 /* NavigationRouter.swift in Sources */,
@@ -1722,6 +1766,7 @@
 				D5A758C2F1A8F4C235D3F9CF /* PlaybackInfoDialog.swift in Sources */,
 				8BF09E744242E20B4C19DABC /* PlaybackManager.swift in Sources */,
 				4D594FD41B9ADBD3E9E2A13C /* PlaybackRolloutPolicy.swift in Sources */,
+				56136629E620823766D663FE /* PlaybackSurfaceView.swift in Sources */,
 				00CBC11CBD19027BD5F7AFF1 /* PlayerOverlayView.swift in Sources */,
 				13AA935D6BB99581DF6A3ED7 /* PlayerSeekBar.swift in Sources */,
 				127223D3B2F8CE2B6B03280B /* PlayerView.swift in Sources */,
@@ -1842,7 +1887,9 @@
 				80E643A14C0A03AE4D6D162A /* StreamResolver.swift in Sources */,
 				7DD83E80B90A544B22074686 /* Strings.swift in Sources */,
 				766840DB1FC200F4DDE7B408 /* SubtitleConfigurator.swift in Sources */,
+				F872F61A76BB3C05129D6A9F /* SubtitleDecoder.swift in Sources */,
 				95C28FED1CFFCFDFAB08B4FC /* SubtitleDownloadView.swift in Sources */,
+				B1BB1830FDB681364FE526C7 /* SubtitleOverlay.swift in Sources */,
 				2BDE593C2AA04389364E5A4D /* SuggestedScreen.swift in Sources */,
 				56729D90CB52173D793C3EA9 /* SuggestedViewModel.swift in Sources */,
 				16A42DD162E3DA3C12CE3F5F /* SupportedLocale.swift in Sources */,
@@ -1865,8 +1912,7 @@
 				EB6655AECBFD44AAAE5AD818 /* UserPreferences.swift in Sources */,
 				DB33FADDE630D729F2D525BA /* UserRepository.swift in Sources */,
 				139EF05143A46C8751511836 /* UserViewsService.swift in Sources */,
-				586DFBFA7AA95BC08E71E035 /* VLCPlayerView.swift in Sources */,
-				15F3DC70128565BFF2270889 /* VLCPlayerWrapper.swift in Sources */,
+				95B3288EE0BB585D1D252F61 /* VTDecoder.swift in Sources */,
 				BC31EA372FC0F5D430C7B93A /* VideoCapabilityPolicy.swift in Sources */,
 				0A7E56E576320DF03B40D49D /* VideoPlayerViewModel.swift in Sources */,
 			);
@@ -2014,11 +2060,12 @@
 /* Begin XCBuildConfiguration section */
 		3692D4DC0894416555EE45DC /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 222272223B36377520B16500 /* Pods-Moonfin.release.xcconfig */;
+			baseConfigurationReference = 1F13AEA1576AE3859376FBC4 /* Pods-Moonfin.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2036,6 +2083,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = MoonfinTopShelf/MoonfinTopShelf.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MoonfinTopShelf/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2052,11 +2100,12 @@
 		};
 		63305EDE78CAE1C908A0F58F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EB6641D0100E4FC4783593E0 /* Pods-Moonfin.debug.xcconfig */;
+			baseConfigurationReference = 3BB7433AF31721F246A18290 /* Pods-Moonfin.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_ENTITLEMENTS = Moonfin/Resources/Moonfin.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Moonfin/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -2199,6 +2248,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = MoonfinTopShelf/MoonfinTopShelf.entitlements;
+				DEVELOPMENT_TEAM = CCBYLPUSVH;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MoonfinTopShelf/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

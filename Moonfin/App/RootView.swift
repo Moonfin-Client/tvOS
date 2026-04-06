@@ -566,7 +566,7 @@ struct TrailerPlayerScreen: View {
     let segmentsJson: String
 
     @EnvironmentObject var router: NavigationRouter
-    @StateObject private var player: VLCPlayerWrapper
+    @StateObject private var player: MpvPlayerWrapper
     @State private var hasStartedPlayback = false
     @State private var resolveError: String?
     @State private var resolverDiagnostics: String = ""
@@ -581,7 +581,7 @@ struct TrailerPlayerScreen: View {
         self.videoId = videoId
         self.startSeconds = startSeconds
         self.segmentsJson = segmentsJson
-        _player = StateObject(wrappedValue: MpvPlayerWrapper.makePreferredPlayer())
+        _player = StateObject(wrappedValue: MpvPlayerWrapper.makePlayer())
     }
 
     private var isLoading: Bool {
@@ -604,7 +604,7 @@ struct TrailerPlayerScreen: View {
                         nativePlayer.play()
                     }
             } else {
-                VLCPlayerView(player: player)
+                PlaybackSurfaceView(player: player)
                     .ignoresSafeArea()
                     .id(videoId)
             }
@@ -775,7 +775,7 @@ struct TrailerPlayerScreen: View {
         }
     }
 
-    private func stateDescription(_ state: VLCPlayerState) -> String {
+    private func stateDescription(_ state: PlayerState) -> String {
         switch state {
         case .idle:
             return "idle"

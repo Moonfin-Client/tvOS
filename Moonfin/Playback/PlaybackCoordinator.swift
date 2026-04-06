@@ -53,14 +53,19 @@ final class PlaybackCoordinator: ObservableObject {
         let player = makePlayer()
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
         videoPlayerManager = manager
-        await manager.play(
-            items: items,
-            startIndex: startIndex,
-            startPosition: startPosition,
-            audioStreamIndex: audioStreamIndex,
-            subtitleStreamIndex: subtitleStreamIndex,
-            mediaSourceIndex: mediaSourceIndex
-        )
+        // Fire-and-forget: play() awaits the surface attachment which only
+        // happens after the caller navigates to the video-player screen.
+        // Blocking here would deadlock because navigation runs after this returns.
+        Task {
+            await manager.play(
+                items: items,
+                startIndex: startIndex,
+                startPosition: startPosition,
+                audioStreamIndex: audioStreamIndex,
+                subtitleStreamIndex: subtitleStreamIndex,
+                mediaSourceIndex: mediaSourceIndex
+            )
+        }
     }
 
     func setLiveTvContext(channels: [ServerItem], currentIndex: Int) {
@@ -98,7 +103,9 @@ final class PlaybackCoordinator: ObservableObject {
         let manager = PlaybackManager(player: player, client: client, preferences: preferences)
         let audio = AudioManager(playbackManager: manager, client: client)
         audioManager = audio
-        await audio.playNow(items: items, startIndex: startIndex, shuffle: shuffle)
+        Task {
+            await audio.playNow(items: items, startIndex: startIndex, shuffle: shuffle)
+        }
     }
 
     func stopAudioPlayback() async {
@@ -106,23 +113,7 @@ final class PlaybackCoordinator: ObservableObject {
         audioManager = nil
     }
 
-    private func makePlayer() -> VLCPlayerWrapper {
-        let requested = preferences[UserPreferences.playbackPlayerBackend]
-        let stage = preferences[UserPreferences.playbackMpvCanaryStage]
-        let killSwitch = preferences[UserPreferences.playbackMpvKillSwitchEnabled]
-        let resolution = PlaybackRolloutPolicy.resolve(
-            requested: requested,
-            stage: stage,
-            localKillSwitch: killSwitch
-        )
-
-        switch resolution.active {
-        case .tvvlcKit:
-            let player = VLCPlayerWrapper()
-            player.updatePlaybackBackend(identifier: "tvvlckit", fallbackReason: resolution.fallbackReason?.rawValue)
-            return player
-        case .mpv:
-            return MpvPlayerWrapper.makePlayer()
-        }
+    private func makePlayer() -> MpvPlayerWrapper {
+        MpvPlayerWrapper.makePlayer()
     }
 }

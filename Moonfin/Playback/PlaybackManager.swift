@@ -21,7 +21,7 @@ final class PlaybackManager: ObservableObject {
 
     var autoAdvanceOnEnd = true
 
-    let player: VLCPlayerWrapper
+    let player: MpvPlayerWrapper
     let segmentHandler: MediaSegmentHandler
     let nextUpManager: NextUpManager
 
@@ -94,7 +94,7 @@ final class PlaybackManager: ObservableObject {
     }
 
     init(
-        player: VLCPlayerWrapper,
+        player: MpvPlayerWrapper,
         client: MediaServerClient,
         preferences: UserPreferences
     ) {
@@ -106,7 +106,11 @@ final class PlaybackManager: ObservableObject {
             stage: preferences[UserPreferences.playbackMpvCanaryStage],
             localKillSwitch: preferences[UserPreferences.playbackMpvKillSwitchEnabled]
         )
-        self.streamResolver = ServerStreamResolver(client: client, requestedBackend: requestedBackend)
+        self.streamResolver = ServerStreamResolver(
+            client: client,
+            requestedBackend: requestedBackend,
+            nativeDvEnabled: preferences[UserPreferences.nativeDvDecodeEnabled]
+        )
         self.subtitleConfigurator = SubtitleConfigurator(preferences: preferences)
 
         let segmentRepo = MediaSegmentRepositoryImpl(preferences: preferences, client: client)
@@ -237,7 +241,7 @@ final class PlaybackManager: ObservableObject {
 
     func setAudioTrack(_ index: Int32) {
         player.setAudioTrack(index)
-        saveSelectedAudioLanguage(vlcTrackIndex: index)
+        saveSelectedAudioLanguage(trackIndex: index)
         Task { [weak self] in
             await self?.reportPlaybackProgressBoundary()
         }
@@ -655,7 +659,7 @@ final class PlaybackManager: ObservableObject {
 
     private func mapPlayerTrackToServerStreamIndex(
         playerTrackId: Int32,
-        playerTracks: [VLCTrack],
+        playerTracks: [PlayerTrack],
         serverStreams: [ServerMediaStream],
         fallback: Int?
     ) -> Int? {
@@ -667,10 +671,10 @@ final class PlaybackManager: ObservableObject {
         return serverStreams[trackPosition].index
     }
 
-    private func saveSelectedAudioLanguage(vlcTrackIndex: Int32) {
+    private func saveSelectedAudioLanguage(trackIndex: Int32) {
         guard let stream = currentStreamInfo else { return }
-        let vlcTracks = player.audioTracks
-        guard let trackPosition = vlcTracks.firstIndex(where: { $0.id == vlcTrackIndex }) else { return }
+        let tracks = player.audioTracks
+        guard let trackPosition = tracks.firstIndex(where: { $0.id == trackIndex }) else { return }
         let audioStreams = stream.audioStreams
         guard trackPosition < audioStreams.count else { return }
         if let language = audioStreams[trackPosition].language, !language.isEmpty {
@@ -685,10 +689,10 @@ final class PlaybackManager: ObservableObject {
         guard !savedLanguage.isEmpty else { return }
 
         if let matchIndex = stream.audioStreams.firstIndex(where: { $0.language == savedLanguage }) {
-            let vlcTracks = player.audioTracks
-            if matchIndex < vlcTracks.count {
-                let vlcId = vlcTracks[matchIndex].id
-                player.setAudioTrack(vlcId)
+            let tracks = player.audioTracks
+            if matchIndex < tracks.count {
+                let trackId = tracks[matchIndex].id
+                player.setAudioTrack(trackId)
             }
         }
     }

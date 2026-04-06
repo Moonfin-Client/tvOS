@@ -15,7 +15,7 @@ struct MediaBarView: View {
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
-    @ObservedObject var inlineTrailerPlayer: VLCPlayerWrapper
+    @ObservedObject var inlineTrailerPlayer: MpvPlayerWrapper
     @State private var inlineVideoOpacity: Double = 0
 
     init(
@@ -23,7 +23,7 @@ struct MediaBarView: View {
         ratingsViewModel: MediaBarRatingsViewModel,
         userPreferences: UserPreferences,
         screenHeight: CGFloat,
-        inlineTrailerPlayer: VLCPlayerWrapper,
+        inlineTrailerPlayer: MpvPlayerWrapper,
         onItemSelected: @escaping (MediaBarSlideItem) -> Void,
         onPlayTrailer: @escaping (MediaBarSlideItem) -> Void,
         onFocusedItemChanged: @escaping (MediaBarSlideItem?) -> Void,
@@ -185,7 +185,7 @@ struct MediaBarView: View {
                 .animation(.easeInOut(duration: 0.8), value: viewModel.currentIndex)
             }
 
-            VLCPlayerView(player: inlineTrailerPlayer)
+            PlaybackSurfaceView(player: inlineTrailerPlayer)
                 .opacity(inlineVideoOpacity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

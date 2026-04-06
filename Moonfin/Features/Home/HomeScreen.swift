@@ -34,7 +34,7 @@ struct HomeScreen: View {
     @State private var focusTask: Task<Void, Never>?
     @State private var mediaBarTrailerPreviewTask: Task<Void, Never>?
     @State private var lastPreviewedMediaBarItemId: String?
-    @StateObject private var inlineTrailerPlayer: VLCPlayerWrapper
+    @StateObject private var inlineTrailerPlayer: MpvPlayerWrapper
     @Environment(\.resetFocus) private var resetFocus
     @State private var focusFirstRowTrigger: Int = 0
     @State private var restoreRowFocusTrigger: Int = 0

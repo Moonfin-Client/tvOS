@@ -28,7 +28,7 @@ struct VideoPlayerScreen: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            VLCPlayerView(player: viewModel.player)
+            PlaybackSurfaceView(player: viewModel.player)
                 .equatable()
                 .ignoresSafeArea()
                 .allowsHitTesting(false)

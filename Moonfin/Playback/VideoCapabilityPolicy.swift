@@ -228,15 +228,23 @@ struct VideoDynamicRangePolicy {
         dynamicRange: VideoDynamicRange,
         capabilities: VideoCapabilityDetector.Capabilities,
         canTranscode: Bool,
-        videoStream: ServerMediaStream? = nil
+        videoStream: ServerMediaStream? = nil,
+        nativeDvEnabled: Bool = true
     ) -> (backend: PlaybackBackendDirective, reason: String?, diagnostics: [String]) {
         var diagnostics = capabilities.diagnostics
         diagnostics.append("dynamic_range=\(dynamicRange.rawValue)")
         diagnostics.append("requested_backend=\(requestedBackend.rawValue)")
         diagnostics.append("can_transcode=\(canTranscode)")
 
+        if dynamicRange == .dolbyVision {
+            if nativeDvEnabled && FFmpegAvailability.isAvailable {
+                return (.native, "dolby_vision_native_decode", diagnostics)
+            }
+            return (.mpv, "dolby_vision_tone_map", diagnostics)
+        }
+
         guard requestedBackend == .mpv else {
-            return (.tvvlcKit, nil, diagnostics)
+            return (.mpv, nil, diagnostics)
         }
 
         switch dynamicRange {
@@ -249,7 +257,7 @@ struct VideoDynamicRangePolicy {
             if canTranscode {
                 return (.mpv, "hdr10_requires_tone_mapping", diagnostics)
             }
-            return (.tvvlcKit, "mpv_hdr10_uncertain", diagnostics)
+            return (.mpv, "mpv_hdr10_uncertain", diagnostics)
         case .hlg:
             if capabilities.sinkProfile.isHdrCapable && capabilities.supportsHLG {
                 return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
@@ -257,7 +265,7 @@ struct VideoDynamicRangePolicy {
             if canTranscode {
                 return (.mpv, "hlg_requires_tone_mapping", diagnostics)
             }
-            return (.tvvlcKit, "mpv_hlg_uncertain", diagnostics)
+            return (.mpv, "mpv_hlg_uncertain", diagnostics)
         case .hdr10Plus:
             if capabilities.sinkProfile.isHdrCapable && capabilities.supportsHDR10Plus {
                 return (.mpv, "prefer_mpv_hdr_pipeline", diagnostics)
@@ -265,32 +273,11 @@ struct VideoDynamicRangePolicy {
             if canTranscode {
                 return (.mpv, "hdr10_plus_requires_tone_mapping", diagnostics)
             }
-            return (.tvvlcKit, "mpv_hdr10_plus_uncertain", diagnostics)
+            return (.mpv, "mpv_hdr10_plus_uncertain", diagnostics)
         case .dolbyVision:
-            if isDolbyVisionProfile5(videoStream: videoStream) {
-                return (.tvvlcKit, "dolby_vision_profile5_prefer_vlc", diagnostics)
-            }
-            if capabilities.sinkProfile.isHdrCapable && canTranscode {
-                return (.mpv, "dolby_vision_requires_transcode", diagnostics)
-            }
-            return (.tvvlcKit, "mpv_dolby_vision_uncertain", diagnostics)
+            return (.mpv, "dolby_vision_tone_map", diagnostics)
         case .unknown:
             return (.mpv, "mpv_dynamic_range_unknown", diagnostics)
         }
-    }
-
-    private static func isDolbyVisionProfile5(videoStream: ServerMediaStream?) -> Bool {
-        guard let stream = videoStream else { return false }
-        let codec = stream.codec?.lowercased() ?? ""
-        let profile = stream.profile?.lowercased() ?? ""
-        let rangeType = stream.videoRangeType?.lowercased() ?? ""
-        let combined = [codec, profile, rangeType].joined(separator: " ")
-        if combined.contains("dvhe.05") || combined.contains("dvh1.05") {
-            return true
-        }
-        if rangeType == "dovi" && !combined.contains("hdr10") {
-            return true
-        }
-        return false
     }
 }

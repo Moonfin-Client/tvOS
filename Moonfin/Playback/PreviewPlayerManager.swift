@@ -19,10 +19,10 @@ final class PreviewPlayerManager: ObservableObject {
     /// The `id` of the item currently being previewed, or nil when idle.
     @Published private(set) var currentItemId: String?
 
-    /// True while VLC is opening, buffering, or playing (drives overlay visibility).
+    /// True while the player is opening, buffering, or playing (drives overlay visibility).
     @Published private(set) var isVisible: Bool = false
 
-    /// The shared player. Cards observe this directly via VLCPlayerView.
+    /// The shared player. Cards observe this directly via PlaybackSurfaceView.
     let player = MpvPlayerWrapper.makePlayer()
 
     // MARK: - Private state
@@ -136,7 +136,7 @@ final class PreviewPlayerManager: ObservableObject {
         currentPlayCount += 1
         scheduleLoopRestart()
         await player.play(streamUrl: url.absoluteString, startPosition: currentSeekPosition)
-        player.mediaPlayer?.audio?.isMuted = currentMuted
+        player.setMuted(currentMuted)
     }
 
     // MARK: - Preview startup
@@ -164,7 +164,7 @@ final class PreviewPlayerManager: ObservableObject {
 
             scheduleLoopRestart()
             await player.play(streamUrl: url.absoluteString, startPosition: seekPosition)
-            player.mediaPlayer?.audio?.isMuted = currentMuted
+            player.setMuted(currentMuted)
 
         } catch { }
     }

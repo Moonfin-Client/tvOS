@@ -19,7 +19,7 @@ final class AudioNowPlayingViewModel: ObservableObject {
     private var trackObserver: AnyCancellable?
     private var playerObserver: AnyCancellable?
 
-    var player: VLCPlayerWrapper { audioManager.player }
+    var player: MpvPlayerWrapper { audioManager.player }
     var playbackManager: PlaybackManager { audioManager.playbackManager }
 
     var currentItem: ServerItem? { audioManager.currentItem }

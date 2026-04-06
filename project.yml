@@ -30,6 +30,11 @@ targets:
     type: application
     platform: tvOS
     deploymentTarget: "16.0"
+    preBuildScripts:
+      - name: Patch MPVKit Module Maps
+        script: |
+          "${PROJECT_DIR}/scripts/patch-modulemaps.sh"
+        basedOnDependencyAnalysis: false
     sources:
       - path: Moonfin
     resources:

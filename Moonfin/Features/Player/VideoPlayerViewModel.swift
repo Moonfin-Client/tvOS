@@ -51,7 +51,7 @@ final class VideoPlayerViewModel: ObservableObject {
             && !(item.mediaSources ?? []).isEmpty
     }
 
-    var player: VLCPlayerWrapper { playbackManager.player }
+    var player: MpvPlayerWrapper { playbackManager.player }
 
     var title: String { ensureItemCache(); return _cachedTitle }
     var subtitle: String { ensureItemCache(); return _cachedSubtitle }

@@ -33,31 +33,31 @@ struct PlaybackInfoDialog: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Playback Information")
-                .font(.title2xl)
+                .font(.captionSm)
                 .foregroundColor(theme.colorScheme.onBackground)
-                .padding(.horizontal, SpaceTokens.spaceLg)
-                .padding(.top, SpaceTokens.spaceLg)
-                .padding(.bottom, SpaceTokens.spaceMd)
+                .padding(.horizontal, SpaceTokens.spaceMd)
+                .padding(.top, SpaceTokens.spaceMd)
+                .padding(.bottom, SpaceTokens.spaceXs)
 
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
+                VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                     playbackSection
                     videoSection
                     audioSection
                     subtitleSection
                 }
-                .padding(.horizontal, SpaceTokens.spaceLg)
+                .padding(.horizontal, SpaceTokens.spaceMd)
             }
-            .frame(maxHeight: 550)
+            .frame(maxHeight: 900)
 
             HStack {
                 Spacer()
                 FocusableDialogButton(title: "Close", action: { viewModel.hidePlaybackInfo() })
                 Spacer()
             }
-            .padding(.vertical, SpaceTokens.spaceMd)
+            .padding(.vertical, SpaceTokens.spaceXs)
         }
-        .frame(width: 650)
+        .frame(width: 580)
         .background(theme.colorScheme.surface)
         .cornerRadius(RadiusTokens.large)
         .onExitCommand { viewModel.hidePlaybackInfo() }
@@ -66,26 +66,82 @@ struct PlaybackInfoDialog: View {
     private var playbackSection: some View {
         InfoSection(title: "Playback") {
             InfoRow(label: "Play Method", value: streamInfo?.playMethod.rawValue ?? "Unknown", isHighlighted: true)
+            InfoRow(label: "Backend", value: backendDisplayName)
+            if let reason = viewModel.player.playbackFallbackReason {
+                InfoRow(label: "Fallback", value: reason)
+            }
             InfoRow(label: "Container", value: (streamInfo?.container ?? mediaSource?.container ?? "Unknown").uppercased())
             InfoRow(label: "Bitrate", value: formatBitrate(mediaSource?.bitrate))
+        }
+    }
+
+    private var backendDisplayName: String {
+        switch viewModel.player.playbackBackendIdentifier {
+        case "native": return "Native"
+        case "mpv": return "mpv"
+        default: return "mpv"
         }
     }
 
     @ViewBuilder
     private var videoSection: some View {
         if let video = videoStream {
+            let playerType = String(describing: type(of: viewModel.player))
+            let telemetry = viewModel.player.dynamicRangeTelemetrySnapshot()
             InfoSection(title: "Video") {
                 if let w = video.width, let h = video.height {
                     let fps = video.realFrameRate.map { " @ \(Int($0))fps" } ?? ""
                     InfoRow(label: "Resolution", value: "\(w)×\(h)\(fps)")
                 }
                 InfoRow(label: "HDR", value: hdrType(for: video))
+                InfoRow(label: "Player Type", value: playerType)
                 InfoRow(label: "Codec", value: videoCodec(for: video))
                 if let depth = video.bitDepth {
                     InfoRow(label: "Bit Depth", value: "\(depth)-bit")
                 }
                 if let br = video.bitRate {
                     InfoRow(label: "Video Bitrate", value: formatBitrate(br))
+                }
+                // Native backend frame counters
+                if let decoded = telemetry["native_frames_decoded"],
+                   let dropped = telemetry["native_frames_dropped"] {
+                    InfoRow(label: "Frames", value: "\(decoded) decoded, \(dropped) dropped")
+                }
+                // mpv HDR metadata
+                Group {
+                    if let hdrType = telemetry["mpv_hdr_type"], hdrType != "unknown" {
+                        InfoRow(label: "HDR Metadata", value: hdrType)
+                    }
+                    if let maxCLL = telemetry["mpv_max_cll"], maxCLL != "unknown" {
+                        InfoRow(label: "MaxCLL", value: "\(maxCLL) nits")
+                    }
+                    if let maxFALL = telemetry["mpv_max_fall"], maxFALL != "unknown" {
+                        InfoRow(label: "MaxFALL", value: "\(maxFALL) nits")
+                    }
+                }
+                // Tone mapping diagnostics
+                Group {
+                    InfoRow(label: "Telemetry", value: telemetry["mpv_dynamic_range_telemetry"] ?? "empty(\(telemetry.count))")
+                    InfoRow(label: "Tone Map", value: telemetry["mpv_intent_tone_mapping"] ?? "n/a")
+                    InfoRow(label: "Sink HDR", value: telemetry["mpv_intent_sink_hdr_capable"] ?? "n/a")
+                    InfoRow(label: "Content", value: telemetry["mpv_intent_content_range"] ?? "n/a")
+                }
+                Group {
+                    if let inPrim = telemetry["mpv_input_primaries"] {
+                        InfoRow(label: "In Color", value: "\(inPrim)/\(telemetry["mpv_input_transfer"] ?? "?")")
+                    }
+                    if let outPrim = telemetry["mpv_output_primaries"] {
+                        InfoRow(label: "Out Color", value: "\(outPrim)/\(telemetry["mpv_output_transfer"] ?? "?")")
+                    }
+                    if let aPrim = telemetry["mpv_active_target_prim"] {
+                        InfoRow(label: "Target", value: "\(aPrim)/\(telemetry["mpv_active_target_trc"] ?? "?")")
+                    }
+                    if let aTM = telemetry["mpv_active_tone_mapping"] {
+                        InfoRow(label: "Active TM", value: aTM)
+                    }
+                    if let aHw = telemetry["mpv_active_hwdec"] {
+                        InfoRow(label: "HW Decode", value: aHw)
+                    }
                 }
             }
         }
@@ -132,7 +188,13 @@ struct PlaybackInfoDialog: View {
 
     private func hdrType(for stream: ServerMediaStream) -> String {
         let rangeType = stream.videoRangeType ?? ""
-        if rangeType.contains("DOVI") || rangeType.contains("DoVi") { return "Dolby Vision" }
+        let telemetry = viewModel.player.dynamicRangeTelemetrySnapshot()
+        let isDV = rangeType.contains("DOVI") || rangeType.contains("DoVi")
+
+        if isDV, let profile = telemetry["native_dv_profile"], let level = telemetry["native_dv_level"] {
+            return "Dolby Vision P\(profile).\(level)"
+        }
+        if isDV { return "Dolby Vision" }
         if rangeType.contains("HDR10Plus") || rangeType.contains("HDR10+") { return "HDR10+" }
         if rangeType.contains("HDR10") { return "HDR10" }
         if rangeType.contains("HLG") { return "HLG" }
@@ -190,16 +252,16 @@ private struct InfoSection<Content: View>: View {
     @EnvironmentObject private var theme: MoonfinTheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(title)
-                .font(.bodyLg)
+                .font(.captionXs)
                 .bold()
                 .foregroundColor(theme.colorScheme.onBackground)
-                .padding(.bottom, SpaceTokens.spaceXs)
+                .padding(.bottom, 2)
 
             content
         }
-        .padding(SpaceTokens.spaceMd)
+        .padding(SpaceTokens.spaceSm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: RadiusTokens.small)
@@ -217,12 +279,12 @@ private struct InfoRow: View {
     var body: some View {
         HStack {
             Text(label)
-                .font(.bodyMd)
+                .font(.caption2xs)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-                .frame(width: 140, alignment: .leading)
+                .frame(width: 120, alignment: .leading)
 
             Text(value)
-                .font(.bodyMd)
+                .font(.caption2xs)
                 .foregroundColor(isHighlighted ? theme.accent : theme.colorScheme.onBackground)
                 .lineLimit(1)
 

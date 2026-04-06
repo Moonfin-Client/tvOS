@@ -17,7 +17,7 @@ struct AudioCapabilityPolicy {
         var diagnostics: [String] = []
 
         guard requestedBackend == .mpv else {
-            return Decision(backend: .tvvlcKit, reason: nil, requiresTranscode: false, diagnostics: diagnostics)
+            return Decision(backend: .mpv, reason: nil, requiresTranscode: false, diagnostics: diagnostics)
         }
 
         guard let stream = selectedAudioStream else {
@@ -65,7 +65,7 @@ struct AudioCapabilityPolicy {
                 )
             }
             return Decision(
-                backend: .tvvlcKit,
+                backend: .mpv,
                 reason: "mpv_truehd_uncertain",
                 requiresTranscode: false,
                 diagnostics: diagnostics
@@ -83,7 +83,7 @@ struct AudioCapabilityPolicy {
                 )
             }
             return Decision(
-                backend: .tvvlcKit,
+                backend: .mpv,
                 reason: "mpv_dts_uncertain",
                 requiresTranscode: false,
                 diagnostics: diagnostics
@@ -111,7 +111,7 @@ struct AudioCapabilityPolicy {
         }
 
         return Decision(
-            backend: .tvvlcKit,
+            backend: .mpv,
             reason: "mpv_audio_codec_uncertain",
             requiresTranscode: false,
             diagnostics: diagnostics

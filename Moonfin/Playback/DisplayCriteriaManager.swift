@@ -18,6 +18,17 @@ final class DisplayCriteriaManager {
         manager.preferredDisplayCriteria = criteria
     }
 
+    func applyNative(formatDescription: CMVideoFormatDescription, refreshRate: Float) {
+        guard let window = activeWindow() else { return }
+        let manager = window.avDisplayManager
+        guard manager.isDisplayCriteriaMatchingEnabled else { return }
+        guard #available(tvOS 17.0, *) else { return }
+        manager.preferredDisplayCriteria = AVDisplayCriteria(
+            refreshRate: refreshRate,
+            formatDescription: formatDescription
+        )
+    }
+
     func reset() {
         guard let window = activeWindow() else { return }
         window.avDisplayManager.preferredDisplayCriteria = nil

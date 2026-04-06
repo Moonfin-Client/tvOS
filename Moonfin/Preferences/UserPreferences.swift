@@ -24,6 +24,7 @@ final class UserPreferences {
     static let playbackPlayerBackend = Preference(key: "playback_player_backend", defaultValue: PlaybackPlayerBackend.mpv)
     static let playbackMpvCanaryStage = Preference(key: "playback_mpv_canary_stage", defaultValue: PlaybackMpvCanaryStage.optInProduction)
     static let playbackMpvKillSwitchEnabled = Preference(key: "playback_mpv_kill_switch_enabled", defaultValue: false)
+    static let nativeDvDecodeEnabled = Preference(key: "native_dv_decode_enabled", defaultValue: true)
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
     static let shuffleContentType = Preference(key: "shuffle_content_type", defaultValue: ShuffleContentType.both)
@@ -184,18 +185,14 @@ enum AudioOutput: String, StringRepresentableEnum, CaseIterable {
 }
 
 enum PlaybackPlayerBackend: String, StringRepresentableEnum, CaseIterable {
-    case tvvlcKit
     case mpv
 
     var displayName: String {
-        switch self {
-        case .tvvlcKit: return "TVVLCKit"
-        case .mpv: return "MPV"
-        }
+        "MPV"
     }
 
     static var selectableCases: [PlaybackPlayerBackend] {
-        [.tvvlcKit, .mpv]
+        [.mpv]
     }
 }
 
@@ -229,19 +226,15 @@ enum PlaybackBackendSupport {
     }
 
     static var isMpvLinked: Bool {
-        dlsym(UnsafeMutableRawPointer(bitPattern: -2), "mpv_create") != nil
+#if canImport(Libmpv)
+        return true
+#else
+        return false
+#endif
     }
 
     static func resolve(for requested: PlaybackPlayerBackend) -> Resolution {
-        switch requested {
-        case .tvvlcKit:
-            return Resolution(requested: requested, active: .tvvlcKit, fallbackReason: nil)
-        case .mpv:
-            if isMpvLinked {
-                return Resolution(requested: requested, active: .mpv, fallbackReason: nil)
-            }
-            return Resolution(requested: requested, active: .tvvlcKit, fallbackReason: .mpvNotLinked)
-        }
+        Resolution(requested: .mpv, active: .mpv, fallbackReason: nil)
     }
 
 }

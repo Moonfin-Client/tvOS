@@ -25,7 +25,7 @@ final class AudioManager: ObservableObject {
     var queue: [QueueEntry] { playbackManager.queue }
     var currentIndex: Int { playbackManager.currentIndex }
     var currentEntry: QueueEntry? { playbackManager.currentEntry }
-    var player: VLCPlayerWrapper { playbackManager.player }
+    var player: MpvPlayerWrapper { playbackManager.player }
 
     var hasQueue: Bool { !queue.isEmpty }
     var currentItem: ServerItem? { currentEntry?.item }
