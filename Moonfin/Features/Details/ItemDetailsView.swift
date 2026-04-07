@@ -99,7 +99,9 @@ struct ItemDetailsView: View {
     var body: some View {
         configuredScreen
         .overlay { addToPlaylistOverlay }
-        .overlay { subtitleDownloadOverlay }
+        .sheet(isPresented: $showSubtitleDownload) {
+            subtitleDownloadOverlay
+        }
         .confirmationDialog(
             "Delete Item?",
             isPresented: $showDeleteConfirmation,
@@ -247,23 +249,14 @@ struct ItemDetailsView: View {
         }
     }
 
-    @ViewBuilder
     private var subtitleDownloadOverlay: some View {
-        if showSubtitleDownload {
-            ZStack {
-                Color.black.opacity(0.8)
-                    .ignoresSafeArea()
-
-                SubtitleDownloadDialog(
-                    defaultLanguage: subtitleSearchLanguage(for: _viewModel.wrappedValue.item),
-                    onSearch: searchRemoteSubtitles,
-                    onDownload: downloadRemoteSubtitle,
-                    onDismiss: { showSubtitleDownload = false },
-                    onDownloaded: { showSubtitleDownload = false }
-                )
-            }
-            .focusSection()
-        }
+        SubtitleDownloadDialog(
+            defaultLanguage: subtitleSearchLanguage(for: _viewModel.wrappedValue.item),
+            onSearch: searchRemoteSubtitles,
+            onDownload: downloadRemoteSubtitle,
+            onDismiss: { showSubtitleDownload = false },
+            onDownloaded: { showSubtitleDownload = false }
+        )
     }
 
     private func searchRemoteSubtitles(language: String) async throws -> [RemoteSubtitleResult] {
@@ -791,7 +784,7 @@ struct ItemDetailsView: View {
         let hasSubtitleStreams = streams.contains { $0.type == .subtitle }
         let isJellyfin = subtitleClient()?.serverType == .jellyfin
         let canDownloadSubtitles = isJellyfin
-            && hasSubtitleStreams
+            && !hasSubtitleStreams
             && !(item.mediaSources ?? []).isEmpty
             && item.type != .photo
             && item.type != .book

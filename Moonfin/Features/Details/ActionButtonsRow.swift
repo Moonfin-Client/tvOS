@@ -104,7 +104,7 @@ struct ActionButtonsRow: View {
 
             if let onDownloadSubtitles {
                 ActionButton(
-                    label: "Get Subtitles",
+                    label: "Get Subs",
                     icon: "square.and.arrow.down",
                     action: onDownloadSubtitles
                 )
