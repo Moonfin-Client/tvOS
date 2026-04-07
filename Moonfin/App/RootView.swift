@@ -105,6 +105,7 @@ struct MainNavigationView: View {
     }
 
     private var contentShouldPreferDefaultFocus: Bool {
+        if preferContentFocusDuringHandoff { return true }
         switch navbarPosition {
         case .top:
             return !shouldShowTopNavbar
@@ -312,7 +313,7 @@ struct MainNavigationView: View {
                     )
                         .frame(height: navbarHeight)
                         .focusSection()
-                        .prefersDefaultFocus(true, in: mainNamespace)
+                        .prefersDefaultFocus(!preferContentFocusDuringHandoff, in: mainNamespace)
                     Spacer()
                 }
                 .zIndex(1)
