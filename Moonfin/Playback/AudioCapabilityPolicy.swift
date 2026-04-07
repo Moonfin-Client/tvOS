@@ -56,17 +56,9 @@ struct AudioCapabilityPolicy {
 
         if isTrueHd {
             diagnostics.append("audio_feature=truehd")
-            if canTranscode {
-                return Decision(
-                    backend: .mpv,
-                    reason: "truehd_requires_transcode",
-                    requiresTranscode: true,
-                    diagnostics: diagnostics
-                )
-            }
             return Decision(
                 backend: .mpv,
-                reason: "mpv_truehd_uncertain",
+                reason: "truehd_direct_play",
                 requiresTranscode: false,
                 diagnostics: diagnostics
             )
@@ -74,17 +66,9 @@ struct AudioCapabilityPolicy {
 
         if isDtsFamily {
             diagnostics.append("audio_feature=dts_family")
-            if canTranscode {
-                return Decision(
-                    backend: .mpv,
-                    reason: "dts_requires_transcode",
-                    requiresTranscode: true,
-                    diagnostics: diagnostics
-                )
-            }
             return Decision(
                 backend: .mpv,
-                reason: "mpv_dts_uncertain",
+                reason: "dts_direct_play",
                 requiresTranscode: false,
                 diagnostics: diagnostics
             )

@@ -18,6 +18,16 @@ struct FFmpegAvailability {
         return false
 #endif
     }()
+
+    static let abiCompatible: Bool = {
+#if canImport(Libavcodec)
+        let ver = avcodec_version()
+        let major = ver >> 16
+        return major == 61
+#else
+        return false
+#endif
+    }()
 }
 
 struct DVConfiguration {
@@ -238,7 +248,7 @@ final class FFDemuxer {
     }
 
     var isReady: Bool {
-        FFmpegAvailability.isAvailable
+        FFmpegAvailability.isAvailable && FFmpegAvailability.abiCompatible
     }
 
     func open(url: String) -> Bool {

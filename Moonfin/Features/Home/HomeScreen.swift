@@ -679,12 +679,7 @@ struct HomeScreen: View {
 
         if let localTrailers = try? await client.userLibraryApi.getLocalTrailers(itemId: item.id),
            let localTrailer = localTrailers.first {
-            let requestedBackend = PlaybackRolloutPolicy.effectiveRequestedDirective(
-                requested: container.userPreferences[UserPreferences.playbackPlayerBackend],
-                stage: container.userPreferences[UserPreferences.playbackMpvCanaryStage],
-                localKillSwitch: container.userPreferences[UserPreferences.playbackMpvKillSwitchEnabled]
-            )
-            let resolver = ServerStreamResolver(client: client, requestedBackend: requestedBackend)
+            let resolver = ServerStreamResolver(client: client, requestedBackend: .mpv)
             let mediaSourceId = localTrailer.mediaSources?.first?.id
             if let stream = try? await resolver.resolve(
                 item: localTrailer,

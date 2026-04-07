@@ -137,8 +137,6 @@ final class AudioRenderer {
         guard outputSampleRate > 0, outputChannels > 0 else { return false }
         guard engine == nil else { return true }
 
-        configureAudioSession()
-
         let channels = outputChannels
         let sampleRate = outputSampleRate
 
@@ -467,14 +465,6 @@ final class AudioRenderer {
         swrOutputPtrs = nil
         swrOutputCapacity = 0
         swrOutputChannelCount = 0
-    }
-
-    private func configureAudioSession() {
-        let session = AVAudioSession.sharedInstance()
-        do {
-            try session.setCategory(.playback, mode: .moviePlayback)
-            try session.setActive(true)
-        } catch {}
     }
 
     private func channelMask(for channels: Int32) -> UInt64 {

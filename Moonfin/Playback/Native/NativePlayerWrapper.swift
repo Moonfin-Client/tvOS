@@ -10,26 +10,26 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private var useNativeBackend = false
     private var nativeBackendRequested = false
 
-    private var demuxer: FFDemuxer?
-    private var videoDecoder: VTDecoder?
-    private var audioRenderer: AudioRenderer?
+    nonisolated(unsafe) private var demuxer: FFDemuxer?
+    nonisolated(unsafe) private var videoDecoder: VTDecoder?
+    nonisolated(unsafe) private var audioRenderer: AudioRenderer?
     private let nativeVideoSurface = NativeVideoSurface()
-    private var subtitleDecoder: SubtitleDecoder?
+    nonisolated(unsafe) private var subtitleDecoder: SubtitleDecoder?
     private let subtitleOverlay = SubtitleOverlay(frame: .zero)
 
     private let readQueue = DispatchQueue(label: "nativePlayer.readLoop", qos: .userInitiated)
     nonisolated(unsafe) private var readLoopRunning = false
     nonisolated(unsafe) private var readLoopPaused = false
 
-    private var activeVideoStreamIndex: Int32 = -1
-    private var activeAudioStreamIndex: Int32 = -1
-    private var activeSubtitleStreamIndex: Int32 = -1
+    nonisolated(unsafe) private var activeVideoStreamIndex: Int32 = -1
+    nonisolated(unsafe) private var activeAudioStreamIndex: Int32 = -1
+    nonisolated(unsafe) private var activeSubtitleStreamIndex: Int32 = -1
     private var videoConfigured = false
     private var firstFrameDelivered = false
-    private var pendingDVReconfigure = false
+    nonisolated(unsafe) private var pendingDVReconfigure = false
 
-    private var pendingStartPosition: TimeInterval?
-    private var seekTarget: TimeInterval?
+    nonisolated(unsafe) private var pendingStartPosition: TimeInterval?
+    nonisolated(unsafe) private var seekTarget: TimeInterval?
     private var nativePlaybackRate: Float = 1.0
 
     private var nativeRequestedContentRange: VideoDynamicRange = .unknown
@@ -41,7 +41,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private let frameSemaphore: DispatchSemaphore
     private let pauseCondition = NSCondition()
 
-    private var consecutiveReadErrors: Int = 0
+    nonisolated(unsafe) private var consecutiveReadErrors: Int = 0
     private let maxReadRetries = 5
     nonisolated(unsafe) private var nativeBackgroundPaused = false
     private var nativeLifecycleObservers: [NSObjectProtocol] = []
@@ -55,6 +55,13 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private static let watchdogInterval: TimeInterval = 3
     private static let watchdogStallThreshold: TimeInterval = 5
     private static let watchdogMaxStalls = 3
+
+    private var driftFramesDropped: Int = 0
+    private var driftFramesHeld: Int = 0
+    private var driftMaxAbs: Double = 0
+    private var driftSum: Double = 0
+    private var driftSampleCount: Int = 0
+    private var lastDriftLogTime: CFAbsoluteTime = 0
 
     override init() {
         frameSemaphore = DispatchSemaphore(value: maxFrameQueueDepth)
@@ -208,6 +215,52 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
     override func addSubtitle(url: URL) {
         guard useNativeBackend else { super.addSubtitle(url: url); return }
+
+        let subDemux = FFDemuxer()
+        guard subDemux.open(url: url.absoluteString) else { return }
+
+        guard let subStream = subDemux.streams.first(where: { $0.type == .subtitle }),
+              let codecpar = subDemux.codecpar(forStreamIndex: subStream.index) else {
+            subDemux.close()
+            return
+        }
+
+        let decoder = SubtitleDecoder()
+        guard decoder.configure(codecId: subStream.codecId, codecpar: codecpar) else {
+            subDemux.close()
+            return
+        }
+
+        subtitleDecoder?.close()
+        subtitleDecoder = decoder
+        subtitleOverlay.clear()
+        activeSubtitleStreamIndex = -1
+
+        let timeBase = subDemux.timeBase(forStreamIndex: subStream.index)
+        let streamIdx = subStream.index
+
+        nonisolated(unsafe) let demux = subDemux
+        nonisolated(unsafe) let dec = decoder
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            while true {
+                let result = demux.readPacket()
+                switch result {
+                case .packet(let pkt):
+                    guard pkt.streamIndex == streamIdx else { continue }
+                    if let event = dec.decodePacket(pkt, timeBase: timeBase) {
+                        DispatchQueue.main.async { [weak self] in
+                            self?.subtitleOverlay.enqueue(event)
+                        }
+                    }
+                case .eof:
+                    return
+                case .wouldBlock:
+                    Thread.sleep(forTimeInterval: 0.01)
+                case .error:
+                    return
+                }
+            }
+        }
     }
 
     override func configureSubtitleAppearance(_ options: [String: Any]) {
@@ -219,6 +272,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
     override func setSubtitleDelay(_ interval: TimeInterval) {
         guard useNativeBackend else { super.setSubtitleDelay(interval); return }
+        subtitleOverlay.delaySeconds = interval
     }
 
     override func setAudioDelay(_ interval: TimeInterval) {
@@ -354,6 +408,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
         firstFrameDelivered = false
 
+        configureAudioSession()
         if let ar = audioRenderer {
             _ = ar.start()
         }
@@ -437,13 +492,13 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             if waitResult == .timedOut { continue }
 
             let readResult: FFReadResult
-            let demux = MainActor.assumeIsolated { self.demuxer }
+            let demux = self.demuxer
             guard let demux else { break }
             readResult = demux.readPacket()
 
             switch readResult {
             case .packet(let pkt):
-                MainActor.assumeIsolated { self.consecutiveReadErrors = 0 }
+                self.consecutiveReadErrors = 0
                 processPacket(pkt)
 
             case .eof:
@@ -462,10 +517,8 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
             case .error(let code):
                 frameSemaphore.signal()
-                let retries = MainActor.assumeIsolated {
-                    self.consecutiveReadErrors += 1
-                    return self.consecutiveReadErrors
-                }
+                self.consecutiveReadErrors += 1
+                let retries = self.consecutiveReadErrors
                 if retries > maxReadRetries {
                     nativeLogger.error("demuxer read failed after \(retries) retries, code=\(code)")
                     DispatchQueue.main.async { [weak self] in
@@ -485,14 +538,16 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     }
 
     private nonisolated func processPacket(_ pkt: FFPacket) {
-        let (videoIdx, audioIdx, subtitleIdx, seekTgt, pendingStart) = MainActor.assumeIsolated {
-            (self.activeVideoStreamIndex, self.activeAudioStreamIndex, self.activeSubtitleStreamIndex, self.seekTarget, self.pendingStartPosition)
-        }
+        let videoIdx = self.activeVideoStreamIndex
+        let audioIdx = self.activeAudioStreamIndex
+        let subtitleIdx = self.activeSubtitleStreamIndex
+        let seekTgt = self.seekTarget
+        let pendingStart = self.pendingStartPosition
 
         if pkt.streamIndex == videoIdx {
-            let (decoder, demuxRef, needsDVCheck) = MainActor.assumeIsolated {
-                (self.videoDecoder, self.demuxer, self.pendingDVReconfigure)
-            }
+            let decoder = self.videoDecoder
+            let demuxRef = self.demuxer
+            let needsDVCheck = self.pendingDVReconfigure
             guard let decoder, let demuxRef else {
                 frameSemaphore.signal()
                 return
@@ -523,13 +578,12 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
                 duration: dur
             )
         } else if pkt.streamIndex == audioIdx {
-            let renderer = MainActor.assumeIsolated { self.audioRenderer }
+            let renderer = self.audioRenderer
             renderer?.decodePacket(pkt)
             frameSemaphore.signal()
         } else if subtitleIdx >= 0 && pkt.streamIndex == subtitleIdx {
-            let (decoder, demuxRef) = MainActor.assumeIsolated {
-                (self.subtitleDecoder, self.demuxer)
-            }
+            let decoder = self.subtitleDecoder
+            let demuxRef = self.demuxer
             if let decoder, let demuxRef {
                 let tb = demuxRef.timeBase(forStreamIndex: subtitleIdx)
                 if let event = decoder.decodePacket(pkt, timeBase: tb) {
@@ -552,6 +606,17 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         let ptsSec = CMTimeGetSeconds(pts)
         if ptsSec.isFinite && ptsSec >= 0 { lastVideoPtsSeconds = ptsSec }
         let dur = CMTime(seconds: 1.0 / videoFrameRate, preferredTimescale: 90000)
+
+        let action = evaluateFrameDrift(ptsSec)
+        switch action {
+        case .drop:
+            driftFramesDropped += 1
+            return
+        case .hold:
+            driftFramesHeld += 1
+        case .display:
+            break
+        }
 
         nativeVideoSurface.enqueue(pixelBuffer: pixelBuffer, pts: pts, duration: dur)
 
@@ -586,6 +651,47 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         }
     }
 
+    private enum FrameAction { case display, hold, drop }
+
+    private func evaluateFrameDrift(_ ptsSec: Double) -> FrameAction {
+        guard let renderer = audioRenderer, renderer.currentTime > 0, ptsSec.isFinite else {
+            return .display
+        }
+        let audioClock = renderer.currentTime
+        let drift = ptsSec - audioClock
+        let absDrift = abs(drift)
+
+        driftSum += absDrift
+        driftSampleCount += 1
+        if absDrift > driftMaxAbs { driftMaxAbs = absDrift }
+        logDriftTelemetryIfNeeded()
+
+        if drift > 0.040 {
+            Thread.sleep(forTimeInterval: min(drift - 0.010, 0.050))
+            return .hold
+        } else if drift < -0.040 {
+            return .drop
+        }
+        return .display
+    }
+
+    private func resetDriftStats() {
+        driftFramesDropped = 0
+        driftFramesHeld = 0
+        driftMaxAbs = 0
+        driftSum = 0
+        driftSampleCount = 0
+        lastDriftLogTime = CFAbsoluteTimeGetCurrent()
+    }
+
+    private func logDriftTelemetryIfNeeded() {
+        let now = CFAbsoluteTimeGetCurrent()
+        guard now - lastDriftLogTime >= 30, driftSampleCount > 0 else { return }
+        let avg = driftSum / Double(driftSampleCount)
+        nativeLogger.info("drift stats: avg=\(String(format: "%.1f", avg * 1000))ms max=\(String(format: "%.1f", self.driftMaxAbs * 1000))ms dropped=\(self.driftFramesDropped) held=\(self.driftFramesHeld) samples=\(self.driftSampleCount)")
+        resetDriftStats()
+    }
+
     private func handleEOF() {
         guard useNativeBackend else { return }
         state = .ended
@@ -614,6 +720,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         seekTarget = seconds
         consecutiveReadErrors = 0
         lastVideoPtsSeconds = 0
+        resetDriftStats()
 
         videoDecoder?.flush()
         videoDecoder?.resetErrorState()
@@ -801,7 +908,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private nonisolated func checkPacketDVConfig(_ pkt: FFPacket, decoder: VTDecoder, demuxRef: FFDemuxer) {
         let doviConfType: Int32 = 23
         guard let sd = pkt.sideData.first(where: { $0.type == doviConfType }), sd.data.count >= 5 else {
-            MainActor.assumeIsolated { self.pendingDVReconfigure = false }
+            self.pendingDVReconfigure = false
             return
         }
         let d = sd.data
@@ -816,11 +923,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             blSignalCompatibilityId: d[4] >> 4,
             mdCompression: d[4] & 0x0F
         )
-        MainActor.assumeIsolated {
-            self.pendingDVReconfigure = false
-            self.demuxer?.setDVConfigFromPacket(dv)
-        }
-        let videoIdx = MainActor.assumeIsolated { self.activeVideoStreamIndex }
+        self.pendingDVReconfigure = false
+        self.demuxer?.setDVConfigFromPacket(dv)
+        let videoIdx = self.activeVideoStreamIndex
         if let extradata = demuxRef.streams.first(where: { $0.index == videoIdx })?.extradata {
             _ = decoder.configure(extradata: extradata, dvConfig: dv)
         }

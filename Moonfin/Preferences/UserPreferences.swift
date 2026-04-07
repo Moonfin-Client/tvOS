@@ -22,8 +22,6 @@ final class UserPreferences {
     static let videoStartDelay = Preference(key: "playback_video_start_delay", defaultValue: 0)
     static let cinemaModeEnabled = Preference(key: "cinema_mode_enabled", defaultValue: true)
     static let playbackPlayerBackend = Preference(key: "playback_player_backend", defaultValue: PlaybackPlayerBackend.mpv)
-    static let playbackMpvCanaryStage = Preference(key: "playback_mpv_canary_stage", defaultValue: PlaybackMpvCanaryStage.optInProduction)
-    static let playbackMpvKillSwitchEnabled = Preference(key: "playback_mpv_kill_switch_enabled", defaultValue: false)
     static let nativeDvDecodeEnabled = Preference(key: "native_dv_decode_enabled", defaultValue: true)
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
@@ -199,49 +197,6 @@ enum PlaybackPlayerBackend: String, StringRepresentableEnum, CaseIterable {
     static var selectableCases: [PlaybackPlayerBackend] {
         [.mpv]
     }
-}
-
-enum PlaybackMpvCanaryStage: String, StringRepresentableEnum, CaseIterable {
-    case internalOnly
-    case betaUsers
-    case optInProduction
-    case defaultSwitch
-
-    var displayName: String {
-        switch self {
-        case .internalOnly: return "Internal"
-        case .betaUsers: return "Beta Users"
-        case .optInProduction: return "Opt-In Production"
-        case .defaultSwitch: return "Default Switch"
-        }
-    }
-}
-
-enum PlaybackBackendSupport {
-    struct Resolution {
-        let requested: PlaybackPlayerBackend
-        let active: PlaybackPlayerBackend
-        let fallbackReason: PlaybackBackendFallbackReason?
-    }
-
-    enum PlaybackBackendFallbackReason: String {
-        case mpvNotLinked = "mpv_not_linked"
-        case mpvRolloutDisabled = "mpv_rollout_disabled"
-        case mpvKillSwitch = "mpv_kill_switch"
-    }
-
-    static var isMpvLinked: Bool {
-#if canImport(Libmpv)
-        return true
-#else
-        return false
-#endif
-    }
-
-    static func resolve(for requested: PlaybackPlayerBackend) -> Resolution {
-        Resolution(requested: .mpv, active: .mpv, fallbackReason: nil)
-    }
-
 }
 
 enum NavbarPosition: String, StringRepresentableEnum, CaseIterable {

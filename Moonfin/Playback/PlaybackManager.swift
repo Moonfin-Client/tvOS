@@ -101,14 +101,9 @@ final class PlaybackManager: ObservableObject {
         self.player = player
         self.client = client
         self.preferences = preferences
-        let requestedBackend = PlaybackRolloutPolicy.effectiveRequestedDirective(
-            requested: preferences[UserPreferences.playbackPlayerBackend],
-            stage: preferences[UserPreferences.playbackMpvCanaryStage],
-            localKillSwitch: preferences[UserPreferences.playbackMpvKillSwitchEnabled]
-        )
         self.streamResolver = ServerStreamResolver(
             client: client,
-            requestedBackend: requestedBackend,
+            requestedBackend: .mpv,
             nativeDvEnabled: preferences[UserPreferences.nativeDvDecodeEnabled]
         )
         self.subtitleConfigurator = SubtitleConfigurator(preferences: preferences)

@@ -125,6 +125,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private var lastWatchdogWarningAt: CFAbsoluteTime = 0
     private var renderStallCount: Int = 0
     private var renderWatchdogTimer: Timer?
+    private var activePlaybackURL: String?
+    private var intentChangeInProgress = false
     private var isSurfaceAttached = false
     private var surfaceAttachedContinuation: CheckedContinuation<Void, Never>?
 
@@ -276,6 +278,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     func stopPlaybackOnly() {
         _ = engine?.stopPlayback()
         stopRenderScheduler()
+        activePlaybackURL = nil
+        renderStallCount = 0
         pendingMpvStartPosition = nil
         pendingMpvSeekAttempts = 0
         pendingMpvSeekLastAttemptAt = 0
@@ -386,6 +390,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     }
 
     private func startMpvPlayback(_ url: String, startPosition: TimeInterval?, audioOnly: Bool = false) -> Bool {
+        activePlaybackURL = url
         pendingMpvStartPosition = (startPosition ?? 0) > 0 ? startPosition : nil
         pendingMpvSeekAttempts = 0
         pendingMpvSeekLastAttemptAt = 0
@@ -518,7 +523,12 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     }
 
     private func resetEngine() {
+        guard let oldEngine = engine else { return }
         engine = nil
+        oldEngine.shutdown()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withExtendedLifetime(oldEngine) {}
+        }
     }
 
     private func applyDynamicRangeIntent() {
@@ -580,7 +590,47 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         if elapsed > 2, now - lastWatchdogWarningAt > 15 {
             lastWatchdogWarningAt = now
             renderStallCount += 1
-            logger.warning("render_watchdog stall detected: no render update for \(String(format: "%.1f", elapsed))s")
+            logger.warning("render_watchdog stall detected: no render update for \(String(format: "%.1f", elapsed))s (count=\(self.renderStallCount))")
+            handleRenderStallRecovery()
+        }
+    }
+
+    private func handleRenderStallRecovery() {
+        if renderStallCount == 3 {
+            logger.warning("render_watchdog recovery: force seek")
+            _ = engine?.seekAbsolute(currentTime)
+        } else if renderStallCount == 5 {
+            logger.warning("render_watchdog recovery: engine recreation")
+            let url = activePlaybackURL
+            let pos = currentTime
+            let savedStallCount = renderStallCount
+            stopPlaybackOnly()
+            renderStallCount = savedStallCount
+            if let url {
+                _ = startMpvPlayback(url, startPosition: pos)
+            }
+        } else if renderStallCount == 8 {
+            logger.warning("render_watchdog recovery: software fallback")
+            let url = activePlaybackURL
+            let pos = currentTime
+            stopPlaybackOnly()
+            resetEngine()
+            if let url {
+                activePlaybackURL = url
+                let intent = resolveOutputIntent()
+                videoSurface.configureColorSpace(forSDR: intent != .hdr)
+                if ensureEngine(profile: .software, outputIntent: intent),
+                   engine?.loadFile(url) == true {
+                    engine?.applySubtitleStyle(mpvSubtitleOptions)
+                    updatePlaybackBackend(identifier: "mpv", fallbackReason: "watchdog_software_fallback")
+                    state = .opening
+                    startRenderScheduler()
+                    renderStallCount = 0
+                    if pos > 0 {
+                        pendingMpvStartPosition = pos
+                    }
+                }
+            }
         }
     }
 
@@ -751,6 +801,49 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         } else if currentSubtitleTrackIndex != -1 {
             currentSubtitleTrackIndex = -1
         }
+
+        checkMidStreamIntentChange(engine: engine)
+    }
+
+    private func intentFromVideoParams(_ primaries: String, _ gamma: String) -> MPVOutputIntent {
+        let isHdr = gamma == "pq" || gamma == "hlg"
+            || primaries == "bt.2020" || primaries == "display-p3"
+        if isHdr {
+            return sinkIsHdrCapable ? .hdr : .sdr
+        }
+        return .auto
+    }
+
+    private func checkMidStreamIntentChange(engine: MPVEngine) {
+        guard !intentChangeInProgress, state == .playing || state == .buffering(0) else { return }
+        let primaries = engine.getStringProperty("video-params/primaries") ?? ""
+        let gamma = engine.getStringProperty("video-params/gamma") ?? ""
+        guard !primaries.isEmpty, !gamma.isEmpty else { return }
+        let detected = intentFromVideoParams(primaries, gamma)
+        guard detected != activeOutputIntent else { return }
+        handleOutputIntentChange(detected)
+    }
+
+    private func handleOutputIntentChange(_ newIntent: MPVOutputIntent) {
+        guard let url = activePlaybackURL else { return }
+        intentChangeInProgress = true
+        let pos = currentTime
+        logger.info("mid-stream intent change: \(String(describing: self.activeOutputIntent)) -> \(String(describing: newIntent))")
+        stopPlaybackOnly()
+        resetEngine()
+        activePlaybackURL = url
+        activeToneMappingMode = newIntent == .sdr ? "spline" : (newIntent == .hdr ? "clip" : "auto")
+        videoSurface.configureColorSpace(forSDR: newIntent != .hdr)
+        if ensureEngine(profile: activeProfile, outputIntent: newIntent),
+           engine?.loadFile(url) == true {
+            engine?.applySubtitleStyle(mpvSubtitleOptions)
+            state = .opening
+            startRenderScheduler()
+            if pos > 0 {
+                pendingMpvStartPosition = pos
+            }
+        }
+        intentChangeInProgress = false
     }
 
     private func refreshTracksFromMpv() {
@@ -954,11 +1047,12 @@ private final class MPVVideoSurface {
     }
 
     func configureColorSpace(forSDR: Bool) {
-        metalLayer.pixelFormat = .bgra8Unorm
         if forSDR {
+            metalLayer.pixelFormat = .bgra8Unorm
             metalLayer.colorspace = CGColorSpace(name: CGColorSpace.sRGB)
         } else {
-            metalLayer.colorspace = nil
+            metalLayer.pixelFormat = .rgba16Float
+            metalLayer.colorspace = CGColorSpace(name: CGColorSpace.itur_2100_PQ)
         }
     }
 }
@@ -1082,8 +1176,18 @@ private final class MPVEngine {
             _ = setOptionString("temporal-dither", value: "yes", on: created)
             _ = setOptionString("vd-lavc-film-grain", value: "gpu", on: created)
             _ = setOptionString("video-rotate", value: "no", on: created)
+
+            _ = setOptionString("video-sync", value: "display-resample", on: created)
+            _ = setOptionString("interpolation", value: "yes", on: created)
+            _ = setOptionString("scale", value: "ewa_lanczos", on: created)
+            _ = setOptionString("dscale", value: "mitchell", on: created)
+            _ = setOptionString("cscale", value: "ewa_lanczos", on: created)
+            _ = setOptionString("correct-downscaling", value: "yes", on: created)
+            _ = setOptionString("deinterlace", value: "auto", on: created)
         }
 
+        _ = setOptionString("network-timeout", value: "30", on: created)
+        _ = setOptionString("user-agent", value: "Moonfin-tvOS/\(AppConstants.clientVersion)", on: created)
         _ = setOptionString("demuxer-max-bytes", value: "250MiB", on: created)
         _ = setOptionString("demuxer-max-back-bytes", value: "75MiB", on: created)
         _ = setOptionString("cache", value: "yes", on: created)
@@ -1121,6 +1225,19 @@ private final class MPVEngine {
         installWakeupCallback()
         mpv_request_log_messages(created, "warn")
         observeCoreProperties()
+    }
+
+    func shutdown() {
+        guard let handle else { return }
+        clearWakeupCallback()
+        wakeupHandler = nil
+        _ = stopPlayback()
+        let deadline = CFAbsoluteTimeGetCurrent() + 0.3
+        while CFAbsoluteTimeGetCurrent() < deadline {
+            guard let event = mpv_wait_event(handle, 0.05) else { break }
+            let id = event.pointee.event_id
+            if id == MPV_EVENT_IDLE || id == MPV_EVENT_SHUTDOWN { break }
+        }
     }
 
     deinit {

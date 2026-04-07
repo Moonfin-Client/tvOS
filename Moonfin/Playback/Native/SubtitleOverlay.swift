@@ -6,6 +6,7 @@ final class SubtitleOverlay: UIView {
     private let bitmapView = UIImageView()
     private var eventQueue: [SubtitleEvent] = []
     private var activeEvent: SubtitleEvent?
+    var delaySeconds: TimeInterval = 0
 
     private var subtitleFontSize: CGFloat = 24
     private var subtitleTextColor: UIColor = .white
@@ -53,8 +54,9 @@ final class SubtitleOverlay: UIView {
     }
 
     func update(currentTime: TimeInterval) {
-        eventQueue.removeAll { $0.endTime < currentTime - 0.5 }
-        let current = eventQueue.first { currentTime >= $0.startTime && currentTime < $0.endTime }
+        let adjusted = currentTime - delaySeconds
+        eventQueue.removeAll { $0.endTime < adjusted - 0.5 }
+        let current = eventQueue.first { adjusted >= $0.startTime && adjusted < $0.endTime }
 
         if let current {
             if activeEvent == nil || activeEvent!.startTime != current.startTime {
