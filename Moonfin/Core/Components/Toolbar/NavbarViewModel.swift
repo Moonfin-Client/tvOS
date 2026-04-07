@@ -183,28 +183,35 @@ final class NavbarViewModel: ObservableObject {
         return container.serverClientFactory.client(for: server)
     }
 
-    func performQuickShuffle(router: NavigationRouter) {
+    func performShuffle(libraryId: String? = nil, genreName: String? = nil, router: NavigationRouter) {
         let contentType = container.userPreferences[UserPreferences.shuffleContentType]
         Task {
-            guard let item = await shuffle(contentType: contentType) else { return }
+            guard let item = await shuffle(contentType: contentType, libraryId: libraryId, genreName: genreName) else { return }
             router.navigatePrimaryToItem(item)
         }
     }
 
-    func performShuffle(contentType: ShuffleContentType, router: NavigationRouter) {
-        container.userPreferences[UserPreferences.shuffleContentType] = contentType
-        Task {
-            guard let item = await shuffle(contentType: contentType) else { return }
-            router.navigatePrimaryToItem(item)
+    func fetchGenres() async -> [String] {
+        guard let client else { return [] }
+        do {
+            let query = buildQuery([
+                ("SortBy", "SortName"),
+                ("SortOrder", "Ascending"),
+            ])
+            let result: ItemsResult = try await client.httpClient.request("/Genres", queryItems: query)
+            return result.items.map(\.name)
+        } catch {
+            return []
         }
     }
 
-    private func shuffle(contentType: ShuffleContentType, libraryId: String? = nil) async -> ServerItem? {
+    private func shuffle(contentType: ShuffleContentType, libraryId: String? = nil, genreName: String? = nil) async -> ServerItem? {
         guard !isShuffling, let client else { return nil }
         isShuffling = true
         defer { isShuffling = false }
 
         let includeTypes = contentType.itemTypes
+        let genreFilter = genreName.map { [$0] }
 
         for _ in 1...5 {
             do {
@@ -214,7 +221,11 @@ final class NavbarViewModel: ObservableObject {
                     includeItemTypes: includeTypes,
                     excludeItemTypes: [.boxSet],
                     sortBy: [.random],
-                    limit: 1
+                    limit: 1,
+                    genres: genreFilter,
+                    enableImages: false,
+                    enableUserData: false,
+                    enableTotalRecordCount: false
                 ))
                 guard let item = result.items.first else { return nil }
                 if item.type == .boxSet { continue }
@@ -224,14 +235,14 @@ final class NavbarViewModel: ObservableObject {
             }
         }
 
-        // Client-side fallback when server-side Random sort fails
         do {
             let countResult = try await client.itemsApi.getItems(request: GetItemsRequest(
                 parentId: libraryId,
                 recursive: true,
                 includeItemTypes: includeTypes,
                 excludeItemTypes: [.boxSet],
-                limit: 0
+                limit: 0,
+                genres: genreFilter
             ))
             guard countResult.totalRecordCount > 0 else { return nil }
             let randomIndex = Int.random(in: 0..<countResult.totalRecordCount)
@@ -242,7 +253,11 @@ final class NavbarViewModel: ObservableObject {
                 excludeItemTypes: [.boxSet],
                 sortBy: [.sortName],
                 limit: 1,
-                startIndex: randomIndex
+                startIndex: randomIndex,
+                genres: genreFilter,
+                enableImages: false,
+                enableUserData: false,
+                enableTotalRecordCount: false
             ))
             return itemResult.items.first
         } catch {

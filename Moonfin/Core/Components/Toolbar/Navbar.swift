@@ -10,6 +10,7 @@ struct Navbar: View {
     @State private var lockToHomeOnEntry = true
     @State private var relockTask: Task<Void, Never>?
     @State private var isLibrariesIconFocused = true
+    @State private var showShuffleDialog = false
     private let navbarPillHeight: CGFloat = 56
     let requestHomeFocusToken: Int
     let onMoveToContent: (() -> Void)?
@@ -78,6 +79,25 @@ struct Navbar: View {
                 }
             }
         }
+        .sheet(isPresented: $showShuffleDialog) {
+            ShuffleOptionsDialog(
+                libraries: viewModel.userViews,
+                onQuickShuffle: {
+                    showShuffleDialog = false
+                    viewModel.performShuffle(router: router)
+                },
+                onLibraryShuffle: { libraryId in
+                    showShuffleDialog = false
+                    viewModel.performShuffle(libraryId: libraryId, router: router)
+                },
+                onGenreShuffle: { genreName in
+                    showShuffleDialog = false
+                    viewModel.performShuffle(genreName: genreName, router: router)
+                },
+                onDismiss: { showShuffleDialog = false },
+                fetchGenres: { await viewModel.fetchGenres() }
+            )
+        }
     }
 
     private var startSection: some View {
@@ -115,18 +135,11 @@ struct Navbar: View {
                 if viewModel.showShuffle {
                     ExpandableToolbarButton(
                         icon: "shuffle",
-                        label: "Shuffle",
+                        label: viewModel.isShuffling ? "..." : "Shuffle",
                         isAssetIcon: true,
-                        action: { viewModel.performQuickShuffle(router: router) }
+                        action: { showShuffleDialog = true }
                     )
                     .focused($navFocusItem, equals: .shuffle)
-                    .contextMenu {
-                        ForEach(ShuffleContentType.allCases, id: \.self) { type in
-                            Button(type.displayName) {
-                                viewModel.performShuffle(contentType: type, router: router)
-                            }
-                        }
-                    }
                     .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.shuffle, in: navPillNamespace, isSource: true))
                 }
 

@@ -14,6 +14,7 @@ struct LeftSidebar: View {
     @State private var isLibraryExpanded = false
     @State private var sidebarHadFocus = false
     @State private var allowAutoExpansion = false
+    @State private var showShuffleDialog = false
     @State private var returnFocusItem: SidebarFocusItem = .home
     @FocusState private var focusedItem: SidebarFocusItem?
 
@@ -123,6 +124,28 @@ struct LeftSidebar: View {
                     isLibraryExpanded = false
                 }
             }
+            .sheet(isPresented: $showShuffleDialog) {
+                ShuffleOptionsDialog(
+                    libraries: viewModel.userViews,
+                    onQuickShuffle: {
+                        showShuffleDialog = false
+                        viewModel.performShuffle(router: router)
+                        handoffFocusToContent()
+                    },
+                    onLibraryShuffle: { libraryId in
+                        showShuffleDialog = false
+                        viewModel.performShuffle(libraryId: libraryId, router: router)
+                        handoffFocusToContent()
+                    },
+                    onGenreShuffle: { genreName in
+                        showShuffleDialog = false
+                        viewModel.performShuffle(genreName: genreName, router: router)
+                        handoffFocusToContent()
+                    },
+                    onDismiss: { showShuffleDialog = false },
+                    fetchGenres: { await viewModel.fetchGenres() }
+                )
+            }
     }
 
     private var sidebarColumn: some View {
@@ -203,22 +226,12 @@ struct LeftSidebar: View {
             if viewModel.showShuffle {
                 SidebarIconItem(
                     assetIcon: "shuffle",
-                    label: "Shuffle",
+                    label: viewModel.isShuffling ? "..." : "Shuffle",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .shuffle,
-                    action: {
-                        viewModel.performQuickShuffle(router: router)
-                        handoffFocusToContent()
-                    }
+                    action: { showShuffleDialog = true }
                 )
                 .focused($focusedItem, equals: .shuffle)
-                .contextMenu {
-                    ForEach(ShuffleContentType.allCases, id: \.self) { type in
-                        Button(type.displayName) {
-                            viewModel.performShuffle(contentType: type, router: router)
-                        }
-                    }
-                }
             }
 
             if viewModel.showFavorites {
