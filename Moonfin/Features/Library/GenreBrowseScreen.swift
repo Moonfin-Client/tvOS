@@ -1,5 +1,6 @@
 import SwiftUI
 import Nuke
+import NukeUI
 
 struct GenreBrowseScreen: View {
     @StateObject private var viewModel: GenreBrowseViewModel
@@ -233,13 +234,12 @@ private struct GenreCard: View {
         Button(action: onTap) {
             ZStack(alignment: .bottomLeading) {
                 if let urlString = genre.imageUrl ?? genre.backdropUrl, let url = URL(string: urlString) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
+                    LazyImage(url: url) { state in
+                        if let image = state.image {
                             image.resizable().aspectRatio(contentMode: .fill)
-                        case .failure:
+                        } else if state.error != nil {
                             Color.white.opacity(0.06)
-                        default:
+                        } else {
                             Color.white.opacity(0.06).shimmering()
                         }
                     }

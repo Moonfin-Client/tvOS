@@ -803,7 +803,7 @@ final class HomeViewModel: ObservableObject {
                 imageType: .primary,
                 maxWidth: 300,
                 maxHeight: nil,
-                tag: nil
+                tag: item.seriesPrimaryImageTag
             )
         }
 
@@ -822,6 +822,16 @@ final class HomeViewModel: ObservableObject {
         if let tag = item.imageTags?["Thumb"] {
             return api.getItemImageUrl(
                 itemId: item.id,
+                imageType: .thumb,
+                maxWidth: 480,
+                maxHeight: nil,
+                tag: tag
+            )
+        }
+        if let tag = item.parentThumbImageTag,
+           let parentId = item.parentThumbItemId {
+            return api.getItemImageUrl(
+                itemId: parentId,
                 imageType: .thumb,
                 maxWidth: 480,
                 maxHeight: nil,
@@ -854,7 +864,7 @@ final class HomeViewModel: ObservableObject {
                 imageType: .primary,
                 maxWidth: 480,
                 maxHeight: nil,
-                tag: nil
+                tag: item.seriesPrimaryImageTag
             )
         }
         if let channelId = item.channelId {
@@ -888,7 +898,7 @@ final class HomeViewModel: ObservableObject {
                 imageType: .primary,
                 maxWidth: 800,
                 maxHeight: nil,
-                tag: nil
+                tag: item.seriesPrimaryImageTag
             )
         }
 
@@ -907,6 +917,16 @@ final class HomeViewModel: ObservableObject {
         if let tag = item.imageTags?["Thumb"] {
             return api.getItemImageUrl(
                 itemId: item.id,
+                imageType: .thumb,
+                maxWidth: 1920,
+                maxHeight: nil,
+                tag: tag
+            )
+        }
+        if let tag = item.parentThumbImageTag,
+           let parentId = item.parentThumbItemId {
+            return api.getItemImageUrl(
+                itemId: parentId,
                 imageType: .thumb,
                 maxWidth: 1920,
                 maxHeight: nil,
@@ -939,7 +959,7 @@ final class HomeViewModel: ObservableObject {
                 imageType: .primary,
                 maxWidth: 1920,
                 maxHeight: nil,
-                tag: nil
+                tag: item.seriesPrimaryImageTag
             )
         }
         if let channelId = item.channelId {

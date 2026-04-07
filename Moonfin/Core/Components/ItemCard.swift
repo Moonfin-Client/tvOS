@@ -1,4 +1,5 @@
 import SwiftUI
+import NukeUI
 
 enum CardShape {
     case rounded
@@ -78,16 +79,13 @@ struct ItemCard: View {
     @ViewBuilder
     private var cardImage: some View {
         if let urlString = imageUrl, let url = URL(string: urlString) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
+            LazyImage(url: url) { state in
+                if let image = state.image {
                     image.resizable().aspectRatio(contentMode: .fill)
-                case .failure:
+                } else if state.error != nil {
                     placeholder
-                case .empty:
+                } else {
                     placeholder.shimmering()
-                @unknown default:
-                    placeholder
                 }
             }
             .frame(width: cardWidth, height: cardHeight)

@@ -1,5 +1,6 @@
 import SwiftUI
 import Nuke
+import NukeUI
 
 struct LibraryBrowseScreen: View {
     @StateObject private var viewModel: LibraryBrowseViewModel
@@ -362,13 +363,12 @@ private struct LibraryPosterCard: View {
     @ViewBuilder
     private var posterImage: some View {
         if let urlString = imageUrl, let url = URL(string: urlString) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
+            LazyImage(url: url) { state in
+                if let image = state.image {
                     image.resizable().aspectRatio(contentMode: .fill)
-                case .failure:
+                } else if state.error != nil {
                     Color.white.opacity(0.06)
-                default:
+                } else {
                     Color.white.opacity(0.06).shimmering()
                 }
             }

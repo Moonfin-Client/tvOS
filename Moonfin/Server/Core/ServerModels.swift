@@ -275,6 +275,9 @@ struct ServerItem: Codable, Identifiable {
     let backdropImageTags: [String]?
     let parentBackdropImageTags: [String]?
     let parentBackdropItemId: String?
+    let seriesPrimaryImageTag: String?
+    let parentThumbImageTag: String?
+    let parentThumbItemId: String?
     let primaryImageAspectRatio: Double?
     let userData: UserItemData?
     let mediaSources: [ServerMediaSource]?
@@ -348,6 +351,9 @@ struct ServerItem: Codable, Identifiable {
         case backdropImageTags = "BackdropImageTags"
         case parentBackdropImageTags = "ParentBackdropImageTags"
         case parentBackdropItemId = "ParentBackdropItemId"
+        case seriesPrimaryImageTag = "SeriesPrimaryImageTag"
+        case parentThumbImageTag = "ParentThumbImageTag"
+        case parentThumbItemId = "ParentThumbItemId"
         case primaryImageAspectRatio = "PrimaryImageAspectRatio"
         case userData = "UserData"
         case mediaSources = "MediaSources"
@@ -408,6 +414,7 @@ extension ServerItem {
             parentId: nil, seriesId: nil, seriesName: nil, seasonId: nil, indexNumber: nil,
             parentIndexNumber: nil, imageTags: nil, backdropImageTags: nil,
             parentBackdropImageTags: nil, parentBackdropItemId: nil,
+            seriesPrimaryImageTag: nil, parentThumbImageTag: nil, parentThumbItemId: nil,
             primaryImageAspectRatio: nil, userData: nil, mediaSources: nil,
             mediaStreams: nil, container: nil, channelId: nil, channelName: nil,
             collectionType: nil, people: nil, chapters: nil, genres: nil, tags: nil,
