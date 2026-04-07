@@ -458,13 +458,6 @@ struct ItemDetailsView: View {
                     if item.type != .person {
                         detailInfoRow(item: item)
 
-                        if item.type != .playlist,
-                           let genres = item.genres, !genres.isEmpty {
-                            Text(genres.joined(separator: ", "))
-                                .font(.bodyMd)
-                                .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
-                        }
-
                         if !viewModel.ratings.isEmpty {
                             ratingsRow
                         }
@@ -719,25 +712,25 @@ struct ItemDetailsView: View {
     }
 
     private func starRatingChip(value: Float, showLabel: Bool) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Image(systemName: "star.fill")
-                .font(.system(size: 18))
+                .font(.system(size: 24))
                 .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(String(format: "%.1f", value))
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
                 if showLabel {
                     Text("Community rating")
-                        .font(.system(size: 11))
+                        .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.5))
                 }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
         .background(Color.white.opacity(0.1))
-        .cornerRadius(6)
+        .cornerRadius(8)
     }
 
     @ViewBuilder

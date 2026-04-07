@@ -12,23 +12,23 @@ struct RatingChipView: View {
             let formatted = ratingSource?.format(normalizedValue) ?? "\(scorePercent)%"
             let label = ratingSource?.label ?? source
 
-            HStack(spacing: 6) {
-                Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 22, height: 22)
-                VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 30, height: 30)
+                VStack(alignment: .leading, spacing: 1) {
                     Text(formatted)
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white)
                     if showLabel {
                         Text(label)
-                            .font(.system(size: 11))
+                            .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.5))
                     }
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
             .background(Color.white.opacity(0.1))
-            .cornerRadius(6)
+            .cornerRadius(8)
         }
     }
 }

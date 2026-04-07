@@ -67,7 +67,7 @@ extension ServerItem {
             }
         case .episode:
             if let s = parentIndexNumber, let e = indexNumber {
-                parts.append("E\(e):S\(s)")
+                parts.append("S\(s):E\(e)")
             }
             if let name = seriesName, !name.isEmpty {
                 parts.append(name)
