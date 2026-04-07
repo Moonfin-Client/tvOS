@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 import UIKit
 
-/// Manages a single shared VLC player instance used for home-row card previews.
+/// Manages a single shared player instance used for home-row card previews.
 ///
 /// Only one preview plays at a time. When focus moves to a new card, the manager
 /// cancels the in-flight task and restarts for the new item. Each preview loops on
@@ -69,6 +69,7 @@ final class PreviewPlayerManager: ObservableObject {
 
     /// Start a preview for `item` after a 1.5 s debounce. Cancels any existing preview first.
     func requestPreview(for item: ServerItem, muted: Bool, container: AppContainer) {
+        if currentItemId == item.id, currentTask != nil { return }
         currentTask?.cancel()
         stopInternal()
         currentMuted = muted
@@ -98,7 +99,7 @@ final class PreviewPlayerManager: ObservableObject {
         currentPlayCount = 0
         currentItemId = nil
         isVisible = false
-        player.stop()
+        player.stopPlaybackOnly()
     }
 
     @objc private func handleResignActive() {
@@ -254,10 +255,10 @@ final class PreviewPlayerManager: ObservableObject {
         let request = PlaybackInfoRequest(
             userId: client.userId ?? "",
             startTimeTicks: episode.userData?.playbackPositionTicks,
-            enableDirectPlay: false,
-            enableDirectStream: false,
+            enableDirectPlay: true,
+            enableDirectStream: true,
             enableTranscoding: true,
-            allowVideoStreamCopy: false,
+            allowVideoStreamCopy: true,
             allowAudioStreamCopy: true
         )
         let playbackResult = try await client.playbackApi.getPlaybackInfo(itemId: episode.id, request: request)
@@ -267,6 +268,7 @@ final class PreviewPlayerManager: ObservableObject {
                           userInfo: [NSLocalizedDescriptionKey: "No media source available"])
         }
 
+        // Prefer transcoding for previews
         if let transcodingPath = mediaSource.transcodingUrl, !transcodingPath.isEmpty {
             guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else {
                 throw NSError(domain: "PreviewPlayer", code: -3,
@@ -285,10 +287,32 @@ final class PreviewPlayerManager: ObservableObject {
             if let url = URL(string: urlString) { return url }
         }
 
+        // Fall back to direct play/stream
+        if mediaSource.supportsDirectPlay || mediaSource.supportsDirectStream {
+            let rawContainer = mediaSource.container ?? "mp4"
+            let container = rawContainer.split(separator: ",").first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? "mp4"
+            let playSessionId = playbackResult.playSessionId ?? ""
+            let params = StreamParams(
+                userId: client.userId ?? "",
+                mediaSourceId: mediaSource.id,
+                playSessionId: playSessionId,
+                liveStreamId: mediaSource.liveStreamId,
+                isLiveTv: false,
+                deviceId: AppConstants.deviceId,
+                container: container,
+                audioStreamIndex: mediaSource.defaultAudioStreamIndex,
+                subtitleStreamIndex: nil,
+                maxStreamingBitrate: nil,
+                startTimeTicks: nil
+            )
+            let urlString = client.playbackApi.getVideoStreamUrl(itemId: episode.id, params: params)
+            if let url = URL(string: urlString) { return url }
+        }
+
         throw NSError(
             domain: "PreviewPlayer",
             code: -4,
-            userInfo: [NSLocalizedDescriptionKey: "No transcoding preview stream available"]
+            userInfo: [NSLocalizedDescriptionKey: "No playable preview stream available"]
         )
     }
 }

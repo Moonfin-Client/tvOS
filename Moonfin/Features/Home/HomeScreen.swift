@@ -656,24 +656,20 @@ struct HomeScreen: View {
         }
     }
 
-    private func mediaBarPreviewVLCOptions(isYouTube: Bool) -> [String: Any] {
-        var options: [String: Any] = [
-            "http-reconnect": 1,
-            "network-caching": 2500,
-            "file-caching": 1500,
-            "live-caching": 2500,
-        ]
-
-        if !container.userPreferences[UserPreferences.previewAudioEnabled] {
-            options["no-audio"] = true
-        }
+    private func configureMediaBarPreview(isYouTube: Bool) {
+        let muted = !container.userPreferences[UserPreferences.previewAudioEnabled]
+        inlineTrailerPlayer.setMuted(muted)
 
         if isYouTube {
-            options["http-user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
-            options["http-referrer"] = "https://www.youtube.com/"
+            inlineTrailerPlayer.setProperty(
+                "user-agent",
+                value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
+            )
+            inlineTrailerPlayer.setProperty(
+                "referrer",
+                value: "https://www.youtube.com/"
+            )
         }
-
-        return options
     }
 
     private func playTrailerFromMediaBar(_ slideItem: MediaBarSlideItem) async {
@@ -700,7 +696,7 @@ struct HomeScreen: View {
                 startTimeTicks: nil
             ) {
                 guard !Task.isCancelled, isMediaBarMode else { return }
-                inlineTrailerPlayer.configureNetworkOptions(mediaBarPreviewVLCOptions(isYouTube: false))
+                configureMediaBarPreview(isYouTube: false)
                 await inlineTrailerPlayer.play(streamUrl: stream.url)
                 lastPreviewedMediaBarItemId = slideItem.id
                 return
@@ -712,7 +708,7 @@ struct HomeScreen: View {
         guard let streamInfo = result.stream else { return }
         guard !Task.isCancelled, isMediaBarMode else { return }
 
-        inlineTrailerPlayer.configureNetworkOptions(mediaBarPreviewVLCOptions(isYouTube: true))
+        configureMediaBarPreview(isYouTube: true)
         await inlineTrailerPlayer.play(url: streamInfo.url)
         lastPreviewedMediaBarItemId = slideItem.id
     }

@@ -263,7 +263,7 @@ enum YouTubeStreamResolver {
         case preview
     }
 
-    static func resolveStream(videoId: String, mode: ResolveMode = .full) async -> ResolveResult {
+    static func resolveStream(videoId: String, mode: ResolveMode = .full, minHeight: Int = 1080) async -> ResolveResult {
         _diagnostics = []
         log("Resolving videoId: \(videoId)")
         var bestEffortStream: StreamInfo?
@@ -306,7 +306,7 @@ enum YouTubeStreamResolver {
         }
 
         if let html = pageData?.html,
-           let stream = extractStreamsFromPage(html: html, playerJS: playerJS) {
+           let stream = extractStreamsFromPage(html: html, playerJS: playerJS, minHeight: minHeight) {
             if await validatePlayableStream(stream) {
                 log("\u{2713} Page extraction strategy succeeded")
                 return ResolveResult(stream: stream, diagnostics: _diagnostics.joined(separator: "\n"))
@@ -317,7 +317,7 @@ enum YouTubeStreamResolver {
             }
         }
 
-        if let stream = await resolveViaInnertube(videoId: videoId, playerJS: playerJS) {
+        if let stream = await resolveViaInnertube(videoId: videoId, playerJS: playerJS, minHeight: minHeight) {
             if await validatePlayableStream(stream) {
                 log("\u{2713} Innertube strategy succeeded")
                 return ResolveResult(stream: stream, diagnostics: _diagnostics.joined(separator: "\n"))
@@ -394,20 +394,20 @@ enum YouTubeStreamResolver {
 
     // MARK: - Strategy 1: Extract streams from page HTML
 
-    private static func extractStreamsFromPage(html: String, playerJS: String?) -> StreamInfo? {
+    private static func extractStreamsFromPage(html: String, playerJS: String?, minHeight: Int) -> StreamInfo? {
         guard let playerResponse = extractPlayerResponse(from: html) else {
             log("[PageExtract] \u{2717} No player response in HTML")
             return nil
         }
         log("[PageExtract] \u{2713} Extracted player response")
-        return extractStreamFromPlayerResponse(playerResponse, playerJS: playerJS, label: "PageExtract")
+        return extractStreamFromPlayerResponse(playerResponse, playerJS: playerJS, label: "PageExtract", minHeight: minHeight)
     }
 
-    /// Shared logic: given a player response JSON, extract the best playable stream.
     private static func extractStreamFromPlayerResponse(
         _ playerResponse: [String: Any],
         playerJS: String?,
-        label: String
+        label: String,
+        minHeight: Int
     ) -> StreamInfo? {
         if let playability = playerResponse["playabilityStatus"] as? [String: Any] {
             let status = playability["status"] as? String ?? "unknown"
@@ -432,11 +432,11 @@ enum YouTubeStreamResolver {
         let directCount = (muxedFormats + adaptiveFormats).filter { $0["url"] as? String != nil }.count
         log("[\(label)] Formats: \(muxedFormats.count) muxed, \(adaptiveFormats.count) adaptive (\(directCount) direct, \(cipherCount) cipher)")
 
-        if let stream = pickBestResolvedStream(from: muxedFormats, playerJS: playerJS, mimeFilter: nil, minPreferredHeight: 720) {
+        if let stream = pickBestResolvedStream(from: muxedFormats, playerJS: playerJS, mimeFilter: nil, minPreferredHeight: minHeight) {
             log("[\(label)] \u{2713} Resolved muxed stream")
             return stream
         }
-        if let stream = pickBestResolvedStream(from: adaptiveFormats, playerJS: playerJS, mimeFilter: "video/", minPreferredHeight: 720) {
+        if let stream = pickBestResolvedStream(from: adaptiveFormats, playerJS: playerJS, mimeFilter: "video/", minPreferredHeight: minHeight) {
             log("[\(label)] \u{2713} Resolved adaptive stream")
             return stream
         }
@@ -447,7 +447,7 @@ enum YouTubeStreamResolver {
 
     // MARK: - Strategy 2: Innertube API
 
-    private static func resolveViaInnertube(videoId: String, playerJS: String?) async -> StreamInfo? {
+    private static func resolveViaInnertube(videoId: String, playerJS: String?, minHeight: Int) async -> StreamInfo? {
         log("[Innertube] Trying API clients...")
 
         struct Client {
@@ -553,7 +553,7 @@ enum YouTubeStreamResolver {
                     log("[Innertube] \(client.name): invalid JSON")
                     continue
                 }
-                if let stream = extractStreamFromPlayerResponse(json, playerJS: playerJS, label: "Innertube/\(client.name)") {
+                if let stream = extractStreamFromPlayerResponse(json, playerJS: playerJS, label: "Innertube/\(client.name)", minHeight: minHeight) {
                     return stream
                 }
             } catch {
@@ -1441,7 +1441,7 @@ enum YouTubeStreamResolver {
                         let target = muxed.isEmpty ? streams : muxed
                         let best = target
                             .filter { ($0["url"] as? String) != nil }
-                            .filter { ($0["height"] as? Int ?? 0) >= 720 || ($0["height"] as? Int ?? 0) == 0 }
+                            .filter { ($0["height"] as? Int ?? 0) >= 1080 || ($0["height"] as? Int ?? 0) == 0 }
                             .sorted { a, b in
                                 let ac = codecPriority(a["mimeType"] as? String)
                                 let bc = codecPriority(b["mimeType"] as? String)
@@ -1553,7 +1553,7 @@ enum YouTubeStreamResolver {
                 let best = playable
                     .filter { format in
                         let height = parseHeight(format["qualityLabel"] as? String) ?? 0
-                        return height >= 720 || height == 0
+                        return height >= 1080 || height == 0
                     }
                     .sorted { a, b in
                         let ac = codecPriority(a["type"] as? String)

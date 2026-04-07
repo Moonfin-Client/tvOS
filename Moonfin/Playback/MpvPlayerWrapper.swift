@@ -94,7 +94,6 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
 
     private(set) var videoView: UIView?
     private var subtitleOptions: [String: Any] = [:]
-    private var networkOptions: [String: Any] = [:]
     private var audioSessionActive = false
 
     private(set) var playbackBackendIdentifier: String = "mpv"
@@ -269,6 +268,12 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     }
 
     func stop() {
+        stopPlaybackOnly()
+        audioSessionActive = false
+        resetEngine()
+    }
+
+    func stopPlaybackOnly() {
         _ = engine?.stopPlayback()
         stopRenderScheduler()
         pendingMpvStartPosition = nil
@@ -283,8 +288,6 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         subtitleTracks = []
         currentAudioTrackIndex = -1
         currentSubtitleTrackIndex = -1
-        audioSessionActive = false
-        resetEngine()
     }
 
     func seek(to seconds: TimeInterval) {
@@ -336,6 +339,10 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         _ = engine?.command(["set", "mute", muted ? "yes" : "no"])
     }
 
+    func setProperty(_ name: String, value: String) {
+        _ = engine?.command(["set", name, value])
+    }
+
     func addSubtitle(url: URL) {
         _ = engine?.command(["sub-add", url.absoluteString])
     }
@@ -366,10 +373,6 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
 
     func configurePreferredBackendForNextPlayback(_ backend: PlaybackBackendDirective, fallbackReason: String?) {
         updatePlaybackBackend(identifier: backend.rawValue, fallbackReason: fallbackReason)
-    }
-
-    func configureNetworkOptions(_ options: [String: Any]) {
-        networkOptions = options
     }
 
     func configureAudioSession() {

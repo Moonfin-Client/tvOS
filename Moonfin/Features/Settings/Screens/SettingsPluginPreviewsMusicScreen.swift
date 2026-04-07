@@ -12,7 +12,7 @@ struct SettingsPluginPreviewsMusicScreen: View {
             SettingsToggleButton(
                 icon: "tv",
                 heading: "Episode Preview",
-                caption: "Show episode previews on detail screens",
+                caption: "Show episode previews on home rows",
                 isOn: prefs.binding(for: UserPreferences.episodePreviewEnabled)
             )
 

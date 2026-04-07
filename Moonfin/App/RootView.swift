@@ -709,12 +709,8 @@ struct TrailerPlayerScreen: View {
         }
         resolvedStreamURL = streamInfo.url
 
-        player.configureNetworkOptions([
-            "http-user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
-            "http-referrer": "https://www.youtube.com/",
-            "http-reconnect": 1,
-            "network-caching": 1000,
-        ])
+        player.setProperty("user-agent", value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0")
+        player.setProperty("referrer", value: "https://www.youtube.com/")
 
         if effectiveStartSeconds > 0 {
             await player.play(streamUrl: streamInfo.url.absoluteString, startPosition: effectiveStartSeconds)
