@@ -133,8 +133,10 @@ struct LeftSidebar: View {
             scrollableItems
                 .frame(maxHeight: .infinity, alignment: .center)
 
-            settingsSection
-                .padding(.bottom, 16)
+            if !isExpanded {
+                settingsSection
+                    .padding(.bottom, 16)
+            }
         }
         .padding(.leading, 16)
         .padding(.trailing, 8)
@@ -313,6 +315,17 @@ struct LeftSidebar: View {
                     .focused($focusedItem, equals: .library(library.id))
                 }
             }
+
+            if isExpanded {
+                SidebarIconItem(
+                    systemIcon: "gearshape.fill",
+                    label: "Settings",
+                    isExpanded: isExpanded,
+                    isFocused: focusedItem == .settings,
+                    action: { settingsRouter.open() }
+                )
+                .focused($focusedItem, equals: .settings)
+            }
         }
     }
 
@@ -330,13 +343,10 @@ struct LeftSidebar: View {
     private var scrollableItems: some View {
         GeometryReader { geo in
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    Spacer(minLength: 0)
-                    sidebarItems
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Spacer(minLength: 0)
-                }
-                .frame(minHeight: geo.size.height)
+                sidebarItems
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 24)
+                    .frame(minHeight: geo.size.height)
             }
             .scrollDisabled(!isExpanded)
         }
