@@ -550,50 +550,37 @@ struct SeerrMediaDetailsView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))], spacing: SpaceTokens.spaceSm) {
                     ForEach(1...max(viewModel.seasonCount, 1), id: \.self) { season in
                         let isUnavailable = unavailable.contains(season)
-                        Button(action: {
-                            if viewModel.selectedSeasons.contains(season) {
-                                viewModel.selectedSeasons.remove(season)
-                            } else {
-                                viewModel.selectedSeasons.insert(season)
+                        let isSelected = viewModel.selectedSeasons.contains(season)
+                        SeerrSeasonButton(
+                            season: season,
+                            isSelected: isSelected,
+                            isUnavailable: isUnavailable,
+                            action: {
+                                if isSelected {
+                                    viewModel.selectedSeasons.remove(season)
+                                } else {
+                                    viewModel.selectedSeasons.insert(season)
+                                }
                             }
-                        }) {
-                            Text("Season \(season)")
-                                .font(.bodySm)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(
-                                    viewModel.selectedSeasons.contains(season)
-                                        ? theme.accent.opacity(0.3)
-                                        : theme.colorScheme.surface.opacity(0.2)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
-                                .foregroundColor(
-                                    isUnavailable
-                                        ? theme.colorScheme.onBackground.opacity(0.3)
-                                        : theme.colorScheme.onBackground
-                                )
-                        }
-                        .disabled(isUnavailable)
+                        )
                     }
                 }
             }
             .frame(maxHeight: 400)
 
             HStack(spacing: SpaceTokens.spaceMd) {
-                Button("Select All") {
+                FocusableDialogButton(title: "Select All") {
                     let available = Set((1...viewModel.seasonCount).filter { !unavailable.contains($0) })
                     viewModel.selectedSeasons = available
                 }
-                .buttonStyle(.bordered)
-
-                Button("Confirm") { viewModel.confirmSeasonSelection() }
-                    .buttonStyle(.borderedProminent)
-                    .tint(theme.accent)
-                    .disabled(viewModel.selectedSeasons.isEmpty)
+                FocusableDialogButton(title: "Confirm") {
+                    viewModel.confirmSeasonSelection()
+                }
             }
         }
         .padding(40)
         .background(theme.colorScheme.background)
+        .onExitCommand { viewModel.showSeasonPicker = false }
     }
 
     private var advancedOptionsSheet: some View {
@@ -609,20 +596,11 @@ struct SeerrMediaDetailsView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: SpaceTokens.spaceSm) {
                             ForEach(details.profiles) { profile in
-                                Button(action: { viewModel.advancedOptions.profileId = profile.id }) {
-                                    Text(profile.name)
-                                        .font(.bodySm)
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            viewModel.advancedOptions.profileId == profile.id
-                                                ? theme.accent.opacity(0.3)
-                                                : theme.colorScheme.surface.opacity(0.2)
-                                        )
-                                        .foregroundColor(theme.colorScheme.onBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
-                                }
-                                .buttonStyle(.plain)
+                                SeerrChipButton(
+                                    label: profile.name,
+                                    isSelected: viewModel.advancedOptions.profileId == profile.id,
+                                    action: { viewModel.advancedOptions.profileId = profile.id }
+                                )
                             }
                         }
                     }
@@ -634,20 +612,11 @@ struct SeerrMediaDetailsView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: SpaceTokens.spaceSm) {
                             ForEach(details.rootFolders) { folder in
-                                Button(action: { viewModel.advancedOptions.rootFolderId = folder.id }) {
-                                    Text(folder.path)
-                                        .font(.bodySm)
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            viewModel.advancedOptions.rootFolderId == folder.id
-                                                ? theme.accent.opacity(0.3)
-                                                : theme.colorScheme.surface.opacity(0.2)
-                                        )
-                                        .foregroundColor(theme.colorScheme.onBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
-                                }
-                                .buttonStyle(.plain)
+                                SeerrChipButton(
+                                    label: folder.path,
+                                    isSelected: viewModel.advancedOptions.rootFolderId == folder.id,
+                                    action: { viewModel.advancedOptions.rootFolderId = folder.id }
+                                )
                             }
                         }
                     }
@@ -658,15 +627,13 @@ struct SeerrMediaDetailsView: View {
 
             HStack {
                 Spacer()
-                Button("Skip") { viewModel.confirmAdvancedOptions() }
-                    .buttonStyle(.bordered)
-                Button("Confirm") { viewModel.confirmAdvancedOptions() }
-                    .buttonStyle(.borderedProminent)
-                    .tint(theme.accent)
+                FocusableDialogButton(title: "Skip") { viewModel.confirmAdvancedOptions() }
+                FocusableDialogButton(title: "Confirm") { viewModel.confirmAdvancedOptions() }
             }
         }
         .padding(40)
         .background(theme.colorScheme.background)
+        .onExitCommand { viewModel.showAdvancedOptions = false }
     }
 
     private var qualityPickerSheet: some View {
@@ -705,42 +672,17 @@ struct SeerrMediaDetailsView: View {
             }
             .frame(maxWidth: 560)
 
-            Button("Cancel") {
+            FocusableDialogButton(title: "Cancel") {
                 viewModel.showQualityPicker = false
             }
-            .buttonStyle(.bordered)
         }
         .padding(40)
         .background(theme.colorScheme.background)
+        .onExitCommand { viewModel.showQualityPicker = false }
     }
 
     private func qualityOptionButton(icon: String, title: String, subtitle: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: SpaceTokens.spaceMd) {
-                Image(systemName: icon)
-                    .font(.system(size: 28, weight: .semibold))
-                    .frame(width: 36)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.titleMd).fontWeight(.semibold)
-                        .lineLimit(1)
-                    Text(subtitle)
-                        .font(.bodySm)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.65))
-                        .lineLimit(1)
-                }
-
-                Spacer(minLength: 0)
-            }
-            .foregroundColor(theme.colorScheme.onBackground)
-            .padding(.horizontal, SpaceTokens.spaceMd)
-            .padding(.vertical, SpaceTokens.spaceMd)
-            .frame(maxWidth: .infinity, minHeight: 78)
-            .background(theme.colorScheme.surface.opacity(0.25))
-            .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
-        }
-        .buttonStyle(CleanButtonStyle())
+        SeerrQualityOptionButton(icon: icon, title: title, subtitle: subtitle, action: action)
     }
 
     private func formatDate(_ dateString: String) -> String {
@@ -851,5 +793,113 @@ private struct SeerrActionButton: View {
         .focused($isFocused)
         .scaleEffect(isFocused ? 1.08 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct SeerrQualityOptionButton: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let action: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: SpaceTokens.spaceMd) {
+                Image(systemName: icon)
+                    .font(.system(size: 28, weight: .semibold))
+                    .frame(width: 36)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.titleMd).fontWeight(.semibold)
+                        .lineLimit(1)
+                    Text(subtitle)
+                        .font(.bodySm)
+                        .foregroundColor(isFocused ? .black.opacity(0.6) : theme.colorScheme.onBackground.opacity(0.65))
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .foregroundColor(isFocused ? .black : theme.colorScheme.onBackground)
+            .padding(.horizontal, SpaceTokens.spaceMd)
+            .padding(.vertical, SpaceTokens.spaceMd)
+            .frame(maxWidth: .infinity, minHeight: 78)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .fill(isFocused ? Color.white : Color.white.opacity(0.1))
+            )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+    }
+}
+
+private struct SeerrSeasonButton: View {
+    let season: Int
+    let isSelected: Bool
+    let isUnavailable: Bool
+    let action: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: action) {
+            Text("Season \(season)")
+                .font(.bodySm)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .foregroundColor(
+                    isUnavailable
+                        ? theme.colorScheme.onBackground.opacity(0.3)
+                        : isFocused ? .black : theme.colorScheme.onBackground
+                )
+                .background(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .fill(
+                            isFocused ? Color.white
+                                : isSelected ? theme.accent.opacity(0.3)
+                                : Color.white.opacity(0.08)
+                        )
+                )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
+        .disabled(isUnavailable)
+    }
+}
+
+private struct SeerrChipButton: View {
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.bodySm)
+                .lineLimit(1)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .foregroundColor(isFocused ? .black : theme.colorScheme.onBackground)
+                .background(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .fill(
+                            isFocused ? Color.white
+                                : isSelected ? theme.accent.opacity(0.3)
+                                : Color.white.opacity(0.08)
+                        )
+                )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
     }
 }
