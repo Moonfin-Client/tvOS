@@ -66,28 +66,30 @@ struct ExpandableLibrariesButton: View {
             .animation(.spring(response: 0.3, dampingFraction: 0.82), value: focusedItem)
 
             if isExpanded {
-                HStack(spacing: 0) {
-                    ForEach(libraries, id: \.id) { library in
-                        Button(action: { onLibrarySelected(library) }) {
-                            Text(library.name)
-                                .font(.bodyMd)
-                                .fontWeight(.bold)
-                                .padding(.horizontal, 18)
-                                .frame(height: pillHeight)
-                                .background(
-                                    Capsule()
-                                        .fill(pillBackground(for: library))
-                                )
-                                .foregroundColor(pillForeground(for: library))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 0) {
+                        ForEach(libraries, id: \.id) { library in
+                            Button(action: { onLibrarySelected(library) }) {
+                                Text(library.name)
+                                    .font(.bodyMd)
+                                    .fontWeight(.bold)
+                                    .padding(.horizontal, 18)
+                                    .frame(height: pillHeight)
+                                    .background(
+                                        Capsule()
+                                            .fill(pillBackground(for: library))
+                                    )
+                                    .foregroundColor(pillForeground(for: library))
+                            }
+                            .buttonStyle(CleanButtonStyle())
+                            .focused($focusedItem, equals: .library(library.id))
+                            .animation(.spring(response: 0.25, dampingFraction: 0.82), value: focusedItem)
                         }
-                        .buttonStyle(CleanButtonStyle())
-                        .focused($focusedItem, equals: .library(library.id))
-                        .animation(.spring(response: 0.25, dampingFraction: 0.82), value: focusedItem)
                     }
+                    .padding(.leading, 8)
+                    .padding(.trailing, 4)
                 }
-                .padding(.leading, 8)
-                .padding(.trailing, 4)
-                .fixedSize()
+                .frame(maxWidth: 700)
                 .onMoveCommand { direction in
                     if direction == .up {
                         isExpanded = false
