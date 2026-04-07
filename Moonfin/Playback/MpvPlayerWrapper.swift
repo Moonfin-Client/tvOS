@@ -525,8 +525,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private func resetEngine() {
         guard let oldEngine = engine else { return }
         engine = nil
-        oldEngine.shutdown()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            oldEngine.shutdown()
             withExtendedLifetime(oldEngine) {}
         }
     }

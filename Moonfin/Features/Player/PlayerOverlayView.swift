@@ -164,6 +164,8 @@ struct PlayerOverlayView: View {
                 if !viewModel.isScrubbing { viewModel.beginScrub() }
                 viewModel.updateScrub(bySeconds: viewModel.skipForwardSeconds)
                 viewModel.resetHideTimer()
+            case .up, .down:
+                if viewModel.isScrubbing { viewModel.commitScrub() }
             default:
                 break
             }

@@ -6,7 +6,7 @@ struct VideoPlayerScreen: View {
     @ObservedObject private var nextUpManager: NextUpManager
     @EnvironmentObject var router: NavigationRouter
     @Environment(\.dismiss) private var dismiss
-    @FocusState private var gestureLayerFocused: Bool
+    @State private var remoteInputFocusToken = UUID()
 
     init(
         playbackManager: PlaybackManager,
@@ -139,59 +139,45 @@ struct VideoPlayerScreen: View {
         .animation(.easeInOut(duration: 0.3), value: nextUpManager.promptState)
         .onAppear {
             viewModel.showOverlay()
-            reclaimGestureFocus()
         }
-        .onChange(of: viewModel.overlayVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.audioSelectionVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.subtitleSelectionVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.speedSelectionVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.chapterSelectionVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.castListVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.playbackInfoVisible) { _ in restoreFocusIfNeeded() }
-        .onChange(of: viewModel.subtitleDownloadVisible) { _ in restoreFocusIfNeeded() }
-    }
-
-    private func restoreFocusIfNeeded() {
-        let anyVisible = viewModel.overlayVisible || viewModel.trackSelectionVisible
-            || viewModel.chapterSelectionVisible || viewModel.castListVisible
-            || viewModel.playbackInfoVisible || viewModel.subtitleDownloadVisible
-        if !anyVisible {
-            reclaimGestureFocus()
+        .onChange(of: viewModel.overlayVisible) { visible in
+            if !visible { remoteInputFocusToken = UUID() }
         }
-    }
-
-    private func reclaimGestureFocus() {
-        DispatchQueue.main.async {
-            gestureLayerFocused = true
+        .onChange(of: viewModel.trackSelectionVisible) { visible in
+            if !visible { remoteInputFocusToken = UUID() }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            gestureLayerFocused = true
+        .onChange(of: viewModel.chapterSelectionVisible) { visible in
+            if !visible { remoteInputFocusToken = UUID() }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            gestureLayerFocused = true
+        .onChange(of: viewModel.castListVisible) { visible in
+            if !visible { remoteInputFocusToken = UUID() }
+        }
+        .onChange(of: viewModel.playbackInfoVisible) { visible in
+            if !visible { remoteInputFocusToken = UUID() }
+        }
+        .onChange(of: viewModel.subtitleDownloadVisible) { visible in
+            if !visible { remoteInputFocusToken = UUID() }
         }
     }
 
     private var gestureLayer: some View {
-        Color.clear
-            .contentShape(Rectangle())
-            .focusable()
-            .focused($gestureLayerFocused)
-            .disabled(viewModel.overlayVisible || viewModel.trackSelectionVisible || viewModel.chapterSelectionVisible || viewModel.castListVisible || viewModel.playbackInfoVisible || viewModel.subtitleDownloadVisible)
-            .onPlayPauseCommand {
-                viewModel.togglePlayPause()
-                if !viewModel.overlayVisible { viewModel.showOverlay() }
-            }
-            .onMoveCommand { direction in
-                if viewModel.isLiveTV {
+        RemoteInputView(
+            onSelect: {
+                if !viewModel.overlayVisible {
+                    viewModel.togglePlayPause()
+                    viewModel.showOverlay()
+                }
+            },
+            onDirection: { direction in
+                if viewModel.isLiveTV && !viewModel.overlayVisible {
                     switch direction {
-                    case .up:
+                    case .upArrow:
                         viewModel.channelUp()
-                        if !viewModel.overlayVisible { viewModel.showOverlay() }
+                        viewModel.showOverlay()
                         return
-                    case .down:
+                    case .downArrow:
                         viewModel.channelDown()
-                        if !viewModel.overlayVisible { viewModel.showOverlay() }
+                        viewModel.showOverlay()
                         return
                     default:
                         break
@@ -200,31 +186,24 @@ struct VideoPlayerScreen: View {
                 if !viewModel.overlayVisible {
                     viewModel.showOverlay()
                 }
-            }
-            .onTapGesture {
+            },
+            onPlayPause: {
                 viewModel.togglePlayPause()
-                viewModel.showOverlay()
-            }
-            .onExitCommand {
-                if viewModel.wasExitCommandHandledRecently() {
+                if !viewModel.overlayVisible { viewModel.showOverlay() }
+            },
+            onMenu: {
+                if viewModel.overlayVisible || viewModel.trackSelectionVisible
+                    || viewModel.chapterSelectionVisible || viewModel.castListVisible
+                    || viewModel.playbackInfoVisible || viewModel.subtitleDownloadVisible {
                     return
                 }
-                if viewModel.chapterSelectionVisible {
-                    viewModel.hideChapterSelection()
-                } else if viewModel.castListVisible {
-                    viewModel.hideCastList()
-                } else if viewModel.playbackInfoVisible {
-                    viewModel.hidePlaybackInfo()
-                } else if viewModel.subtitleDownloadVisible {
-                    viewModel.hideSubtitleDownload()
-                } else if viewModel.trackSelectionVisible {
-                    viewModel.hideTrackSelection()
-                } else if viewModel.overlayVisible {
-                    viewModel.hideOverlay()
-                } else {
-                    dismiss()
-                }
-            }
+                dismiss()
+            },
+            focusToken: remoteInputFocusToken
+        )
+        .allowsHitTesting(!viewModel.overlayVisible && !viewModel.trackSelectionVisible
+            && !viewModel.chapterSelectionVisible && !viewModel.castListVisible
+            && !viewModel.playbackInfoVisible && !viewModel.subtitleDownloadVisible)
     }
 
     private func trackDialogOverlay<Content: View>(@ViewBuilder content: () -> Content) -> some View {
