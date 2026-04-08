@@ -1,14 +1,22 @@
 import SwiftUI
 import Nuke
+import NukeUI
 
 struct SearchScreen: View {
     @StateObject private var viewModel: SearchViewModel
+    @EnvironmentObject var container: AppContainer
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
+    @StateObject private var ratingsViewModel: MediaBarRatingsViewModel
 
     init(container: AppContainer, query: String? = nil) {
         _viewModel = StateObject(wrappedValue: SearchViewModel(
             container: container, initialQuery: query
+        ))
+        _ratingsViewModel = StateObject(wrappedValue: MediaBarRatingsViewModel(
+            mdbListRepository: container.mdbListRepository,
+            tmdbRepository: container.tmdbRepository,
+            userPreferences: container.userPreferences
         ))
     }
 
@@ -71,24 +79,31 @@ struct SearchScreen: View {
     }
 
     private var focusedItemInfo: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             if let item = viewModel.focusedItem {
                 Text(item.name)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 42, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(1)
 
-                let sub = viewModel.subtitle(for: item)
-                if !sub.isEmpty {
-                    Text(sub)
-                        .font(.bodySm)
-                        .foregroundColor(.white.opacity(0.6))
-                        .lineLimit(1)
-                }
+                SimpleInfoRow(item: item)
+                    .scaleEffect(1.15, anchor: .leading)
+                    .padding(.bottom, 4)
+
+                MediaBarRatingsRow(
+                    ratings: ratingsViewModel.ratings,
+                    enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
+                )
+                .scaleEffect(1.3, anchor: .leading)
             }
         }
-        .frame(height: 50, alignment: .leading)
+        .frame(height: 130, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: viewModel.focusedItem?.id) { _ in
+            if let item = viewModel.focusedItem {
+                ratingsViewModel.loadRatings(for: item)
+            }
+        }
     }
 
     // MARK: - Results
@@ -198,7 +213,6 @@ struct SearchScreen: View {
                         SearchResultCard(
                             item: item,
                             imageUrl: viewModel.posterUrl(for: item),
-                            subtitle: viewModel.subtitle(for: item),
                             theme: theme,
                             onFocused: { viewModel.setFocusedItem(item) },
                             onTap: { navigateToItem(item) }
@@ -259,7 +273,6 @@ struct SearchScreen: View {
 private struct SearchResultCard: View {
     let item: ServerItem
     let imageUrl: String?
-    let subtitle: String
     let theme: MoonfinTheme
     let onFocused: () -> Void
     let onTap: () -> Void
@@ -294,15 +307,10 @@ private struct SearchResultCard: View {
                 if focused { onFocused() }
             }
 
-            Text(item.name)
-                .font(.captionXs)
-                .foregroundColor(.white)
-                .lineLimit(1)
-
-            if !subtitle.isEmpty {
-                Text(subtitle)
-                    .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.6))
+            if item.type == .person || item.type == .musicArtist {
+                Text(item.name)
+                    .font(.captionXs)
+                    .foregroundColor(.white)
                     .lineLimit(1)
             }
         }

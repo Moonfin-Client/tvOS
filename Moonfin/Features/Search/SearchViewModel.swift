@@ -19,6 +19,7 @@ final class SearchViewModel: ObservableObject {
 
     private let container: AppContainer
     private var searchTask: Task<Void, Never>?
+    private var backdropDebounceTask: Task<Void, Never>?
     private var previousQuery = ""
     private var cancellables = Set<AnyCancellable>()
 
@@ -99,8 +100,13 @@ final class SearchViewModel: ObservableObject {
 
     func setFocusedItem(_ item: ServerItem) {
         focusedItem = item
-        if let url = imageUrl(for: item, type: .backdrop, maxWidth: 1920) {
-            backgroundService.setBackground(url: url)
+        backdropDebounceTask?.cancel()
+        backdropDebounceTask = Task { @MainActor [weak self] in
+            do { try await Task.sleep(nanoseconds: 300_000_000) } catch { return }
+            guard let self, self.focusedItem?.id == item.id else { return }
+            if let url = self.imageUrl(for: item, type: .backdrop, maxWidth: 1920) {
+                self.backgroundService.setBackground(url: url)
+            }
         }
     }
 
