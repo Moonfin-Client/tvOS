@@ -42,7 +42,7 @@ private struct PickerOptionRow: View {
     let action: () -> Void
 
     @EnvironmentObject var theme: MoonfinTheme
-    @Environment(\.isFocused) private var isFocused
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         Button(action: action) {
@@ -63,8 +63,13 @@ private struct PickerOptionRow: View {
                 RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
                     .fill(isFocused ? theme.colorScheme.listButtonFocused : theme.colorScheme.listButton)
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
+                    .stroke(Color.white, lineWidth: isFocused ? 3 : 0)
+            )
             .animation(.easeInOut(duration: 0.15), value: isFocused)
         }
         .buttonStyle(CleanButtonStyle())
+        .focused($isFocused)
     }
 }
