@@ -11,6 +11,7 @@ final class PlaybackCoordinator: ObservableObject {
     private let serverClientFactory: MediaServerClientFactory
     private let serverRepository: ServerRepositoryProtocol
     private let preferences: UserPreferences
+    private let dataRefreshService: DataRefreshService
 
     private var client: MediaServerClient? {
         guard let server = serverRepository.currentServer.value else { return nil }
@@ -30,11 +31,13 @@ final class PlaybackCoordinator: ObservableObject {
     init(
         serverClientFactory: MediaServerClientFactory,
         serverRepository: ServerRepositoryProtocol,
-        preferences: UserPreferences
+        preferences: UserPreferences,
+        dataRefreshService: DataRefreshService
     ) {
         self.serverClientFactory = serverClientFactory
         self.serverRepository = serverRepository
         self.preferences = preferences
+        self.dataRefreshService = dataRefreshService
     }
 
     func startVideoPlayback(
@@ -51,7 +54,7 @@ final class PlaybackCoordinator: ObservableObject {
         let startItem = items.indices.contains(startIndex) ? items[startIndex] : nil
         guard let client = client(for: serverId ?? startItem?.effectiveServerId) else { return }
         let player = makePlayer()
-        let manager = PlaybackManager(player: player, client: client, preferences: preferences)
+        let manager = PlaybackManager(player: player, client: client, preferences: preferences, dataRefreshService: dataRefreshService)
         videoPlayerManager = manager
         // Fire-and-forget: play() awaits the surface attachment which only
         // happens after the caller navigates to the video-player screen.
@@ -100,7 +103,7 @@ final class PlaybackCoordinator: ObservableObject {
         let startItem = items.indices.contains(startIndex) ? items[startIndex] : nil
         guard let client = client(for: serverId ?? startItem?.effectiveServerId) else { return }
         let player = makePlayer()
-        let manager = PlaybackManager(player: player, client: client, preferences: preferences)
+        let manager = PlaybackManager(player: player, client: client, preferences: preferences, dataRefreshService: dataRefreshService)
         let audio = AudioManager(playbackManager: manager, client: client)
         audioManager = audio
         Task {

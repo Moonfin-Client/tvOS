@@ -108,7 +108,8 @@ final class AppContainer: ObservableObject {
         self.playbackCoordinator = PlaybackCoordinator(
             serverClientFactory: factory,
             serverRepository: serverRepo,
-            preferences: self.userPreferences
+            preferences: self.userPreferences,
+            dataRefreshService: self.dataRefreshService
         )
         self.inactivityTracker = InactivityTracker(
             userPreferences: self.userPreferences,

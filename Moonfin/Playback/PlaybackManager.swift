@@ -29,6 +29,7 @@ final class PlaybackManager: ObservableObject {
     private let preferences: UserPreferences
     private let streamResolver: StreamResolver
     private let subtitleConfigurator: SubtitleConfigurator
+    private let dataRefreshService: DataRefreshService?
     private var reportingTask: Task<Void, Never>?
     private var stateObserver: AnyCancellable?
     private var positionObserver: AnyCancellable?
@@ -96,11 +97,13 @@ final class PlaybackManager: ObservableObject {
     init(
         player: MpvPlayerWrapper,
         client: MediaServerClient,
-        preferences: UserPreferences
+        preferences: UserPreferences,
+        dataRefreshService: DataRefreshService? = nil
     ) {
         self.player = player
         self.client = client
         self.preferences = preferences
+        self.dataRefreshService = dataRefreshService
         self.streamResolver = ServerStreamResolver(
             client: client,
             requestedBackend: .mpv,
@@ -210,6 +213,7 @@ final class PlaybackManager: ObservableObject {
     }
 
     func stop() async {
+        recordPlaybackTrigger()
         await stopAndReport(failed: false)
         queue = []
         currentIndex = -1
@@ -468,6 +472,7 @@ final class PlaybackManager: ObservableObject {
 
     private func handlePlaybackEnded() async {
         await stopAndReport(failed: false)
+        recordPlaybackTrigger()
         guard autoAdvanceOnEnd else { return }
         if hasNext {
             currentIndex += 1
@@ -495,6 +500,18 @@ final class PlaybackManager: ObservableObject {
         currentStreamInfo = nil
         player.stop()
         await MainActor.run { DisplayCriteriaManager.shared.reset() }
+    }
+
+    private func recordPlaybackTrigger() {
+        guard let item = currentEntry?.item else { return }
+        switch item.type {
+        case .movie, .video, .trailer:
+            dataRefreshService?.recordMoviePlayback()
+        case .audio:
+            dataRefreshService?.recordPlayback()
+        default:
+            dataRefreshService?.recordTvPlayback()
+        }
     }
 
     private func emitPlaybackTelemetry(failed: Bool) {

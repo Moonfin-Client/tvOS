@@ -226,6 +226,14 @@ final class ItemDetailViewModel: ObservableObject {
         Task {
             do {
                 _ = try await container.itemMutationService.setPlayed(itemId: itemId, isPlayed: newValue)
+                switch item?.type {
+                case .movie, .video, .trailer:
+                    container.dataRefreshService.recordMoviePlayback()
+                case .audio:
+                    container.dataRefreshService.recordPlayback()
+                default:
+                    container.dataRefreshService.recordTvPlayback()
+                }
             } catch {
                 isPlayed = !newValue
             }
