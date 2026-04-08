@@ -1291,7 +1291,6 @@ private final class MPVEngine {
 
     func applySubtitleStyle(_ options: [String: Any]) {
         let mappings: [(String, String)] = [
-            ("freetype-rel-fontsize", "sub-font-size"),
             ("sub-margin", "sub-margin-y"),
             ("freetype-outline-thickness", "sub-border-size")
         ]
@@ -1299,6 +1298,11 @@ private final class MPVEngine {
         for (sourceKey, targetKey) in mappings {
             guard let value = options[sourceKey] else { continue }
             _ = setRuntimeOption(targetKey, value: String(describing: value))
+        }
+
+        if let relSize = options["freetype-rel-fontsize"] as? Int, relSize > 0 {
+            let mpvSize = Int(round(1080.0 / Double(relSize) * (55.0 / 24.0)))
+            _ = setRuntimeOption("sub-font-size", value: String(mpvSize))
         }
 
         if let color = options["freetype-color"] as? Int {
