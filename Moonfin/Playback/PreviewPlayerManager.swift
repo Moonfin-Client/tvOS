@@ -29,6 +29,7 @@ final class PreviewPlayerManager: ObservableObject {
 
     private var currentTask: Task<Void, Never>?
     private var loopTask: Task<Void, Never>?
+    private var pendingItemId: String?
     private var currentStreamUrl: URL?
     private var currentSeekPosition: TimeInterval = 0
     private var currentMuted: Bool = true
@@ -43,7 +44,7 @@ final class PreviewPlayerManager: ObservableObject {
             .sink { [weak self] state in
                 guard let self else { return }
                 switch state {
-                case .opening, .buffering, .playing:
+                case .playing:
                     self.isVisible = true
                 case .ended:
                     self.isVisible = false
@@ -73,11 +74,18 @@ final class PreviewPlayerManager: ObservableObject {
         currentTask?.cancel()
         stopInternal()
         currentMuted = muted
+        pendingItemId = item.id
         currentTask = Task { await startPreview(for: item, container: container) }
     }
 
     /// Stop preview only if `itemId` is the currently active item (safe to call on unfocus).
     func stopIfCurrent(itemId: String) {
+        if pendingItemId == itemId {
+            pendingItemId = nil
+            currentTask?.cancel()
+            currentTask = nil
+            return
+        }
         guard currentItemId == itemId else { return }
         stop()
     }
@@ -94,6 +102,7 @@ final class PreviewPlayerManager: ObservableObject {
     private func stopInternal() {
         loopTask?.cancel()
         loopTask = nil
+        pendingItemId = nil
         currentStreamUrl = nil
         currentSeekPosition = 0
         currentPlayCount = 0
@@ -135,9 +144,9 @@ final class PreviewPlayerManager: ObservableObject {
         }
 
         currentPlayCount += 1
+        player.setMuted(currentMuted)
         scheduleLoopRestart()
         await player.play(streamUrl: url.absoluteString, startPosition: currentSeekPosition)
-        player.setMuted(currentMuted)
     }
 
     // MARK: - Preview startup
@@ -162,10 +171,11 @@ final class PreviewPlayerManager: ObservableObject {
             currentSeekPosition = seekPosition
             currentPlayCount = 1
             currentItemId = item.id
+            pendingItemId = nil
 
+            player.setMuted(currentMuted)
             scheduleLoopRestart()
             await player.play(streamUrl: url.absoluteString, startPosition: seekPosition)
-            player.setMuted(currentMuted)
 
         } catch { }
     }

@@ -20,6 +20,7 @@ struct ItemCard: View {
 
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var container: AppContainer
+    @EnvironmentObject var previewManager: PreviewPlayerManager
     @FocusState private var isFocused: Bool
 
     private var cardHeight: CGFloat { cardWidth / aspectRatio }
@@ -53,7 +54,12 @@ struct ItemCard: View {
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
-            if focused { onFocused?(item) }
+            if focused {
+                onFocused?(item)
+                if !shouldShowPreview {
+                    previewManager.stop()
+                }
+            }
             onFocusChange?(focused)
         }
     }
