@@ -172,8 +172,10 @@ final class NavbarViewModel: ObservableObject {
         )
     }
 
-    func switchUser() {
+    func switchUser() -> UUID? {
+        let serverId = container.serverRepository.currentServer.value?.id
         container.sessionRepository.destroyCurrentSession()
+        return serverId
     }
 
     @Published var isShuffling = false

@@ -3,6 +3,13 @@ import Foundation
 @MainActor
 final class SessionInitializer: ObservableObject {
     @Published var restoredServerId: UUID?
+    var suppressAutoLogin = false
+
+    func consumeSuppressAutoLogin() -> Bool {
+        let value = suppressAutoLogin
+        suppressAutoLogin = false
+        return value
+    }
 
     private let container: AppContainer
     private var pendingDestination: Destination?

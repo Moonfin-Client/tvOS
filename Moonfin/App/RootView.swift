@@ -41,18 +41,24 @@ struct StartupNavigationView: View {
     @EnvironmentObject var sessionInitializer: SessionInitializer
 
     var body: some View {
-        NavigationStack(path: $router.path) {
+        NavigationStack(path: $router.startupPath) {
             SelectServerScreen(container: container)
                 .navigationDestination(for: Destination.self) { destination in
                     startupDestinationView(for: destination)
                 }
         }
         .onAppear {
-            if let serverId = sessionInitializer.restoredServerId {
-                sessionInitializer.restoredServerId = nil
-                router.navigate(to: .serverUsers(serverId: serverId))
-            }
+            navigateToRestoredServerIfNeeded()
         }
+        .onChange(of: sessionInitializer.restoredServerId) { _ in
+            navigateToRestoredServerIfNeeded()
+        }
+    }
+
+    private func navigateToRestoredServerIfNeeded() {
+        guard let serverId = sessionInitializer.restoredServerId else { return }
+        sessionInitializer.restoredServerId = nil
+        router.navigate(to: .serverUsers(serverId: serverId))
     }
 
     @ViewBuilder
@@ -63,7 +69,7 @@ struct StartupNavigationView: View {
         case .embyConnect:
             EmbyConnectScreen(container: container)
         case .serverUsers(let serverId):
-            ServerScreen(serverId: serverId, container: container)
+            ServerScreen(serverId: serverId, container: container, suppressAutoLogin: sessionInitializer.consumeSuppressAutoLogin())
         case .userLogin(let serverId, let username):
             UserLoginScreen(serverId: serverId, username: username, container: container)
         case .connectHelp:

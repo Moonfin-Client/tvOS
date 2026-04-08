@@ -5,6 +5,7 @@ struct Navbar: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @EnvironmentObject var sessionInitializer: SessionInitializer
     @FocusState private var navFocusItem: NavbarItem?
     @Namespace private var navPillNamespace
     @State private var lockToHomeOnEntry = true
@@ -105,7 +106,9 @@ struct Navbar: View {
             imageUrl: viewModel.userImageUrl,
             isFocused: navFocusItem == .user,
             onTap: {
-                viewModel.switchUser()
+                let serverId = viewModel.switchUser()
+                sessionInitializer.suppressAutoLogin = true
+                sessionInitializer.restoredServerId = serverId
                 router.switchFlow(to: .startup)
             }
         )

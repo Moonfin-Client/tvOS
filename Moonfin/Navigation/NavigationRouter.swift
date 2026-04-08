@@ -10,6 +10,7 @@ enum AppFlow: Hashable {
 final class NavigationRouter: ObservableObject {
     @Published var flow: AppFlow = .splash
     @Published var path = NavigationPath()
+    @Published var startupPath = NavigationPath()
     @Published var hideNavbar = false
     private var navbarHideRequestCount = 0
 
@@ -32,24 +33,32 @@ final class NavigationRouter: ObservableObject {
         hideNavbar = false
     }
 
+    private var activePath: NavigationPath {
+        get { flow == .startup ? startupPath : path }
+        set {
+            if flow == .startup { startupPath = newValue }
+            else { path = newValue }
+        }
+    }
+
     func navigate(to destination: Destination) {
-        path.append(destination)
+        activePath.append(destination)
     }
 
     func goBack() {
-        guard !path.isEmpty else { return }
-        path.removeLast()
+        guard !activePath.isEmpty else { return }
+        activePath.removeLast()
     }
 
     func goBack(count: Int) {
-        let removeCount = min(count, path.count)
+        let removeCount = min(count, activePath.count)
         guard removeCount > 0 else { return }
-        path.removeLast(removeCount)
+        activePath.removeLast(removeCount)
     }
 
     func reset(to destination: Destination? = nil) {
-        path = NavigationPath()
-        if let destination { path.append(destination) }
+        activePath = NavigationPath()
+        if let destination { activePath.append(destination) }
     }
 
     func navigatePrimary(to destination: Destination) {
@@ -177,6 +186,7 @@ final class NavigationRouter: ObservableObject {
     func switchFlow(to flow: AppFlow) {
         self.flow = flow
         path = NavigationPath()
+        startupPath = NavigationPath()
         resetNavbarVisibility()
     }
 }

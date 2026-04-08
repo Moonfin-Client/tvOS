@@ -8,16 +8,20 @@ struct ServerScreen: View {
 
     let serverId: UUID
 
-    init(serverId: UUID, container: AppContainer) {
+    init(serverId: UUID, container: AppContainer, suppressAutoLogin: Bool = false) {
         self.serverId = serverId
-        _viewModel = StateObject(wrappedValue: ServerViewModel(
-            serverId: serverId,
-            serverRepository: container.serverRepository,
-            serverUserRepository: container.serverUserRepository,
-            authenticationRepository: container.authenticationRepository,
-            authPreferences: container.authPreferences,
-            serverClientFactory: container.serverClientFactory
-        ))
+        _viewModel = StateObject(wrappedValue: {
+            let vm = ServerViewModel(
+                serverId: serverId,
+                serverRepository: container.serverRepository,
+                serverUserRepository: container.serverUserRepository,
+                authenticationRepository: container.authenticationRepository,
+                authPreferences: container.authPreferences,
+                serverClientFactory: container.serverClientFactory
+            )
+            vm.suppressAutoLogin = suppressAutoLogin
+            return vm
+        }())
     }
 
     var body: some View {

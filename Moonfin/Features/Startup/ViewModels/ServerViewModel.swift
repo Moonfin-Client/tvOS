@@ -11,6 +11,7 @@ final class ServerViewModel: ObservableObject {
     @Published var authenticatingUser: (any User)? = nil
     @Published var notification: String? = nil
     private var didAttemptAutomaticLogin = false
+    var suppressAutoLogin = false
 
     private let serverId: UUID
     private let serverRepository: ServerRepositoryProtocol
@@ -86,6 +87,7 @@ final class ServerViewModel: ObservableObject {
 
     private func attemptAutomaticLoginIfNeeded(server: Server, storedUsers: [PrivateUser]) {
         guard !didAttemptAutomaticLogin else { return }
+        guard !suppressAutoLogin else { return }
         guard !authPreferences.alwaysAuthenticate else { return }
 
         let targetUser: PrivateUser?
