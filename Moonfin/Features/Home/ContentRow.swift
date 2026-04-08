@@ -129,19 +129,7 @@ struct ContentRow: View {
 
     @ViewBuilder
     private func cardView(for item: ServerItem) -> some View {
-        if row.rowType == .myMedia {
-            LibraryCard(
-                item: item,
-                imageUrl: viewModel.thumbImageUrl(for: item),
-                cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
-                onFocused: { item in
-                    viewModel.onItemFocused(item)
-                    onItemFocused?(item)
-                    onRowFocused?()
-                },
-                onSelect: { onItemSelected?(item) }
-            )
-        } else if row.rowType == .myMediaSmall {
+        if row.rowType == .myMediaSmall {
             LibraryActionCard(
                 item: item,
                 cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
