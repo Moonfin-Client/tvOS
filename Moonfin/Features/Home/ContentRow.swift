@@ -108,7 +108,7 @@ struct ContentRow: View {
             rowTitle
 
             ScrollViewReader { scrollProxy in
-                FocusFirstRow(firstItemId: row.items.first?.id, restoredItemId: validRestoredItemId, focusTrigger: focusTrigger) { focusBinding in
+                FocusFirstRow(firstItemId: row.items.first?.id, restoredItemId: validRestoredItemId, focusTrigger: focusTrigger, applyFocusSection: false) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                             cardView(for: item)

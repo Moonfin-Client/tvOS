@@ -393,26 +393,37 @@ struct FocusFirstRow<Content: View>: View {
     let firstItemId: String?
     let restoredItemId: String?
     var focusTrigger: Int = 0
+    var applyFocusSection: Bool = true
     let content: (FocusState<String?>.Binding) -> Content
 
     @FocusState private var focusedId: String?
 
-    init(firstItemId: String?, restoredItemId: String? = nil, focusTrigger: Int = 0, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
+    init(firstItemId: String?, restoredItemId: String? = nil, focusTrigger: Int = 0, applyFocusSection: Bool = true, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
         self.firstItemId = firstItemId
         self.restoredItemId = restoredItemId
         self.focusTrigger = focusTrigger
+        self.applyFocusSection = applyFocusSection
         self.content = content
     }
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        scrollContent
+            .defaultFocus($focusedId, restoredItemId ?? firstItemId, priority: restoredItemId != nil ? .userInitiated : .automatic)
+            .onChange(of: focusTrigger) { newValue in
+                guard newValue > 0, let target = restoredItemId ?? firstItemId else { return }
+                focusedId = target
+            }
+    }
+
+    @ViewBuilder
+    private var scrollContent: some View {
+        let scroll = ScrollView(.horizontal, showsIndicators: false) {
             content($focusedId)
         }
-        .focusSection()
-        .defaultFocus($focusedId, restoredItemId ?? firstItemId, priority: restoredItemId != nil ? .userInitiated : .automatic)
-        .onChange(of: focusTrigger) { newValue in
-            guard newValue > 0, let target = restoredItemId ?? firstItemId else { return }
-            focusedId = target
+        if applyFocusSection {
+            scroll.focusSection()
+        } else {
+            scroll
         }
     }
 }
