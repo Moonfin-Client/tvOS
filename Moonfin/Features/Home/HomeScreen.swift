@@ -642,7 +642,7 @@ struct HomeScreen: View {
     ) async -> YouTubeStreamResolver.ResolveResult? {
         await withTaskGroup(of: YouTubeStreamResolver.ResolveResult?.self) { group in
             group.addTask {
-                await YouTubeStreamResolver.resolveStream(videoId: videoId, mode: .preview)
+                await YouTubeStreamResolver.resolveStream(videoId: videoId, mode: .full)
             }
             group.addTask {
                 let nanos = UInt64(timeoutSeconds * 1_000_000_000)
