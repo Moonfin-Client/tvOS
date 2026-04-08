@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum SidebarFocusItem: Hashable {
-    case user, home, search, shuffle, favorites, genres, folders, syncPlay, seerr, libraries, settings
+    case user, home, search, shuffle, favorites, genres, syncPlay, seerr, libraries, settings
     case library(String)
 }
 
@@ -261,18 +261,6 @@ struct LeftSidebar: View {
                 )
                 .focused($focusedItem, equals: .genres)
             }
-
-            SidebarIconItem(
-                systemIcon: "folder.fill",
-                label: "Folders",
-                isExpanded: isExpanded,
-                isFocused: focusedItem == .folders,
-                action: {
-                    router.navigatePrimary(to: .folderView)
-                    handoffFocusToContent()
-                }
-            )
-            .focused($focusedItem, equals: .folders)
 
             if viewModel.showSyncPlay {
                 SidebarIconItem(

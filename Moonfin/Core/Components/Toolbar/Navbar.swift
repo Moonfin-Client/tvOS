@@ -156,14 +156,6 @@ struct Navbar: View {
                     .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.favorites, in: navPillNamespace, isSource: true))
                 }
 
-                ExpandableToolbarButton(
-                    icon: "folder.fill",
-                    label: "Folders",
-                    action: { router.navigatePrimary(to: .folderView) }
-                )
-                .focused($navFocusItem, equals: .folders)
-                .background(Color.clear.frame(height: navbarPillHeight).matchedGeometryEffect(id: NavbarItem.folders, in: navPillNamespace, isSource: true))
-
                 if viewModel.showGenres {
                     ExpandableToolbarButton(
                         icon: "theatermasks",
@@ -250,7 +242,6 @@ enum NavbarItem: Hashable {
     case shuffle
     case favorites
     case genres
-    case folders
     case seerr
     case libraries
     case syncPlay

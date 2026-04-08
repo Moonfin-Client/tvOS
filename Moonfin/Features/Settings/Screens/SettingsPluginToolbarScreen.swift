@@ -65,7 +65,7 @@ struct SettingsPluginToolbarScreen: View {
             SettingsToggleButton(
                 icon: "folder",
                 heading: "Enable Folder View",
-                caption: "Show folders button in toolbar",
+                caption: "Show folders in libraries",
                 isOn: prefs.binding(for: UserPreferences.enableFolderView)
             )
         }

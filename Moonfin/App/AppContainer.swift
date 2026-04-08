@@ -129,7 +129,8 @@ final class AppContainer: ObservableObject {
         self.userViewsService = UserViewsService(
             serverRepository: serverRepo,
             serverClientFactory: factory,
-            userRepository: userRepo
+            userRepository: userRepo,
+            userPreferences: self.userPreferences
         )
 
         let resolveClient: () -> HttpClient? = { [weak serverRepo] in
