@@ -819,19 +819,13 @@ final class HomeViewModel: ObservableObject {
 
     func thumbImageUrl(for item: ServerItem) -> String? {
         guard let api = imageApi(for: item) else { return nil }
+        let useSeriesImage = item.seriesId != nil
+            ? container.userPreferences[UserPreferences.homeImageUseSeriesImage]
+            : true
+
         if let tag = item.imageTags?["Thumb"] {
             return api.getItemImageUrl(
                 itemId: item.id,
-                imageType: .thumb,
-                maxWidth: 480,
-                maxHeight: nil,
-                tag: tag
-            )
-        }
-        if let tag = item.parentThumbImageTag,
-           let parentId = item.parentThumbItemId {
-            return api.getItemImageUrl(
-                itemId: parentId,
                 imageType: .thumb,
                 maxWidth: 480,
                 maxHeight: nil,
@@ -847,25 +841,37 @@ final class HomeViewModel: ObservableObject {
                 tag: tag
             )
         }
-        if let parentTags = item.parentBackdropImageTags,
-           let parentId = item.parentBackdropItemId,
-           let tag = parentTags.first {
-            return api.getItemImageUrl(
-                itemId: parentId,
-                imageType: .backdrop,
-                maxWidth: 480,
-                maxHeight: nil,
-                tag: tag
-            )
-        }
-        if let seriesId = item.seriesId {
-            return api.getItemImageUrl(
-                itemId: seriesId,
-                imageType: .primary,
-                maxWidth: 480,
-                maxHeight: nil,
-                tag: item.seriesPrimaryImageTag
-            )
+        if useSeriesImage {
+            if let tag = item.parentThumbImageTag,
+               let parentId = item.parentThumbItemId {
+                return api.getItemImageUrl(
+                    itemId: parentId,
+                    imageType: .thumb,
+                    maxWidth: 480,
+                    maxHeight: nil,
+                    tag: tag
+                )
+            }
+            if let parentTags = item.parentBackdropImageTags,
+               let parentId = item.parentBackdropItemId,
+               let tag = parentTags.first {
+                return api.getItemImageUrl(
+                    itemId: parentId,
+                    imageType: .backdrop,
+                    maxWidth: 480,
+                    maxHeight: nil,
+                    tag: tag
+                )
+            }
+            if let seriesId = item.seriesId {
+                return api.getItemImageUrl(
+                    itemId: seriesId,
+                    imageType: .primary,
+                    maxWidth: 480,
+                    maxHeight: nil,
+                    tag: item.seriesPrimaryImageTag
+                )
+            }
         }
         if let channelId = item.channelId {
             return api.getItemImageUrl(
@@ -877,6 +883,10 @@ final class HomeViewModel: ObservableObject {
             )
         }
         return posterImageUrl(for: item)
+    }
+
+    func bannerImageUrl(for item: ServerItem) -> String? {
+        return thumbImageUrl(for: item)
     }
 
     private func topShelfPosterImageUrl(for item: ServerItem) -> String? {

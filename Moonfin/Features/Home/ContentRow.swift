@@ -178,6 +178,8 @@ struct ContentRow: View {
         switch imageDisplayType {
         case .thumb:
             return viewModel.thumbImageUrl(for: item)
+        case .banner:
+            return viewModel.bannerImageUrl(for: item)
         default:
             return viewModel.posterImageUrl(for: item)
         }
