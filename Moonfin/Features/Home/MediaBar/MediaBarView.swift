@@ -270,6 +270,7 @@ struct MediaBarView: View {
                         ratings: ratingsViewModel.ratings,
                         enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
                     )
+                    .scaleEffect(1.3, anchor: .leading)
                 }
 
                 Text(item.overview ?? " ")
