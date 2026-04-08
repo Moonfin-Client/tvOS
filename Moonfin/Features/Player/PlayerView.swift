@@ -91,10 +91,7 @@ struct VideoPlayerScreen: View {
             }
 
             if !viewModel.isLiveTV, let action = segmentHandler.activeSkipPrompt {
-                SkipSegmentOverlay(
-                    action: action,
-                    onSkip: { segmentHandler.confirmSkip() }
-                )
+                SkipSegmentOverlay(action: action)
             }
 
             if !viewModel.isLiveTV {
@@ -108,6 +105,8 @@ struct VideoPlayerScreen: View {
                             onPlayNext: { nextUpManager.confirmPlayNext() },
                             onClose: { nextUpManager.dismiss() }
                         )
+                        .focusSection()
+                        .onExitCommand { nextUpManager.dismiss() }
                     }
                 case .stillWatching:
                     StillWatchingOverlay(
@@ -160,9 +159,17 @@ struct VideoPlayerScreen: View {
         }
     }
 
+    private var isNextUpOrStillWatchingVisible: Bool {
+        nextUpManager.promptState != .hidden
+    }
+
     private var gestureLayer: some View {
         RemoteInputView(
             onSelect: {
+                if segmentHandler.activeSkipPrompt != nil {
+                    segmentHandler.confirmSkip()
+                    return
+                }
                 if !viewModel.overlayVisible {
                     viewModel.togglePlayPause()
                     viewModel.showOverlay()
@@ -192,6 +199,10 @@ struct VideoPlayerScreen: View {
                 if !viewModel.overlayVisible { viewModel.showOverlay() }
             },
             onMenu: {
+                if segmentHandler.activeSkipPrompt != nil {
+                    segmentHandler.dismissPrompt()
+                    return
+                }
                 if viewModel.overlayVisible || viewModel.trackSelectionVisible
                     || viewModel.chapterSelectionVisible || viewModel.castListVisible
                     || viewModel.playbackInfoVisible || viewModel.subtitleDownloadVisible {
@@ -203,7 +214,8 @@ struct VideoPlayerScreen: View {
         )
         .allowsHitTesting(!viewModel.overlayVisible && !viewModel.trackSelectionVisible
             && !viewModel.chapterSelectionVisible && !viewModel.castListVisible
-            && !viewModel.playbackInfoVisible && !viewModel.subtitleDownloadVisible)
+            && !viewModel.playbackInfoVisible && !viewModel.subtitleDownloadVisible
+            && !isNextUpOrStillWatchingVisible)
     }
 
     private func trackDialogOverlay<Content: View>(@ViewBuilder content: () -> Content) -> some View {

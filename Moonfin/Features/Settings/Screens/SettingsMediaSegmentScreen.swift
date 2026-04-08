@@ -42,22 +42,28 @@ private struct PickerOptionRow: View {
     let action: () -> Void
 
     @EnvironmentObject var theme: MoonfinTheme
+    @Environment(\.isFocused) private var isFocused
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: SpaceTokens.spaceMd) {
                 Text(label)
                     .font(.bodyMd)
-                    .foregroundColor(theme.colorScheme.listHeadline)
+                    .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : theme.colorScheme.listHeadline)
 
                 Spacer()
 
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
                     .font(.bodyMd)
-                    .foregroundColor(isSelected ? theme.accent : theme.colorScheme.listCaption)
+                    .foregroundColor(isSelected ? theme.accent : (isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption))
             }
             .padding(.horizontal, SpaceTokens.spaceMd)
             .padding(.vertical, SpaceTokens.spaceSm)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
+                    .fill(isFocused ? theme.colorScheme.listButtonFocused : theme.colorScheme.listButton)
+            )
+            .animation(.easeInOut(duration: 0.15), value: isFocused)
         }
         .buttonStyle(CleanButtonStyle())
     }

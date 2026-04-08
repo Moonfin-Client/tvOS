@@ -15,11 +15,12 @@ final class NextUpManager: ObservableObject {
     private var countdownTask: Task<Void, Never>?
     private var countdownRemaining: Int = 0
     private var lastStillWatchingEpisodeCount: Int = -1
+    private var dismissed = false
 
     private var countdownDuration: Int {
         preferences[UserPreferences.nextUpTimeout]
     }
-    private let creditsThresholdSeconds: TimeInterval = 120
+    private let creditsThresholdSeconds: TimeInterval = 30
 
     var onPlayNext: (() async -> Void)?
     var onDismiss: (() -> Void)?
@@ -34,7 +35,7 @@ final class NextUpManager: ObservableObject {
         hasNext: Bool,
         episodesPlayed: Int
     ) {
-        guard promptState == .hidden else { return }
+        guard promptState == .hidden, !dismissed else { return }
         guard duration > 0, hasNext else { return }
 
         let behavior = preferences[UserPreferences.nextUpBehavior]
@@ -68,6 +69,7 @@ final class NextUpManager: ObservableObject {
     func dismiss() {
         cancelCountdown()
         promptState = .hidden
+        dismissed = true
         onDismiss?()
     }
 
@@ -78,6 +80,7 @@ final class NextUpManager: ObservableObject {
     func reset() {
         cancelCountdown()
         promptState = .hidden
+        dismissed = false
     }
 
     func resetForNewQueue() {

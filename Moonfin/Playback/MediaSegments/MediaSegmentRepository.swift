@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 protocol MediaSegmentRepository {
     func getSegmentTypeAction(_ type: MediaSegmentType) -> MediaSegmentAction
@@ -15,6 +16,7 @@ final class MediaSegmentRepositoryImpl: MediaSegmentRepository {
     private let preferences: UserPreferences
     private let client: MediaServerClient
     private var typeActions: [MediaSegmentType: MediaSegmentAction] = [:]
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "MediaSegments")
 
     init(preferences: UserPreferences, client: MediaServerClient) {
         self.preferences = preferences
@@ -51,14 +53,14 @@ final class MediaSegmentRepositoryImpl: MediaSegmentRepository {
 
     func getSegmentsForItem(itemId: String) async -> [MediaSegmentDto] {
         guard client.serverType == .jellyfin else { return [] }
-        let typesQuery = MediaSegmentType.supported.map(\.rawValue).joined(separator: ",")
         do {
             let result: MediaSegmentQueryResult = try await client.httpClient.request(
                 "/MediaSegments/\(itemId)",
-                queryItems: [URLQueryItem(name: "IncludeSegmentTypes", value: typesQuery)]
+                queryItems: []
             )
             return result.items
         } catch {
+            logger.error("Failed to fetch segments for \(itemId): \(error.localizedDescription)")
             return []
         }
     }

@@ -121,6 +121,7 @@ final class PlaybackManager: ObservableObject {
         }
 
         nextUpManager.onPlayNext = { [weak self] in
+            self?.autoAdvanceOnEnd = false
             await self?.playNext()
         }
 

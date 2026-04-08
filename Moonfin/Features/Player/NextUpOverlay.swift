@@ -9,6 +9,13 @@ struct NextUpOverlay: View {
 
     @EnvironmentObject var theme: MoonfinTheme
 
+    @FocusState private var focusedButton: NextUpButton?
+
+    private enum NextUpButton: Hashable {
+        case playNext
+        case close
+    }
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.85).ignoresSafeArea()
@@ -20,11 +27,13 @@ struct NextUpOverlay: View {
 
                 episodeCard
 
-                HStack(spacing: SpaceTokens.spaceMd) {
+                HStack(spacing: SpaceTokens.spaceLg) {
                     actionButton(
                         label: countdown > 0 ? "Play Next (\(countdown))" : "Play Next",
                         icon: "play.fill",
                         isAccent: true,
+                        focused: $focusedButton,
+                        tag: .playNext,
                         action: onPlayNext
                     )
 
@@ -32,6 +41,8 @@ struct NextUpOverlay: View {
                         label: "Close",
                         icon: "xmark",
                         isAccent: false,
+                        focused: $focusedButton,
+                        tag: .close,
                         action: onClose
                     )
                 }
@@ -39,6 +50,7 @@ struct NextUpOverlay: View {
             .padding(SpaceTokens.space3xl)
         }
         .transition(.opacity)
+        .onAppear { focusedButton = .playNext }
     }
 
     private var episodeCard: some View {
@@ -52,7 +64,7 @@ struct NextUpOverlay: View {
                         Color.gray.opacity(0.3)
                     }
                 }
-                .frame(width: 320, height: 180)
+                .frame(width: 480, height: 270)
                 .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.medium))
             }
 
@@ -64,7 +76,7 @@ struct NextUpOverlay: View {
                 }
 
                 Text(episodeLabel)
-                    .font(.titleXl)
+                    .font(.title2xl)
                     .foregroundColor(.white)
                     .lineLimit(2)
 
@@ -89,33 +101,48 @@ struct NextUpOverlay: View {
             RoundedRectangle(cornerRadius: RadiusTokens.large)
                 .fill(theme.colorScheme.surface.opacity(0.6))
         )
-        .frame(maxWidth: 700)
+        .frame(maxWidth: 900)
     }
 
     private var episodeLabel: String {
         var label = ""
         if let s = nextItem.parentIndexNumber { label += "S\(s)" }
-        if let e = nextItem.indexNumber { label += "E\(e) — " }
+        if let e = nextItem.indexNumber { label += "E\(e) - " }
         label += nextItem.name
         return label
     }
 
-    private func actionButton(label: String, icon: String, isAccent: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private func actionButton(
+        label: String,
+        icon: String,
+        isAccent: Bool,
+        focused: FocusState<NextUpButton?>.Binding,
+        tag: NextUpButton,
+        action: @escaping () -> Void
+    ) -> some View {
+        let isFocused = focused.wrappedValue == tag
+        return Button(action: action) {
             HStack(spacing: SpaceTokens.spaceSm) {
                 Image(systemName: icon)
                 Text(label)
                     .fontWeight(.semibold)
             }
-            .font(.bodyMd)
-            .padding(.horizontal, SpaceTokens.spaceLg)
+            .font(.bodyLg)
+            .padding(.horizontal, SpaceTokens.spaceXl)
             .padding(.vertical, SpaceTokens.spaceMd)
             .background(
                 RoundedRectangle(cornerRadius: RadiusTokens.medium)
-                    .fill(isAccent ? theme.accent.opacity(0.85) : theme.colorScheme.surface.opacity(0.7))
+                    .fill(isAccent ? theme.accent.opacity(isFocused ? 1.0 : 0.85) : theme.colorScheme.surface.opacity(isFocused ? 0.9 : 0.7))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .strokeBorder(Color.white.opacity(isFocused ? 0.6 : 0), lineWidth: 2)
+            )
+            .scaleEffect(isFocused ? 1.05 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: isFocused)
             .foregroundColor(.white)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CleanButtonStyle())
+        .focused(focused, equals: tag)
     }
 }
