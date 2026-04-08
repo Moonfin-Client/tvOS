@@ -92,7 +92,7 @@ struct LibraryBrowseScreen: View {
                 Spacer()
                 HStack(spacing: 12) {
                     Text(viewModel.libraryName)
-                        .font(.system(size: 26, weight: .light))
+                        .font(.system(size: 28, weight: .semibold))
                         .foregroundColor(.white)
 
                     if viewModel.totalItems > 0 {
@@ -120,19 +120,22 @@ struct LibraryBrowseScreen: View {
         VStack(alignment: .leading, spacing: 4) {
             if let item = viewModel.focusedItem {
                 Text(item.name)
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.system(size: 42, weight: .semibold))
                     .foregroundColor(.white)
                     .lineLimit(1)
 
                 SimpleInfoRow(item: item)
+                    .scaleEffect(1.15, anchor: .leading)
+                    .padding(.bottom, 4)
 
                 MediaBarRatingsRow(
                     ratings: ratingsViewModel.ratings,
                     enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
                 )
+                .scaleEffect(1.3, anchor: .leading)
             }
         }
-        .frame(height: 110, alignment: .leading)
+        .frame(height: 130, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: viewModel.focusedItem?.id) { _ in
             if let item = viewModel.focusedItem {
@@ -200,7 +203,7 @@ struct LibraryBrowseScreen: View {
                         cardHeight: dims.height,
                         metadata: viewModel.buildMetadata(for: item),
                         watchedIndicator: container.userPreferences[UserPreferences.watchedIndicator],
-                        showLabels: true,
+                        showLabels: false,
                         onFocused: { viewModel.setFocusedItem($0) },
                         onTap: { navigateToItem(item) }
                     )
@@ -495,9 +498,9 @@ private struct AlphaPickerLetter: View {
     var body: some View {
         Button(action: action) {
             Text(letter)
-                .font(.system(size: 22, weight: isSelected ? .bold : .medium))
+                .font(.system(size: 28, weight: isSelected ? .bold : .medium))
                 .foregroundColor(letterColor)
-                .frame(width: 38, height: 40)
+                .frame(width: 44, height: 46)
         }
         .buttonStyle(AlphaLetterButtonStyle(theme: theme, isFocused: isFocused))
         .focused($isFocused)

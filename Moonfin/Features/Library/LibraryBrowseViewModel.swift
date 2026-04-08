@@ -33,6 +33,7 @@ final class LibraryBrowseViewModel: ObservableObject {
     private let libraryPreferences: LibraryPreferences
     private var currentPage = 0
     private var isLoadingMore = false
+    private var backdropDebounceTask: Task<Void, Never>?
     private let pageSize = 100
     private var loadTask: Task<Void, Never>?
     private var cancellables = Set<AnyCancellable>()
@@ -202,6 +203,15 @@ final class LibraryBrowseViewModel: ObservableObject {
 
     func setFocusedItem(_ item: ServerItem) {
         focusedItem = item
+        backdropDebounceTask?.cancel()
+        backdropDebounceTask = Task { @MainActor [weak self] in
+            do { try await Task.sleep(nanoseconds: 300_000_000) } catch { return }
+            guard let self, self.focusedItem?.id == item.id else { return }
+            self.updateBackdrop(for: item)
+        }
+    }
+
+    private func updateBackdrop(for item: ServerItem) {
         guard let imageApi else { return }
         var urls: [String] = []
         if let tags = item.backdropImageTags, !tags.isEmpty {
