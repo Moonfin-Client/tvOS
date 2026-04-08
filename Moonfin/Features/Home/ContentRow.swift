@@ -125,6 +125,7 @@ struct ContentRow: View {
                 .modifier(ScrollClipDisabledModifier())
             }
         }
+        .focusSection()
     }
 
     @ViewBuilder
