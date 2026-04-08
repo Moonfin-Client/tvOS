@@ -16,6 +16,7 @@ struct EpisodePreviewOverlay: View {
         Group {
             if isActiveItem {
                 PlaybackSurfaceView(player: previewManager.player)
+                    .aspectRatio(16.0 / 9.0, contentMode: .fill)
                     .opacity(previewManager.isVisible ? 1 : 0)
                     .animation(.easeInOut(duration: 0.6), value: previewManager.isVisible)
             }

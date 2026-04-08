@@ -144,6 +144,7 @@ final class PreviewPlayerManager: ObservableObject {
         }
 
         currentPlayCount += 1
+        player.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
         player.setMuted(currentMuted)
         scheduleLoopRestart()
         await player.play(streamUrl: url.absoluteString, startPosition: currentSeekPosition)
@@ -173,6 +174,7 @@ final class PreviewPlayerManager: ObservableObject {
             currentItemId = item.id
             pendingItemId = nil
 
+            player.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
             player.setMuted(currentMuted)
             scheduleLoopRestart()
             await player.play(streamUrl: url.absoluteString, startPosition: seekPosition)
