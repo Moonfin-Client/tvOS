@@ -47,7 +47,7 @@ struct SettingsMoonfinScreen: View {
             SettingsListButton(
                 icon: "play.rectangle",
                 heading: "Previews & Music",
-                caption: "Episode previews, theme music",
+                caption: "Media previews, theme music",
                 action: { settingsRouter.navigate(to: .pluginPreviewsMusic) }
             )
             .focused($focusedRoute, equals: .pluginPreviewsMusic)

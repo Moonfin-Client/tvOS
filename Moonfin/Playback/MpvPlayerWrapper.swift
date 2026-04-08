@@ -127,8 +127,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private var renderWatchdogTimer: Timer?
     private var activePlaybackURL: String?
     private var intentChangeInProgress = false
-    private var isSurfaceAttached = false
-    private var surfaceAttachedContinuation: CheckedContinuation<Void, Never>?
+    private var surfaceAttachedContinuations: [CheckedContinuation<Void, Never>] = []
 
     override init() {
         super.init()
@@ -150,27 +149,29 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         videoView = view
         videoSurface.attach(to: view)
         if view.window != nil {
-            isSurfaceAttached = true
-            surfaceAttachedContinuation?.resume()
-            surfaceAttachedContinuation = nil
+            for continuation in surfaceAttachedContinuations {
+                continuation.resume()
+            }
+            surfaceAttachedContinuations.removeAll()
         }
     }
 
     func notifySurfaceReady() {
-        guard !isSurfaceAttached else { return }
-        isSurfaceAttached = true
         videoSurface.updateLayout()
-        surfaceAttachedContinuation?.resume()
-        surfaceAttachedContinuation = nil
+        let pending = surfaceAttachedContinuations
+        surfaceAttachedContinuations.removeAll()
+        for continuation in pending {
+            continuation.resume()
+        }
     }
 
     private func waitForSurface() async {
-        if isSurfaceAttached { return }
+        if videoView?.window != nil { return }
         await withCheckedContinuation { continuation in
-            if isSurfaceAttached {
+            if videoView?.window != nil {
                 continuation.resume()
             } else {
-                surfaceAttachedContinuation = continuation
+                surfaceAttachedContinuations.append(continuation)
             }
         }
     }
@@ -415,7 +416,14 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
             return false
         }
 
-        videoSurface.configureColorSpace(forSDR: intent != .hdr)
+        // Only reconfigure layer format when the engine will be recreated.
+        // MoltenVK overrides the layer's pixelFormat during swapchain creation;
+        // changing it back while reusing the engine causes a pipeline/framebuffer
+        // pixel format mismatch (e.g. RGB10A2Unorm vs BGRA8Unorm).
+        let canReuseEngine = engine != nil && activeProfile == .metal && activeOutputIntent == intent
+        if !canReuseEngine {
+            videoSurface.configureColorSpace(forSDR: intent != .hdr)
+        }
 
         if ensureEngine(profile: .metal, outputIntent: intent) {
             if engine?.loadFile(url) == true {

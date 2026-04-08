@@ -35,7 +35,7 @@ struct ItemCard: View {
                 cardImage
                 
                 if shouldShowPreview {
-                    EpisodePreviewOverlay(
+                    MediaPreviewOverlay(
                         item: item,
                         shouldPlay: isFocused,
                         muted: !previewAudioEnabled
@@ -75,7 +75,7 @@ struct ItemCard: View {
     }
 
     private var previewEnabled: Bool {
-        container.userPreferences[UserPreferences.episodePreviewEnabled]
+        container.userPreferences[UserPreferences.mediaPreviewEnabled]
     }
     
     private var previewAudioEnabled: Bool {

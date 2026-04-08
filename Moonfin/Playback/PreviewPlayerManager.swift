@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 import UIKit
 
-/// Manages a single shared player instance used for home-row card previews.
+/// Manages a single shared player instance used for home-row media previews.
 ///
 /// Only one preview plays at a time. When focus moves to a new card, the manager
 /// cancels the in-flight task and restarts for the new item. Each preview loops on
@@ -25,6 +25,16 @@ final class PreviewPlayerManager: ObservableObject {
     /// The shared player. Cards observe this directly via PlaybackSurfaceView.
     let player = MpvPlayerWrapper.makePlayer()
 
+    /// Persistent UIView for the player surface. Survives across preview transitions
+    /// so the Vulkan/Metal engine is not rebuilt for every card focus change.
+    let persistentSurface: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        view.isOpaque = false
+        return view
+    }()
+
     // MARK: - Private state
 
     private var currentTask: Task<Void, Never>?
@@ -39,6 +49,9 @@ final class PreviewPlayerManager: ObservableObject {
     // MARK: - Init / deinit
 
     init() {
+        player.attachVideoView(persistentSurface)
+        player.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
+
         stateObserver = player.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
@@ -108,7 +121,7 @@ final class PreviewPlayerManager: ObservableObject {
         currentPlayCount = 0
         currentItemId = nil
         isVisible = false
-        player.stopPlaybackOnly()
+        player.stop()
     }
 
     @objc private func handleResignActive() {
@@ -162,10 +175,11 @@ final class PreviewPlayerManager: ObservableObject {
             guard let episode = try await resolvePreviewEpisode(item: item, client: client) else { return }
             guard !Task.isCancelled else { return }
 
-            let seekPosition = await determineSeekPosition(for: episode, client: client)
-            guard !Task.isCancelled else { return }
+            async let seekPositionTask = determineSeekPosition(for: episode, client: client)
+            async let urlTask = getStreamUrl(for: episode, client: client)
 
-            let url = try await getStreamUrl(for: episode, client: client)
+            let seekPosition = await seekPositionTask
+            let url = try await urlTask
             guard !Task.isCancelled else { return }
 
             currentStreamUrl = url
@@ -269,7 +283,7 @@ final class PreviewPlayerManager: ObservableObject {
             startTimeTicks: episode.userData?.playbackPositionTicks,
             enableDirectPlay: true,
             enableDirectStream: true,
-            enableTranscoding: true,
+            enableTranscoding: false,
             allowVideoStreamCopy: true,
             allowAudioStreamCopy: true
         )
@@ -280,51 +294,27 @@ final class PreviewPlayerManager: ObservableObject {
                           userInfo: [NSLocalizedDescriptionKey: "No media source available"])
         }
 
-        // Prefer transcoding for previews
-        if let transcodingPath = mediaSource.transcodingUrl, !transcodingPath.isEmpty {
-            guard let base = client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) else {
-                throw NSError(domain: "PreviewPlayer", code: -3,
-                              userInfo: [NSLocalizedDescriptionKey: "Missing server base URL"])
-            }
-            var urlString: String
-            if transcodingPath.hasPrefix("http://") || transcodingPath.hasPrefix("https://") {
-                urlString = transcodingPath
-            } else {
-                let path = transcodingPath.hasPrefix("/") ? transcodingPath : "/\(transcodingPath)"
-                urlString = "\(base)\(path)"
-            }
-            if let token = client.accessToken, !urlString.contains("api_key=") {
-                urlString += urlString.contains("?") ? "&api_key=\(token)" : "?api_key=\(token)"
-            }
-            if let url = URL(string: urlString) { return url }
-        }
-
-        // Fall back to direct play/stream
-        if mediaSource.supportsDirectPlay || mediaSource.supportsDirectStream {
-            let rawContainer = mediaSource.container ?? "mp4"
-            let container = rawContainer.split(separator: ",").first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? "mp4"
-            let playSessionId = playbackResult.playSessionId ?? ""
-            let params = StreamParams(
-                userId: client.userId ?? "",
-                mediaSourceId: mediaSource.id,
-                playSessionId: playSessionId,
-                liveStreamId: mediaSource.liveStreamId,
-                isLiveTv: false,
-                deviceId: AppConstants.deviceId,
-                container: container,
-                audioStreamIndex: mediaSource.defaultAudioStreamIndex,
-                subtitleStreamIndex: nil,
-                maxStreamingBitrate: nil,
-                startTimeTicks: nil
-            )
-            let urlString = client.playbackApi.getVideoStreamUrl(itemId: episode.id, params: params)
-            if let url = URL(string: urlString) { return url }
-        }
-
-        throw NSError(
-            domain: "PreviewPlayer",
-            code: -4,
-            userInfo: [NSLocalizedDescriptionKey: "No playable preview stream available"]
+        let rawContainer = mediaSource.container ?? "mp4"
+        let container = rawContainer.split(separator: ",").first.map(String.init)?.trimmingCharacters(in: .whitespaces) ?? "mp4"
+        let playSessionId = playbackResult.playSessionId ?? ""
+        let params = StreamParams(
+            userId: client.userId ?? "",
+            mediaSourceId: mediaSource.id,
+            playSessionId: playSessionId,
+            liveStreamId: mediaSource.liveStreamId,
+            isLiveTv: false,
+            deviceId: AppConstants.deviceId,
+            container: container,
+            audioStreamIndex: mediaSource.defaultAudioStreamIndex,
+            subtitleStreamIndex: nil,
+            maxStreamingBitrate: nil,
+            startTimeTicks: nil
         )
+        let urlString = client.playbackApi.getVideoStreamUrl(itemId: episode.id, params: params)
+        guard let url = URL(string: urlString) else {
+            throw NSError(domain: "PreviewPlayer", code: -4,
+                          userInfo: [NSLocalizedDescriptionKey: "No playable preview stream available"])
+        }
+        return url
     }
 }

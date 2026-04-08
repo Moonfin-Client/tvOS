@@ -11,9 +11,9 @@ struct SettingsPluginPreviewsMusicScreen: View {
         SettingsScreenLayout(title: "Previews & Music") {
             SettingsToggleButton(
                 icon: "tv",
-                heading: "Episode Preview",
-                caption: "Show episode previews on home rows",
-                isOn: prefs.binding(for: UserPreferences.episodePreviewEnabled)
+                heading: "Media Preview",
+                caption: "Show media previews on home rows",
+                isOn: prefs.binding(for: UserPreferences.mediaPreviewEnabled)
             )
 
             SettingsToggleButton(
