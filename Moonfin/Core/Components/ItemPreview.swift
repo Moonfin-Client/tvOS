@@ -8,6 +8,7 @@ struct ItemPreview: View {
     var shape: CardShape = .rounded
     var watchedIndicator: WatchedIndicatorBehavior = .always
     var serverName: String?
+    var showLabels: Bool = true
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
 
@@ -29,28 +30,30 @@ struct ItemPreview: View {
                 onFocusChange: { isCardFocused = $0 }
             )
 
-            VStack(alignment: .leading, spacing: 2) {
-                MarqueeText(
-                    text: item.name,
-                    font: .captionXs,
-                    fontSize: TypographyTokens.fontSizeXs,
-                    color: theme.colorScheme.onBackground,
-                    maxWidth: cardWidth,
-                    isFocused: isCardFocused
-                )
-
-                if !item.cardSubtitle.isEmpty {
+            if showLabels {
+                VStack(alignment: .leading, spacing: 2) {
                     MarqueeText(
-                        text: item.cardSubtitle,
+                        text: item.name,
                         font: .captionXs,
                         fontSize: TypographyTokens.fontSizeXs,
-                        color: theme.colorScheme.onBackground.opacity(0.6),
+                        color: theme.colorScheme.onBackground,
                         maxWidth: cardWidth,
                         isFocused: isCardFocused
                     )
+
+                    if !item.cardSubtitle.isEmpty {
+                        MarqueeText(
+                            text: item.cardSubtitle,
+                            font: .captionXs,
+                            fontSize: TypographyTokens.fontSizeXs,
+                            color: theme.colorScheme.onBackground.opacity(0.6),
+                            maxWidth: cardWidth,
+                            isFocused: isCardFocused
+                        )
+                    }
                 }
+                .frame(width: cardWidth, alignment: .leading)
             }
-            .frame(width: cardWidth, alignment: .leading)
         }
     }
 }

@@ -162,6 +162,7 @@ struct ContentRow: View {
                 cardWidth: effectiveCardWidth,
                 watchedIndicator: watchedIndicator,
                 serverName: viewModel.serverName(for: item),
+                showLabels: row.rowType != .myMedia,
                 onFocused: { item in
                     viewModel.onItemFocused(item)
                     onItemFocused?(item)
