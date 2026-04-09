@@ -66,8 +66,6 @@ final class SeerrDiscoverViewModel: ObservableObject {
     private var focusDebounceTask: Task<Void, Never>?
     private var backdropDebounceTask: Task<Void, Never>?
     private var loadingMoreTypes: Set<SeerrRowType> = []
-    private var recentRequestsHydrationTask: Task<Void, Never>?
-    private var recentRequestsHydrationVersion: Int = 0
     private var blockNsfw = true
 
     static let popularNetworks: [SeerrNetworkDto] = [
@@ -165,13 +163,8 @@ final class SeerrDiscoverViewModel: ObservableObject {
                     return SeerrDiscoverItemDto.fromRequest(tmdbId: tmdbId, mediaType: request.type, request: request)
                 }
                 let filteredItems = filterItems(requestItems)
-                updateRequestsRow(type, items: filteredItems)
-                recentRequestsHydrationVersion += 1
-                let hydrationVersion = recentRequestsHydrationVersion
-                recentRequestsHydrationTask?.cancel()
-                recentRequestsHydrationTask = Task {
-                    await hydrateRequestsRow(type, items: filteredItems, version: hydrationVersion)
-                }
+                let enriched = await enrichRequestItems(filteredItems)
+                updateRequestsRow(type, items: enriched)
             case .trending:
                 let page = try await seerrRepository.getTrending(limit: limit, offset: 0)
                 updateRow(type, page: page)
@@ -218,93 +211,69 @@ final class SeerrDiscoverViewModel: ObservableObject {
         rows[index].isLoading = false
     }
 
-    private func hydrateRequestsRow(_ type: SeerrRowType, items: [SeerrDiscoverItemDto], version: Int) async {
-        var movieDetailsCache: [Int: SeerrMovieDetailsDto] = [:]
-        var tvDetailsCache: [Int: SeerrTvDetailsDto] = [:]
-        var hydratedItems: [SeerrDiscoverItemDto] = []
-        hydratedItems.reserveCapacity(items.count)
-
-        for item in items {
-            guard !Task.isCancelled else { return }
-
-            let tmdbId = item.id
-            guard tmdbId > 0 else {
-                hydratedItems.append(item)
-                continue
-            }
-
-            if item.posterPath != nil && item.backdropPath != nil && item.voteAverage != nil {
-                hydratedItems.append(item)
-                continue
-            }
-
-            do {
-                if item.mediaType == "tv" {
-                    let details: SeerrTvDetailsDto
-                    if let cached = tvDetailsCache[tmdbId] {
-                        details = cached
-                    } else {
-                        let fetched = try await seerrRepository.getTvDetails(tmdbId: tmdbId)
-                        tvDetailsCache[tmdbId] = fetched
-                        details = fetched
-                    }
-
-                    hydratedItems.append(
-                        SeerrDiscoverItemDto(
-                            id: item.id,
-                            mediaType: item.mediaType,
-                            title: item.title,
-                            name: item.name ?? details.name ?? details.title,
-                            posterPath: details.posterPath ?? item.posterPath,
-                            backdropPath: details.backdropPath ?? item.backdropPath,
-                            overview: details.overview ?? item.overview,
-                            releaseDate: item.releaseDate,
-                            firstAirDate: item.firstAirDate,
-                            genreIds: item.genreIds,
-                            voteAverage: details.voteAverage ?? item.voteAverage,
-                            adult: item.adult,
-                            mediaInfo: item.mediaInfo,
-                            requestStatus: item.requestStatus
-                        )
-                    )
-                } else {
-                    let details: SeerrMovieDetailsDto
-                    if let cached = movieDetailsCache[tmdbId] {
-                        details = cached
-                    } else {
-                        let fetched = try await seerrRepository.getMovieDetails(tmdbId: tmdbId)
-                        movieDetailsCache[tmdbId] = fetched
-                        details = fetched
-                    }
-
-                    hydratedItems.append(
-                        SeerrDiscoverItemDto(
-                            id: item.id,
-                            mediaType: item.mediaType,
-                            title: item.title ?? details.title,
-                            name: item.name,
-                            posterPath: details.posterPath ?? item.posterPath,
-                            backdropPath: details.backdropPath ?? item.backdropPath,
-                            overview: details.overview ?? item.overview,
-                            releaseDate: item.releaseDate,
-                            firstAirDate: item.firstAirDate,
-                            genreIds: item.genreIds,
-                            voteAverage: details.voteAverage ?? item.voteAverage,
-                            adult: item.adult,
-                            mediaInfo: item.mediaInfo,
-                            requestStatus: item.requestStatus
-                        )
-                    )
+    private func enrichRequestItems(_ items: [SeerrDiscoverItemDto]) async -> [SeerrDiscoverItemDto] {
+        guard !items.isEmpty else { return [] }
+        return await withTaskGroup(of: (Int, SeerrDiscoverItemDto).self) { group in
+            for (offset, item) in items.enumerated() {
+                group.addTask { [weak self] in
+                    guard let self else { return (offset, item) }
+                    return (offset, await self.enrichSingleItem(item))
                 }
-            } catch {
-                hydratedItems.append(item)
             }
+            var results = items
+            for await (offset, enriched) in group {
+                results[offset] = enriched
+            }
+            return results
         }
+    }
 
-        guard !Task.isCancelled else { return }
-        guard version == recentRequestsHydrationVersion else { return }
-        guard let index = rows.firstIndex(where: { $0.rowType == type }) else { return }
-        rows[index].items = hydratedItems
+    private nonisolated func enrichSingleItem(_ item: SeerrDiscoverItemDto) async -> SeerrDiscoverItemDto {
+        let tmdbId = item.id
+        guard tmdbId > 0 else { return item }
+        if item.posterPath != nil && item.backdropPath != nil && item.voteAverage != nil { return item }
+
+        do {
+            if item.mediaType == "tv" {
+                let details = try await seerrRepository.getTvDetails(tmdbId: tmdbId)
+                return SeerrDiscoverItemDto(
+                    id: item.id,
+                    mediaType: item.mediaType,
+                    title: item.title,
+                    name: item.name ?? details.name ?? details.title,
+                    posterPath: details.posterPath ?? item.posterPath,
+                    backdropPath: details.backdropPath ?? item.backdropPath,
+                    overview: details.overview ?? item.overview,
+                    releaseDate: item.releaseDate,
+                    firstAirDate: item.firstAirDate,
+                    genreIds: item.genreIds,
+                    voteAverage: details.voteAverage ?? item.voteAverage,
+                    adult: item.adult,
+                    mediaInfo: item.mediaInfo,
+                    requestStatus: item.requestStatus
+                )
+            } else {
+                let details = try await seerrRepository.getMovieDetails(tmdbId: tmdbId)
+                return SeerrDiscoverItemDto(
+                    id: item.id,
+                    mediaType: item.mediaType,
+                    title: item.title ?? details.title,
+                    name: item.name,
+                    posterPath: details.posterPath ?? item.posterPath,
+                    backdropPath: details.backdropPath ?? item.backdropPath,
+                    overview: details.overview ?? item.overview,
+                    releaseDate: item.releaseDate,
+                    firstAirDate: item.firstAirDate,
+                    genreIds: item.genreIds,
+                    voteAverage: details.voteAverage ?? item.voteAverage,
+                    adult: item.adult,
+                    mediaInfo: item.mediaInfo,
+                    requestStatus: item.requestStatus
+                )
+            }
+        } catch {
+            return item
+        }
     }
 
     private func updateGenreRow(_ type: SeerrRowType, genres: [SeerrGenreDto]) {

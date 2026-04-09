@@ -228,9 +228,14 @@ struct SeerrItemCard: View {
     }
 
     private var placeholder: some View {
-        Rectangle()
-            .fill(theme.colorScheme.surface.opacity(0.3))
-            .frame(width: cardWidth, height: cardHeight)
+        ZStack {
+            Rectangle()
+                .fill(theme.colorScheme.surface.opacity(0.6))
+            Image(systemName: item.mediaType == "tv" ? "tv" : "film")
+                .font(.system(size: 28))
+                .foregroundColor(theme.colorScheme.onBackground.opacity(0.3))
+        }
+        .frame(width: cardWidth, height: cardHeight)
     }
 
     private func extractYear(from item: SeerrDiscoverItemDto) -> String? {

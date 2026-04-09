@@ -194,9 +194,15 @@ struct SeerrMediaDetailsView: View {
                     .frame(width: 280, height: 420)
                     .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.medium))
             } else {
-                RoundedRectangle(cornerRadius: RadiusTokens.medium)
-                    .fill(theme.colorScheme.surface.opacity(0.3))
-                    .frame(width: 280, height: 420)
+                ZStack {
+                    RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                        .fill(theme.colorScheme.surface.opacity(0.6))
+                    Image(systemName: viewModel.isMovie ? "film" : "tv")
+                        .font(.system(size: 48))
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.3))
+                }
+                .frame(width: 280, height: 420)
+                .clipShape(RoundedRectangle(cornerRadius: RadiusTokens.medium))
             }
         }
         .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
