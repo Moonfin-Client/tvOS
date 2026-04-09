@@ -24,6 +24,7 @@ struct HomeScreen: View {
     @State private var isRestoringPosition = false
     @State private var mediaBarRequestFocus = false
     @State private var focusTask: Task<Void, Never>?
+    @State private var restoreTask: Task<Void, Never>?
     @State private var mediaBarTrailerPreviewTask: Task<Void, Never>?
     @State private var lastPreviewedMediaBarItemId: String?
     @StateObject private var inlineTrailerPlayer = InlineTrailerPlayerManager()
@@ -102,8 +103,8 @@ struct HomeScreen: View {
     }
 
     private func scheduleSidebarRowRestore(delay: UInt64 = 100_000_000) {
-        focusTask?.cancel()
-        focusTask = Task {
+        restoreTask?.cancel()
+        restoreTask = Task {
             try? await Task.sleep(nanoseconds: delay)
             guard !Task.isCancelled else { return }
             restoreRowFocusTrigger += 1

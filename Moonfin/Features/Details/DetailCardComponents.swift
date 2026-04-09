@@ -410,7 +410,7 @@ struct FocusFirstRow<Content: View>: View {
 
     var body: some View {
         scrollContent
-            .defaultFocus($focusedId, restoredItemId ?? firstItemId, priority: restoredItemId != nil ? .userInitiated : .automatic)
+            .defaultFocus($focusedId, restoredItemId ?? firstItemId)
             .onChange(of: focusTrigger) { newValue in
                 guard newValue > 0, let target = restoredItemId ?? firstItemId else { return }
                 focusedId = target
