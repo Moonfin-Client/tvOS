@@ -23,6 +23,8 @@ struct ContentRow: View {
             return container.userPreferences[UserPreferences.homeImageTypeContinueWatching]
         case .nextUp:
             return container.userPreferences[UserPreferences.homeImageTypeNextUp]
+        case .myMedia:
+            return container.userPreferences[UserPreferences.homeImageTypeMyMedia]
         case .liveTvOnNow, .liveTvComingUp:
             return container.userPreferences[UserPreferences.homeImageTypeLiveTv]
         default:

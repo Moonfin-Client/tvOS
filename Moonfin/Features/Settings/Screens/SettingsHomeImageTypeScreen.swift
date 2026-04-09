@@ -29,6 +29,15 @@ struct SettingsHomeImageTypeScreen: View {
             .focused($focusedRoute, equals: .homeImageTypeNextUp)
 
             SettingsListButton(
+                icon: "rectangle.grid.1x2",
+                heading: "My Media",
+                caption: "Image type for my media row",
+                trailingText: prefs[UserPreferences.homeImageTypeMyMedia].displayName,
+                action: { settingsRouter.navigate(to: .homeImageTypeMyMedia) }
+            )
+            .focused($focusedRoute, equals: .homeImageTypeMyMedia)
+
+            SettingsListButton(
                 icon: "rectangle.stack",
                 heading: "Libraries",
                 caption: "Image type for library rows",

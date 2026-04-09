@@ -16,21 +16,15 @@ final class PreviewPlayerManager: ObservableObject {
 
     // MARK: - Public observable state
 
-    /// The `id` of the item currently being previewed, or nil when idle.
     @Published private(set) var currentItemId: String?
-
-    /// True while the player is opening, buffering, or playing (drives overlay visibility).
     @Published private(set) var isVisible: Bool = false
 
-    /// The shared player. Cards observe this directly via PlaybackSurfaceView.
+    /// The shared player used for preview rendering.
     let player = MpvPlayerWrapper.makePlayer()
 
-    /// Persistent UIView for the player surface. Survives across preview transitions
-    /// so the Vulkan/Metal engine is not rebuilt for every card focus change.
     let persistentSurface: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
-        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.isOpaque = false
         return view
     }()
@@ -50,7 +44,6 @@ final class PreviewPlayerManager: ObservableObject {
 
     init() {
         player.attachVideoView(persistentSurface)
-        player.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
 
         stateObserver = player.$state
             .receive(on: DispatchQueue.main)
@@ -81,7 +74,7 @@ final class PreviewPlayerManager: ObservableObject {
 
     // MARK: - Public API
 
-    /// Start a preview for `item` after a 1.5 s debounce. Cancels any existing preview first.
+    /// Cancels any existing preview first.
     func requestPreview(for item: ServerItem, muted: Bool, container: AppContainer) {
         if currentItemId == item.id, currentTask != nil { return }
         currentTask?.cancel()
@@ -91,7 +84,7 @@ final class PreviewPlayerManager: ObservableObject {
         currentTask = Task { await startPreview(for: item, container: container) }
     }
 
-    /// Stop preview only if `itemId` is the currently active item (safe to call on unfocus).
+    /// Stop preview only if `itemId` is the currently active item.
     func stopIfCurrent(itemId: String) {
         if pendingItemId == itemId {
             pendingItemId = nil
@@ -103,7 +96,7 @@ final class PreviewPlayerManager: ObservableObject {
         stop()
     }
 
-    /// Unconditionally stop everything and release player resources.
+    /// Unconditionally stop and release player resources.
     func stop() {
         currentTask?.cancel()
         currentTask = nil

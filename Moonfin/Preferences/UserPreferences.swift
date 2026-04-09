@@ -32,6 +32,7 @@ final class UserPreferences {
     static let homeRowsImageType = Preference(key: "home_rows_image_type", defaultValue: ImageDisplayType.poster)
     static let homeImageTypeContinueWatching = Preference(key: "home_image_type_continue_watching", defaultValue: ImageDisplayType.thumb)
     static let homeImageTypeNextUp = Preference(key: "home_image_type_next_up", defaultValue: ImageDisplayType.thumb)
+    static let homeImageTypeMyMedia = Preference(key: "home_image_type_my_media", defaultValue: ImageDisplayType.thumb)
     static let homeImageTypeLibraries = Preference(key: "home_image_type_libraries", defaultValue: ImageDisplayType.poster)
     static let homeImageTypeLiveTv = Preference(key: "home_image_type_live_tv", defaultValue: ImageDisplayType.thumb)
     static let homeImageUseSeriesImage = Preference(key: "home_image_use_series_image", defaultValue: false)

@@ -19,22 +19,32 @@ final class SessionInitializer: ObservableObject {
     }
 
     private static let sessionTimeoutNs: UInt64 = 15_000_000_000
+    private static let splashMinNs: UInt64 = 2_500_000_000
+    private static let syncGraceNs: UInt64 = 2_500_000_000
 
     func initialize(router: NavigationRouter) {
         Task {
             let restoreCompleted = await raceSessionRestoreAgainstTimeout()
-            async let minDelay: Void = Task.sleep(nanoseconds: 2_500_000_000)
-            _ = try? await minDelay
 
             if container.sessionRepository.isAuthenticated,
                container.userRepository.currentUser.value != nil {
+                // Run plugin sync during splash so preferences land before home loads
+                let syncTask = Task { await container.pluginSyncService.syncOnStartup() }
+                try? await Task.sleep(nanoseconds: Self.splashMinNs)
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { await syncTask.value }
+                    group.addTask { try? await Task.sleep(nanoseconds: Self.syncGraceNs) }
+                    await group.next()
+                    group.cancelAll()
+                }
                 router.switchFlow(to: .main)
                 processPendingDestinationIfPossible(router: router)
                 configureCrashReportEndpoint()
                 container.serverConnectionMonitor.startMonitoring()
-                Task { await container.pluginSyncService.syncOnStartup() }
                 return
             }
+
+            try? await Task.sleep(nanoseconds: Self.splashMinNs)
 
             if !restoreCompleted {
                 container.sessionRepository.destroyCurrentSession()

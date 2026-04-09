@@ -158,11 +158,10 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
 
     func notifySurfaceReady() {
         videoSurface.updateLayout()
-        let pending = surfaceAttachedContinuations
-        surfaceAttachedContinuations.removeAll()
-        for continuation in pending {
+        for continuation in surfaceAttachedContinuations {
             continuation.resume()
         }
+        surfaceAttachedContinuations.removeAll()
     }
 
     private func waitForSurface() async {
@@ -417,9 +416,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         }
 
         // Only reconfigure layer format when the engine will be recreated.
-        // MoltenVK overrides the layer's pixelFormat during swapchain creation;
-        // changing it back while reusing the engine causes a pipeline/framebuffer
-        // pixel format mismatch (e.g. RGB10A2Unorm vs BGRA8Unorm).
+        // MoltenVK owns the layer pixelFormat after swapchain creation.
         let canReuseEngine = engine != nil && activeProfile == .metal && activeOutputIntent == intent
         if !canReuseEngine {
             videoSurface.configureColorSpace(forSDR: intent != .hdr)

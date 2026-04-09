@@ -172,6 +172,13 @@ struct SettingsOverlayView: View {
                 displayName: \.displayName,
                 options: ImageDisplayType.homeRowOptions
             )
+        case .homeImageTypeMyMedia:
+            SettingsPickerScreen(
+                title: "My Media",
+                selection: container.userPreferences.binding(for: UserPreferences.homeImageTypeMyMedia),
+                displayName: \.displayName,
+                options: ImageDisplayType.homeRowOptions
+            )
         case .homeImageTypeLibraries:
             SettingsPickerScreen(
                 title: "Libraries",

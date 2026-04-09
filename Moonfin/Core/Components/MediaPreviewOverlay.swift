@@ -75,6 +75,4 @@ private struct PersistentSurfaceHost: UIViewRepresentable {
             surfaceView.frame = host.bounds
         }
     }
-
-    static func dismantleUIView(_ host: UIView, coordinator: ()) {}
 }

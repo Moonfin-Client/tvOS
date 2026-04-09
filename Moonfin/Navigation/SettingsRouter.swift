@@ -33,6 +33,7 @@ enum SettingsRoute: Hashable {
     case homeRowsImageType
     case homeImageTypeContinueWatching
     case homeImageTypeNextUp
+    case homeImageTypeMyMedia
     case homeImageTypeLibraries
     case homeImageTypeLiveTv
 

@@ -75,6 +75,7 @@ enum PluginSyncConstants {
         SyncablePreference(key: "home_rows_image_type", type: .enum, serverKey: "homeRowsImageType", defaultValue: "poster"),
         SyncablePreference(key: "home_image_type_continue_watching", type: .enum, serverKey: "homeImageTypeContinueWatching", defaultValue: "thumb"),
         SyncablePreference(key: "home_image_type_next_up", type: .enum, serverKey: "homeImageTypeNextUp", defaultValue: "thumb"),
+        SyncablePreference(key: "home_image_type_my_media", type: .enum, serverKey: "homeImageTypeMyMedia", defaultValue: "thumb"),
         SyncablePreference(key: "home_image_type_libraries", type: .enum, serverKey: "homeImageTypeLibraries", defaultValue: "poster"),
         SyncablePreference(key: "home_image_type_live_tv", type: .enum, serverKey: "homeImageTypeLiveTv", defaultValue: "thumb"),
         SyncablePreference(key: "home_image_use_series_image", type: .boolean, serverKey: "homeImageUseSeriesImage", defaultValue: false),
