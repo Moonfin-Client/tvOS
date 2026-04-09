@@ -7,11 +7,20 @@ struct MarqueeText: View {
     let maxWidth: CGFloat
     var isFocused: Bool = false
 
-    @State private var textWidth: CGFloat = 0
+    private let textWidth: CGFloat
     @State private var offset: CGFloat = 0
 
     private var overflows: Bool { textWidth > maxWidth + 1 }
     private var scrollDistance: CGFloat { max(0, textWidth - maxWidth) }
+
+    init(text: String, font: Font, fontSize: CGFloat, color: Color, maxWidth: CGFloat, isFocused: Bool = false) {
+        self.text = text
+        self.font = font
+        self.color = color
+        self.maxWidth = maxWidth
+        self.isFocused = isFocused
+        self.textWidth = Self.measureWidth(text, fontSize: fontSize)
+    }
 
     var body: some View {
         Text(text)
@@ -19,13 +28,6 @@ struct MarqueeText: View {
             .foregroundColor(color)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
-            .background(
-                GeometryReader { geo in
-                    Color.clear.onAppear {
-                        textWidth = geo.size.width
-                    }
-                }
-            )
             .offset(x: offset)
             .frame(width: maxWidth, alignment: .leading)
             .clipped()
@@ -41,5 +43,16 @@ struct MarqueeText: View {
                     }
                 }
             }
+    }
+
+    private static func measureWidth(_ text: String, fontSize: CGFloat) -> CGFloat {
+        let uiFont = UIFont.systemFont(ofSize: fontSize)
+        let size = (text as NSString).boundingRect(
+            with: CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin],
+            attributes: [.font: uiFont],
+            context: nil
+        ).size
+        return ceil(size.width)
     }
 }

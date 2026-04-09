@@ -69,6 +69,7 @@ struct FocusableItemCard: View {
                 MarqueeText(
                     text: item.name,
                     font: .bodySm,
+                    fontSize: TypographyTokens.fontSizeSm,
                     color: theme.colorScheme.onBackground,
                     maxWidth: cardWidth,
                     isFocused: isFocused
@@ -78,6 +79,7 @@ struct FocusableItemCard: View {
                     MarqueeText(
                         text: item.cardSubtitle,
                         font: .captionXs,
+                        fontSize: TypographyTokens.fontSizeXs,
                         color: theme.colorScheme.onBackground.opacity(0.6),
                         maxWidth: cardWidth,
                         isFocused: isFocused
