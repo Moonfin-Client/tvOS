@@ -388,12 +388,12 @@ struct SeerrNetworkStudioCard: View {
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
 
-    private let cardWidth: CGFloat = 200
-    private let cardHeight: CGFloat = 100
+    private let cardWidth: CGFloat = 280
+    private let cardHeight: CGFloat = 140
 
     var body: some View {
         Button(action: { onSelect?() }) {
-            VStack(spacing: 8) {
+            ZStack {
                 if let urlString = logoUrl, let url = URL(string: urlString) {
                     AsyncImage(url: url) { phase in
                         switch phase {
@@ -401,7 +401,7 @@ struct SeerrNetworkStudioCard: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: cardWidth - 32, maxHeight: cardHeight - 48)
+                                .frame(maxWidth: cardWidth - 48, maxHeight: cardHeight - 48)
                         case .failure:
                             logoPlaceholder
                         case .empty:
@@ -413,11 +413,6 @@ struct SeerrNetworkStudioCard: View {
                 } else {
                     logoPlaceholder
                 }
-                Text(name)
-                    .font(.captionSm)
-                    .fontWeight(.medium)
-                    .foregroundColor(theme.colorScheme.onBackground)
-                    .lineLimit(1)
             }
             .frame(width: cardWidth, height: cardHeight)
             .background(theme.colorScheme.surface.opacity(0.3))
@@ -436,7 +431,7 @@ struct SeerrNetworkStudioCard: View {
 
     private var logoPlaceholder: some View {
         Image(systemName: "building.2")
-            .font(.system(size: 24))
+            .font(.system(size: 28))
             .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
     }
 }
