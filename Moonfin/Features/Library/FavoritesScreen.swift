@@ -1,6 +1,5 @@
 import SwiftUI
 import Nuke
-import NukeUI
 
 struct FavoritesScreen: View {
     @StateObject private var viewModel: FavoritesViewModel
@@ -230,16 +229,11 @@ struct BrowseItemCard: View {
 
     @ViewBuilder
     private var cardImage: some View {
-        if let urlString = imageUrl, let url = URL(string: urlString) {
-            LazyImage(url: url) { state in
-                if let image = state.image {
-                    image.resizable().aspectRatio(contentMode: .fill)
-                } else if state.error != nil {
-                    cardPlaceholder
-                } else {
-                    cardPlaceholder.shimmering()
-                }
-            }
+        if imageUrl != nil {
+            CachedImage(
+                urlString: imageUrl,
+                thumbnailSize: CGSize(width: cardWidth, height: cardHeight)
+            )
             .frame(width: cardWidth, height: cardHeight)
         } else {
             cardPlaceholder

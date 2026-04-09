@@ -1,5 +1,4 @@
 import SwiftUI
-import NukeUI
 
 struct AudioNowPlayingView: View {
     private enum FocusTarget: Hashable {
@@ -41,13 +40,10 @@ struct AudioNowPlayingView: View {
             Color.black
 
             if let url = viewModel.albumArtUrl {
-                LazyImage(url: url) { state in
-                    if let image = state.image {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    }
-                }
+                CachedImage(
+                    url: url,
+                    thumbnailSize: CGSize(width: 400, height: 400)
+                )
                 .blur(radius: 40)
                 .opacity(0.4)
                 .scaleEffect(1.2)
@@ -165,15 +161,11 @@ struct AudioNowPlayingView: View {
     private var albumArt: some View {
         Group {
             if let url = viewModel.albumArtUrl {
-                LazyImage(url: url) { state in
-                    if let image = state.image {
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } else {
-                        albumArtPlaceholder
-                    }
-                }
+                CachedImage(
+                    url: url,
+                    contentMode: .fit,
+                    thumbnailSize: CGSize(width: 360, height: 360)
+                )
             } else {
                 albumArtPlaceholder
             }

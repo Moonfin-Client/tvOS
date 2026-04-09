@@ -1,5 +1,4 @@
 import SwiftUI
-import NukeUI
 
 struct LibraryCard: View {
     let item: ServerItem
@@ -60,16 +59,11 @@ struct LibraryCard: View {
 
     @ViewBuilder
     private var cardImage: some View {
-        if let urlString = imageUrl, let url = URL(string: urlString) {
-            LazyImage(url: url) { state in
-                if let image = state.image {
-                    image.resizable().aspectRatio(contentMode: .fill)
-                } else if state.error != nil {
-                    libraryPlaceholder
-                } else {
-                    libraryPlaceholder.shimmering()
-                }
-            }
+        if imageUrl != nil {
+            CachedImage(
+                urlString: imageUrl,
+                thumbnailSize: CGSize(width: cardWidth, height: cardHeight)
+            )
             .frame(width: cardWidth, height: cardHeight)
         } else {
             libraryPlaceholder

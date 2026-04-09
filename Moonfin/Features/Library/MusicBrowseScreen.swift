@@ -1,6 +1,5 @@
 import SwiftUI
 import Nuke
-import NukeUI
 
 struct MusicBrowseScreen: View {
     @StateObject private var viewModel: MusicBrowseViewModel
@@ -337,16 +336,11 @@ private struct MusicSquareCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 6) {
                 ZStack {
-                    if let urlString = imageUrl, let url = URL(string: urlString) {
-                        LazyImage(url: url) { state in
-                            if let image = state.image {
-                                image.resizable().aspectRatio(contentMode: .fill)
-                            } else if state.error != nil {
-                                cardPlaceholder
-                            } else {
-                                cardPlaceholder.shimmering()
-                            }
-                        }
+                    if imageUrl != nil {
+                        CachedImage(
+                            urlString: imageUrl,
+                            thumbnailSize: CGSize(width: cardSize, height: cardSize)
+                        )
                     } else {
                         cardPlaceholder
                     }
