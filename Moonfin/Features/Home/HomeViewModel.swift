@@ -3,8 +3,9 @@ import Combine
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    @Published private(set) var selectedItemState: SelectedItemState = .empty
+    let infoState = HomeInfoState()
     @Published private(set) var rows: [HomeRow] = []
+    private(set) var visibleRows: [HomeRow] = []
     @Published private(set) var isInitialLoad = true
     @Published private(set) var isMediaBarActive: Bool = false
     @Published private(set) var isMediaBarLoading: Bool = true
@@ -48,14 +49,10 @@ final class HomeViewModel: ObservableObject {
         backgroundService.configure(preferences: container.userPreferences)
         observeMediaBar()
 
-        backgroundService.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        mediaBarRatingsViewModel.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
+        $rows
+            .sink { [weak self] newRows in
+                self?.visibleRows = newRows.filter { !$0.isEmpty }
+            }
             .store(in: &cancellables)
 
         container.pluginSyncService.$syncCompletedCount
@@ -762,7 +759,7 @@ final class HomeViewModel: ObservableObject {
         guard let item else {
             selectionDebounceTask?.cancel()
             backdropDebounceTask?.cancel()
-            selectedItemState = .empty
+            infoState.selectedItemState = .empty
             backgroundService.clearBackground()
             return
         }
@@ -771,7 +768,7 @@ final class HomeViewModel: ObservableObject {
         selectionDebounceTask = Task {
             try? await Task.sleep(nanoseconds: Self.selectionDebounceMs)
             guard !Task.isCancelled else { return }
-            selectedItemState = buildSelectedState(for: item)
+            infoState.selectedItemState = buildSelectedState(for: item)
             mediaBarRatingsViewModel.loadRatings(for: item)
         }
 

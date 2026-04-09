@@ -2,14 +2,6 @@ import SwiftUI
 import Nuke
 
 struct HomeScreen: View {
-    private static let infoLogoReservedHeight: CGFloat = 128
-    private static let infoLogoMaxWidth: CGFloat = 560
-    private static let infoMetaReservedHeight: CGFloat = 28
-    private static let infoRatingsReservedHeight: CGFloat = 40
-    private static let infoSummaryReservedHeight: CGFloat = 120
-    private static let infoAreaTotalHeight: CGFloat =
-        infoLogoReservedHeight + infoMetaReservedHeight + infoRatingsReservedHeight + infoSummaryReservedHeight + (3 * SpaceTokens.spaceSm)
-
     @StateObject private var viewModel: HomeViewModel
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var previewManager: PreviewPlayerManager
@@ -167,7 +159,7 @@ struct HomeScreen: View {
                             sentinelEnabled = false
                             sentinelEnablePending = false
                             isMediaBarMode = false
-                            let firstVisibleRowId = viewModel.rows.first(where: { !$0.isEmpty })?.id
+                            let firstVisibleRowId = viewModel.visibleRows.first?.id
                             lastFocusedRowId = firstVisibleRowId
                             focusedRowId = firstVisibleRowId
                             lastFocusedItemId = nil
@@ -188,11 +180,15 @@ struct HomeScreen: View {
 
                 if !viewModel.isInitialLoad {
                     if !mediaBarPresented {
-                        backdropLayer
+                        HomeBackdropView(backgroundService: viewModel.backgroundService)
                         gradientOverlay
-                        infoArea
-                            .allowsHitTesting(false)
-                            .zIndex(1)
+                        HomeInfoAreaView(
+                            infoState: viewModel.infoState,
+                            ratingsViewModel: viewModel.mediaBarRatingsViewModel,
+                            contentLeading: contentLeading
+                        )
+                        .allowsHitTesting(false)
+                        .zIndex(1)
                     }
                     rowsContent(screenHeight: geo.size.height)
                         .disabled(mediaBarPresented)
@@ -326,29 +322,6 @@ struct HomeScreen: View {
         }
     }
 
-    private var backdropLayer: some View {
-        GeometryReader { geo in
-            if viewModel.backgroundService.enabled,
-               let urlString = viewModel.backgroundService.currentBackdropUrl,
-               let url = URL(string: urlString) {
-                CachedImage(
-                    url: url,
-                    processors: [
-                        ImageProcessors.Resize(size: CGSize(width: geo.size.width, height: geo.size.height), contentMode: .aspectFill),
-                        ImageProcessors.GaussianBlur(radius: Int(viewModel.backgroundService.blurAmount))
-                    ]
-                )
-                .frame(width: geo.size.width, height: geo.size.height)
-                .clipped()
-                .drawingGroup()
-                .transition(.opacity)
-                .id(urlString)
-            }
-        }
-        .animation(.easeInOut(duration: BackgroundService.transitionDuration), value: viewModel.backgroundService.currentBackdropUrl)
-        .background(theme.colorScheme.background)
-    }
-
     private var gradientOverlay: some View {
         ZStack {
             LinearGradient(
@@ -403,59 +376,6 @@ struct HomeScreen: View {
         )
     }
 
-    private var infoArea: some View {
-        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            ZStack(alignment: .leading) {
-                if let logoUrl = viewModel.selectedItemState.logoUrl,
-                   let url = URL(string: logoUrl) {
-                    AsyncImage(url: url) { phase in
-                        if case .success(let image) = phase {
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: Self.infoLogoMaxWidth, maxHeight: 120, alignment: .leading)
-                        } else {
-                            Color.clear
-                        }
-                    }
-                } else if !viewModel.selectedItemState.title.isEmpty {
-                    Text(viewModel.selectedItemState.title)
-                        .font(.system(size: 48, weight: .bold))
-                        .foregroundColor(theme.colorScheme.onBackground)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.8)
-                }
-            }
-            .frame(height: Self.infoLogoReservedHeight, alignment: .leading)
-
-            SimpleInfoRow(item: viewModel.selectedItemState.item)
-                .frame(height: Self.infoMetaReservedHeight, alignment: .leading)
-
-            ZStack(alignment: .leading) {
-                MediaBarRatingsRow(
-                    ratings: viewModel.mediaBarRatingsViewModel.ratings,
-                    enableAdditionalRatings: viewModel.mediaBarRatingsViewModel.enableAdditionalRatings
-                )
-            }
-            .frame(height: Self.infoRatingsReservedHeight, alignment: .leading)
-            .opacity(viewModel.mediaBarRatingsViewModel.ratings.isEmpty ? 0 : 1)
-
-            ZStack(alignment: .topLeading) {
-                Text(viewModel.selectedItemState.summary)
-                    .font(.bodyMd)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
-                    .lineLimit(4)
-            }
-            .frame(height: Self.infoSummaryReservedHeight, alignment: .topLeading)
-            .opacity(viewModel.selectedItemState.summary.isEmpty ? 0 : 1)
-        }
-        .padding(.leading, contentLeading)
-        .padding(.trailing, 50)
-        .padding(.top, 80)
-        .frame(height: Self.infoAreaTotalHeight, alignment: .topLeading)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-    }
-
     private func rowsContent(screenHeight: CGFloat) -> some View {
         let rowsTop = screenHeight * 0.38
 
@@ -468,7 +388,7 @@ struct HomeScreen: View {
                     VStack(alignment: .leading, spacing: 0) {
                         if viewModel.mediaBarViewModel.isEnabled && viewModel.isMediaBarActive && sentinelEnabled {
                             MediaBarReturnSentinel(
-                                hasContent: viewModel.rows.contains(where: { !$0.isEmpty }),
+                                hasContent: !viewModel.visibleRows.isEmpty,
                                 onReturn: {
                                     isMediaBarMode = true
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
@@ -480,13 +400,12 @@ struct HomeScreen: View {
                         }
 
                         VStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
-                            let visibleRows = viewModel.rows.filter { !$0.isEmpty }
-                            ForEach(visibleRows) { row in
+                            ForEach(viewModel.visibleRows) { row in
                                 ContentRow(
                                     row: row,
                                     viewModel: viewModel,
                                     watchedIndicator: viewModel.watchedIndicator,
-                                    titleTopPadding: visibleRows.first?.id == row.id ? 4 : 0,
+                                    titleTopPadding: viewModel.visibleRows.first?.id == row.id ? 4 : 0,
                                     onRowFocused: {
                                         let isNewRow = focusedRowId != row.id
                                         focusedRowId = row.id
@@ -540,7 +459,7 @@ struct HomeScreen: View {
                                         if lastFocusedRowId == row.id {
                                             return restoreRowFocusTrigger
                                         }
-                                        if visibleRows.first?.id == row.id {
+                                        if viewModel.visibleRows.first?.id == row.id {
                                             return focusFirstRowTrigger
                                         }
                                         return 0
@@ -706,6 +625,106 @@ struct HomeScreen: View {
         configureMediaBarPreview(isYouTube: true)
         await inlineTrailerPlayer.play(url: streamInfo.url)
         lastPreviewedMediaBarItemId = slideItem.id
+    }
+}
+
+// MARK: - Home Backdrop View
+
+private struct HomeBackdropView: View {
+    @ObservedObject var backgroundService: BackgroundService
+    @EnvironmentObject var theme: MoonfinTheme
+
+    var body: some View {
+        GeometryReader { geo in
+            if backgroundService.enabled,
+               let urlString = backgroundService.currentBackdropUrl,
+               let url = URL(string: urlString) {
+                CachedImage(
+                    url: url,
+                    processors: [
+                        ImageProcessors.Resize(size: CGSize(width: geo.size.width, height: geo.size.height), contentMode: .aspectFill),
+                        ImageProcessors.GaussianBlur(radius: Int(backgroundService.blurAmount))
+                    ]
+                )
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipped()
+                .drawingGroup()
+                .transition(.opacity)
+                .id(urlString)
+            }
+        }
+        .animation(.easeInOut(duration: BackgroundService.transitionDuration), value: backgroundService.currentBackdropUrl)
+        .background(theme.colorScheme.background)
+    }
+}
+
+// MARK: - Home Info Area View
+
+private struct HomeInfoAreaView: View {
+    private static let logoReservedHeight: CGFloat = 128
+    private static let logoMaxWidth: CGFloat = 560
+    private static let metaReservedHeight: CGFloat = 28
+    private static let ratingsReservedHeight: CGFloat = 40
+    private static let summaryReservedHeight: CGFloat = 120
+    private static let totalHeight: CGFloat =
+        logoReservedHeight + metaReservedHeight + ratingsReservedHeight + summaryReservedHeight + (3 * SpaceTokens.spaceSm)
+
+    @ObservedObject var infoState: HomeInfoState
+    @ObservedObject var ratingsViewModel: MediaBarRatingsViewModel
+    let contentLeading: CGFloat
+    @EnvironmentObject var theme: MoonfinTheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+            ZStack(alignment: .leading) {
+                if let logoUrl = infoState.selectedItemState.logoUrl,
+                   let url = URL(string: logoUrl) {
+                    AsyncImage(url: url) { phase in
+                        if case .success(let image) = phase {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: Self.logoMaxWidth, maxHeight: 120, alignment: .leading)
+                        } else {
+                            Color.clear
+                        }
+                    }
+                } else if !infoState.selectedItemState.title.isEmpty {
+                    Text(infoState.selectedItemState.title)
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundColor(theme.colorScheme.onBackground)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                }
+            }
+            .frame(height: Self.logoReservedHeight, alignment: .leading)
+
+            SimpleInfoRow(item: infoState.selectedItemState.item)
+                .frame(height: Self.metaReservedHeight, alignment: .leading)
+
+            ZStack(alignment: .leading) {
+                MediaBarRatingsRow(
+                    ratings: ratingsViewModel.ratings,
+                    enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
+                )
+            }
+            .frame(height: Self.ratingsReservedHeight, alignment: .leading)
+            .opacity(ratingsViewModel.ratings.isEmpty ? 0 : 1)
+
+            ZStack(alignment: .topLeading) {
+                Text(infoState.selectedItemState.summary)
+                    .font(.bodyMd)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                    .lineLimit(4)
+            }
+            .frame(height: Self.summaryReservedHeight, alignment: .topLeading)
+            .opacity(infoState.selectedItemState.summary.isEmpty ? 0 : 1)
+        }
+        .padding(.leading, contentLeading)
+        .padding(.trailing, 50)
+        .padding(.top, 80)
+        .frame(height: Self.totalHeight, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 }
 
