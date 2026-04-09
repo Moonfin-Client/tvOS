@@ -15,7 +15,7 @@ struct MediaBarView: View {
 
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
-    @ObservedObject var inlineTrailerPlayer: MpvPlayerWrapper
+    @ObservedObject var inlineTrailerPlayer: InlineTrailerPlayerManager
     @State private var inlineVideoOpacity: Double = 0
 
     init(
@@ -23,7 +23,7 @@ struct MediaBarView: View {
         ratingsViewModel: MediaBarRatingsViewModel,
         userPreferences: UserPreferences,
         screenHeight: CGFloat,
-        inlineTrailerPlayer: MpvPlayerWrapper,
+        inlineTrailerPlayer: InlineTrailerPlayerManager,
         onItemSelected: @escaping (MediaBarSlideItem) -> Void,
         onPlayTrailer: @escaping (MediaBarSlideItem) -> Void,
         onFocusedItemChanged: @escaping (MediaBarSlideItem?) -> Void,
@@ -185,7 +185,7 @@ struct MediaBarView: View {
                 .animation(.easeInOut(duration: 0.8), value: viewModel.currentIndex)
             }
 
-            PlaybackSurfaceView(player: inlineTrailerPlayer)
+            InlineTrailerSurfaceHost(manager: inlineTrailerPlayer)
                 .opacity(inlineVideoOpacity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -375,4 +375,43 @@ private struct MediaBarButtonStyle: ButtonStyle {
     }
 }
 
+private class TrailerHostView: UIView {
+    var onWindowAttach: (() -> Void)?
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil {
+            onWindowAttach?()
+            onWindowAttach = nil
+        }
+    }
+}
+
+private struct InlineTrailerSurfaceHost: UIViewRepresentable {
+    let manager: InlineTrailerPlayerManager
+
+    func makeUIView(context: Context) -> UIView {
+        let host = TrailerHostView()
+        host.backgroundColor = .clear
+        host.clipsToBounds = true
+        let surface = manager.surface
+        surface.frame = host.bounds
+        surface.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        host.addSubview(surface)
+        host.onWindowAttach = { [weak manager] in
+            manager?.player?.notifySurfaceReady()
+        }
+        return host
+    }
+
+    func updateUIView(_ host: UIView, context: Context) {
+        let surface = manager.surface
+        if surface.superview !== host {
+            surface.frame = host.bounds
+            host.addSubview(surface)
+        } else {
+            surface.frame = host.bounds
+        }
+    }
+}
 

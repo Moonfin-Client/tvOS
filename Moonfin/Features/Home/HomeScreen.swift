@@ -26,7 +26,7 @@ struct HomeScreen: View {
     @State private var focusTask: Task<Void, Never>?
     @State private var mediaBarTrailerPreviewTask: Task<Void, Never>?
     @State private var lastPreviewedMediaBarItemId: String?
-    @StateObject private var inlineTrailerPlayer: MpvPlayerWrapper
+    @StateObject private var inlineTrailerPlayer = InlineTrailerPlayerManager()
     @Environment(\.resetFocus) private var resetFocus
     @State private var focusFirstRowTrigger: Int = 0
     @State private var restoreRowFocusTrigger: Int = 0
@@ -65,7 +65,6 @@ struct HomeScreen: View {
         onRequestTopNavbarHomeFocus: (() -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: HomeViewModel(container: container))
-        _inlineTrailerPlayer = StateObject(wrappedValue: MpvPlayerWrapper.makePlayer())
         self.mainNamespace = mainNamespace
         self._contentReady = contentReady
         self.sidebarEntryToken = sidebarEntryToken

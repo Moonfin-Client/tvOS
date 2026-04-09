@@ -2,25 +2,17 @@ import SwiftUI
 import Combine
 import UIKit
 
-/// Manages a single shared player instance used for home-row media previews.
-///
-/// Only one preview plays at a time. When focus moves to a new card, the manager
-/// cancels the in-flight task and restarts for the new item. Each preview loops on
-/// a 30-second cycle. Playback stops automatically when the app is backgrounded or
-/// suspended.
 @MainActor
 final class PreviewPlayerManager: ObservableObject {
 
     private static let maxPreviewPlays = 2
     private static let previewLoopIntervalNanoseconds: UInt64 = 30_000_000_000
-
-    // MARK: - Public observable state
+    private static let idleTeardownNanoseconds: UInt64 = 30_000_000_000
 
     @Published private(set) var currentItemId: String?
     @Published private(set) var isVisible: Bool = false
 
-    /// The shared player used for preview rendering.
-    let player = MpvPlayerWrapper.makePlayer()
+    private(set) var player: MpvPlayerWrapper?
 
     let persistentSurface: UIView = {
         let view = UIView()
@@ -29,10 +21,9 @@ final class PreviewPlayerManager: ObservableObject {
         return view
     }()
 
-    // MARK: - Private state
-
     private var currentTask: Task<Void, Never>?
     private var loopTask: Task<Void, Never>?
+    private var idleTeardownTask: Task<Void, Never>?
     private var pendingItemId: String?
     private var currentStreamUrl: URL?
     private var currentSeekPosition: TimeInterval = 0
@@ -40,12 +31,28 @@ final class PreviewPlayerManager: ObservableObject {
     private var currentPlayCount: Int = 0
     private var stateObserver: AnyCancellable?
 
-    // MARK: - Init / deinit
-
     init() {
-        player.attachVideoView(persistentSurface)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleResignActive),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+    }
 
-        stateObserver = player.$state
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    private func ensurePlayer() -> MpvPlayerWrapper {
+        if let existing = player { return existing }
+        let created = MpvPlayerWrapper.makePlayer()
+        created.attachVideoView(persistentSurface)
+        if persistentSurface.window != nil {
+            created.notifySurfaceReady()
+        }
+        player = created
+        stateObserver = created.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 guard let self else { return }
@@ -59,32 +66,42 @@ final class PreviewPlayerManager: ObservableObject {
                     self.isVisible = false
                 }
             }
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleResignActive),
-            name: UIApplication.willResignActiveNotification,
-            object: nil
-        )
+        return created
     }
 
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+    private func teardownPlayer() {
+        stateObserver?.cancel()
+        stateObserver = nil
+        player?.stop()
+        player = nil
+        persistentSurface.subviews.forEach { $0.removeFromSuperview() }
+        persistentSurface.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
     }
 
-    // MARK: - Public API
+    private func scheduleIdleTeardown() {
+        idleTeardownTask?.cancel()
+        idleTeardownTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: Self.idleTeardownNanoseconds)
+            guard !Task.isCancelled else { return }
+            self?.teardownPlayer()
+        }
+    }
 
-    /// Cancels any existing preview first.
+    private func cancelIdleTeardown() {
+        idleTeardownTask?.cancel()
+        idleTeardownTask = nil
+    }
+
     func requestPreview(for item: ServerItem, muted: Bool, container: AppContainer) {
         if currentItemId == item.id, currentTask != nil { return }
         currentTask?.cancel()
         stopInternal()
+        cancelIdleTeardown()
         currentMuted = muted
         pendingItemId = item.id
         currentTask = Task { await startPreview(for: item, container: container) }
     }
 
-    /// Stop preview only if `itemId` is the currently active item.
     func stopIfCurrent(itemId: String) {
         if pendingItemId == itemId {
             pendingItemId = nil
@@ -96,7 +113,6 @@ final class PreviewPlayerManager: ObservableObject {
         stop()
     }
 
-    /// Unconditionally stop and release player resources.
     func stop() {
         currentTask?.cancel()
         currentTask = nil
@@ -114,7 +130,8 @@ final class PreviewPlayerManager: ObservableObject {
         currentPlayCount = 0
         currentItemId = nil
         isVisible = false
-        player.stop()
+        player?.stop()
+        scheduleIdleTeardown()
     }
 
     @objc private func handleResignActive() {
@@ -150,10 +167,11 @@ final class PreviewPlayerManager: ObservableObject {
         }
 
         currentPlayCount += 1
-        player.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
-        player.setMuted(currentMuted)
+        let p = ensurePlayer()
+        p.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
+        p.setMuted(currentMuted)
         scheduleLoopRestart()
-        await player.play(streamUrl: url.absoluteString, startPosition: currentSeekPosition)
+        await p.play(streamUrl: url.absoluteString, startPosition: currentSeekPosition)
     }
 
     // MARK: - Preview startup
@@ -181,10 +199,11 @@ final class PreviewPlayerManager: ObservableObject {
             currentItemId = item.id
             pendingItemId = nil
 
-            player.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
-            player.setMuted(currentMuted)
+            let p = ensurePlayer()
+            p.configureDynamicRangeIntent(contentRange: .sdr, sinkIsHdrCapable: false)
+            p.setMuted(currentMuted)
             scheduleLoopRestart()
-            await player.play(streamUrl: url.absoluteString, startPosition: seekPosition)
+            await p.play(streamUrl: url.absoluteString, startPosition: seekPosition)
 
         } catch { }
     }

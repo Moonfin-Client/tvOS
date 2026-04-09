@@ -14,9 +14,9 @@ struct MediaPreviewOverlay: View {
 
     var body: some View {
         Group {
-            if isActiveItem {
+            if isActiveItem, let player = previewManager.player {
                 Color.clear.overlay(
-                    PersistentSurfaceHost(surfaceView: previewManager.persistentSurface, player: previewManager.player)
+                    PersistentSurfaceHost(surfaceView: previewManager.persistentSurface, player: player)
                         .aspectRatio(16.0 / 9.0, contentMode: .fill)
                 )
                 .clipped()
