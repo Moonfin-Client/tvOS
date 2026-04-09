@@ -58,7 +58,7 @@ final class DisplayCriteriaManager {
         videoStream: ServerMediaStream,
         dynamicRange: VideoDynamicRange
     ) -> CMFormatDescription? {
-        let codecType = resolveCodecType(codec: videoStream.codec)
+        let codecType = resolveCodecType(codec: videoStream.codec, dynamicRange: dynamicRange)
         let width = Int32(videoStream.width ?? 3840)
         let height = Int32(videoStream.height ?? 2160)
         let extensions = makeColorExtensions(dynamicRange: dynamicRange)
@@ -76,7 +76,10 @@ final class DisplayCriteriaManager {
         return formatDescription
     }
 
-    private func resolveCodecType(codec: String?) -> CMVideoCodecType {
+    private func resolveCodecType(codec: String?, dynamicRange: VideoDynamicRange = .unknown) -> CMVideoCodecType {
+        if dynamicRange == .dolbyVision {
+            return kCMVideoCodecType_DolbyVisionHEVC
+        }
         switch codec?.lowercased() {
         case "hevc", "h265":
             return kCMVideoCodecType_HEVC

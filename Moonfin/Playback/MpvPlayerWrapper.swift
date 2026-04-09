@@ -490,9 +490,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
 
     private func resolveOutputIntent() -> MPVOutputIntent {
         switch requestedContentRange {
-        case .dolbyVision:
-            return .sdr
-        case .hdr10, .hlg, .hdr10Plus:
+        case .dolbyVision, .hdr10, .hlg, .hdr10Plus:
             return sinkIsHdrCapable ? .hdr : .sdr
         case .sdr, .unknown:
             return .auto

@@ -9,6 +9,7 @@ final class NativeVideoSurface {
     private var pendingFrames: [(CVPixelBuffer, CMTime, CMTime)] = []
     private let lock = NSLock()
     private var requestingData = false
+    private var activeFormatDescription: CMVideoFormatDescription?
 
     init() {
         displayLayer.backgroundColor = UIColor.black.cgColor
@@ -35,6 +36,12 @@ final class NativeVideoSurface {
         }
     }
 
+    func setFormatDescription(_ formatDescription: CMVideoFormatDescription?) {
+        lock.lock()
+        activeFormatDescription = formatDescription
+        lock.unlock()
+    }
+
     func enqueue(pixelBuffer: CVPixelBuffer, pts: CMTime, duration: CMTime) {
         lock.lock()
         pendingFrames.append((pixelBuffer, pts, duration))
@@ -52,6 +59,7 @@ final class NativeVideoSurface {
         stopRequestingMediaData()
         lock.lock()
         pendingFrames.removeAll()
+        activeFormatDescription = nil
         lock.unlock()
         displayLayer.flush()
         displayLayer.removeFromSuperlayer()
@@ -92,9 +100,10 @@ final class NativeVideoSurface {
                 return
             }
             let (pixelBuffer, pts, duration) = pendingFrames.removeFirst()
+            let fmtDesc = activeFormatDescription
             lock.unlock()
 
-            guard let sampleBuffer = makeSampleBuffer(from: pixelBuffer, pts: pts, duration: duration) else {
+            guard let sampleBuffer = makeSampleBuffer(from: pixelBuffer, pts: pts, duration: duration, formatDescription: fmtDesc) else {
                 continue
             }
             displayLayer.enqueue(sampleBuffer)
@@ -103,14 +112,25 @@ final class NativeVideoSurface {
 
     // MARK: - CMSampleBuffer creation
 
-    private func makeSampleBuffer(from pixelBuffer: CVPixelBuffer, pts: CMTime, duration: CMTime) -> CMSampleBuffer? {
-        var formatDescription: CMVideoFormatDescription?
-        let status = CMVideoFormatDescriptionCreateForImageBuffer(
-            allocator: kCFAllocatorDefault,
-            imageBuffer: pixelBuffer,
-            formatDescriptionOut: &formatDescription
-        )
-        guard status == noErr, let fmt = formatDescription else { return nil }
+    private func makeSampleBuffer(
+        from pixelBuffer: CVPixelBuffer,
+        pts: CMTime,
+        duration: CMTime,
+        formatDescription: CMVideoFormatDescription?
+    ) -> CMSampleBuffer? {
+        let fmt: CMVideoFormatDescription
+        if let active = formatDescription {
+            fmt = active
+        } else {
+            var imageDesc: CMVideoFormatDescription?
+            let status = CMVideoFormatDescriptionCreateForImageBuffer(
+                allocator: kCFAllocatorDefault,
+                imageBuffer: pixelBuffer,
+                formatDescriptionOut: &imageDesc
+            )
+            guard status == noErr, let created = imageDesc else { return nil }
+            fmt = created
+        }
 
         var timing = CMSampleTimingInfo(
             duration: duration,

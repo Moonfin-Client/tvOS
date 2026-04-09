@@ -368,6 +368,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         if let fmtDesc = decoder.formatDescription {
             let fps = Float(videoInfo.frameRate > 0 ? videoInfo.frameRate : 24)
             DisplayCriteriaManager.shared.applyNative(formatDescription: fmtDesc, refreshRate: fps)
+            nativeVideoSurface.setFormatDescription(fmtDesc)
         }
 
         decoder.onFrameDecoded = { [weak self] pixelBuffer, pts in

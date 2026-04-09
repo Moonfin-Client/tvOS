@@ -292,7 +292,7 @@ final class VTDecoder {
         var newDesc: CMVideoFormatDescription?
         let status = CMVideoFormatDescriptionCreate(
             allocator: kCFAllocatorDefault,
-            codecType: kCMVideoCodecType_HEVC,
+            codecType: kCMVideoCodecType_DolbyVisionHEVC,
             width: dims.width,
             height: dims.height,
             extensions: extensions as CFDictionary,
