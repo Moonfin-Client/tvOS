@@ -66,7 +66,7 @@ struct SimpleInfoRow: View {
     private func seasonEpisodeText(for item: ServerItem) -> String? {
         guard item.type == .episode else { return nil }
         if let s = item.parentIndexNumber, let e = item.indexNumber {
-            return "S\(s)E\(e)"
+            return "S\(s):E\(e)"
         } else if let e = item.indexNumber {
             return "E\(e)"
         }
