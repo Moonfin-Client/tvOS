@@ -302,6 +302,7 @@ struct ServerItem: Codable, Identifiable {
     let albumPrimaryImageTag: String?
     let album: String?
     let childCount: Int?
+    let songCount: Int?
     let albumCount: Int?
     let hasLyrics: Bool?
     let dateCreated: Date?
@@ -378,6 +379,7 @@ struct ServerItem: Codable, Identifiable {
         case albumPrimaryImageTag = "AlbumPrimaryImageTag"
         case album = "Album"
         case childCount = "ChildCount"
+        case songCount = "SongCount"
         case albumCount = "AlbumCount"
         case hasLyrics = "HasLyrics"
         case dateCreated = "DateCreated"
@@ -421,7 +423,7 @@ extension ServerItem {
             taglines: nil, studios: nil, providerIds: nil, endDate: nil,
             productionLocations: nil, artists: nil, albumArtists: nil, albumArtist: nil,
             albumId: nil, albumPrimaryImageTag: nil, album: nil, childCount: nil,
-            albumCount: nil, hasLyrics: nil, dateCreated: nil, playlistItemId: nil, canDelete: nil, localTrailerCount: nil, remoteTrailers: nil, startDate: nil, channelNumber: nil,
+            songCount: nil, albumCount: nil, hasLyrics: nil, dateCreated: nil, playlistItemId: nil, canDelete: nil, localTrailerCount: nil, remoteTrailers: nil, startDate: nil, channelNumber: nil,
             timerId: nil, seriesTimerId: nil, isMovie: nil, isSeries: nil, isNews: nil,
             isSports: nil, isKids: nil, isPremiere: nil, isRepeat: nil, isLive: nil,
             isHD: nil, status: nil, currentProgram: nil

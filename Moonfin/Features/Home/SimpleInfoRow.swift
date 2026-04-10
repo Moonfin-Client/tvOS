@@ -24,6 +24,48 @@ struct SimpleInfoRow: View {
     }
 
     private func metadataParts(for item: ServerItem) -> [AnyView] {
+        switch item.type {
+        case .musicAlbum, .audio, .playlist:
+            return musicMetadataParts(for: item)
+        default:
+            return defaultMetadataParts(for: item)
+        }
+    }
+
+    private func musicMetadataParts(for item: ServerItem) -> [AnyView] {
+        var parts: [AnyView] = []
+
+        let albumArtists = item.albumArtists?
+            .compactMap(\.name)
+            .joined(separator: ", ")
+        let artists = item.artists?.joined(separator: ", ")
+        let artistCandidates: [String?] = [albumArtists, item.albumArtist, artists]
+        let artist = artistCandidates
+            .compactMap { candidate -> String? in
+                guard let candidate, !candidate.isEmpty else { return nil }
+                return candidate
+            }
+            .first
+        if let artist, !artist.isEmpty {
+            parts.append(infoText(artist))
+        }
+
+        if let year = yearText(for: item) {
+            parts.append(infoText(year))
+        }
+
+        if let count = item.songCount ?? item.childCount, count > 0 {
+            parts.append(infoText("\(count) track\(count == 1 ? "" : "s")"))
+        }
+
+        if let genres = item.genres, !genres.isEmpty {
+            parts.append(infoText(genres.prefix(3).joined(separator: ", ")))
+        }
+
+        return parts
+    }
+
+    private func defaultMetadataParts(for item: ServerItem) -> [AnyView] {
         var parts: [AnyView] = []
 
         if let year = yearText(for: item) {

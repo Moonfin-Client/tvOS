@@ -35,7 +35,7 @@ final class HomeViewModel: ObservableObject {
     private static let multiServerLimit = 30
 
     private static let defaultFields: [ItemField] = [
-        .overview, .genres, .providerIds, .mediaSources, .mediaStreams
+        .overview, .genres, .providerIds, .mediaSources, .mediaStreams, .childCount
     ]
 
     init(container: AppContainer) {
@@ -292,15 +292,19 @@ final class HomeViewModel: ObservableObject {
                         if let rowClient = clientsByServerId[lib.server.id] {
                             rowClients[rowId] = rowClient
                         }
+                        let isMusic = lib.library.collectionType?.lowercased() == "music"
+                        let queryType: RowQueryType = isMusic
+                            ? latestMusicQuery(parentId: lib.library.id)
+                            : .latestMedia(latestMediaRequest(
+                                parentId: lib.library.id,
+                                collectionType: lib.library.collectionType
+                            ))
                         resultRows.append(makeRow(
                             id: rowId,
                             title: "Latest \(lib.displayName)",
                             rowType: .latestMedia(libraryId: lib.library.id),
-                            isMusicLibraryRow: lib.library.collectionType?.lowercased() == "music",
-                            queryType: .latestMedia(latestMediaRequest(
-                                parentId: lib.library.id,
-                                collectionType: lib.library.collectionType
-                            )),
+                            isMusicLibraryRow: isMusic,
+                            queryType: queryType,
                             triggers: [.libraryUpdated]
                         ))
                     }
@@ -451,15 +455,19 @@ final class HomeViewModel: ObservableObject {
 
         case .latestMedia:
             return latestMediaViewTypes.map { view in
-                makeRow(
+                let isMusic = view.collectionType?.lowercased() == "music"
+                let queryType: RowQueryType = isMusic
+                    ? latestMusicQuery(parentId: view.id)
+                    : .latestMedia(latestMediaRequest(
+                        parentId: view.id,
+                        collectionType: view.collectionType
+                    ))
+                return makeRow(
                     id: "latest_\(view.id)",
                     title: "Latest \(view.name)",
                     rowType: .latestMedia(libraryId: view.id),
-                    isMusicLibraryRow: view.collectionType?.lowercased() == "music",
-                    queryType: .latestMedia(latestMediaRequest(
-                        parentId: view.id,
-                        collectionType: view.collectionType
-                    )),
+                    isMusicLibraryRow: isMusic,
+                    queryType: queryType,
                     triggers: [.libraryUpdated]
                 )
             }
@@ -535,6 +543,19 @@ final class HomeViewModel: ObservableObject {
         case .none:
             return []
         }
+    }
+
+    private func latestMusicQuery(parentId: String) -> RowQueryType {
+        .items(GetItemsRequest(
+            parentId: parentId,
+            recursive: true,
+            includeItemTypes: [.musicAlbum],
+            sortBy: [.dateCreated],
+            sortOrder: .descending,
+            fields: Self.defaultFields,
+            limit: RowDataSource.maxItems,
+            imageTypeLimit: 1
+        ))
     }
 
     private func makeRow(
@@ -805,6 +826,7 @@ final class HomeViewModel: ObservableObject {
         }
 
         let tag = item.imageTags?["Primary"]
+        if tag == nil && item.type == .musicAlbum { return nil }
         return api.getItemImageUrl(
             itemId: item.id,
             imageType: .primary,

@@ -32,6 +32,10 @@ struct ContentRow: View {
         }
     }
 
+    private var resolvedImageDisplayType: ImageDisplayType {
+        isMusicRow ? .poster : imageDisplayType
+    }
+
     private var isCustomizableRow: Bool {
         switch row.rowType {
         case .liveTvButtons:
@@ -61,7 +65,7 @@ struct ContentRow: View {
 
     private var effectiveCardWidth: CGFloat {
         let base: CGFloat = isCustomizableRow
-            ? imageDisplayType.aspectRatio >= 1.0 ? 280 : 150
+            ? resolvedImageDisplayType.aspectRatio >= 1.0 ? 280 : 150
             : row.rowType.cardWidth
         return base * posterSize.scaleFactor
     }
@@ -178,7 +182,7 @@ struct ContentRow: View {
             return viewModel.thumbImageUrl(for: item)
         }
 
-        switch imageDisplayType {
+        switch resolvedImageDisplayType {
         case .thumb:
             return viewModel.thumbImageUrl(for: item)
         case .banner:
