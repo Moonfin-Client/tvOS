@@ -270,6 +270,7 @@ struct SeerrPosterBadgeOverlay: View {
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundColor(.white)
                 .tracking(0.8)
+                .fixedSize()
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
                 .background(backgroundColor.opacity(0.85))
