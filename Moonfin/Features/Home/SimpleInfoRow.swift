@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SimpleInfoRow: View {
     let item: ServerItem?
+    var metadataSummary: String?
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
@@ -24,6 +25,9 @@ struct SimpleInfoRow: View {
     }
 
     private func metadataParts(for item: ServerItem) -> [AnyView] {
+        if let summary = metadataSummary, !summary.isEmpty {
+            return summary.components(separatedBy: " \u{2022} ").map { infoText($0) }
+        }
         switch item.type {
         case .musicAlbum, .audio, .playlist:
             return musicMetadataParts(for: item)

@@ -27,6 +27,8 @@ final class HomeViewModel: ObservableObject {
     private var dataSources: [String: RowDataSource] = [:]
     private var rowClients: [String: MediaServerClient] = [:]
     private var userViews: [ServerItem] = []
+    private var myMediaSummaries: [String: String] = [:]
+    private var myMediaSummaryTasks: [String: Task<Void, Never>] = [:]
     private var cancellables = Set<AnyCancellable>()
     private let topShelfCacheWriter = TopShelfCacheWriter()
     private static let selectionDebounceMs: UInt64 = 150_000_000
@@ -115,6 +117,15 @@ final class HomeViewModel: ObservableObject {
         return imageApi
     }
 
+    private func client(for item: ServerItem) -> MediaServerClient? {
+        if let serverId = item.effectiveServerId,
+           let serverUUID = UUID(uuidString: serverId),
+           let server = container.serverRepository.storedServers.value.first(where: { $0.id == serverUUID }) {
+            return container.serverClientFactory.client(for: server)
+        }
+        return client
+    }
+
     private var queuedForceReload = false
 
     func loadContent(forceReload: Bool = false) {
@@ -197,6 +208,90 @@ final class HomeViewModel: ObservableObject {
             queuedForceReload = false
             loadContent(forceReload: true)
         }
+    }
+
+    private func scheduleMyMediaSummaryLoad(for item: ServerItem) {
+        guard item.collectionType != nil else { return }
+        guard myMediaSummaries[item.id] == nil else { return }
+        guard myMediaSummaryTasks[item.id] == nil else { return }
+
+        let task = Task { [weak self] in
+            guard let self else { return }
+            defer { myMediaSummaryTasks[item.id] = nil }
+            guard let summary = await loadMyMediaSummary(for: item) else { return }
+            myMediaSummaries[item.id] = summary
+            if infoState.selectedItemState.item?.id == item.id {
+                infoState.selectedItemState.metadataSummary = summary
+            }
+        }
+        myMediaSummaryTasks[item.id] = task
+    }
+
+    private func loadMyMediaSummary(for item: ServerItem) async -> String? {
+        guard let client = client(for: item) else { return nil }
+
+        let queries = itemTypesForLibrary(item)
+        var parts: [String] = []
+        for (type, singular, plural) in queries {
+            let count = await countItems(in: item.id, type: type, client: client)
+            appendSummaryPart(&parts, count: count, singular: singular, plural: plural)
+        }
+
+        return parts.isEmpty ? nil : parts.joined(separator: " \u{2022} ")
+    }
+
+    private func itemTypesForLibrary(_ item: ServerItem) -> [(ItemType, String, String)] {
+        switch item.collectionType?.lowercased() {
+        case "movies":
+            return [(.movie, "movie", "movies"), (.boxSet, "collection", "collections")]
+        case "tvshows":
+            return [(.series, "series", "series"), (.season, "season", "seasons")]
+        case "music":
+            return [(.musicAlbum, "album", "albums"), (.audio, "track", "tracks")]
+        case "photos", "homevideos":
+            return [(.photo, "photo", "photos")]
+        case "boxsets":
+            return [(.boxSet, "collection", "collections")]
+        case "playlists":
+            return [(.playlist, "playlist", "playlists")]
+        case "books":
+            return [(.book, "book", "books")]
+        default:
+            return [
+                (.movie, "movie", "movies"),
+                (.series, "series", "series"),
+                (.musicAlbum, "album", "albums"),
+                (.audio, "track", "tracks"),
+                (.photo, "photo", "photos"),
+            ]
+        }
+    }
+
+    private func countItems(in parentId: String, type: ItemType, client: MediaServerClient) async -> Int {
+        do {
+            let result = try await client.itemsApi.getItems(request: GetItemsRequest(
+                parentId: parentId,
+                recursive: true,
+                includeItemTypes: [type],
+                limit: 1,
+                startIndex: 0,
+                enableTotalRecordCount: true
+            ))
+            return result.totalRecordCount
+        } catch {
+            return 0
+        }
+    }
+
+    private func appendSummaryPart(
+        _ parts: inout [String],
+        count: Int,
+        singular: String,
+        plural: String
+    ) {
+        guard count > 0 else { return }
+        let label = count == 1 ? singular : plural
+        parts.append("\(count) \(label)")
     }
 
     func refreshContent() {
@@ -789,6 +884,7 @@ final class HomeViewModel: ObservableObject {
         selectionDebounceTask = Task {
             try? await Task.sleep(nanoseconds: Self.selectionDebounceMs)
             guard !Task.isCancelled else { return }
+            scheduleMyMediaSummaryLoad(for: item)
             infoState.selectedItemState = buildSelectedState(for: item)
             mediaBarRatingsViewModel.loadRatings(for: item)
         }
@@ -1016,7 +1112,8 @@ final class HomeViewModel: ObservableObject {
             summary: item.overview ?? "",
             item: item,
             logoUrl: logoImageUrl(for: item),
-            backdropUrl: backdropUrls(for: item).first
+            backdropUrl: backdropUrls(for: item).first,
+            metadataSummary: myMediaSummaries[item.id]
         )
     }
 

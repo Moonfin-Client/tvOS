@@ -6,6 +6,7 @@ struct SelectedItemState: Equatable {
     let item: ServerItem?
     let logoUrl: String?
     let backdropUrl: String?
+    var metadataSummary: String?
 
     static let empty = SelectedItemState(title: "", summary: "", item: nil, logoUrl: nil, backdropUrl: nil)
 
@@ -15,5 +16,6 @@ struct SelectedItemState: Equatable {
             && lhs.item?.id == rhs.item?.id
             && lhs.logoUrl == rhs.logoUrl
             && lhs.backdropUrl == rhs.backdropUrl
+            && lhs.metadataSummary == rhs.metadataSummary
     }
 }

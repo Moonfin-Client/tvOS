@@ -699,7 +699,7 @@ private struct HomeInfoAreaView: View {
             }
             .frame(height: Self.logoReservedHeight, alignment: .leading)
 
-            SimpleInfoRow(item: infoState.selectedItemState.item)
+            SimpleInfoRow(item: infoState.selectedItemState.item, metadataSummary: infoState.selectedItemState.metadataSummary)
                 .frame(height: Self.metaReservedHeight, alignment: .leading)
 
             ZStack(alignment: .leading) {
