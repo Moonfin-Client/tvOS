@@ -104,5 +104,11 @@ struct SettingsMainScreen: View {
         .focusScope(screenNamespace)
         .defaultFocus($focusedRoute, .authentication)
         .restoresFocus($focusedRoute)
+        .onAppear {
+            guard settingsRouter.path.count == 1,
+                  settingsRouter.path.first == .main,
+                  settingsRouter.lastPoppedRoute == nil else { return }
+            focusedRoute = .authentication
+        }
     }
 }
