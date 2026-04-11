@@ -3,19 +3,23 @@ import Foundation
 final class EmbyServerClient: MediaServerClient {
     let serverType: ServerType = .emby
     let httpClient: HttpClient
+    private let _webSocketClient: ServerWebSocketClient
 
     var baseURL: URL? { httpClient.baseURL }
     var accessToken: String? { httpClient.accessToken }
     var userId: String? { httpClient.userId }
 
     init(httpClient: HttpClient? = nil) {
-        self.httpClient = httpClient ?? HttpClient(authFormat: .emby)
+        let client = httpClient ?? HttpClient(authFormat: .emby)
+        self.httpClient = client
+        self._webSocketClient = ServerWebSocketClient(serverType: .emby, httpClient: client)
     }
 
     func configure(baseURL: URL, accessToken: String? = nil, userId: String? = nil) {
         httpClient.configure(baseURL: baseURL, accessToken: accessToken, userId: userId)
     }
 
+    var webSocketApi: ServerWebSocketApi { _webSocketClient }
     var authApi: ServerAuthApi { EmbyAuthApi(client: httpClient) }
     var itemsApi: ServerItemsApi { EmbyItemsApi(client: httpClient) }
     var userLibraryApi: ServerUserLibraryApi { EmbyUserLibraryApi(client: httpClient) }

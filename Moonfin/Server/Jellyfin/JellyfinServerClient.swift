@@ -3,19 +3,23 @@ import Foundation
 final class JellyfinServerClient: MediaServerClient {
     let serverType: ServerType = .jellyfin
     let httpClient: HttpClient
+    private let _webSocketClient: ServerWebSocketClient
 
     var baseURL: URL? { httpClient.baseURL }
     var accessToken: String? { httpClient.accessToken }
     var userId: String? { httpClient.userId }
 
     init(httpClient: HttpClient? = nil) {
-        self.httpClient = httpClient ?? HttpClient(authFormat: .jellyfin)
+        let client = httpClient ?? HttpClient(authFormat: .jellyfin)
+        self.httpClient = client
+        self._webSocketClient = ServerWebSocketClient(serverType: .jellyfin, httpClient: client)
     }
 
     func configure(baseURL: URL, accessToken: String? = nil, userId: String? = nil) {
         httpClient.configure(baseURL: baseURL, accessToken: accessToken, userId: userId)
     }
 
+    var webSocketApi: ServerWebSocketApi { _webSocketClient }
     var authApi: ServerAuthApi { JellyfinAuthApi(client: httpClient) }
     var itemsApi: ServerItemsApi { JellyfinItemsApi(client: httpClient) }
     var userLibraryApi: ServerUserLibraryApi { JellyfinUserLibraryApi(client: httpClient) }

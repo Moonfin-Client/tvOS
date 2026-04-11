@@ -1,0 +1,20 @@
+{
+  "unpause": {
+    "request": {},
+    "responseStatus": 204
+  },
+  "pause": {
+    "request": {},
+    "responseStatus": 204
+  },
+  "seek": {
+    "request": {
+      "PositionTicks": 5234500000
+    },
+    "responseStatus": 204
+  },
+  "stop": {
+    "request": {},
+    "responseStatus": 204
+  }
+}

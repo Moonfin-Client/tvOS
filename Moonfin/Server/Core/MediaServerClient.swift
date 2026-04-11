@@ -24,6 +24,7 @@ protocol MediaServerClient: AnyObject {
     var displayPreferencesApi: ServerDisplayPreferencesApi { get }
     var lyricsApi: ServerLyricsApi { get }
     var syncPlayApi: ServerSyncPlayApi { get }
+    var webSocketApi: ServerWebSocketApi { get }
 }
 
 extension MediaServerClient {
@@ -202,19 +203,117 @@ struct SyncPlayGroupListItem: Codable {
     }
 }
 
+enum SyncPlayQueueRequestMode: String, Codable {
+    case queue = "Queue"
+    case queueNext = "QueueNext"
+}
+
+enum SyncPlayRepeatRequestMode: String, Codable {
+    case repeatNone = "RepeatNone"
+    case repeatOne = "RepeatOne"
+    case repeatAll = "RepeatAll"
+}
+
+enum SyncPlayShuffleRequestMode: String, Codable {
+    case sorted = "Sorted"
+    case shuffle = "Shuffle"
+}
+
+struct SyncPlaySetPlaylistItemRequest: Codable {
+    let playlistItemId: String
+
+    enum CodingKeys: String, CodingKey {
+        case playlistItemId = "PlaylistItemId"
+    }
+}
+
+struct SyncPlayRemoveFromPlaylistRequest: Codable {
+    let playlistItemIds: [String]
+    let clearPlaylist: Bool
+    let clearPlayingItem: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case playlistItemIds = "PlaylistItemIds"
+        case clearPlaylist = "ClearPlaylist"
+        case clearPlayingItem = "ClearPlayingItem"
+    }
+}
+
+struct SyncPlayMovePlaylistItemRequest: Codable {
+    let playlistItemId: String
+    let newIndex: Int
+
+    enum CodingKeys: String, CodingKey {
+        case playlistItemId = "PlaylistItemId"
+        case newIndex = "NewIndex"
+    }
+}
+
+struct SyncPlayQueueRequest: Codable {
+    let itemIds: [String]
+    let mode: SyncPlayQueueRequestMode
+
+    enum CodingKeys: String, CodingKey {
+        case itemIds = "ItemIds"
+        case mode = "Mode"
+    }
+}
+
+struct SyncPlayPlaylistItemRequest: Codable {
+    let playlistItemId: String
+
+    enum CodingKeys: String, CodingKey {
+        case playlistItemId = "PlaylistItemId"
+    }
+}
+
+struct SyncPlaySetRepeatModeRequest: Codable {
+    let mode: SyncPlayRepeatRequestMode
+
+    enum CodingKeys: String, CodingKey {
+        case mode = "Mode"
+    }
+}
+
+struct SyncPlaySetShuffleModeRequest: Codable {
+    let mode: SyncPlayShuffleRequestMode
+
+    enum CodingKeys: String, CodingKey {
+        case mode = "Mode"
+    }
+}
+
+struct SyncPlaySetIgnoreWaitRequest: Codable {
+    let ignoreWait: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case ignoreWait = "IgnoreWait"
+    }
+}
+
 protocol ServerSyncPlayApi {
     func createGroup(groupName: String) async throws
     func joinGroup(groupId: String) async throws
     func leaveGroup() async throws
+    func getGroup(groupId: String) async throws -> SyncPlayGroupListItem
     func getGroups() async throws -> [SyncPlayGroupListItem]
     func sendUnpause() async throws
     func sendPause() async throws
     func sendSeek(positionTicks: Int64) async throws
     func sendStop() async throws
-    func sendBuffering(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws
-    func sendReady(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws
+    func sendBuffering(isPlaying: Bool, playlistItemId: String, positionTicks: Int64) async throws
+    func sendReady(isPlaying: Bool, playlistItemId: String, positionTicks: Int64) async throws
     func sendPing(ping: Int64) async throws
     func setNewQueue(itemIds: [String], startIndex: Int, startPositionTicks: Int64) async throws
+    func setPlaylistItem(request: SyncPlaySetPlaylistItemRequest) async throws
+    func removeFromPlaylist(request: SyncPlayRemoveFromPlaylistRequest) async throws
+    func movePlaylistItem(request: SyncPlayMovePlaylistItemRequest) async throws
+    func queue(request: SyncPlayQueueRequest) async throws
+    func nextItem(request: SyncPlayPlaylistItemRequest) async throws
+    func previousItem(request: SyncPlayPlaylistItemRequest) async throws
+    func setRepeatMode(request: SyncPlaySetRepeatModeRequest) async throws
+    func setShuffleMode(request: SyncPlaySetShuffleModeRequest) async throws
+    func setIgnoreWait(request: SyncPlaySetIgnoreWaitRequest) async throws
     func getUtcTime() async throws -> UtcTimeResponse
 }
 

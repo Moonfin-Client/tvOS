@@ -1,0 +1,20 @@
+{
+  "setRepeatMode": {
+    "request": {
+      "Mode": "RepeatAll"
+    },
+    "responseStatus": 204
+  },
+  "setShuffleMode": {
+    "request": {
+      "Mode": "Shuffle"
+    },
+    "responseStatus": 204
+  },
+  "setIgnoreWait": {
+    "request": {
+      "IgnoreWait": true
+    },
+    "responseStatus": 204
+  }
+}

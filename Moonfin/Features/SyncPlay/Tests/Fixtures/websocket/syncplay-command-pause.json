@@ -1,0 +1,11 @@
+{
+  "MessageType": "SyncPlayCommand",
+  "Data": {
+    "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+    "PlaylistItemId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "Command": "Pause",
+    "When": "2026-04-11T20:16:00Z",
+    "PositionTicks": 2234500000,
+    "EmittedAt": "2026-04-11T20:15:59.5000000Z"
+  }
+}

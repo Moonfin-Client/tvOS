@@ -1,0 +1,57 @@
+{
+  "setNewQueue": {
+    "request": {
+      "PlayingQueue": [
+        "11111111-2222-3333-4444-555555555555",
+        "66666666-7777-8888-9999-000000000000"
+      ],
+      "PlayingItemPosition": 0,
+      "StartPositionTicks": 150000000
+    },
+    "responseStatus": 204
+  },
+  "setPlaylistItem": {
+    "request": {
+      "PlaylistItemId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    },
+    "responseStatus": 204
+  },
+  "removeFromPlaylist": {
+    "request": {
+      "PlaylistItemIds": [
+        "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      ],
+      "ClearPlaylist": false,
+      "ClearPlayingItem": false
+    },
+    "responseStatus": 204
+  },
+  "movePlaylistItem": {
+    "request": {
+      "PlaylistItemId": "ffffffff-1111-2222-3333-444444444444",
+      "NewIndex": 0
+    },
+    "responseStatus": 204
+  },
+  "queue": {
+    "request": {
+      "ItemIds": [
+        "99999999-aaaa-bbbb-cccc-dddddddddddd"
+      ],
+      "Mode": "QueueNext"
+    },
+    "responseStatus": 204
+  },
+  "nextItem": {
+    "request": {
+      "PlaylistItemId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    },
+    "responseStatus": 204
+  },
+  "previousItem": {
+    "request": {
+      "PlaylistItemId": "ffffffff-1111-2222-3333-444444444444"
+    },
+    "responseStatus": 204
+  }
+}

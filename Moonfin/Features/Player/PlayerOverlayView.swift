@@ -22,6 +22,7 @@ struct PlayerOverlayView: View {
         case next
         case chapters
         case cast
+        case queueNext
         case speed
         case zoom
         case info
@@ -238,13 +239,13 @@ struct PlayerOverlayView: View {
             if !viewModel.isLiveTV {
                 if viewModel.playbackManager.hasPrevious {
                     overlayButton(icon: "backward.end.fill", focus: .previous) {
-                        Task { await viewModel.playbackManager.playPrevious() }
+                        Task { await viewModel.playPrevious() }
                     }
                 }
 
                 if viewModel.playbackManager.hasNext {
                     overlayButton(icon: "forward.end.fill", focus: .next) {
-                        Task { await viewModel.playbackManager.playNext() }
+                        Task { await viewModel.playNext() }
                     }
                 }
 
@@ -257,6 +258,12 @@ struct PlayerOverlayView: View {
                 if viewModel.hasCast {
                     overlayButton(icon: "person.2", focus: .cast) {
                         viewModel.showCastList()
+                    }
+                }
+
+                if viewModel.syncPlayActive, viewModel.nextQueueItem != nil {
+                    overlayButton(icon: "text.line.first.and.arrowtriangle.forward", focus: .queueNext) {
+                        viewModel.queueNextItemForSyncPlay()
                     }
                 }
             }

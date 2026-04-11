@@ -1,0 +1,26 @@
+[
+  {
+    "MessageType": "SyncPlayGroupUpdate",
+    "Data": {
+      "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+      "Type": "UserJoined",
+      "Data": "charlie"
+    }
+  },
+  {
+    "MessageType": "SyncPlayGroupUpdate",
+    "Data": {
+      "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+      "Type": "UserLeft",
+      "Data": "bob"
+    }
+  },
+  {
+    "MessageType": "SyncPlayGroupUpdate",
+    "Data": {
+      "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+      "Type": "GroupLeft",
+      "Data": "f0f0f0f0-1111-2222-3333-444444444444"
+    }
+  }
+]

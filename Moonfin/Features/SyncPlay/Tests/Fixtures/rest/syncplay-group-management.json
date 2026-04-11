@@ -1,0 +1,44 @@
+{
+  "new": {
+    "request": {
+      "GroupName": "Movie Night"
+    },
+    "response": {
+      "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+      "GroupName": "Movie Night",
+      "State": "Waiting",
+      "Participants": ["alice"],
+      "LastUpdatedAt": "2026-04-11T20:10:00.0000000Z"
+    }
+  },
+  "join": {
+    "request": {
+      "GroupId": "f0f0f0f0-1111-2222-3333-444444444444"
+    },
+    "responseStatus": 204
+  },
+  "leave": {
+    "request": {},
+    "responseStatus": 204
+  },
+  "list": {
+    "response": [
+      {
+        "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+        "GroupName": "Movie Night",
+        "State": "Playing",
+        "Participants": ["alice", "bob"],
+        "LastUpdatedAt": "2026-04-11T20:20:00Z"
+      }
+    ]
+  },
+  "getById": {
+    "response": {
+      "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+      "GroupName": "Movie Night",
+      "State": "Playing",
+      "Participants": ["alice", "bob"],
+      "LastUpdatedAt": "2026-04-11T20:20:00Z"
+    }
+  }
+}

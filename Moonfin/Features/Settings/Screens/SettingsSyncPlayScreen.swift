@@ -6,6 +6,7 @@ struct SettingsSyncPlayScreen: View {
     @FocusState private var focusedRoute: SettingsRoute?
 
     private var prefs: UserPreferences { container.userPreferences }
+    private var syncPlayManager: SyncPlayManager { container.syncPlayManager }
 
     var body: some View {
         SettingsScreenLayout(title: "SyncPlay") {
@@ -14,6 +15,20 @@ struct SettingsSyncPlayScreen: View {
                 heading: "Enabled",
                 caption: "Enable SyncPlay synchronized playback",
                 isOn: prefs.binding(for: UserPreferences.syncPlayEnabled)
+            )
+
+            SettingsToggleButton(
+                icon: "person.badge.shield.checkmark",
+                heading: "Internal Rollout Access",
+                caption: "Restrict SyncPlay to internal test users",
+                isOn: prefs.binding(for: UserPreferences.syncPlayInternalRolloutEnabled)
+            )
+
+            SettingsToggleButton(
+                icon: "exclamationmark.shield",
+                heading: "Advanced Correction",
+                caption: "Kill switch for advanced SyncPlay timing corrections",
+                isOn: prefs.binding(for: UserPreferences.syncPlayAdvancedCorrectionEnabled)
             )
 
             SettingsToggleButton(
@@ -81,6 +96,18 @@ struct SettingsSyncPlayScreen: View {
                 action: { settingsRouter.navigate(to: .moonfinSyncPlayExtraOffset) }
             )
             .focused($focusedRoute, equals: .moonfinSyncPlayExtraOffset)
+
+            if syncPlayManager.state.enabled {
+                SettingsToggleButton(
+                    icon: "hourglass",
+                    heading: "Ignore Wait (Current Group)",
+                    caption: "Bypass waiting for other participants",
+                    isOn: Binding(
+                        get: { syncPlayManager.ignoreWaitEnabled },
+                        set: { syncPlayManager.requestSetIgnoreWait($0) }
+                    )
+                )
+            }
         }
         .restoresFocus($focusedRoute)
     }

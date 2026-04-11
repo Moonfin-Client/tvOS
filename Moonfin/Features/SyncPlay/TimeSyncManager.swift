@@ -9,6 +9,7 @@ final class TimeSyncManager {
 
     private(set) var timeOffset: Int64 = 0
     private(set) var roundTripTime: Int64 = 0
+    private(set) var offsetJitterMs: Int64 = 0
     private(set) var measurementCount = 0
 
     var isGreedyMode: Bool { measurementCount < greedyPingCount }
@@ -88,6 +89,11 @@ final class TimeSyncManager {
 
             measurements.append(Measurement(offset: offset, roundTripTime: rtt, delay: networkDelay))
             while measurements.count > maxMeasurements { measurements.removeFirst() }
+
+            if let minOffset = measurements.map({ $0.offset }).min(),
+               let maxOffset = measurements.map({ $0.offset }).max() {
+                offsetJitterMs = maxOffset - minOffset
+            }
 
             if let best = measurements.min(by: { $0.delay < $1.delay }) {
                 timeOffset = best.offset

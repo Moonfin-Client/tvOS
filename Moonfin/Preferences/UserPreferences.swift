@@ -121,6 +121,8 @@ final class UserPreferences {
     static let liveTvFilterPremiere = Preference(key: "livetv_filter_premiere", defaultValue: false)
 
     static let syncPlayEnabled = Preference(key: "syncplay_enabled", defaultValue: false)
+    static let syncPlayInternalRolloutEnabled = Preference(key: "syncplay_internal_rollout_enabled", defaultValue: false)
+    static let syncPlayAdvancedCorrectionEnabled = Preference(key: "syncplay_advanced_correction_enabled", defaultValue: true)
     static let syncPlayEnableSyncCorrection = Preference(key: "syncplay_sync_correction", defaultValue: true)
     static let syncPlayUseSpeedToSync = Preference(key: "syncplay_speed_to_sync", defaultValue: true)
     static let syncPlayUseSkipToSync = Preference(key: "syncplay_skip_to_sync", defaultValue: true)

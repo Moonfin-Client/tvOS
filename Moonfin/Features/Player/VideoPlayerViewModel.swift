@@ -19,6 +19,7 @@ final class VideoPlayerViewModel: ObservableObject {
     let isLiveTV: Bool
     private let onLiveTvChannelUp: (() async -> Void)?
     private let onLiveTvChannelDown: (() async -> Void)?
+    weak var syncPlayManager: SyncPlayManager?
 
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
@@ -64,6 +65,10 @@ final class VideoPlayerViewModel: ObservableObject {
         playbackManager.nextEntry?.item
     }
 
+    var syncPlayActive: Bool {
+        syncPlayManager?.state.enabled == true
+    }
+
     var nextItemImageUrl: String? {
         guard let item = nextQueueItem else { return nil }
         return playbackManager.imageUrl(for: item, type: .backdrop)
@@ -84,11 +89,14 @@ final class VideoPlayerViewModel: ObservableObject {
     init(
         playbackManager: PlaybackManager,
         isLiveTV: Bool = false,
+        syncPlayManager: SyncPlayManager? = nil,
         onLiveTvChannelUp: (() async -> Void)? = nil,
         onLiveTvChannelDown: (() async -> Void)? = nil
     ) {
+        self.syncPlayManager = syncPlayManager
         self.playbackManager = playbackManager
         self.isLiveTV = isLiveTV
+        syncPlayManager?.attachPlaybackStateObserverIfNeeded()
         self.onLiveTvChannelUp = onLiveTvChannelUp
         self.onLiveTvChannelDown = onLiveTvChannelDown
 
@@ -217,21 +225,37 @@ final class VideoPlayerViewModel: ObservableObject {
     }
 
     func togglePlayPause() {
-        if player.isPlaying {
-            playbackManager.pause()
+        if let spm = syncPlayManager, spm.state.enabled {
+            if player.isPlaying {
+                spm.requestPause()
+            } else {
+                spm.requestUnpause()
+            }
         } else {
-            playbackManager.resume()
+            if player.isPlaying {
+                playbackManager.pause()
+            } else {
+                playbackManager.resume()
+            }
         }
         resetHideTimer()
     }
 
     func seekForward() {
-        playbackManager.seek(by: skipForwardSeconds)
+        if let spm = syncPlayManager, spm.state.enabled {
+            spm.requestSeek(to: player.currentTime + skipForwardSeconds)
+        } else {
+            playbackManager.seek(by: skipForwardSeconds)
+        }
         showOverlay()
     }
 
     func seekBackward() {
-        playbackManager.seek(by: -skipBackSeconds)
+        if let spm = syncPlayManager, spm.state.enabled {
+            spm.requestSeek(to: max(0, player.currentTime - skipBackSeconds))
+        } else {
+            playbackManager.seek(by: -skipBackSeconds)
+        }
         showOverlay()
     }
 
@@ -253,6 +277,7 @@ final class VideoPlayerViewModel: ObservableObject {
     }
 
     private func debouncedSeek() {
+        if syncPlayManager?.state.enabled == true { return }
         scrubSeekTask?.cancel()
         scrubSeekTask = Task {
             try? await Task.sleep(nanoseconds: 400_000_000)
@@ -266,7 +291,11 @@ final class VideoPlayerViewModel: ObservableObject {
         guard isScrubbing else { return }
         scrubSeekTask?.cancel()
         let target = TimeInterval(scrubPosition) * player.duration
-        playbackManager.seek(to: target)
+        if let spm = syncPlayManager, spm.state.enabled {
+            spm.requestSeek(to: target)
+        } else {
+            playbackManager.seek(to: target)
+        }
         isScrubbing = false
         resetHideTimer()
     }
@@ -324,8 +353,34 @@ final class VideoPlayerViewModel: ObservableObject {
 
     func seekToChapter(_ chapter: ServerChapter) {
         let position = TimeInterval(chapter.startPositionTicks) / 10_000_000
-        playbackManager.seek(to: position)
+        if let spm = syncPlayManager, spm.state.enabled {
+            spm.requestSeek(to: position)
+        } else {
+            playbackManager.seek(to: position)
+        }
         hideChapterSelection()
+    }
+
+    func playNext() async {
+        if let spm = syncPlayManager, spm.state.enabled {
+            spm.requestNext()
+        } else {
+            await playbackManager.playNext()
+        }
+    }
+
+    func playPrevious() async {
+        if let spm = syncPlayManager, spm.state.enabled {
+            spm.requestPrevious()
+        } else {
+            await playbackManager.playPrevious()
+        }
+    }
+
+    func queueNextItemForSyncPlay() {
+        guard let spm = syncPlayManager, spm.state.enabled,
+              let itemId = nextQueueItem?.id else { return }
+        spm.requestQueueItemIds([itemId], mode: .queueNext)
     }
 
     func currentChapterIndex() -> Int {

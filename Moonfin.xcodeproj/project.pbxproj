@@ -288,6 +288,7 @@
 		F6635A47F59537CE23A1B0F7 /* SettingsTelemetryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */; };
 		F695BE1C0B1984B1D35873F5 /* SeerrBrowseByViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269C2AE578D735E14C13184C /* SeerrBrowseByViewModel.swift */; };
 		F872F61A76BB3C05129D6A9F /* SubtitleDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2137FFC469CA450D30D6AB92 /* SubtitleDecoder.swift */; };
+		E3F7A891BC042D5609E21C74 /* SyncPlayRuntimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A8B912CD153E67010F3D85 /* SyncPlayRuntimeCoordinator.swift */; };
 		FA0888C6B508098C61D3C093 /* SyncPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24051174A7D551EB4CBB14D /* SyncPlayManager.swift */; };
 		FAA9362203F394F8C16A88E0 /* MusicBrowseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7539F7F9B1DF246DC2B1D54D /* MusicBrowseScreen.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
@@ -660,6 +661,7 @@
 		D0134334AD83E19655459900 /* ServerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerScreen.swift; sourceTree = "<group>"; };
 		D10256EC8BACAA177ADD2AC0 /* StillWatchingSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StillWatchingSettingsScreen.swift; sourceTree = "<group>"; };
 		D24051174A7D551EB4CBB14D /* SyncPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPlayManager.swift; sourceTree = "<group>"; };
+		F4A8B912CD153E67010F3D85 /* SyncPlayRuntimeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPlayRuntimeCoordinator.swift; sourceTree = "<group>"; };
 		D2D355085448AD81BF50C085 /* RadioOptionContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioOptionContent.swift; sourceTree = "<group>"; };
 		D350319305B10BAA1D1404CC /* RowDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowDataSource.swift; sourceTree = "<group>"; };
 		D3F31279E854ADD3052D8537 /* LocalServerDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalServerDiscovery.swift; sourceTree = "<group>"; };
@@ -927,6 +929,7 @@
 			children = (
 				D24051174A7D551EB4CBB14D /* SyncPlayManager.swift */,
 				207D7B97AF9819D4AF2B610E /* SyncPlayModels.swift */,
+				F4A8B912CD153E67010F3D85 /* SyncPlayRuntimeCoordinator.swift */,
 				6A2ABF92E68CA858C820159F /* SyncPlayScreen.swift */,
 				C42088A8F589D865EC2229C3 /* TimeSyncManager.swift */,
 			);
@@ -1920,6 +1923,7 @@
 				16A42DD162E3DA3C12CE3F5F /* SupportedLocale.swift in Sources */,
 				FA0888C6B508098C61D3C093 /* SyncPlayManager.swift in Sources */,
 				CB9BB8184531C28106697918 /* SyncPlayModels.swift in Sources */,
+				E3F7A891BC042D5609E21C74 /* SyncPlayRuntimeCoordinator.swift in Sources */,
 				F43E7B713287BBBD4B72CE15 /* SyncPlayScreen.swift in Sources */,
 				D7F00997ECDB87EA0BAC512D /* TelemetryPreferences.swift in Sources */,
 				8DC3DC9D827C8C5CE5EA476F /* ThemeMusicPlayer.swift in Sources */,

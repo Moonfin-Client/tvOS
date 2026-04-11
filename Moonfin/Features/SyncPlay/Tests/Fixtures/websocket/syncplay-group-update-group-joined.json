@@ -1,0 +1,14 @@
+{
+  "MessageType": "SyncPlayGroupUpdate",
+  "Data": {
+    "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+    "Type": "GroupJoined",
+    "Data": {
+      "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+      "GroupName": "Movie Night",
+      "State": "Waiting",
+      "Participants": ["alice", "bob"],
+      "LastUpdatedAt": "2026-04-11T20:14:00.0000000Z"
+    }
+  }
+}

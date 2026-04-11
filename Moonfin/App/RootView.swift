@@ -464,7 +464,7 @@ struct MainNavigationView: View {
     @ViewBuilder
     private var videoPlayerDestination: some View {
         if let manager = container.playbackCoordinator.videoPlayerManager {
-            VideoPlayerScreen(playbackManager: manager)
+            VideoPlayerScreen(playbackManager: manager, syncPlayManager: container.syncPlayManager)
                 .onAppear { router.pushNavbarHidden() }
                 .onDisappear {
                     router.popNavbarHidden()
@@ -496,6 +496,7 @@ struct MainNavigationView: View {
             VideoPlayerScreen(
                 playbackManager: manager,
                 isLiveTV: true,
+                syncPlayManager: container.syncPlayManager,
                 onLiveTvChannelUp: { await switchLiveTvChannel(by: -1) },
                 onLiveTvChannelDown: { await switchLiveTvChannel(by: 1) }
             )

@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import JavaScriptCore
+import UIKit
 
 @MainActor
 final class AppContainer: ObservableObject {
@@ -34,6 +35,8 @@ final class AppContainer: ObservableObject {
     let spotlightIndexer: SpotlightIndexer
     let inactivityTracker: InactivityTracker
     private var inactivityTrackerCancellable: AnyCancellable?
+    private var appForegroundCancellable: AnyCancellable?
+    private var appBackgroundCancellable: AnyCancellable?
     let serverConnectionMonitor: ServerConnectionMonitor
     let featureDegradationManager: FeatureDegradationManager
     let userViewsService: UserViewsService
@@ -45,6 +48,7 @@ final class AppContainer: ObservableObject {
     // MARK: - SyncPlay
 
     let syncPlayManager: SyncPlayManager
+    let syncPlayRuntimeCoordinator: SyncPlayRuntimeCoordinator
 
     // MARK: - Repositories
 
@@ -121,6 +125,12 @@ final class AppContainer: ObservableObject {
             playbackCoordinator: self.playbackCoordinator,
             userPreferences: self.userPreferences
         )
+        let coordinator = SyncPlayRuntimeCoordinator(
+            serverRepository: serverRepo,
+            serverClientFactory: factory,
+            syncPlayManager: self.syncPlayManager
+        )
+        self.syncPlayRuntimeCoordinator = coordinator
 
         self.serverConnectionMonitor = ServerConnectionMonitor(
             serverClientFactory: factory,
@@ -171,6 +181,22 @@ final class AppContainer: ObservableObject {
 
         self.inactivityTrackerCancellable = self.inactivityTracker.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
+
+        self.appForegroundCancellable = NotificationCenter.default
+            .publisher(for: UIApplication.didBecomeActiveNotification)
+            .sink { [weak self] _ in
+                self?.syncPlayRuntimeCoordinator.appDidBecomeActive()
+                self?.syncPlayManager.appDidBecomeActive()
+            }
+
+        self.appBackgroundCancellable = NotificationCenter.default
+            .publisher(for: UIApplication.didEnterBackgroundNotification)
+            .sink { [weak self] _ in
+                self?.syncPlayManager.appDidEnterBackground()
+                self?.syncPlayRuntimeCoordinator.appDidEnterBackground()
+            }
+
+        coordinator.start()
     }
 }
 

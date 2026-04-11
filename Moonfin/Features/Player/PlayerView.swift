@@ -11,12 +11,14 @@ struct VideoPlayerScreen: View {
     init(
         playbackManager: PlaybackManager,
         isLiveTV: Bool = false,
+        syncPlayManager: SyncPlayManager? = nil,
         onLiveTvChannelUp: (() async -> Void)? = nil,
         onLiveTvChannelDown: (() async -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(
             playbackManager: playbackManager,
             isLiveTV: isLiveTV,
+            syncPlayManager: syncPlayManager,
             onLiveTvChannelUp: onLiveTvChannelUp,
             onLiveTvChannelDown: onLiveTvChannelDown
         ))

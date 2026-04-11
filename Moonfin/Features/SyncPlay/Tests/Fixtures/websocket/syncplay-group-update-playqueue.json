@@ -1,0 +1,26 @@
+{
+  "MessageType": "SyncPlayGroupUpdate",
+  "Data": {
+    "GroupId": "f0f0f0f0-1111-2222-3333-444444444444",
+    "Type": "PlayQueue",
+    "Data": {
+      "Reason": "SetCurrentItem",
+      "LastUpdate": "2026-04-11T20:18:00.1000000Z",
+      "Playlist": [
+        {
+          "ItemId": "11111111-2222-3333-4444-555555555555",
+          "PlaylistItemId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        },
+        {
+          "ItemId": "66666666-7777-8888-9999-000000000000",
+          "PlaylistItemId": "ffffffff-1111-2222-3333-444444444444"
+        }
+      ],
+      "PlayingItemIndex": 0,
+      "StartPositionTicks": 150000000,
+      "IsPlaying": true,
+      "ShuffleMode": "Sorted",
+      "RepeatMode": "RepeatNone"
+    }
+  }
+}

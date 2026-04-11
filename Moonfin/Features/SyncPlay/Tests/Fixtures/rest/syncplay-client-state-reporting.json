@@ -1,0 +1,26 @@
+{
+  "buffering": {
+    "request": {
+      "When": "2026-04-11T20:17:00.2500000Z",
+      "PositionTicks": 4234500000,
+      "IsPlaying": true,
+      "PlaylistItemId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    },
+    "responseStatus": 204
+  },
+  "ready": {
+    "request": {
+      "When": "2026-04-11T20:17:01.1000000Z",
+      "PositionTicks": 4238500000,
+      "IsPlaying": true,
+      "PlaylistItemId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    },
+    "responseStatus": 204
+  },
+  "ping": {
+    "request": {
+      "Ping": 150
+    },
+    "responseStatus": 204
+  }
+}

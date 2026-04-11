@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 final class ServerWebSocketClient: ServerWebSocketApi {
     private let serverType: ServerType
@@ -8,6 +9,7 @@ final class ServerWebSocketClient: ServerWebSocketApi {
     private var reconnectTask: Task<Void, Never>?
     private var reconnectAttempt = 0
     private let maxReconnectAttempts = 12
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "ServerWebSocketClient")
 
     var onMessage: ((ServerWebSocketMessage) -> Void)?
 
@@ -173,27 +175,47 @@ final class ServerWebSocketClient: ServerWebSocketApi {
     }
 
     private func parseSyncPlayMessage(type: String, data: [String: Any]) -> ServerWebSocketMessage? {
+        let decoder = JSONDecoder()
+
         if type == "SyncPlayCommand" {
-            guard let rawCommand = data["Command"] as? String,
-                  let command = SyncPlayCommandType(rawValue: rawCommand) else { return nil }
-            let positionTicks = (data["PositionTicks"] as? NSNumber)?.int64Value ?? 0
-            let whenStr = data["When"] as? String ?? ""
-            let whenMs = SyncPlayUtils.parseISOToMs(whenStr)
-            let emittedStr = data["EmittedAt"] as? String ?? whenStr
-            let emittedMs = SyncPlayUtils.parseISOToMs(emittedStr)
-            return .syncPlayCommand(SyncPlayCommand(
-                groupId: data["GroupId"] as? String ?? "",
-                command: command,
-                positionTicks: positionTicks,
-                whenUtcMs: whenMs,
-                playlistItemId: data["PlaylistItemId"] as? String,
-                emittedAtUtcMs: emittedMs
-            ))
+            if let rawCommand = data["Command"] as? String,
+               SyncPlayCommandType(rawValue: rawCommand) == nil {
+                logger.error("Unknown SyncPlay command type: \(rawCommand, privacy: .public)")
+                return nil
+            }
+
+            logUnexpectedKeys(in: data, allowed: ["GroupId", "Command", "PositionTicks", "When", "PlaylistItemId", "EmittedAt"], context: "SyncPlayCommand")
+
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: data),
+                  let command = try? decoder.decode(SyncPlayCommand.self, from: jsonData) else {
+                logger.error("Failed to decode SyncPlayCommand payload")
+                return nil
+            }
+
+            return .syncPlayCommand(command)
         } else {
-            guard let rawType = data["Type"] as? String,
-                  let updateType = SyncPlayGroupUpdateType(rawValue: rawType) else { return nil }
-            return .syncPlayGroupUpdate(SyncPlayGroupUpdate(type: updateType, data: data))
+            if let rawType = data["Type"] as? String,
+               SyncPlayGroupUpdateType(rawValue: rawType) == nil {
+                logger.error("Unknown SyncPlay group update type: \(rawType, privacy: .public)")
+                return nil
+            }
+
+            logUnexpectedKeys(in: data, allowed: ["GroupId", "Type", "Data"], context: "SyncPlayGroupUpdate")
+
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: data),
+                  let update = try? decoder.decode(SyncPlayGroupUpdate.self, from: jsonData) else {
+                logger.error("Failed to decode SyncPlayGroupUpdate payload")
+                return nil
+            }
+
+            return .syncPlayGroupUpdate(update)
         }
+    }
+
+    private func logUnexpectedKeys(in data: [String: Any], allowed: Set<String>, context: String) {
+        let unexpected = Set(data.keys).subtracting(allowed)
+        guard !unexpected.isEmpty else { return }
+        logger.warning("Unexpected keys in \(context, privacy: .public): \(Array(unexpected).joined(separator: ","), privacy: .public)")
     }
 
     private func startKeepAlive(intervalSeconds: Int64) {

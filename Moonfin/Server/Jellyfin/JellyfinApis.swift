@@ -584,6 +584,10 @@ struct JellyfinSyncPlayApi: ServerSyncPlayApi {
         try await client.requestVoid("/SyncPlay/Leave", method: "POST")
     }
 
+    func getGroup(groupId: String) async throws -> SyncPlayGroupListItem {
+        try await client.request("/SyncPlay/\(groupId)")
+    }
+
     func getGroups() async throws -> [SyncPlayGroupListItem] {
         try await client.request("/SyncPlay/List")
     }
@@ -605,18 +609,18 @@ struct JellyfinSyncPlayApi: ServerSyncPlayApi {
         try await client.requestVoid("/SyncPlay/Stop", method: "POST")
     }
 
-    func sendBuffering(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {
+    func sendBuffering(isPlaying: Bool, playlistItemId: String, positionTicks: Int64) async throws {
         struct Body: Encodable { let When: String; let PositionTicks: Int64; let IsPlaying: Bool; let PlaylistItemId: String }
         let when = ISO8601DateFormatter().string(from: Date())
         try await client.requestVoid("/SyncPlay/Buffering", method: "POST",
-            body: Body(When: when, PositionTicks: positionTicks, IsPlaying: isPlaying, PlaylistItemId: itemId))
+            body: Body(When: when, PositionTicks: positionTicks, IsPlaying: isPlaying, PlaylistItemId: playlistItemId))
     }
 
-    func sendReady(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {
+    func sendReady(isPlaying: Bool, playlistItemId: String, positionTicks: Int64) async throws {
         struct Body: Encodable { let When: String; let PositionTicks: Int64; let IsPlaying: Bool; let PlaylistItemId: String }
         let when = ISO8601DateFormatter().string(from: Date())
         try await client.requestVoid("/SyncPlay/Ready", method: "POST",
-            body: Body(When: when, PositionTicks: positionTicks, IsPlaying: isPlaying, PlaylistItemId: itemId))
+            body: Body(When: when, PositionTicks: positionTicks, IsPlaying: isPlaying, PlaylistItemId: playlistItemId))
     }
 
     func sendPing(ping: Int64) async throws {
@@ -628,6 +632,42 @@ struct JellyfinSyncPlayApi: ServerSyncPlayApi {
         struct Body: Encodable { let PlayingQueue: [String]; let PlayingItemPosition: Int; let StartPositionTicks: Int64 }
         try await client.requestVoid("/SyncPlay/SetNewQueue", method: "POST",
             body: Body(PlayingQueue: itemIds, PlayingItemPosition: startIndex, StartPositionTicks: startPositionTicks))
+    }
+
+    func setPlaylistItem(request: SyncPlaySetPlaylistItemRequest) async throws {
+        try await client.requestVoid("/SyncPlay/SetPlaylistItem", method: "POST", body: request)
+    }
+
+    func removeFromPlaylist(request: SyncPlayRemoveFromPlaylistRequest) async throws {
+        try await client.requestVoid("/SyncPlay/RemoveFromPlaylist", method: "POST", body: request)
+    }
+
+    func movePlaylistItem(request: SyncPlayMovePlaylistItemRequest) async throws {
+        try await client.requestVoid("/SyncPlay/MovePlaylistItem", method: "POST", body: request)
+    }
+
+    func queue(request: SyncPlayQueueRequest) async throws {
+        try await client.requestVoid("/SyncPlay/Queue", method: "POST", body: request)
+    }
+
+    func nextItem(request: SyncPlayPlaylistItemRequest) async throws {
+        try await client.requestVoid("/SyncPlay/NextItem", method: "POST", body: request)
+    }
+
+    func previousItem(request: SyncPlayPlaylistItemRequest) async throws {
+        try await client.requestVoid("/SyncPlay/PreviousItem", method: "POST", body: request)
+    }
+
+    func setRepeatMode(request: SyncPlaySetRepeatModeRequest) async throws {
+        try await client.requestVoid("/SyncPlay/SetRepeatMode", method: "POST", body: request)
+    }
+
+    func setShuffleMode(request: SyncPlaySetShuffleModeRequest) async throws {
+        try await client.requestVoid("/SyncPlay/SetShuffleMode", method: "POST", body: request)
+    }
+
+    func setIgnoreWait(request: SyncPlaySetIgnoreWaitRequest) async throws {
+        try await client.requestVoid("/SyncPlay/SetIgnoreWait", method: "POST", body: request)
     }
 
     func getUtcTime() async throws -> UtcTimeResponse {

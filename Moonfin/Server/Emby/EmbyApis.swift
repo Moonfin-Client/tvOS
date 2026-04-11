@@ -640,14 +640,24 @@ struct UnsupportedSyncPlayApi: ServerSyncPlayApi {
     func createGroup(groupName: String) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
     func joinGroup(groupId: String) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
     func leaveGroup() async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
-    func getGroups() async throws -> [SyncPlayGroupListItem] { [] }
-    func sendUnpause() async throws {}
-    func sendPause() async throws {}
-    func sendSeek(positionTicks: Int64) async throws {}
-    func sendStop() async throws {}
-    func sendBuffering(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {}
-    func sendReady(isPlaying: Bool, itemId: String, positionTicks: Int64) async throws {}
-    func sendPing(ping: Int64) async throws {}
-    func setNewQueue(itemIds: [String], startIndex: Int, startPositionTicks: Int64) async throws {}
+    func getGroup(groupId: String) async throws -> SyncPlayGroupListItem { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func getGroups() async throws -> [SyncPlayGroupListItem] { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func sendUnpause() async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func sendPause() async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func sendSeek(positionTicks: Int64) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func sendStop() async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func sendBuffering(isPlaying: Bool, playlistItemId: String, positionTicks: Int64) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func sendReady(isPlaying: Bool, playlistItemId: String, positionTicks: Int64) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func sendPing(ping: Int64) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func setNewQueue(itemIds: [String], startIndex: Int, startPositionTicks: Int64) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func setPlaylistItem(request: SyncPlaySetPlaylistItemRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func removeFromPlaylist(request: SyncPlayRemoveFromPlaylistRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func movePlaylistItem(request: SyncPlayMovePlaylistItemRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func queue(request: SyncPlayQueueRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func nextItem(request: SyncPlayPlaylistItemRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func previousItem(request: SyncPlayPlaylistItemRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func setRepeatMode(request: SyncPlaySetRepeatModeRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func setShuffleMode(request: SyncPlaySetShuffleModeRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
+    func setIgnoreWait(request: SyncPlaySetIgnoreWaitRequest) async throws { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
     func getUtcTime() async throws -> UtcTimeResponse { throw ServerError.unsupported("SyncPlay is not supported on Emby") }
 }

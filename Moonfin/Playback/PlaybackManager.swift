@@ -206,11 +206,13 @@ final class PlaybackManager: ObservableObject {
         }
     }
 
-    func resume() {
-        let rewind = TimeInterval(preferences[UserPreferences.unpauseRewindDuration])
-        if rewind > 0 {
-            let target = max(player.currentTime - rewind, 0)
-            player.seek(to: target)
+    func resume(applyRewind: Bool = true) {
+        if applyRewind {
+            let rewind = TimeInterval(preferences[UserPreferences.unpauseRewindDuration])
+            if rewind > 0 {
+                let target = max(player.currentTime - rewind, 0)
+                player.seek(to: target)
+            }
         }
         player.resume()
         Task { [weak self] in

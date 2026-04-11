@@ -10,7 +10,13 @@ struct SyncPlayScreen: View {
 
     var body: some View {
         SettingsScreenLayout(title: "SyncPlay") {
-            if syncPlayManager.state.enabled {
+            if !syncPlayManager.syncPlayConfigured {
+                unavailableSection(title: "SyncPlay Disabled", message: "Enable SyncPlay in settings to use synchronized playback.")
+            } else if !syncPlayManager.syncPlayRolloutEnabled {
+                unavailableSection(title: "Rollout Restricted", message: "SyncPlay is staged for internal test users. Enable Internal Rollout Access in settings.")
+            } else if !syncPlayManager.syncPlayEnabled {
+                unavailableSection(title: "Server Unsupported", message: "Current server does not support SyncPlay. Jellyfin with SyncPlay support is required.")
+            } else if syncPlayManager.state.enabled {
                 activeGroupSection
             } else {
                 createGroupSection
@@ -25,9 +31,23 @@ struct SyncPlayScreen: View {
             }
         }
         .task {
-            if !syncPlayManager.state.enabled {
+            if syncPlayManager.syncPlayEnabled && !syncPlayManager.state.enabled {
                 await syncPlayManager.fetchGroups()
             }
+        }
+    }
+
+    private func unavailableSection(title: String, message: String) -> some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+            Text(title)
+                .font(.bodySm)
+                .bold()
+                .foregroundColor(theme.colorScheme.listHeadline)
+                .padding(.horizontal, SpaceTokens.spaceMd)
+            Text(message)
+                .font(.caption)
+                .foregroundColor(theme.colorScheme.listCaption)
+                .padding(.horizontal, SpaceTokens.spaceMd)
         }
     }
 
@@ -46,12 +66,28 @@ struct SyncPlayScreen: View {
             }
             .padding(.horizontal, SpaceTokens.spaceMd)
 
-            if let info = syncPlayManager.state.groupInfo {
-                Text(info.groupName ?? info.groupId)
+            if let displayName = syncPlayManager.state.groupName ?? syncPlayManager.state.groupId {
+                Text(displayName)
                     .font(.caption)
                     .foregroundColor(theme.colorScheme.listCaption)
                     .padding(.horizontal, SpaceTokens.spaceMd)
             }
+
+            if !syncPlayManager.state.participants.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Participants")
+                        .font(.caption)
+                        .foregroundColor(theme.colorScheme.listCaption)
+                    Text(syncPlayManager.state.participants.joined(separator: " • "))
+                        .font(.caption)
+                        .foregroundColor(theme.colorScheme.listHeadline)
+                        .lineLimit(2)
+                }
+                .padding(.horizontal, SpaceTokens.spaceMd)
+            }
+
+            groupOptionsSection
+            groupQueueSection
 
             Button {
                 Task { await syncPlayManager.leaveGroup() }
@@ -68,6 +104,149 @@ struct SyncPlayScreen: View {
             }
             .buttonStyle(CleanButtonStyle())
         }
+    }
+
+    private var groupOptionsSection: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+            Text("Group Options")
+                .font(.bodySm)
+                .bold()
+                .foregroundColor(theme.colorScheme.listCaption)
+                .padding(.horizontal, SpaceTokens.spaceMd)
+
+            HStack(spacing: SpaceTokens.spaceSm) {
+                Button {
+                    syncPlayManager.cycleRepeatMode()
+                } label: {
+                    Text("Repeat: \(repeatLabel)")
+                        .font(.caption)
+                }
+                .buttonStyle(CleanButtonStyle())
+
+                Button {
+                    syncPlayManager.toggleShuffleMode()
+                } label: {
+                    Text("Shuffle: \(shuffleLabel)")
+                        .font(.caption)
+                }
+                .buttonStyle(CleanButtonStyle())
+            }
+            .padding(.horizontal, SpaceTokens.spaceMd)
+
+            SettingsToggleButton(
+                icon: "hourglass",
+                heading: "Ignore Wait",
+                caption: "Let playback continue without waiting for everyone",
+                isOn: Binding(
+                    get: { syncPlayManager.ignoreWaitEnabled },
+                    set: { syncPlayManager.requestSetIgnoreWait($0) }
+                )
+            )
+
+            Button {
+                Task { await syncPlayManager.syncCurrentPlaybackQueueToGroup() }
+            } label: {
+                HStack {
+                    Image(systemName: "rectangle.stack.badge.play")
+                    Text("Sync Current Playback Queue")
+                        .font(.bodyMd)
+                    Spacer()
+                }
+                .padding(.horizontal, SpaceTokens.spaceMd)
+                .padding(.vertical, SpaceTokens.spaceSm)
+            }
+            .buttonStyle(CleanButtonStyle())
+        }
+    }
+
+    private var groupQueueSection: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+            HStack {
+                Text("Group Queue")
+                    .font(.bodySm)
+                    .bold()
+                    .foregroundColor(theme.colorScheme.listCaption)
+                Spacer()
+                Button {
+                    syncPlayManager.requestQueueCurrentPlaybackItem(mode: .queue)
+                } label: {
+                    Text("Queue Current")
+                        .font(.caption)
+                }
+                .buttonStyle(CleanButtonStyle())
+
+                Button {
+                    syncPlayManager.requestQueueCurrentPlaybackItem(mode: .queueNext)
+                } label: {
+                    Text("Queue Next")
+                        .font(.caption)
+                }
+                .buttonStyle(CleanButtonStyle())
+            }
+            .padding(.horizontal, SpaceTokens.spaceMd)
+
+            if syncPlayManager.state.queue.isEmpty {
+                Text("Queue is empty")
+                    .font(.caption)
+                    .foregroundColor(theme.colorScheme.listCaption)
+                    .padding(.horizontal, SpaceTokens.spaceMd)
+            } else {
+                ForEach(Array(syncPlayManager.state.queue.enumerated()), id: \.element.playlistItemId) { index, item in
+                    HStack(spacing: SpaceTokens.spaceSm) {
+                        if index == syncPlayManager.state.currentItemIndex {
+                            Image(systemName: "play.circle.fill")
+                                .foregroundColor(theme.accent)
+                        } else {
+                            Image(systemName: "circle")
+                                .foregroundColor(theme.colorScheme.listCaption)
+                        }
+
+                        Text(item.itemId)
+                            .lineLimit(1)
+                            .font(.caption)
+                            .foregroundColor(theme.colorScheme.listHeadline)
+
+                        Spacer()
+
+                        Button("Set") {
+                            syncPlayManager.requestSetCurrentItem(playlistItemId: item.playlistItemId)
+                        }
+                        .buttonStyle(CleanButtonStyle())
+
+                        Button("Up") {
+                            syncPlayManager.requestMoveQueueItem(playlistItemId: item.playlistItemId, to: max(0, index - 1))
+                        }
+                        .buttonStyle(CleanButtonStyle())
+                        .disabled(index == 0)
+
+                        Button("Down") {
+                            syncPlayManager.requestMoveQueueItem(playlistItemId: item.playlistItemId, to: index + 1)
+                        }
+                        .buttonStyle(CleanButtonStyle())
+                        .disabled(index == syncPlayManager.state.queue.count - 1)
+
+                        Button("Remove") {
+                            syncPlayManager.requestRemoveFromQueue(playlistItemId: item.playlistItemId)
+                        }
+                        .buttonStyle(CleanButtonStyle())
+                    }
+                    .padding(.horizontal, SpaceTokens.spaceMd)
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+    }
+
+    private var repeatLabel: String {
+        switch syncPlayManager.state.repeatMode {
+        case .repeatNone: return "Off"
+        case .repeatOne: return "One"
+        case .repeatAll: return "All"
+        }
+    }
+
+    private var shuffleLabel: String {
+        syncPlayManager.state.shuffleMode == .shuffle ? "On" : "Off"
     }
 
     private var createGroupSection: some View {
@@ -120,7 +299,7 @@ struct SyncPlayScreen: View {
 
             ForEach(syncPlayManager.availableGroups, id: \.groupId) { group in
                 Button {
-                    Task { await syncPlayManager.joinGroup(group.groupId) }
+                    Task { await syncPlayManager.joinGroup(group.groupId, withCurrentQueueSnapshot: true) }
                 } label: {
                     SyncPlayGroupRow(group: group)
                 }
