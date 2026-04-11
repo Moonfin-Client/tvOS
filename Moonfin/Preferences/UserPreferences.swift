@@ -73,6 +73,7 @@ final class UserPreferences {
     static let mergeContinueWatchingNextUp = Preference(key: "merge_continue_next_up", defaultValue: false)
     static let enableFolderView = Preference(key: "enable_folder_view", defaultValue: false)
     static let mediaBarTrailerPreview = Preference(key: "media_bar_trailer_preview", defaultValue: true)
+    static let mediaBarTrailerAudio = Preference(key: "media_bar_trailer_audio", defaultValue: true)
     static let mediaPreviewEnabled = Preference(key: "episode_preview_enabled", defaultValue: true)
     static let previewAudioEnabled = Preference(key: "preview_audio_enabled", defaultValue: true)
 

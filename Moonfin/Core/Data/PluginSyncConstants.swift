@@ -61,6 +61,7 @@ enum PluginSyncConstants {
         SyncablePreference(key: "media_bar_overlay_opacity", type: .int, serverKey: "mediaBarOpacity", defaultValue: 50),
         SyncablePreference(key: "media_bar_overlay_color", type: .enum, serverKey: "mediaBarOverlayColor", defaultValue: "gray"),
         SyncablePreference(key: "media_bar_trailer_preview", type: .boolean, serverKey: "mediaBarTrailerPreview", defaultValue: true),
+        SyncablePreference(key: "media_bar_trailer_audio", type: .boolean, serverKey: "mediaBarTrailerAudio", defaultValue: true),
         SyncablePreference(key: "media_bar_source_type", type: .enum, serverKey: "mediaBarSourceType", defaultValue: "library"),
         SyncablePreference(key: "media_bar_library_ids", type: .list, serverKey: "mediaBarLibraryIds", defaultValue: [String]()),
         SyncablePreference(key: "media_bar_collection_ids", type: .list, serverKey: "mediaBarCollectionIds", defaultValue: [String]()),

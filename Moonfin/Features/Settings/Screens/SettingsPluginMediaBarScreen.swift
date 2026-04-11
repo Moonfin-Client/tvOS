@@ -58,6 +58,13 @@ struct SettingsPluginMediaBarScreen: View {
                 caption: "Play trailers in media bar",
                 isOn: prefs.binding(for: UserPreferences.mediaBarTrailerPreview)
             )
+
+            SettingsToggleButton(
+                icon: "speaker.wave.2",
+                heading: "Trailer Audio",
+                caption: "Play audio in media bar trailers",
+                isOn: prefs.binding(for: UserPreferences.mediaBarTrailerAudio)
+            )
         }
         .restoresFocus($focusedRoute)
     }

@@ -576,7 +576,7 @@ struct HomeScreen: View {
     }
 
     private func configureMediaBarPreview(isYouTube: Bool) {
-        let muted = !container.userPreferences[UserPreferences.previewAudioEnabled]
+        let muted = !container.userPreferences[UserPreferences.mediaBarTrailerAudio]
         inlineTrailerPlayer.setMuted(muted)
 
         if isYouTube {
