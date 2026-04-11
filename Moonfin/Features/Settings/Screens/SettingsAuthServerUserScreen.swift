@@ -32,27 +32,13 @@ struct SettingsAuthServerUserScreen: View {
                         _ = container.authenticationRepository.logout(user: user)
                         settingsRouter.goBack()
                     }) {
-                        HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Sign Out")
-                        }
-                        .font(.bodyMd)
-                        .foregroundColor(theme.accent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, SpaceTokens.spaceSm)
+                        FocusAwareActionLabel(icon: "rectangle.portrait.and.arrow.right", text: "Sign Out")
                     }
                     .buttonStyle(CleanButtonStyle())
                 }
 
                 Button(action: { showDeleteAlert = true }) {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Remove Account")
-                    }
-                    .font(.bodyMd)
-                    .foregroundColor(.red)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, SpaceTokens.spaceSm)
+                    FocusAwareActionLabel(icon: "trash", text: "Remove Account", color: .red)
                 }
                 .buttonStyle(CleanButtonStyle())
                 .alert("Remove Account", isPresented: $showDeleteAlert) {

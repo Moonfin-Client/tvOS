@@ -21,7 +21,6 @@ final class UserPreferences {
     static let liveTvDirectPlay = Preference(key: "playback_livetv_direct_play", defaultValue: true)
     static let videoStartDelay = Preference(key: "playback_video_start_delay", defaultValue: 0)
     static let cinemaModeEnabled = Preference(key: "cinema_mode_enabled", defaultValue: true)
-    static let playbackPlayerBackend = Preference(key: "playback_player_backend", defaultValue: PlaybackPlayerBackend.mpv)
     static let nativeDvDecodeEnabled = Preference(key: "native_dv_decode_enabled", defaultValue: true)
 
     static let navbarPosition = Preference(key: "navbar_position", defaultValue: NavbarPosition.top)
@@ -122,7 +121,6 @@ final class UserPreferences {
     static let liveTvFilterPremiere = Preference(key: "livetv_filter_premiere", defaultValue: false)
 
     static let syncPlayEnabled = Preference(key: "syncplay_enabled", defaultValue: false)
-    static let syncPlayInternalRolloutEnabled = Preference(key: "syncplay_internal_rollout_enabled", defaultValue: false)
     static let syncPlayAdvancedCorrectionEnabled = Preference(key: "syncplay_advanced_correction_enabled", defaultValue: true)
     static let syncPlayEnableSyncCorrection = Preference(key: "syncplay_sync_correction", defaultValue: true)
     static let syncPlayUseSpeedToSync = Preference(key: "syncplay_speed_to_sync", defaultValue: true)
@@ -188,18 +186,6 @@ enum AudioOutput: String, StringRepresentableEnum, CaseIterable {
         case .directStream: return "Direct Stream"
         case .downmixToStereo: return "Downmix to Stereo"
         }
-    }
-}
-
-enum PlaybackPlayerBackend: String, StringRepresentableEnum, CaseIterable {
-    case mpv
-
-    var displayName: String {
-        "MPV"
-    }
-
-    static var selectableCases: [PlaybackPlayerBackend] {
-        [.mpv]
     }
 }
 

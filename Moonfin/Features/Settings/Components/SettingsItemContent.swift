@@ -14,7 +14,7 @@ struct SettingsItemContent<Trailing: View>: View {
             Image(systemName: icon)
                 .font(.bodyLg)
                 .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : theme.colorScheme.listOverline)
-                .frame(width: 28)
+                .frame(width: 36)
 
             VStack(alignment: .leading, spacing: SpaceTokens.space2xs) {
                 Text(heading)

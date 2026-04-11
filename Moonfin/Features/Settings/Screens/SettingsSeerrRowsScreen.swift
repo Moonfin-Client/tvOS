@@ -27,16 +27,10 @@ struct SettingsSeerrRowsScreen: View {
             }
 
             Button(action: resetToDefaults) {
-                HStack {
-                    Image(systemName: "arrow.counterclockwise")
-                    Text("Reset to Defaults")
-                }
-                .font(.bodyMd)
-                .foregroundColor(theme.accent)
-                .frame(maxWidth: .infinity)
-                .padding(.top, SpaceTokens.spaceMd)
+                FocusAwareActionLabel(icon: "arrow.counterclockwise", text: "Reset to Defaults")
             }
             .buttonStyle(CleanButtonStyle())
+            .padding(.top, SpaceTokens.spaceMd)
         }
         .onAppear { loadRows() }
     }

@@ -42,14 +42,7 @@ struct SettingsAuthServerScreen: View {
                     .padding(.vertical, SpaceTokens.spaceXs)
 
                 Button(action: { showDeleteAlert = true }) {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Remove Server")
-                    }
-                    .font(.bodyMd)
-                    .foregroundColor(.red)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, SpaceTokens.spaceSm)
+                    FocusAwareActionLabel(icon: "trash", text: "Remove Server", color: .red)
                 }
                 .buttonStyle(CleanButtonStyle())
                 .alert("Remove Server", isPresented: $showDeleteAlert) {
@@ -97,43 +90,79 @@ struct SettingsAuthServerScreen: View {
         Button {
             settingsRouter.navigate(to: .authenticationServerUser(serverId: serverId, userId: user.id.uuidString))
         } label: {
-            HStack(spacing: SpaceTokens.spaceSm) {
-                SettingsUserAvatarView(user: user, server: server, size: 36)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(user.name)
-                        .font(.bodyMd)
-                        .foregroundColor(theme.colorScheme.listHeadline)
-
-                    if let lastUsed = user.lastUsed {
-                        Text("Last used \(lastUsed, style: .relative) ago")
-                            .font(.captionXs)
-                            .foregroundColor(theme.colorScheme.listCaption)
-                    }
-                }
-
-                Spacer()
-
-                if user.accessToken != nil {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(theme.accent)
-                        .font(.system(size: 14))
-                }
-
-                Image(systemName: "chevron.right")
-                    .font(.captionXs)
-                    .foregroundColor(theme.colorScheme.listCaption)
-            }
-            .padding(.horizontal, SpaceTokens.spaceMd)
-            .padding(.vertical, SpaceTokens.spaceSm)
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
-                    .fill(theme.colorScheme.listButton)
-            )
+            UserRowLabel(user: user, server: server)
         }
         .buttonStyle(CleanButtonStyle())
     }
 
+}
+
+private struct UserRowLabel: View {
+    let user: PrivateUser
+    let server: Server
+    @EnvironmentObject var theme: MoonfinTheme
+    @Environment(\.isFocused) private var isFocused
+
+    var body: some View {
+        HStack(spacing: SpaceTokens.spaceSm) {
+            SettingsUserAvatarView(user: user, server: server, size: 36)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(user.name)
+                    .font(.bodyMd)
+                    .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : theme.colorScheme.listHeadline)
+
+                if let lastUsed = user.lastUsed {
+                    Text("Last used \(lastUsed, style: .relative) ago")
+                        .font(.captionXs)
+                        .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
+                }
+            }
+
+            Spacer()
+
+            if user.accessToken != nil {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : theme.accent)
+                    .font(.system(size: 14))
+            }
+
+            Image(systemName: "chevron.right")
+                .font(.captionXs)
+                .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused.opacity(0.5) : theme.colorScheme.listCaption)
+        }
+        .padding(.horizontal, SpaceTokens.spaceMd)
+        .padding(.vertical, SpaceTokens.spaceSm)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
+                .fill(isFocused ? theme.colorScheme.listButtonFocused : theme.colorScheme.listButton)
+        )
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+struct FocusAwareActionLabel: View {
+    let icon: String
+    let text: String
+    var color: Color?
+    @EnvironmentObject var theme: MoonfinTheme
+    @Environment(\.isFocused) private var isFocused
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+            Text(text)
+        }
+        .font(.bodyMd)
+        .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : (color ?? theme.accent))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, SpaceTokens.spaceSm)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
+                .fill(isFocused ? theme.colorScheme.listButtonFocused : Color.clear)
+        )
+        .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
 }
 
 struct SettingsUserAvatarView: View {

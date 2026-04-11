@@ -60,7 +60,7 @@ struct SettingsMainScreen: View {
             .focused($focusedRoute, equals: .playback)
 
             SettingsListButton(
-                icon: "person.2.fill",
+                icon: "person.3.fill",
                 heading: "SyncPlay",
                 caption: "Synchronized playback settings",
                 trailingText: prefs[UserPreferences.syncPlayEnabled] ? "On" : "Off",

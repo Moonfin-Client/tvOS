@@ -12,8 +12,6 @@ struct SyncPlayScreen: View {
         SettingsScreenLayout(title: "SyncPlay") {
             if !syncPlayManager.syncPlayConfigured {
                 unavailableSection(title: "SyncPlay Disabled", message: "Enable SyncPlay in settings to use synchronized playback.")
-            } else if !syncPlayManager.syncPlayRolloutEnabled {
-                unavailableSection(title: "Rollout Restricted", message: "SyncPlay is staged for internal test users. Enable Internal Rollout Access in settings.")
             } else if !syncPlayManager.syncPlayEnabled {
                 unavailableSection(title: "Server Unsupported", message: "Current server does not support SyncPlay. Jellyfin with SyncPlay support is required.")
             } else if syncPlayManager.state.enabled {
@@ -54,7 +52,7 @@ struct SyncPlayScreen: View {
     private var activeGroupSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
             HStack {
-                Image(systemName: "person.2.fill")
+                Image(systemName: "person.3.fill")
                     .foregroundColor(theme.accent)
                 Text("In Group")
                     .font(.bodyMd)

@@ -11,17 +11,10 @@ struct SettingsSyncPlayScreen: View {
     var body: some View {
         SettingsScreenLayout(title: "SyncPlay") {
             SettingsToggleButton(
-                icon: "person.2.fill",
+                icon: "person.3.fill",
                 heading: "Enabled",
                 caption: "Enable SyncPlay synchronized playback",
                 isOn: prefs.binding(for: UserPreferences.syncPlayEnabled)
-            )
-
-            SettingsToggleButton(
-                icon: "person.badge.shield.checkmark",
-                heading: "Internal Rollout Access",
-                caption: "Restrict SyncPlay to internal test users",
-                isOn: prefs.binding(for: UserPreferences.syncPlayInternalRolloutEnabled)
             )
 
             SettingsToggleButton(

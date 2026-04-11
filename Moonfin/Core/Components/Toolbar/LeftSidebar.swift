@@ -264,7 +264,7 @@ struct LeftSidebar: View {
 
             if viewModel.showSyncPlay {
                 SidebarIconItem(
-                    systemIcon: "person.2.fill",
+                    systemIcon: "person.3.fill",
                     label: "SyncPlay",
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .syncPlay,

@@ -49,16 +49,11 @@ final class SyncPlayManager: ObservableObject {
 
     var syncPlayEnabled: Bool {
         userPreferences[UserPreferences.syncPlayEnabled]
-            && userPreferences[UserPreferences.syncPlayInternalRolloutEnabled]
             && syncPlayServerSupported
     }
 
     var syncPlayConfigured: Bool {
         userPreferences[UserPreferences.syncPlayEnabled]
-    }
-
-    var syncPlayRolloutEnabled: Bool {
-        userPreferences[UserPreferences.syncPlayInternalRolloutEnabled]
     }
 
     var advancedCorrectionEnabled: Bool {

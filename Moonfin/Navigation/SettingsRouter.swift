@@ -48,7 +48,6 @@ enum SettingsRoute: Hashable {
     case liveTvGuideChannelOrder
 
     case playback
-    case playbackPlayer
     case playbackNextUp
     case playbackNextUpBehavior
     case playbackNextUpTimeout

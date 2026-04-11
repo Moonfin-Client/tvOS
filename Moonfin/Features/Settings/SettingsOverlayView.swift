@@ -13,7 +13,7 @@ struct SettingsOverlayView: View {
             HStack(spacing: 0) {
                 Color.clear
 
-                settingsPanel(width: min(max(geo.size.width * 0.25, 350), 560))
+                settingsPanel(width: min(max(geo.size.width * 0.30, 420), 680))
             }
         }
         .onAppear {
@@ -330,8 +330,6 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.audioOutput),
                 displayName: \.displayName
             )
-        case .playbackPlayer:
-            SettingsPlaybackPlayerScreen()
         case .playbackSlideshowInterval:
             SettingsPickerScreen(
                 title: "Slideshow Interval",
