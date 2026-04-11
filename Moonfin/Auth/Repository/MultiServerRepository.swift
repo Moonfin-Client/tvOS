@@ -46,6 +46,10 @@ final class MultiServerRepository: MultiServerRepositoryProtocol {
     }
 
     func getLoggedInServers() async -> [ServerUserSession] {
+        if serverRepository.storedServers.value.isEmpty {
+            serverRepository.loadStoredServers()
+        }
+
         let servers = serverRepository.storedServers.value
         let currentSession = sessionRepository.currentSession.value
 
