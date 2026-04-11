@@ -86,49 +86,45 @@ private struct SeerrRowItem: View {
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
-        HStack(spacing: SpaceTokens.spaceSm) {
-            Button(action: onMoveUp) {
-                Image(systemName: "chevron.up")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(isFirst ? theme.colorScheme.listCaption.opacity(0.3) : theme.accent)
-                    .frame(width: 32, height: 32)
+        Button(action: onToggle) {
+            SettingsItemContent(
+                icon: iconForRowType(row.type),
+                heading: row.type.displayName,
+                caption: nil
+            ) { isFocused in
+                HStack(spacing: SpaceTokens.spaceSm) {
+                    if !isFirst {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
+                    }
+                    if !isLast {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
+                    }
+                    Image(systemName: row.enabled ? "checkmark.circle.fill" : "circle")
+                        .font(.bodyLg)
+                        .foregroundColor(row.enabled
+                            ? (isFocused ? theme.colorScheme.listHeadlineFocused : theme.accent)
+                            : (isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption))
+                }
             }
-            .buttonStyle(CleanButtonStyle())
-            .disabled(isFirst)
-
-            Button(action: onMoveDown) {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(isLast ? theme.colorScheme.listCaption.opacity(0.3) : theme.accent)
-                    .frame(width: 32, height: 32)
-            }
-            .buttonStyle(CleanButtonStyle())
-            .disabled(isLast)
-
-            Image(systemName: iconForRowType(row.type))
-                .font(.system(size: 16))
-                .foregroundColor(row.enabled ? theme.accent : theme.colorScheme.listCaption)
-                .frame(width: 24)
-
-            Text(row.type.displayName)
-                .font(.bodyMd)
-                .foregroundColor(row.enabled ? theme.colorScheme.onBackground : theme.colorScheme.listCaption)
-
-            Spacer()
-
-            Button(action: onToggle) {
-                Image(systemName: row.enabled ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20))
-                    .foregroundColor(row.enabled ? theme.accent : theme.colorScheme.listCaption)
-            }
-            .buttonStyle(CleanButtonStyle())
         }
-        .padding(.vertical, SpaceTokens.space2xs)
+        .buttonStyle(CleanButtonStyle())
+        .onMoveCommand { direction in
+            switch direction {
+            case .left: onMoveUp()
+            case .right: onMoveDown()
+            default: break
+            }
+        }
     }
 
     private func iconForRowType(_ type: SeerrRowType) -> String {
         switch type {
         case .recentRequests: return "clock.arrow.circlepath"
+        case .recentlyAdded: return "sparkles"
         case .trending: return "flame"
         case .popularMovies: return "film"
         case .movieGenres: return "theatermasks"

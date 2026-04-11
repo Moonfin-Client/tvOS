@@ -14,6 +14,7 @@ final class PluginSyncService: ObservableObject {
     private let logger = Logger(subsystem: "org.moonfin.appletv", category: "PluginSync")
 
     private var serverSchemaVersion = 1
+    private var pendingSeerrRowsConfig: [String: Any]?
     private var pushTask: Task<Void, Never>?
     private var changeObserver: NSObjectProtocol?
     private var seerrChangeObserver: NSObjectProtocol?
@@ -53,6 +54,7 @@ final class PluginSyncService: ObservableObject {
         if let serverSettings {
             let merged = mergeThreeWay(local: localSettings, server: serverSettings, snapshot: snapshot)
             applySettings(merged)
+            applySeerrRowConfig()
             await pushSettings(client: client, settings: merged)
             saveSnapshot(merged)
             syncCompletedCount += 1
@@ -143,6 +145,9 @@ final class PluginSyncService: ObservableObject {
             }
         }
 
+        pendingSeerrRowsConfig = (tv?["jellyseerrRows"] ?? tv?["JellyseerrRows"]
+            ?? global?["jellyseerrRows"] ?? global?["JellyseerrRows"]) as? [String: Any]
+
         return resolved
     }
 
@@ -193,6 +198,9 @@ final class PluginSyncService: ObservableObject {
         var map = [String: Any]()
         for sp in PluginSyncConstants.syncablePreferences {
             map[sp.serverKey] = readLocalValue(sp)
+        }
+        if let seerrRows = collectSeerrRowsConfig() {
+            map["jellyseerrRows"] = seerrRows
         }
         return map
     }
@@ -451,6 +459,72 @@ final class PluginSyncService: ObservableObject {
             await pushSettings(client: client, settings: settings)
             saveSnapshot(settings)
         }
+    }
+
+    // MARK: - Seerr row config sync
+
+    private static let serverKeyToSeerrRow: [String: SeerrRowType] = {
+        var map: [String: SeerrRowType] = [:]
+        for type in SeerrRowType.allCases {
+            map[type.rawValue] = type
+        }
+        map["trendingMovies"] = .trending
+        map["trendingTv"] = .trending
+        map["popularMovies"] = .popularMovies
+        map["popularTv"] = .popularSeries
+        map["movieGenres"] = .movieGenres
+        map["upcomingMovies"] = .upcomingMovies
+        map["upcomingTv"] = .upcomingSeries
+        map["recentRequests"] = .recentRequests
+        map["recentlyAdded"] = .recentlyAdded
+        return map
+    }()
+
+    private func applySeerrRowConfig() {
+        guard let config = pendingSeerrRowsConfig else { return }
+        guard let seerr = seerrDefaults() else { return }
+        pendingSeerrRowsConfig = nil
+
+        let rowOrder = (config["rowOrder"] as? [String]) ?? []
+
+        var orderedTypes: [SeerrRowType] = []
+        var seen = Set<SeerrRowType>()
+        for key in rowOrder {
+            if let rowType = Self.serverKeyToSeerrRow[key], !seen.contains(rowType) {
+                seen.insert(rowType)
+                orderedTypes.append(rowType)
+            }
+        }
+
+        let enabledSet = seen
+        for type in SeerrRowType.allCases where !seen.contains(type) {
+            orderedTypes.append(type)
+        }
+
+        let configs: [SeerrRowConfig] = orderedTypes.enumerated().map { index, type in
+            SeerrRowConfig(type: type, enabled: enabledSet.contains(type), order: index)
+        }
+
+        if let data = try? JSONEncoder().encode(configs),
+           let json = String(data: data, encoding: .utf8) {
+            seerr.set(json, forKey: SeerrPreferences.rowsConfigJson.key)
+        }
+    }
+
+    private func collectSeerrRowsConfig() -> [String: Any]? {
+        guard let seerr = seerrDefaults() else { return nil }
+        let json = seerr.string(forKey: SeerrPreferences.rowsConfigJson.key) ?? ""
+        guard !json.isEmpty,
+              let data = json.data(using: .utf8),
+              let configs = try? JSONDecoder().decode([SeerrRowConfig].self, from: data) else { return nil }
+
+        let activeRows = configs
+            .sorted { $0.order < $1.order }
+            .filter(\.enabled)
+            .map(\.type.rawValue)
+
+        guard !activeRows.isEmpty else { return nil }
+        return ["rowOrder": activeRows]
     }
 
     // MARK: - Per-user Seerr defaults

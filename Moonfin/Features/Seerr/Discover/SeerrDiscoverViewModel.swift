@@ -157,12 +157,19 @@ final class SeerrDiscoverViewModel: ObservableObject {
         do {
             switch type {
             case .recentRequests:
-                let response = try await seerrRepository.getRequests(filter: nil, requestedBy: nil, limit: limit, offset: 0)
+                let user = try await seerrRepository.getCurrentUser()
+                let response = try await seerrRepository.getRequests(filter: "all", requestedBy: user.id, limit: limit, offset: 0)
                 let requestItems = response.results.compactMap { request -> SeerrDiscoverItemDto? in
                     guard let media = request.media, let tmdbId = media.tmdbId else { return nil }
                     return SeerrDiscoverItemDto.fromRequest(tmdbId: tmdbId, mediaType: request.type, request: request)
                 }
                 let filteredItems = filterItems(requestItems)
+                let enriched = await enrichRequestItems(filteredItems)
+                updateRequestsRow(type, items: enriched)
+            case .recentlyAdded:
+                let response = try await seerrRepository.getRecentlyAdded(limit: limit)
+                let mediaItems = response.results.compactMap { SeerrDiscoverItemDto.fromMedia($0) }
+                let filteredItems = filterItems(mediaItems)
                 let enriched = await enrichRequestItems(filteredItems)
                 updateRequestsRow(type, items: enriched)
             case .trending:

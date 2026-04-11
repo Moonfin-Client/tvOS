@@ -225,14 +225,30 @@ struct SeerrDiscoverItemDto: Codable, Identifiable {
         SeerrDiscoverItemDto(
             id: tmdbId,
             mediaType: mediaType,
-            title: mediaType == "movie" ? (request.media?.title ?? request.media?.name ?? "Request #\(request.id)") : nil,
-            name: mediaType == "tv" ? (request.media?.name ?? request.media?.title ?? "Request #\(request.id)") : nil,
+            title: mediaType == "movie" ? (request.media?.title ?? request.media?.name) : nil,
+            name: mediaType == "tv" ? (request.media?.name ?? request.media?.title) : nil,
             posterPath: request.media?.posterPath,
             backdropPath: request.media?.backdropPath,
             overview: request.media?.overview,
             releaseDate: request.media?.releaseDate,
             firstAirDate: request.media?.firstAirDate,
             requestStatus: request.status
+        )
+    }
+
+    static func fromMedia(_ media: SeerrMediaDto) -> SeerrDiscoverItemDto? {
+        guard let tmdbId = media.tmdbId else { return nil }
+        return SeerrDiscoverItemDto(
+            id: tmdbId,
+            mediaType: media.mediaType,
+            title: media.title,
+            name: media.name,
+            posterPath: media.posterPath,
+            backdropPath: media.backdropPath,
+            overview: media.overview,
+            releaseDate: media.releaseDate,
+            firstAirDate: media.firstAirDate,
+            mediaInfo: SeerrMediaInfoDto(id: media.id, tmdbId: media.tmdbId, tvdbId: media.tvdbId, status: media.status, status4k: media.status4k, requests: media.requests)
         )
     }
 }

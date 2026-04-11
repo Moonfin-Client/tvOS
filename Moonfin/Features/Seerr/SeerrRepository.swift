@@ -33,6 +33,7 @@ protocol SeerrRepositoryProtocol: AnyObject {
     func getTopTv(limit: Int, offset: Int) async throws -> SeerrDiscoverPageDto
     func getUpcomingMovies() async throws -> SeerrDiscoverPageDto
     func getUpcomingTv() async throws -> SeerrDiscoverPageDto
+    func getRecentlyAdded(limit: Int) async throws -> SeerrListResponse<SeerrMediaDto>
 
     func search(query: String, mediaType: String?, limit: Int, offset: Int) async throws -> SeerrDiscoverPageDto
     func getSimilarMovies(tmdbId: Int, page: Int) async throws -> SeerrDiscoverPageDto
@@ -415,6 +416,10 @@ final class SeerrRepository: SeerrRepositoryProtocol {
 
     func getUpcomingTv() async throws -> SeerrDiscoverPageDto {
         try await withClient { try await $0.getUpcomingTv() }
+    }
+
+    func getRecentlyAdded(limit: Int = 20) async throws -> SeerrListResponse<SeerrMediaDto> {
+        try await withClient { try await $0.getRecentlyAdded(limit: limit) }
     }
 
     // MARK: - Search

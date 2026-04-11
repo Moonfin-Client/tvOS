@@ -55,7 +55,7 @@ struct SettingsMoonfinScreen: View {
             SettingsListButton(
                 icon: "puzzlepiece.extension",
                 heading: "Integrations",
-                caption: "Jellyseerr, multi-server, ratings",
+                caption: "Seerr, multi-server, ratings",
                 action: { settingsRouter.navigate(to: .pluginIntegrations) }
             )
             .focused($focusedRoute, equals: .pluginIntegrations)

@@ -299,6 +299,12 @@ final class SeerrHttpClient {
         try await get(url: apiUrl("discover/tv/upcoming"))
     }
 
+    func getRecentlyAdded(limit: Int = 20) async throws -> SeerrListResponse<SeerrMediaDto> {
+        try await get(url: buildUrl(apiUrl("media"), params: [
+            "filter": "allavailable", "sort": "mediaAdded", "take": String(limit)
+        ]))
+    }
+
     // MARK: - Search
 
     func search(query: String, mediaType: String? = nil, limit: Int = 20, offset: Int = 0) async throws -> SeerrDiscoverPageDto {

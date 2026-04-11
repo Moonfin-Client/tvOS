@@ -24,6 +24,7 @@ enum SeerrFetchLimit: String, StringRepresentableEnum, CaseIterable {
 
 enum SeerrRowType: String, Codable, CaseIterable {
     case recentRequests = "recent_requests"
+    case recentlyAdded = "recently_added"
     case trending
     case popularMovies = "popular_movies"
     case movieGenres = "movie_genres"
@@ -37,6 +38,7 @@ enum SeerrRowType: String, Codable, CaseIterable {
     var displayName: String {
         switch self {
         case .recentRequests: return "Recent Requests"
+        case .recentlyAdded: return "Recently Added"
         case .trending: return "Trending"
         case .popularMovies: return "Popular Movies"
         case .movieGenres: return "Movie Genres"
