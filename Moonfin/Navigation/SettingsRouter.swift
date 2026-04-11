@@ -100,7 +100,6 @@ enum SettingsRoute: Hashable {
     case syncPlay
     case language
     case telemetry
-    case developer
     case about
     case licenses
     case license(artifactId: String)

@@ -326,6 +326,7 @@ struct ServerItem: Codable, Identifiable {
     let isHD: Bool?
     let status: String?
     let currentProgram: Indirect<ServerItem>?
+    let trickplay: [String: [String: TrickPlayInfo]]?
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -402,11 +403,23 @@ struct ServerItem: Codable, Identifiable {
         case isHD = "IsHD"
         case status = "Status"
         case currentProgram = "CurrentProgram"
+        case trickplay = "Trickplay"
     }
 }
 
 extension ServerItem {
     var effectiveServerId: String? { overrideServerId ?? serverId }
+
+    func trickPlayInfo(for mediaSourceId: String?) -> TrickPlayInfo? {
+        guard let trickplay else { return nil }
+        let resolutions: [String: TrickPlayInfo]?
+        if let mediaSourceId, let source = trickplay[mediaSourceId] {
+            resolutions = source
+        } else {
+            resolutions = trickplay.values.first
+        }
+        return resolutions?.values.first
+    }
 
     static func placeholder(id: String, name: String, type: ItemType = .folder) -> ServerItem {
         ServerItem(
@@ -426,7 +439,8 @@ extension ServerItem {
             songCount: nil, albumCount: nil, hasLyrics: nil, dateCreated: nil, playlistItemId: nil, canDelete: nil, localTrailerCount: nil, remoteTrailers: nil, startDate: nil, channelNumber: nil,
             timerId: nil, seriesTimerId: nil, isMovie: nil, isSeries: nil, isNews: nil,
             isSports: nil, isKids: nil, isPremiere: nil, isRepeat: nil, isLive: nil,
-            isHD: nil, status: nil, currentProgram: nil
+            isHD: nil, status: nil, currentProgram: nil,
+            trickplay: nil
         )
     }
 }

@@ -84,6 +84,13 @@ struct SettingsPlaybackScreen: View {
                 isOn: prefs.binding(for: UserPreferences.cinemaModeEnabled)
             )
 
+            SettingsToggleButton(
+                icon: "film.stack",
+                heading: "TrickPlay",
+                caption: "Show seek preview thumbnails during playback",
+                isOn: prefs.binding(for: UserPreferences.trickPlayEnabled)
+            )
+
             if supportsMediaSegments {
                 SettingsListButton(
                     icon: "scissors",

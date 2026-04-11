@@ -94,14 +94,6 @@ struct SettingsMainScreen: View {
             .focused($focusedRoute, equals: .telemetry)
 
             SettingsListButton(
-                icon: "hammer",
-                heading: "Developer",
-                caption: "Debug tools & diagnostics",
-                action: { settingsRouter.navigate(to: .developer) }
-            )
-            .focused($focusedRoute, equals: .developer)
-
-            SettingsListButton(
                 icon: "info.circle",
                 heading: Strings.about,
                 caption: "Version & licenses",

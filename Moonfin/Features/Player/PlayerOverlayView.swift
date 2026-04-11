@@ -4,6 +4,7 @@ struct PlayerOverlayView: View {
     @ObservedObject var viewModel: VideoPlayerViewModel
     @EnvironmentObject private var theme: MoonfinTheme
     @FocusState private var focusedControl: ControlFocus?
+    @StateObject private var trickPlayLoader = TrickPlayImageLoader()
 
     private static let headerGradientColors: [Color] = [.black.opacity(0.8), .clear]
     private static let controlsGradientColors: [Color] = [.clear, .black.opacity(0.85)]
@@ -88,6 +89,7 @@ struct PlayerOverlayView: View {
         VStack(spacing: 12) {
             primaryControlRow
             if !viewModel.isLiveTV {
+                trickPlayPreviewSection
                 seekbarRow
             }
             secondaryControlRow
@@ -143,6 +145,54 @@ struct PlayerOverlayView: View {
                     .foregroundColor(.white.opacity(0.7))
                     .monospacedDigit()
             }
+        }
+    }
+
+    private var currentTrickPlayInfo: TrickPlayInfo? {
+        guard viewModel.playbackManager.trickPlayEnabled,
+              let entry = viewModel.playbackManager.currentEntry else { return nil }
+        return entry.item.trickPlayInfo(for: entry.mediaSourceId)
+    }
+
+    @ViewBuilder
+    private var trickPlayPreviewSection: some View {
+        if viewModel.isScrubbing, let info = currentTrickPlayInfo {
+            GeometryReader { geo in
+                TrickPlayPreview(
+                    thumbnail: trickPlayLoader.thumbnail,
+                    position: CGFloat(viewModel.scrubPosition),
+                    barWidth: geo.size.width,
+                    thumbSize: CGSize(width: CGFloat(info.width), height: CGFloat(info.height))
+                )
+            }
+            .frame(height: CGFloat(info.height) * 1.5)
+            .onChange(of: viewModel.scrubPosition) { newPosition in
+                loadTrickPlayTile(position: newPosition, info: info)
+            }
+            .onAppear {
+                loadTrickPlayTile(position: viewModel.scrubPosition, info: info)
+            }
+            .onDisappear {
+                trickPlayLoader.clear()
+            }
+        }
+    }
+
+    private func loadTrickPlayTile(position: Float, info: TrickPlayInfo) {
+        guard let entry = viewModel.playbackManager.currentEntry,
+              let baseUrl = viewModel.playbackManager.serverBaseUrl else { return }
+        let duration = viewModel.player.duration
+        guard duration > 0 else { return }
+        let positionMs = Int(Double(position) * duration * 1000)
+        if let tile = trickPlayTile(
+            positionMs: positionMs,
+            info: info,
+            itemId: entry.item.id,
+            mediaSourceId: entry.mediaSourceId,
+            baseUrl: baseUrl,
+            accessToken: viewModel.playbackManager.serverAccessToken
+        ) {
+            trickPlayLoader.load(tile: tile)
         }
     }
 

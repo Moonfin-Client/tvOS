@@ -441,8 +441,6 @@ struct SettingsOverlayView: View {
                 options: [-5000, -2000, -1000, -500, 0, 500, 1000, 2000, 5000],
                 suffix: " ms"
             )
-        case .developer:
-            SettingsDeveloperScreen()
         case .liveTvGuideOptions:
             SettingsLiveTvGuideOptionsScreen()
         case .liveTvGuideFilters:

@@ -180,7 +180,7 @@ struct JellyfinItemsApi: ServerItemsApi {
         let query = buildQuery([
             ("SeasonId", seasonId),
             ("UserId", userId),
-            ("Fields", "Overview"),
+            ("Fields", "Overview,Trickplay"),
         ])
         return try await client.request("/Shows/\(seriesId)/Episodes", queryItems: query)
     }

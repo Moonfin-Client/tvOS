@@ -83,6 +83,12 @@ final class PlaybackManager: ObservableObject {
     }
 
     var serverType: ServerType { client.serverType }
+    var serverBaseUrl: String? { client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) }
+    var serverAccessToken: String? { client.accessToken }
+
+    var trickPlayEnabled: Bool {
+        preferences[UserPreferences.trickPlayEnabled] && serverType.supports(.trickplay)
+    }
 
     func searchRemoteSubtitles(language: String) async throws -> [RemoteSubtitleResult] {
         guard let itemId = currentEntry?.item.id else { throw URLError(.cancelled) }
