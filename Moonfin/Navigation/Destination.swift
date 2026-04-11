@@ -58,7 +58,7 @@ enum Destination: Hashable {
     case videoPlayer
     case nextUp(itemId: String)
     case stillWatching(itemId: String)
-    case trailerPlayer(videoId: String, startSeconds: Double = 0, segmentsJson: String = "[]")
+    case trailerPlayer(videoId: String? = nil, trailerUrl: String? = nil, startSeconds: Double = 0, segmentsJson: String = "[]")
 
     // MARK: - Seerr
 

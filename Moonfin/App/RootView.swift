@@ -435,8 +435,8 @@ struct MainNavigationView: View {
             BookReaderScreen(container: container, itemId: itemId, serverId: serverId)
         case .videoPlayer:
             videoPlayerDestination
-        case .trailerPlayer(let videoId, let startSeconds, let segmentsJson):
-            TrailerPlayerScreen(videoId: videoId, startSeconds: startSeconds, segmentsJson: segmentsJson)
+        case .trailerPlayer(let videoId, let trailerUrl, let startSeconds, let segmentsJson):
+            TrailerPlayerScreen(videoId: videoId, trailerUrl: trailerUrl, startSeconds: startSeconds, segmentsJson: segmentsJson)
         case .liveTvGuide:
             LiveTvGuideView(container: container)
         case .liveTvRecordings:
@@ -581,7 +581,8 @@ struct PlaceholderView: View {
 }
 
 struct TrailerPlayerScreen: View {
-    let videoId: String
+    let videoId: String?
+    let trailerUrl: String?
     let startSeconds: Double
     let segmentsJson: String
 
@@ -597,8 +598,9 @@ struct TrailerPlayerScreen: View {
     @State private var didTryNativeFallback = false
     @State private var nativePlayer: AVPlayer?
 
-    init(videoId: String, startSeconds: Double, segmentsJson: String) {
+    init(videoId: String?, trailerUrl: String?, startSeconds: Double, segmentsJson: String) {
         self.videoId = videoId
+        self.trailerUrl = trailerUrl
         self.startSeconds = startSeconds
         self.segmentsJson = segmentsJson
         _player = StateObject(wrappedValue: MpvPlayerWrapper.makePlayer())
@@ -626,7 +628,7 @@ struct TrailerPlayerScreen: View {
             } else {
                 PlaybackSurfaceView(player: player)
                     .ignoresSafeArea()
-                    .id(videoId)
+                    .id(playbackSurfaceId)
             }
 
             if isLoading {
@@ -702,31 +704,70 @@ struct TrailerPlayerScreen: View {
     }
 
     private func resolveAndPlay() async {
-        async let streamTask = YouTubeStreamResolver.resolveStream(videoId: videoId)
-        async let segmentsTask = SponsorBlockAPI.getSkipSegments(videoId: videoId)
+        if let resolvedVideoId = resolvedVideoId {
+            async let streamTask = YouTubeStreamResolver.resolveStream(videoId: resolvedVideoId)
+            async let segmentsTask = SponsorBlockAPI.getSkipSegments(videoId: resolvedVideoId)
 
-        let segments = await segmentsTask
-        sponsorSegments = segments
-        effectiveStartSeconds = SponsorBlockAPI.calculateStartTime(segments: segments)
+            let segments = await segmentsTask
+            sponsorSegments = segments
+            effectiveStartSeconds = SponsorBlockAPI.calculateStartTime(segments: segments)
 
-        let result = await streamTask
-        resolverDiagnostics = result.diagnostics
-        guard let streamInfo = result.stream else {
-            resolveError = "Could not resolve a playable stream.\n\n\(result.diagnostics)"
+            let result = await streamTask
+            resolverDiagnostics = result.diagnostics
+            guard let streamInfo = result.stream else {
+                resolveError = "Could not resolve a playable stream.\n\n\(result.diagnostics)"
+                return
+            }
+            resolvedStreamURL = streamInfo.url
+
+            await playResolvedStream(at: streamInfo.url)
+
+            startPlaybackWatchdog(streamURL: streamInfo.url)
             return
         }
-        resolvedStreamURL = streamInfo.url
 
+        sponsorSegments = []
+        effectiveStartSeconds = max(0, startSeconds)
+        resolverDiagnostics = "Direct trailer URL playback"
+
+        guard let trailerUrl,
+              let streamURL = URL(string: trailerUrl) else {
+            resolveError = "Could not resolve a playable stream.\n\nMissing trailer URL or video id."
+            return
+        }
+
+        resolvedStreamURL = streamURL
+
+        await playResolvedStream(at: streamURL)
+
+        startPlaybackWatchdog(streamURL: streamURL)
+    }
+
+    private var playbackSurfaceId: String {
+        videoId ?? trailerUrl ?? "trailer-player"
+    }
+
+    private var resolvedVideoId: String? {
+        if let videoId, !videoId.isEmpty {
+            return videoId
+        }
+
+        if let trailerUrl {
+            return TrailerPlaybackHelper.extractYouTubeVideoId(from: trailerUrl)
+        }
+
+        return nil
+    }
+
+    private func playResolvedStream(at url: URL) async {
         player.setProperty("user-agent", value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0")
         player.setProperty("referrer", value: "https://www.youtube.com/")
 
         if effectiveStartSeconds > 0 {
-            await player.play(streamUrl: streamInfo.url.absoluteString, startPosition: effectiveStartSeconds)
+            await player.play(streamUrl: url.absoluteString, startPosition: effectiveStartSeconds)
         } else {
-            await player.play(url: streamInfo.url)
+            await player.play(url: url)
         }
-
-        startPlaybackWatchdog(streamURL: streamInfo.url)
     }
 
     private func startPlaybackWatchdog(streamURL: URL) {

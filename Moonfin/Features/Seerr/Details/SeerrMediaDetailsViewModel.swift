@@ -115,11 +115,57 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
         tvDetails?.networks ?? []
     }
 
+    private var relatedVideos: [SeerrRelatedVideoDto] {
+        isMovie ? (movieDetails?.relatedVideos ?? []) : (tvDetails?.relatedVideos ?? [])
+    }
+
+    var hasTrailer: Bool {
+        trailerYouTubeKey != nil || trailerUrl != nil
+    }
+
+    private var preferredTrailer: SeerrRelatedVideoDto? {
+        let trailers = relatedVideos.filter { $0.type?.lowercased() == "trailer" }
+        let candidates = trailers.isEmpty ? relatedVideos : trailers
+
+        return candidates.max { lhs, rhs in
+            (lhs.size ?? 0) < (rhs.size ?? 0)
+        }
+    }
+
     var trailerYouTubeKey: String? {
-        let videos = isMovie ? (movieDetails?.relatedVideos ?? []) : (tvDetails?.relatedVideos ?? [])
-        let ytVideos = videos.filter { $0.site?.lowercased() == "youtube" && $0.key != nil }
-        return ytVideos.first(where: { $0.type?.lowercased() == "trailer" })?.key
-            ?? ytVideos.first?.key
+        if let trailer = preferredTrailer,
+           trailer.site?.lowercased() == "youtube" {
+            if let key = trailer.key, !key.isEmpty {
+                return key
+            }
+
+            if let url = trailer.url {
+                return TrailerPlaybackHelper.extractYouTubeVideoId(from: url)
+            }
+        }
+
+        for video in relatedVideos where video.site?.lowercased() == "youtube" {
+            if let key = video.key, !key.isEmpty {
+                return key
+            }
+
+            if let url = video.url,
+               let extracted = TrailerPlaybackHelper.extractYouTubeVideoId(from: url) {
+                return extracted
+            }
+        }
+
+        return nil
+    }
+
+    var trailerUrl: String? {
+        if let trailer = preferredTrailer,
+           let url = trailer.url,
+           !url.isEmpty {
+            return url
+        }
+
+        return relatedVideos.lazy.compactMap(\.url).first { !$0.isEmpty }
     }
 
     private var isAvailable: Bool {

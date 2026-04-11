@@ -419,6 +419,9 @@ struct SeerrRelatedVideoDto: Codable {
     let key: String?
     let type: String?
     let site: String?
+    let name: String?
+    let size: Int?
+    let url: String?
 }
 
 struct SeerrRelatedVideosDto: Codable {

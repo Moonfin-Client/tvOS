@@ -275,18 +275,20 @@ struct SeerrMediaDetailsView: View {
                     .focused(focusBinding, equals: "cancel")
                 }
 
-                SeerrActionButton(
-                    icon: "film",
-                    label: "Trailer",
-                    action: {
-                        if let key = viewModel.trailerYouTubeKey,
-                           let url = URL(string: "https://www.youtube.com/watch?v=\(key)") {
-                            UIApplication.shared.open(url)
+                if viewModel.hasTrailer {
+                    SeerrActionButton(
+                        icon: "film",
+                        label: "Trailer",
+                        action: {
+                            router.navigate(to: .trailerPlayer(
+                                videoId: viewModel.trailerYouTubeKey,
+                                trailerUrl: viewModel.trailerUrl
+                            ))
                         }
-                    }
-                )
-                .id("trailer")
-                .focused(focusBinding, equals: "trailer")
+                    )
+                    .id("trailer")
+                    .focused(focusBinding, equals: "trailer")
+                }
 
                 if viewModel.showPlayButton {
                     SeerrActionButton(
