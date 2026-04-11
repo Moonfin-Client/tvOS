@@ -39,6 +39,11 @@ struct SettingsHomeScreen: View {
                 .foregroundColor(theme.colorScheme.onBackground)
                 .padding(.bottom, SpaceTokens.space2xs)
 
+            Text("Press left or right to rearrange")
+                .font(.caption)
+                .foregroundColor(theme.colorScheme.listCaption)
+                .padding(.bottom, SpaceTokens.space2xs)
+
             ForEach(Array(sections.enumerated()), id: \.element.id) { index, entry in
                 HomeSectionRow(
                     entry: entry,
@@ -138,90 +143,38 @@ private struct HomeSectionRow: View {
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
-        HStack(spacing: SpaceTokens.spaceSm) {
-            SectionArrowButton(icon: "chevron.up", disabled: isFirst, action: onMoveUp)
-            SectionArrowButton(icon: "chevron.down", disabled: isLast, action: onMoveDown)
-
-            Button(action: onToggle) {
-                SectionToggleContent(entry: entry)
+        Button(action: onToggle) {
+            SettingsItemContent(
+                icon: entry.type.icon,
+                heading: entry.type.displayName,
+                caption: nil
+            ) { isFocused in
+                HStack(spacing: SpaceTokens.spaceSm) {
+                    if !isFirst {
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
+                    }
+                    if !isLast {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
+                    }
+                    Image(systemName: entry.enabled ? "checkmark.circle.fill" : "circle")
+                        .font(.bodyLg)
+                        .foregroundColor(entry.enabled
+                            ? (isFocused ? theme.colorScheme.listHeadlineFocused : theme.accent)
+                            : (isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption))
+                }
             }
-            .buttonStyle(CleanButtonStyle())
-        }
-        .padding(.vertical, SpaceTokens.space2xs)
-    }
-}
-
-private struct SectionArrowButton: View {
-    let icon: String
-    let disabled: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            SectionArrowContent(icon: icon, disabled: disabled)
         }
         .buttonStyle(CleanButtonStyle())
-        .disabled(disabled)
-    }
-}
-
-private struct SectionArrowContent: View {
-    let icon: String
-    let disabled: Bool
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @Environment(\.isFocused) private var isFocused
-
-    var body: some View {
-        Image(systemName: icon)
-            .font(.system(size: 14, weight: .bold))
-            .foregroundColor(disabled
-                ? theme.colorScheme.listCaption.opacity(0.3)
-                : (isFocused ? .black : theme.accent))
-            .frame(width: 36, height: 36)
-            .background(
-                RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .fill(isFocused && !disabled ? Color.white : Color.clear)
-            )
-            .animation(.easeInOut(duration: 0.15), value: isFocused)
-    }
-}
-
-private struct SectionToggleContent: View {
-    let entry: HomeSectionEntry
-
-    @EnvironmentObject var theme: MoonfinTheme
-    @Environment(\.isFocused) private var isFocused
-
-    var body: some View {
-        HStack(spacing: SpaceTokens.spaceMd) {
-            Image(systemName: entry.type.icon)
-                .font(.bodyLg)
-                .foregroundColor(entry.enabled
-                    ? (isFocused ? theme.colorScheme.listHeadlineFocused : theme.accent)
-                    : theme.colorScheme.listCaption)
-                .frame(width: 28)
-
-            Text(entry.type.displayName)
-                .font(.bodyMd)
-                .foregroundColor(entry.enabled
-                    ? (isFocused ? theme.colorScheme.listHeadlineFocused : theme.colorScheme.listHeadline)
-                    : theme.colorScheme.listCaption)
-
-            Spacer()
-
-            Image(systemName: entry.enabled ? "checkmark.circle.fill" : "circle")
-                .font(.bodyLg)
-                .foregroundColor(entry.enabled
-                    ? (isFocused ? theme.colorScheme.listHeadlineFocused : theme.accent)
-                    : (isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption))
+        .onMoveCommand { direction in
+            switch direction {
+            case .left: onMoveUp()
+            case .right: onMoveDown()
+            default: break
+            }
         }
-        .padding(.horizontal, SpaceTokens.spaceMd)
-        .padding(.vertical, SpaceTokens.spaceSm)
-        .background(
-            RoundedRectangle(cornerRadius: RadiusTokens.small, style: .continuous)
-                .fill(isFocused ? theme.colorScheme.listButtonFocused : theme.colorScheme.listButton)
-        )
-        .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }

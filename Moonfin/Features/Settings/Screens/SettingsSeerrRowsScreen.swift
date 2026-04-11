@@ -10,6 +10,11 @@ struct SettingsSeerrRowsScreen: View {
 
     var body: some View {
         SettingsScreenLayout(title: "Discover Rows") {
+            Text("Press left or right to rearrange")
+                .font(.caption)
+                .foregroundColor(theme.colorScheme.listCaption)
+                .padding(.bottom, SpaceTokens.space2xs)
+
             ForEach(Array(rows.enumerated()), id: \.element.type.rawValue) { index, row in
                 SeerrRowItem(
                     row: row,
