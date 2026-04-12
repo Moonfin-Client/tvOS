@@ -1399,7 +1399,7 @@ struct ItemDetailsView: View {
                     }
                 }
             }
-            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.horizontal, SpaceTokens.spaceLg)
             .padding(.vertical, SpaceTokens.spaceSm)
         }
     }
