@@ -12,6 +12,7 @@
 		00CBC11CBD19027BD5F7AFF1 /* PlayerOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CDFE971FC99BC62D4569090 /* PlayerOverlayView.swift */; };
 		00D47B65F5554173CE1866D5 /* ServerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074468E8521DA23AB817B560 /* ServerError.swift */; };
 		0116D073F06403EF1DC56A63 /* SettingsHomeImageTypeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56A44937BDAE28873DFD50B9 /* SettingsHomeImageTypeScreen.swift */; };
+		02BF9D15A5003AAAD2474773 /* TrickPlayInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F55D92D362970F9B517268 /* TrickPlayInfo.swift */; };
 		05598E8B24355E2A7D15EEFB /* JellyfinApis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAB441B2D93DAF13B529D21 /* JellyfinApis.swift */; };
 		063B115422BD6FA165CF8051 /* SplashScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC7A36F3499A0D0B041F9B7 /* SplashScreen.swift */; };
 		08BE93EC9CA5C3E531D22D78 /* SessionInitializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36892F89FCB6FDDA0932F860 /* SessionInitializer.swift */; };
@@ -27,8 +28,6 @@
 		131295AFF0C20D9BA793CB36 /* AudioNowPlayingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4477DE8CA9E01077E2A8E5 /* AudioNowPlayingViewModel.swift */; };
 		139EF05143A46C8751511836 /* UserViewsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327474406D1FBDDC07A6B559 /* UserViewsService.swift */; };
 		13AA935D6BB99581DF6A3ED7 /* PlayerSeekBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C93AFA31BD221AFA4D0257 /* PlayerSeekBar.swift */; };
-		B2C3D4E5F60718293A4B5C6D /* TrickPlayImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F708193A4B5C6D7E8F9011 /* TrickPlayImageLoader.swift */; };
-		C3D4E5F607182A3B4C5D6E7F /* TrickPlayPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = F708192A3B4C5D6E7F809112 /* TrickPlayPreview.swift */; };
 		16A42DD162E3DA3C12CE3F5F /* SupportedLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28727709AB22C5FAD93DB4C /* SupportedLocale.swift */; };
 		180127D423D36F0B0B80EA63 /* SettingsPickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98784D7402B2F3DB94726461 /* SettingsPickerScreen.swift */; };
 		1A91A6B65647E2B9EC1146EC /* NativeVideoSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C1E2FBABA0F471666513F8 /* NativeVideoSurface.swift */; };
@@ -64,6 +63,7 @@
 		3477900E70CA1B45F700CD9A /* SettingsLicenseDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A08E2DB890F6D9077611BC5 /* SettingsLicenseDetailScreen.swift */; };
 		34AE77021F4280ED397150B3 /* ServerEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41A3039D72FC265C3A86801E /* ServerEnums.swift */; };
 		3691F2BA3751A8BE31CDB057 /* EmbyApis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F91BCAC2868F2231BC3267E /* EmbyApis.swift */; };
+		3733F558E62C383C72D9C15F /* SyncPlayRuntimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FE4089836F6D9C497F6D14 /* SyncPlayRuntimeCoordinator.swift */; };
 		382288BD55A9D7ECDC42F70A /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73D2F15693134A15639B26D /* KeychainStore.swift */; };
 		393B3D43D0F6DD5D1FAF1905 /* MiniAudioPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3526BCC6628461DABF06EC44 /* MiniAudioPlayerView.swift */; };
 		39A4CE71574277DB34E60CA1 /* AudioRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2740819BB6B30453279DFF /* AudioRenderer.swift */; };
@@ -84,6 +84,7 @@
 		493970FF836F428B8C0226C8 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = E06089A3C07C6E7548153255 /* NukeUI */; };
 		4953C9006854B851B4D39E4D /* SettingsSyncPlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704499E2DBDF2AED58ABA84B /* SettingsSyncPlayScreen.swift */; };
 		4A145C122DD60B25A04DE2FE /* FavoritesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B523A2B54897DD15342C4926 /* FavoritesViewModel.swift */; };
+		4E42AC783CD893AB3774686C /* AudioUnitInterpose.c in Sources */ = {isa = PBXBuildFile; fileRef = 3A8C4BBC62D3733516777F4E /* AudioUnitInterpose.c */; };
 		4EFD2067E471639216BC6F31 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7FAD9331B478B54CAEE858 /* AppContainer.swift */; };
 		4FBC45A7F73DED36EFF7848C /* SeerrBrowseByView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148150D5166F7D59B34690E3 /* SeerrBrowseByView.swift */; };
 		50C05090550D4CBD7B058385 /* UserLoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */; };
@@ -105,6 +106,7 @@
 		5AE1EAEF4D90171F63A28D54 /* EmbyLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 853E6DEE22DC8A300940D5DF /* EmbyLogo.swift */; };
 		5E857B21118AF4F5728C00E6 /* SettingsScreensaverScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC153185AA86A0600FF5D61 /* SettingsScreensaverScreen.swift */; };
 		5EE8232949CE383F086241EC /* SettingsCustomizationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBDE0DA7AABA47AF63658FE /* SettingsCustomizationScreen.swift */; };
+		5F600B80012DB9F80B542C07 /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7983D1B05246892B68938F0E /* Pods_Moonfin.framework */; };
 		5F9B8A04262585EA5327B3F5 /* InactivityTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 748E8112CB7B0F6B2342C800 /* InactivityTracker.swift */; };
 		60DAB99A8C867604E18614FD /* SettingsLanguageScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50D6C7E8C457E62998FE7D /* SettingsLanguageScreen.swift */; };
 		60F805E19A5C41B05807B5ED /* SettingsPluginPreviewsMusicScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B864F1E3CB31F4464A9659E4 /* SettingsPluginPreviewsMusicScreen.swift */; };
@@ -163,6 +165,7 @@
 		8BED70158CE7B75EBDEBC7C0 /* MediaBarModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2532D5B583DB1A74F1810BC /* MediaBarModels.swift */; };
 		8BF09E744242E20B4C19DABC /* PlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */; };
 		8CB632339448549CD4CF0585 /* MarqueeText.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4381FBDA038266FCB9D4493 /* MarqueeText.swift */; };
+		8CB6AB9B38AE08F9100510B7 /* TrickPlayPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298979EC18BCCDA7B07B0166 /* TrickPlayPreview.swift */; };
 		8D33D68A47C03FEC1FAFA9ED /* licenses.json in Resources */ = {isa = PBXBuildFile; fileRef = 008BBE683AE4C50A2524A686 /* licenses.json */; };
 		8DBAF1FEA8986436AC8317BF /* LoginBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681B5D321FDDC52F49B7EFB7 /* LoginBackground.swift */; };
 		8DC3DC9D827C8C5CE5EA476F /* ThemeMusicPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 029FB338B8B3F14A4E8A182E /* ThemeMusicPlayer.swift */; };
@@ -245,10 +248,8 @@
 		CC5946EBEE0483E3D3CF414F /* NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 532FB992932D9FF916978F6A /* NetworkError.swift */; };
 		CE591F2305133083B1C019B1 /* ServerRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FEB9DCB39B5C4AF061AF748 /* ServerRepository.swift */; };
 		CE61B52711F2E70348248571 /* ServerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A61F4E72236D1D4D7833D6B /* ServerModels.swift */; };
-		A1B2C3D4E5F60718192A3B4C /* TrickPlayInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E6F708192A3B4C5D6E7F80 /* TrickPlayInfo.swift */; };
 		CEBE19AA7A814A37EFFD6D1F /* StillWatchingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634C718BADDB00E36F5891D6 /* StillWatchingOverlay.swift */; };
 		D00BF3EB70D5C5BB65903977 /* PluginSyncConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1188B2AD37F68983EDA9FF54 /* PluginSyncConstants.swift */; };
-		D1480FDA47D9F5A0DBD1824D /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F5F6ABE64CCEC2610628BA3A /* Pods_Moonfin.framework */; };
 		D3D9E67F5AA1CB47DD677623 /* ItemCardOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32BF0285D5448ABF4905FE29 /* ItemCardOverlays.swift */; };
 		D449921FEECD4D04626400B6 /* SettingsThemePickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36CF13F3E90E0CB513F23184 /* SettingsThemePickerScreen.swift */; };
 		D456E5C9A41E43D4D9786AD7 /* MediaSegmentRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6194CE9C28CEDB6615316AD1 /* MediaSegmentRepository.swift */; };
@@ -280,6 +281,7 @@
 		EDB11E43146103FF686559F2 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14655AF7A48478F46D0FE802 /* Server.swift */; };
 		EF3338B76D9FDB7E5C2BDD5D /* ExpandableLibrariesButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD070B3D16B451F68649E3B /* ExpandableLibrariesButton.swift */; };
 		EF7DF8ADC72954304A9ED8D5 /* ServerQueryHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF728FA7DAC888DE730C3CC3 /* ServerQueryHelpers.swift */; };
+		F0DFCDA97EF4A9CE68CD7DDD /* TrickPlayImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D640B2276814EFA328AF65B /* TrickPlayImageLoader.swift */; };
 		F1C0DD535459B37BDE6CD7DD /* SeerrHttpClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 346AD60702A751C6BBA53A49 /* SeerrHttpClient.swift */; };
 		F27FC644EA67854A8B70924D /* ServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A01D1F576F0C41A53ECB16 /* ServiceProvider.swift */; };
 		F3A45AB09B898ECA8E8D6BF0 /* Navbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112499C198A05F78A779F663 /* Navbar.swift */; };
@@ -288,7 +290,6 @@
 		F6635A47F59537CE23A1B0F7 /* SettingsTelemetryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */; };
 		F695BE1C0B1984B1D35873F5 /* SeerrBrowseByViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269C2AE578D735E14C13184C /* SeerrBrowseByViewModel.swift */; };
 		F872F61A76BB3C05129D6A9F /* SubtitleDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2137FFC469CA450D30D6AB92 /* SubtitleDecoder.swift */; };
-		E3F7A891BC042D5609E21C74 /* SyncPlayRuntimeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A8B912CD153E67010F3D85 /* SyncPlayRuntimeCoordinator.swift */; };
 		FA0888C6B508098C61D3C093 /* SyncPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D24051174A7D551EB4CBB14D /* SyncPlayManager.swift */; };
 		FAA9362203F394F8C16A88E0 /* MusicBrowseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7539F7F9B1DF246DC2B1D54D /* MusicBrowseScreen.swift */; };
 		FAEF7D61BE0FD74783F5F1EF /* ServerAddViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBF9EA9C0CD20656E172D3 /* ServerAddViewModel.swift */; };
@@ -377,12 +378,13 @@
 		2523CF196DD63575C61CB15E /* EmbyServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyServerClient.swift; sourceTree = "<group>"; };
 		260C3C82CF4ACF0E8629F5DA /* ChangeTriggerType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeTriggerType.swift; sourceTree = "<group>"; };
 		269C2AE578D735E14C13184C /* SeerrBrowseByViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrBrowseByViewModel.swift; sourceTree = "<group>"; };
+		298979EC18BCCDA7B07B0166 /* TrickPlayPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrickPlayPreview.swift; sourceTree = "<group>"; };
 		2B084B9480678704502B6011 /* CastListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastListView.swift; sourceTree = "<group>"; };
 		2B73FA206F8A4DF144150EDF /* FocusBorderButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusBorderButtonStyle.swift; sourceTree = "<group>"; };
 		2C1A96490F53D6BA1CDB8A8A /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
-		2C32CE0DCBD490DF7FE0AE4A /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
 		2C45C3ED4CF1B58F6693CC53 /* ServerConnectionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConnectionMonitor.swift; sourceTree = "<group>"; };
 		2CA92E4943C66A700242A879 /* FilterOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterOptions.swift; sourceTree = "<group>"; };
+		2D638E36BAB472EACC1638FC /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
 		2D7DAD20426F96F052F9D238 /* SettingsMediaBarOpacityScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaBarOpacityScreen.swift; sourceTree = "<group>"; };
 		2E2740819BB6B30453279DFF /* AudioRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRenderer.swift; sourceTree = "<group>"; };
 		2E8FD77D17697D20510FDA9D /* fa */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fa; path = fa.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -408,10 +410,13 @@
 		394CCE77FFFDDFD9278308B8 /* hu */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = hu; path = hu.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		39FB08870D76B932543FCFC8 /* Moonfin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Moonfin.entitlements; sourceTree = "<group>"; };
 		3A08E2DB890F6D9077611BC5 /* SettingsLicenseDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLicenseDetailScreen.swift; sourceTree = "<group>"; };
+		3A8C4BBC62D3733516777F4E /* AudioUnitInterpose.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AudioUnitInterpose.c; sourceTree = "<group>"; };
+		3ACEB9ECD68CBD7819AB1BF9 /* Moonfin-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Moonfin-Bridging-Header.h"; sourceTree = "<group>"; };
 		3C368CDA2FC6C1709CC5F22D /* RatingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingModels.swift; sourceTree = "<group>"; };
 		3C72F20A47DD2A40EE40925E /* SelectServerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectServerViewModel.swift; sourceTree = "<group>"; };
 		3CABD3CD4B909CCEE8EAE42F /* LyricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsView.swift; sourceTree = "<group>"; };
 		3CBB645AF6ED5272E4D1F2FB /* BackgroundService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundService.swift; sourceTree = "<group>"; };
+		3D640B2276814EFA328AF65B /* TrickPlayImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrickPlayImageLoader.swift; sourceTree = "<group>"; };
 		3DB8F093E6186AF21C6AA8A8 /* SettingsHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHomeScreen.swift; sourceTree = "<group>"; };
 		3DBF6559E6FDF03DBF08F2D8 /* NavbarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavbarViewModel.swift; sourceTree = "<group>"; };
 		3E4CC8BFEB89092597875127 /* SettingsSubtitlesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSubtitlesScreen.swift; sourceTree = "<group>"; };
@@ -509,11 +514,11 @@
 		76E698DF6B30C654D7A61FEB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		77C886291277410697A4193F /* lt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = lt; path = lt.lproj/Localizable.strings; sourceTree = "<group>"; };
 		77D1D1951AF033C0AC774AE3 /* sw */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = sw; path = sw.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		7983D1B05246892B68938F0E /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		79850B890D9ABCF4C0FDE37A /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		79E8963CD402B79BAE982A3A /* MoonfinLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonfinLogo.swift; sourceTree = "<group>"; };
 		7A471FCC6F27C455F463F8D1 /* ServerRequestModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRequestModels.swift; sourceTree = "<group>"; };
 		7A61F4E72236D1D4D7833D6B /* ServerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerModels.swift; sourceTree = "<group>"; };
-		D5E6F708192A3B4C5D6E7F80 /* TrickPlayInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrickPlayInfo.swift; sourceTree = "<group>"; };
 		7A7E85C27B4CDBD48229FF2F /* SettingsAuthPinCodeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAuthPinCodeScreen.swift; sourceTree = "<group>"; };
 		7AA7D041A8EF59843C97A3BD /* SuggestedScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedScreen.swift; sourceTree = "<group>"; };
 		7B9763F38E835095728E9931 /* LibraryPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPreferences.swift; sourceTree = "<group>"; };
@@ -531,10 +536,12 @@
 		8291D25FD1C3C2E9276E9E71 /* SettingsSeerrRowsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSeerrRowsScreen.swift; sourceTree = "<group>"; };
 		838ACBBD4AAFD821179099C9 /* es-DO */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-DO"; path = "es-DO.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		838B6DDE822EEB98311172D6 /* Moonfin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moonfin.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		83FE4089836F6D9C497F6D14 /* SyncPlayRuntimeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPlayRuntimeCoordinator.swift; sourceTree = "<group>"; };
 		84351FB844308F8CE1733E97 /* JellyfinLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinLogo.swift; sourceTree = "<group>"; };
 		84D844F4B913B43E4E3EB025 /* PlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackManager.swift; sourceTree = "<group>"; };
 		853E6DEE22DC8A300940D5DF /* EmbyLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbyLogo.swift; sourceTree = "<group>"; };
 		85D0018B887BA412742A8F93 /* SettingsLicensesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsLicensesScreen.swift; sourceTree = "<group>"; };
+		86F55D92D362970F9B517268 /* TrickPlayInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrickPlayInfo.swift; sourceTree = "<group>"; };
 		87F337E1EA8A9A452F9A6E97 /* SettingsMaxBitrateScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMaxBitrateScreen.swift; sourceTree = "<group>"; };
 		88B6C16743063B47C88FAEA3 /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
 		88E66AD9B6A360A875F0EE44 /* SettingsPluginIntegrationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginIntegrationsScreen.swift; sourceTree = "<group>"; };
@@ -580,7 +587,6 @@
 		A2AF5E3DFDEC74514265F3FF /* DetailCardComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailCardComponents.swift; sourceTree = "<group>"; };
 		A33E9BB53F44C4CEE46E8D0A /* bg */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = bg; path = bg.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A37A5B797B86E6122B645143 /* TrackSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSelectionView.swift; sourceTree = "<group>"; };
-		A37B54788B9EE2171BE03A75 /* Pods-Moonfin.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.debug.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.debug.xcconfig"; sourceTree = "<group>"; };
 		A4362482E9FFE0C23DA7397D /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = id.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A4381FBDA038266FCB9D4493 /* MarqueeText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueeText.swift; sourceTree = "<group>"; };
 		A453813549605AFDFA54913E /* SeerrMediaDetailsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeerrMediaDetailsViewModel.swift; sourceTree = "<group>"; };
@@ -648,8 +654,6 @@
 		C877A9EFA2B193E0D44113DB /* LibraryBrowseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryBrowseViewModel.swift; sourceTree = "<group>"; };
 		C88EB3BB9FEABB574E468E4A /* ItemDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailsView.swift; sourceTree = "<group>"; };
 		C8C93AFA31BD221AFA4D0257 /* PlayerSeekBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSeekBar.swift; sourceTree = "<group>"; };
-		E6F708193A4B5C6D7E8F9011 /* TrickPlayImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrickPlayImageLoader.swift; sourceTree = "<group>"; };
-		F708192A3B4C5D6E7F809112 /* TrickPlayPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrickPlayPreview.swift; sourceTree = "<group>"; };
 		C8D9DC6E3197C8498F141404 /* StreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamResolver.swift; sourceTree = "<group>"; };
 		C9F0305BFD9DE8CFA6B83D7A /* SettingsPluginBackgroundsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginBackgroundsScreen.swift; sourceTree = "<group>"; };
 		CA4159CF66566044EE7426BC /* ColorScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorScheme.swift; sourceTree = "<group>"; };
@@ -661,7 +665,6 @@
 		D0134334AD83E19655459900 /* ServerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerScreen.swift; sourceTree = "<group>"; };
 		D10256EC8BACAA177ADD2AC0 /* StillWatchingSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StillWatchingSettingsScreen.swift; sourceTree = "<group>"; };
 		D24051174A7D551EB4CBB14D /* SyncPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPlayManager.swift; sourceTree = "<group>"; };
-		F4A8B912CD153E67010F3D85 /* SyncPlayRuntimeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPlayRuntimeCoordinator.swift; sourceTree = "<group>"; };
 		D2D355085448AD81BF50C085 /* RadioOptionContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadioOptionContent.swift; sourceTree = "<group>"; };
 		D350319305B10BAA1D1404CC /* RowDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowDataSource.swift; sourceTree = "<group>"; };
 		D3F31279E854ADD3052D8537 /* LocalServerDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalServerDiscovery.swift; sourceTree = "<group>"; };
@@ -683,6 +686,7 @@
 		E12ABE38576294E17C706C48 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = sk; path = sk.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		E13C8282BC93E97F87F7D3B5 /* ServerStreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStreamResolver.swift; sourceTree = "<group>"; };
 		E22736649FA21CC1FC2652CF /* et */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = et; path = et.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		E2F329F1A6085395CB8FCC45 /* Pods-Moonfin.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Moonfin.release.xcconfig"; path = "Target Support Files/Pods-Moonfin/Pods-Moonfin.release.xcconfig"; sourceTree = "<group>"; };
 		E30398C74AA337F81E8F2505 /* SelectServerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectServerScreen.swift; sourceTree = "<group>"; };
 		E39FCAB733A05955B6246DE1 /* UserDefaultsPreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsPreferenceStore.swift; sourceTree = "<group>"; };
 		E44904AD37EE5BC8463DDDD0 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = tr; path = tr.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -710,7 +714,6 @@
 		F3C5BA320256763324A64A17 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 		F453C17FE40F9EC78DD964BA /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		F5889750A5E466196A1C5DE4 /* ExpandableToolbarButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableToolbarButton.swift; sourceTree = "<group>"; };
-		F5F6ABE64CCEC2610628BA3A /* Pods_Moonfin.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Moonfin.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F60A57D73E27E7F1BBA5E387 /* ItemDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailViewModel.swift; sourceTree = "<group>"; };
 		F60F5DF93D31F2E766B4BAC5 /* TelemetryPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelemetryPreferences.swift; sourceTree = "<group>"; };
 		F685AFC9A981613AEBEDFC9E /* SettingsSubtitleColorPickerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSubtitleColorPickerScreen.swift; sourceTree = "<group>"; };
@@ -732,7 +735,7 @@
 				555AFC2DDF8B010AEDF450AF /* Nuke in Frameworks */,
 				0D1E59B7FA6065C5EB3ACA78 /* KeychainAccess in Frameworks */,
 				6D6DACBFE202887C15BFBD12 /* MPVKit in Frameworks */,
-				D1480FDA47D9F5A0DBD1824D /* Pods_Moonfin.framework in Frameworks */,
+				5F600B80012DB9F80B542C07 /* Pods_Moonfin.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -773,8 +776,8 @@
 				634C718BADDB00E36F5891D6 /* StillWatchingOverlay.swift */,
 				31559FCAE6E15A3710AEAA45 /* SubtitleDownloadView.swift */,
 				A37A5B797B86E6122B645143 /* TrackSelectionView.swift */,
-				E6F708193A4B5C6D7E8F9011 /* TrickPlayImageLoader.swift */,
-				F708192A3B4C5D6E7F809112 /* TrickPlayPreview.swift */,
+				3D640B2276814EFA328AF65B /* TrickPlayImageLoader.swift */,
+				298979EC18BCCDA7B07B0166 /* TrickPlayPreview.swift */,
 				BA98661768E47C4ACB84AE09 /* VideoPlayerViewModel.swift */,
 			);
 			path = Player;
@@ -796,8 +799,8 @@
 				EC8EF81012D6A9F511E67D90 /* Moonfin */,
 				7737AEA69D88AC7CE51C6E80 /* MoonfinTopShelf */,
 				D189A2B18468536429738151 /* Products */,
-				1D83161611D2F026BFD9FDFE /* Pods */,
-				69A25AB330A091797C3FB360 /* Frameworks */,
+				3FF486C5CD7A9DFBC5D3A622 /* Pods */,
+				8902C32EE17EF75AFC18078F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -871,16 +874,6 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
-		1D83161611D2F026BFD9FDFE /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				A37B54788B9EE2171BE03A75 /* Pods-Moonfin.debug.xcconfig */,
-				2C32CE0DCBD490DF7FE0AE4A /* Pods-Moonfin.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		23AA0D2B744E7F0078FDB439 /* Native */ = {
 			isa = PBXGroup;
 			children = (
@@ -929,7 +922,7 @@
 			children = (
 				D24051174A7D551EB4CBB14D /* SyncPlayManager.swift */,
 				207D7B97AF9819D4AF2B610E /* SyncPlayModels.swift */,
-				F4A8B912CD153E67010F3D85 /* SyncPlayRuntimeCoordinator.swift */,
+				83FE4089836F6D9C497F6D14 /* SyncPlayRuntimeCoordinator.swift */,
 				6A2ABF92E68CA858C820159F /* SyncPlayScreen.swift */,
 				C42088A8F589D865EC2229C3 /* TimeSyncManager.swift */,
 			);
@@ -944,6 +937,15 @@
 				AA7532FD2D9BC07A1867B22E /* ViewModels */,
 			);
 			path = Startup;
+			sourceTree = "<group>";
+		};
+		3FF486C5CD7A9DFBC5D3A622 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				2D638E36BAB472EACC1638FC /* Pods-Moonfin.debug.xcconfig */,
+				E2F329F1A6085395CB8FCC45 /* Pods-Moonfin.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		42348467192A7D2B9CCE8595 /* Data */ = {
@@ -1032,6 +1034,7 @@
 				23AA0D2B744E7F0078FDB439 /* Native */,
 				BF003B267C85FF1D6480BA5D /* AudioCapabilityPolicy.swift */,
 				C33518745EEEEE15D7C873DA /* AudioManager.swift */,
+				3A8C4BBC62D3733516777F4E /* AudioUnitInterpose.c */,
 				BDB8F28B92CABD88BE5EC234 /* DisplayCriteriaManager.swift */,
 				53EF7CAE5F86DAD668C1376A /* InlineTrailerPlayerManager.swift */,
 				CA6C3B9D21C70461867A2E19 /* MpvPlayerWrapper.swift */,
@@ -1121,14 +1124,6 @@
 			path = Discover;
 			sourceTree = "<group>";
 		};
-		69A25AB330A091797C3FB360 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				F5F6ABE64CCEC2610628BA3A /* Pods_Moonfin.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		7737AEA69D88AC7CE51C6E80 /* MoonfinTopShelf */ = {
 			isa = PBXGroup;
 			children = (
@@ -1159,6 +1154,14 @@
 				CEE1A0D103CDA07F4AF652AA /* TopShelfCacheWriter.swift */,
 			);
 			path = TopShelf;
+			sourceTree = "<group>";
+		};
+		8902C32EE17EF75AFC18078F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				7983D1B05246892B68938F0E /* Pods_Moonfin.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		91ED9112A63C43BEB571B627 /* Components */ = {
@@ -1262,7 +1265,7 @@
 				7A471FCC6F27C455F463F8D1 /* ServerRequestModels.swift */,
 				30ACEC9DF946E2B335321F13 /* ServerWebSocketClient.swift */,
 				6D817B3079DB381F66B8EBE6 /* ServerWebSocketMessage.swift */,
-				D5E6F708192A3B4C5D6E7F80 /* TrickPlayInfo.swift */,
+				86F55D92D362970F9B517268 /* TrickPlayInfo.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -1424,6 +1427,7 @@
 				BE4F59B4CD5667562ACAA26F /* Preferences */,
 				58D8EADEDAC655BCDB4A73B8 /* Resources */,
 				023CFF8A75A258805DEC10EE /* Server */,
+				3ACEB9ECD68CBD7819AB1BF9 /* Moonfin-Bridging-Header.h */,
 			);
 			path = Moonfin;
 			sourceTree = "<group>";
@@ -1443,13 +1447,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27492BE8AEF59CC3B0E24072 /* Build configuration list for PBXNativeTarget "Moonfin" */;
 			buildPhases = (
-				67983CBE70092AE9333C7240 /* [CP] Check Pods Manifest.lock */,
+				B8282EA955094403F6A9DE16 /* [CP] Check Pods Manifest.lock */,
 				8AA6B4D6C4D493A6BD1EFD08 /* Patch MPVKit Module Maps */,
 				7772703707EE7DD8FA8C7D63 /* Sources */,
 				02EDCD9F5CB60B47801BD4ED /* Resources */,
 				DBD8DE1F616DE17837EFC577 /* Frameworks */,
 				D086A9091B643496E6F2B660 /* Embed Foundation Extensions */,
-				BDF284732FF3C3BEF180186A /* [CP] Embed Pods Frameworks */,
+				B998B76AB6E547BCFF274E88 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1595,7 +1599,26 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		67983CBE70092AE9333C7240 /* [CP] Check Pods Manifest.lock */ = {
+		8AA6B4D6C4D493A6BD1EFD08 /* Patch MPVKit Module Maps */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Patch MPVKit Module Maps";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/scripts/patch-modulemaps.sh\"\n";
+		};
+		B8282EA955094403F6A9DE16 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1617,26 +1640,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8AA6B4D6C4D493A6BD1EFD08 /* Patch MPVKit Module Maps */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Patch MPVKit Module Maps";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PROJECT_DIR}/scripts/patch-modulemaps.sh\"\n";
-		};
-		BDF284732FF3C3BEF180186A /* [CP] Embed Pods Frameworks */ = {
+		B998B76AB6E547BCFF274E88 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1644,9 +1648,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Moonfin/Pods-Moonfin-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1677,6 +1685,7 @@
 				C3196E7D876BD01CF010F3E1 /* AudioNowPlayingView.swift in Sources */,
 				131295AFF0C20D9BA793CB36 /* AudioNowPlayingViewModel.swift in Sources */,
 				39A4CE71574277DB34E60CA1 /* AudioRenderer.swift in Sources */,
+				4E42AC783CD893AB3774686C /* AudioUnitInterpose.c in Sources */,
 				3363A53733BC3A4924F09B5C /* AuthStates.swift in Sources */,
 				523C091BE2752ADC33800E25 /* AuthenticationPreferences.swift in Sources */,
 				659117FFF2FEE58885DFDFBB /* AuthenticationRepository.swift in Sources */,
@@ -1792,8 +1801,6 @@
 				56136629E620823766D663FE /* PlaybackSurfaceView.swift in Sources */,
 				00CBC11CBD19027BD5F7AFF1 /* PlayerOverlayView.swift in Sources */,
 				13AA935D6BB99581DF6A3ED7 /* PlayerSeekBar.swift in Sources */,
-				B2C3D4E5F60718293A4B5C6D /* TrickPlayImageLoader.swift in Sources */,
-				C3D4E5F607182A3B4C5D6E7F /* TrickPlayPreview.swift in Sources */,
 				127223D3B2F8CE2B6B03280B /* PlayerView.swift in Sources */,
 				D00BF3EB70D5C5BB65903977 /* PluginSyncConstants.swift in Sources */,
 				9CE2FF82B95D20AB2C9B0F9F /* PluginSyncService.swift in Sources */,
@@ -1849,7 +1856,6 @@
 				CE591F2305133083B1C019B1 /* ServerRepository.swift in Sources */,
 				8B06D277855492E3283E3C02 /* ServerRequestModels.swift in Sources */,
 				58F6064FF66BB601A96ED555 /* ServerScreen.swift in Sources */,
-				A1B2C3D4E5F60718192A3B4C /* TrickPlayInfo.swift in Sources */,
 				C00C251AB57AB8DD679E433A /* ServerStreamResolver.swift in Sources */,
 				9C276CBD301A91D706F97692 /* ServerUserRepository.swift in Sources */,
 				9B0960F5FAE82F5DD654D878 /* ServerViewModel.swift in Sources */,
@@ -1923,7 +1929,7 @@
 				16A42DD162E3DA3C12CE3F5F /* SupportedLocale.swift in Sources */,
 				FA0888C6B508098C61D3C093 /* SyncPlayManager.swift in Sources */,
 				CB9BB8184531C28106697918 /* SyncPlayModels.swift in Sources */,
-				E3F7A891BC042D5609E21C74 /* SyncPlayRuntimeCoordinator.swift in Sources */,
+				3733F558E62C383C72D9C15F /* SyncPlayRuntimeCoordinator.swift in Sources */,
 				F43E7B713287BBBD4B72CE15 /* SyncPlayScreen.swift in Sources */,
 				D7F00997ECDB87EA0BAC512D /* TelemetryPreferences.swift in Sources */,
 				8DC3DC9D827C8C5CE5EA476F /* ThemeMusicPlayer.swift in Sources */,
@@ -1933,6 +1939,9 @@
 				7B4479B47985265C331CEA4C /* TopShelfCacheWriter.swift in Sources */,
 				C11E2B548EA494CCBA95C1D1 /* TrackSelectionView.swift in Sources */,
 				452672237B4048790575A569 /* TrackSelectorDialog.swift in Sources */,
+				F0DFCDA97EF4A9CE68CD7DDD /* TrickPlayImageLoader.swift in Sources */,
+				02BF9D15A5003AAAD2474773 /* TrickPlayInfo.swift in Sources */,
+				8CB6AB9B38AE08F9100510B7 /* TrickPlayPreview.swift in Sources */,
 				531794D91B2DAF454CB71AF5 /* UUID+Parsing.swift in Sources */,
 				27C322C6C1A1E71707F6A64C /* User.swift in Sources */,
 				0A5163E5360F657B68F41BA4 /* UserDefaultsPreferenceStore.swift in Sources */,
@@ -2089,7 +2098,7 @@
 /* Begin XCBuildConfiguration section */
 		3692D4DC0894416555EE45DC /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2C32CE0DCBD490DF7FE0AE4A /* Pods-Moonfin.release.xcconfig */;
+			baseConfigurationReference = E2F329F1A6085395CB8FCC45 /* Pods-Moonfin.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -2103,6 +2112,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.moonfin.app;
 				SDKROOT = appletvos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Moonfin/Moonfin-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 16.0;
 			};
@@ -2129,7 +2139,7 @@
 		};
 		63305EDE78CAE1C908A0F58F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A37B54788B9EE2171BE03A75 /* Pods-Moonfin.debug.xcconfig */;
+			baseConfigurationReference = 2D638E36BAB472EACC1638FC /* Pods-Moonfin.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -2143,6 +2153,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.moonfin.app;
 				SDKROOT = appletvos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Moonfin/Moonfin-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 16.0;
 			};

@@ -381,9 +381,10 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
 
     func configureAudioSession() {
         guard !audioSessionActive else { return }
+        installAudioUnitChannelLayoutFix()
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(.playback, mode: .moviePlayback)
+            try session.setCategory(.playback, mode: .moviePlayback, policy: .longFormAudio)
             try session.setActive(true)
             audioSessionActive = true
         } catch {}
@@ -394,6 +395,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         pendingMpvStartPosition = (startPosition ?? 0) > 0 ? startPosition : nil
         pendingMpvSeekAttempts = 0
         pendingMpvSeekLastAttemptAt = 0
+
+        configureAudioSession()
 
         let intent = resolveOutputIntent()
         activeToneMappingMode = intent == .sdr ? "spline" : (intent == .hdr ? "clip" : "auto")
