@@ -100,41 +100,12 @@ final class VideoPlayerViewModel: ObservableObject {
         self.onLiveTvChannelUp = onLiveTvChannelUp
         self.onLiveTvChannelDown = onLiveTvChannelDown
 
-        playbackManager.player.$state
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        playbackManager.player.$audioTracks
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        playbackManager.player.$subtitleTracks
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        playbackManager.player.$currentAudioTrackIndex
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        playbackManager.player.$currentSubtitleTrackIndex
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
-
-        playbackManager.player.$rate
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.objectWillChange.send() }
-            .store(in: &cancellables)
+        bindObjectWillChange(playbackManager.player.$state.removeDuplicates())
+        bindObjectWillChange(playbackManager.player.$audioTracks.removeDuplicates())
+        bindObjectWillChange(playbackManager.player.$subtitleTracks.removeDuplicates())
+        bindObjectWillChange(playbackManager.player.$currentAudioTrackIndex.removeDuplicates())
+        bindObjectWillChange(playbackManager.player.$currentSubtitleTrackIndex.removeDuplicates())
+        bindObjectWillChange(playbackManager.player.$rate.removeDuplicates())
 
         playbackManager.player.$currentTime
             .throttle(for: .milliseconds(500), scheduler: DispatchQueue.main, latest: true)
@@ -154,13 +125,16 @@ final class VideoPlayerViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        playbackManager.player.$zoomMode
-            .removeDuplicates()
+        bindObjectWillChange(playbackManager.player.$zoomMode.removeDuplicates())
+
+        prefetchCastForCurrentItem()
+    }
+
+    private func bindObjectWillChange<P: Publisher>(_ publisher: P) where P.Failure == Never {
+        publisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
-
-        prefetchCastForCurrentItem()
     }
 
     func channelUp() {

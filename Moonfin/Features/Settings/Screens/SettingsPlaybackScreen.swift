@@ -9,12 +9,12 @@ struct SettingsPlaybackScreen: View {
 
     private var stillWatchingLabel: String {
         let val = prefs[UserPreferences.stillWatchingThreshold]
-        return val > 0 ? "\(val) episodes" : "Disabled"
+        return val > 0 ? Strings.episodeCount(val) : Strings.disabled
     }
 
     private var nextUpTimeoutLabel: String {
         let val = prefs[UserPreferences.nextUpTimeout]
-        return val > 0 ? "\(val) sec" : "Disabled"
+        return val > 0 ? "\(val)\(Strings.secondsShort)" : Strings.disabled
     }
 
     private var supportsMediaSegments: Bool {
@@ -22,11 +22,11 @@ struct SettingsPlaybackScreen: View {
     }
 
     var body: some View {
-        SettingsScreenLayout(title: "Playback") {
+        SettingsScreenLayout(title: Strings.playbackSettings) {
             SettingsListButton(
                 icon: "forward.end",
-                heading: "Next Up Behavior",
-                caption: "How next up is displayed",
+                heading: Strings.nextUpBehaviorTitle,
+                caption: Strings.nextUpBehaviorDescription,
                 trailingText: prefs[UserPreferences.nextUpBehavior].displayName,
                 action: { settingsRouter.navigate(to: .playbackNextUpBehavior) }
             )
@@ -34,8 +34,8 @@ struct SettingsPlaybackScreen: View {
 
             SettingsListButton(
                 icon: "timer",
-                heading: "Next Up Timeout",
-                caption: "Auto-play countdown duration",
+                heading: Strings.nextUpTimeoutTitle,
+                caption: Strings.nextUpTimeoutDescription,
                 trailingText: nextUpTimeoutLabel,
                 action: { settingsRouter.navigate(to: .playbackNextUpTimeout) }
             )
@@ -43,8 +43,8 @@ struct SettingsPlaybackScreen: View {
 
             SettingsListButton(
                 icon: "pause.circle",
-                heading: "Still Watching Prompt",
-                caption: "Ask after N episodes",
+                heading: Strings.stillWatchingPrompt,
+                caption: Strings.stillWatchingPromptDescription,
                 trailingText: stillWatchingLabel,
                 action: { settingsRouter.navigate(to: .playbackInactivityPrompt) }
             )
@@ -52,8 +52,8 @@ struct SettingsPlaybackScreen: View {
 
             SettingsListButton(
                 icon: "speaker.wave.2",
-                heading: "Audio Behavior",
-                caption: "Audio track selection",
+                heading: Strings.audioBehavior,
+                caption: Strings.audioBehaviorDescription,
                 trailingText: prefs[UserPreferences.audioBehavior].displayName,
                 action: { settingsRouter.navigate(to: .playbackAudioBehavior) }
             )
@@ -61,8 +61,8 @@ struct SettingsPlaybackScreen: View {
 
             SettingsListButton(
                 icon: "photo.on.rectangle",
-                heading: "Slideshow Interval",
-                caption: "Time between photos",
+                heading: Strings.slideshowInterval,
+                caption: Strings.slideshowIntervalDescription,
                 trailingText: prefs[UserPreferences.photoSlideshowInterval].displayName,
                 action: { settingsRouter.navigate(to: .playbackSlideshowInterval) }
             )
@@ -77,16 +77,16 @@ struct SettingsPlaybackScreen: View {
 
             SettingsToggleButton(
                 icon: "film.stack",
-                heading: "TrickPlay",
-                caption: "Show seek preview thumbnails during playback",
+                heading: Strings.trickPlay,
+                caption: Strings.trickPlayDescription,
                 isOn: prefs.binding(for: UserPreferences.trickPlayEnabled)
             )
 
             if supportsMediaSegments {
                 SettingsListButton(
                     icon: "scissors",
-                    heading: "Media Segments",
-                    caption: "Skip intros, outros, and more",
+                    heading: Strings.mediaSegmentsSettings,
+                    caption: Strings.mediaSegmentsDescription,
                     action: { settingsRouter.navigate(to: .playbackMediaSegments) }
                 )
                 .focused($focusedRoute, equals: .playbackMediaSegments)
@@ -94,8 +94,8 @@ struct SettingsPlaybackScreen: View {
 
             SettingsListButton(
                 icon: "gearshape.2",
-                heading: "Advanced",
-                caption: "Resolution, zoom, delays, and more",
+                heading: Strings.advanced,
+                caption: Strings.advancedDescription,
                 action: { settingsRouter.navigate(to: .playbackAdvanced) }
             )
             .focused($focusedRoute, equals: .playbackAdvanced)

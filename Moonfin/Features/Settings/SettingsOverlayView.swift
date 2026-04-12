@@ -303,16 +303,16 @@ struct SettingsOverlayView: View {
             }
         case .playbackNextUpBehavior:
             SettingsPickerScreen(
-                title: "Next Up Behavior",
+                title: Strings.nextUpBehaviorTitle,
                 selection: container.userPreferences.binding(for: UserPreferences.nextUpBehavior),
                 displayName: \.displayName
             )
         case .playbackNextUpTimeout:
             SettingsSyncPlayValueScreen(
-                title: "Next Up Timeout",
+                title: Strings.nextUpTimeoutTitle,
                 preference: UserPreferences.nextUpTimeout,
                 options: [0, 5, 10, 15, 20, 25, 30, 45, 60],
-                suffix: " sec"
+                suffix: Strings.secondsShort
             )
         case .playbackInactivityPrompt:
             StillWatchingSettingsScreen()
@@ -320,19 +320,19 @@ struct SettingsOverlayView: View {
             SettingsMaxBitrateScreen()
         case .playbackAudioBehavior:
             SettingsPickerScreen(
-                title: "Audio Behavior",
+                title: Strings.audioBehavior,
                 selection: container.userPreferences.binding(for: UserPreferences.audioBehavior),
                 displayName: \.displayName
             )
         case .playbackAudioOutput:
             SettingsPickerScreen(
-                title: "Audio Output",
+                title: Strings.audioOutput,
                 selection: container.userPreferences.binding(for: UserPreferences.audioOutput),
                 displayName: \.displayName
             )
         case .playbackSlideshowInterval:
             SettingsPickerScreen(
-                title: "Slideshow Interval",
+                title: Strings.slideshowInterval,
                 selection: container.userPreferences.binding(for: UserPreferences.photoSlideshowInterval),
                 displayName: \.displayName
             )
@@ -340,41 +340,41 @@ struct SettingsOverlayView: View {
             SettingsPlaybackAdvancedScreen()
         case .playbackResumeSubtractDuration:
             SettingsSyncPlayValueScreen(
-                title: "Resume Pre-roll",
+                title: Strings.resumePreroll,
                 preference: UserPreferences.resumeSubtractDuration,
                 options: [0, 3, 5, 7, 10, 20, 30, 60, 120, 300],
-                suffix: " sec"
+                suffix: Strings.secondsShort
             )
         case .playbackSkipForwardLength:
             SettingsSyncPlayValueScreen(
-                title: "Skip Forward Length",
+                title: Strings.skipForwardLength,
                 preference: UserPreferences.skipForwardLength,
                 options: [5, 10, 15, 20, 25, 30],
-                suffix: " sec"
+                suffix: Strings.secondsShort
             )
         case .playbackUnpauseRewind:
             SettingsSyncPlayValueScreen(
-                title: "Unpause Rewind",
+                title: Strings.unpauseRewind,
                 preference: UserPreferences.unpauseRewindDuration,
                 options: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                suffix: " sec"
+                suffix: Strings.secondsShort
             )
         case .playbackVideoStartDelay:
             SettingsSyncPlayValueScreen(
-                title: "Video Start Delay",
+                title: Strings.videoStartDelay,
                 preference: UserPreferences.videoStartDelay,
                 options: [0, 250, 500, 1000, 2000, 3000, 5000],
-                suffix: " ms"
+                suffix: Strings.millisecondsShort
             )
         case .playbackMaxResolution:
             SettingsPickerScreen(
-                title: "Max Resolution",
+                title: Strings.maxResolution,
                 selection: container.userPreferences.binding(for: UserPreferences.maxVideoResolution),
                 displayName: \.displayName
             )
         case .playbackZoomMode:
             SettingsPickerScreen(
-                title: "Default Zoom",
+                title: Strings.defaultZoom,
                 selection: container.userPreferences.binding(for: UserPreferences.playerZoomMode),
                 displayName: \.displayName
             )
@@ -396,7 +396,7 @@ struct SettingsOverlayView: View {
             SettingsSeerrRowsScreen()
         case .seerrFetchLimit:
             SettingsPickerScreen(
-                title: "Fetch Limit",
+                title: Strings.fetchLimit,
                 selection: seerrFetchLimitBinding,
                 displayName: \.displayName
             )
@@ -406,38 +406,38 @@ struct SettingsOverlayView: View {
             SettingsSyncPlayScreen()
         case .moonfinSyncPlayMinDelay:
             SettingsSyncPlayValueScreen(
-                title: "Min Delay (Speed)",
+                title: Strings.syncPlayMinDelaySpeed,
                 preference: UserPreferences.syncPlayMinDelaySpeedToSync,
                 options: [50, 100, 150, 200, 300, 500, 750, 1000],
-                suffix: " ms"
+                suffix: Strings.millisecondsShort
             )
         case .moonfinSyncPlayMaxDelay:
             SettingsSyncPlayValueScreen(
-                title: "Max Delay (Speed)",
+                title: Strings.syncPlayMaxDelaySpeed,
                 preference: UserPreferences.syncPlayMaxDelaySpeedToSync,
                 options: [1000, 2000, 3000, 5000, 7500, 10000],
-                suffix: " ms"
+                suffix: Strings.millisecondsShort
             )
         case .moonfinSyncPlayDuration:
             SettingsSyncPlayValueScreen(
-                title: "Speed Duration",
+                title: Strings.syncPlaySpeedDuration,
                 preference: UserPreferences.syncPlaySpeedToSyncDuration,
                 options: [500, 750, 1000, 1500, 2000, 3000],
-                suffix: " ms"
+                suffix: Strings.millisecondsShort
             )
         case .moonfinSyncPlayMinDelaySkip:
             SettingsSyncPlayValueScreen(
-                title: "Min Delay (Skip)",
+                title: Strings.syncPlayMinDelaySkip,
                 preference: UserPreferences.syncPlayMinDelaySkipToSync,
                 options: [500, 1000, 1500, 2000, 3000, 5000],
-                suffix: " ms"
+                suffix: Strings.millisecondsShort
             )
         case .moonfinSyncPlayExtraOffset:
             SettingsSyncPlayValueScreen(
-                title: "Extra Time Offset",
+                title: Strings.syncPlayExtraOffset,
                 preference: UserPreferences.syncPlayExtraTimeOffset,
                 options: [-5000, -2000, -1000, -500, 0, 500, 1000, 2000, 5000],
-                suffix: " ms"
+                suffix: Strings.millisecondsShort
             )
         case .liveTvGuideOptions:
             SettingsLiveTvGuideOptionsScreen()
@@ -445,7 +445,7 @@ struct SettingsOverlayView: View {
             SettingsLiveTvGuideFiltersScreen()
         case .liveTvGuideChannelOrder:
             SettingsPickerScreen(
-                title: "Channel Order",
+                title: Strings.channelOrder,
                 selection: container.userPreferences.binding(for: UserPreferences.liveTvChannelOrder),
                 displayName: \.displayName
             )
@@ -477,7 +477,7 @@ struct SettingsPlaceholderScreen: View {
     var body: some View {
         VStack {
             Spacer()
-            Text("Coming Soon")
+            Text(Strings.comingSoon)
                 .font(.bodyMd)
                 .foregroundColor(theme.colorScheme.listCaption)
             Spacer()

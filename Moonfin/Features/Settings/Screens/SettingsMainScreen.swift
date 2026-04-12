@@ -9,11 +9,11 @@ struct SettingsMainScreen: View {
     private var prefs: UserPreferences { container.userPreferences }
 
     var body: some View {
-        SettingsScreenLayout(title: "Settings") {
+        SettingsScreenLayout(title: Strings.settings) {
             SettingsListButton(
                 icon: "person.2",
                 heading: Strings.authentication,
-                caption: "Manage servers & users",
+                caption: Strings.authenticationSummary,
                 action: { settingsRouter.navigate(to: .authentication) }
             )
             .focused($focusedRoute, equals: .authentication)
@@ -22,31 +22,31 @@ struct SettingsMainScreen: View {
             SettingsListButton(
                 icon: "paintbrush",
                 heading: Strings.customization,
-                caption: "Theme, clock, watched indicators",
+                caption: Strings.customizationSummary,
                 action: { settingsRouter.navigate(to: .customization) }
             )
             .focused($focusedRoute, equals: .customization)
 
             SettingsListButton(
                 icon: "house",
-                heading: "Home",
-                caption: "Sections, poster size, image type",
+                heading: Strings.home,
+                caption: Strings.homeSummary,
                 action: { settingsRouter.navigate(to: .home) }
             )
             .focused($focusedRoute, equals: .home)
 
             SettingsListButton(
                 icon: "gear",
-                heading: "Plugin",
-                caption: "Navbar, shuffle, media bar",
+                heading: Strings.plugin,
+                caption: Strings.pluginSummary,
                 action: { settingsRouter.navigate(to: .plugin) }
             )
             .focused($focusedRoute, equals: .plugin)
 
             SettingsListButton(
                 icon: "sparkles",
-                heading: "Screensaver",
-                caption: "Mode, timeout, dimming",
+                heading: Strings.screensaver,
+                caption: Strings.screensaverSummary,
                 action: { settingsRouter.navigate(to: .customizationScreensaver) }
             )
             .focused($focusedRoute, equals: .customizationScreensaver)
@@ -54,16 +54,16 @@ struct SettingsMainScreen: View {
             SettingsListButton(
                 icon: "play.circle",
                 heading: Strings.playbackSettings,
-                caption: "Quality, next up, audio",
+                caption: Strings.playbackDescription,
                 action: { settingsRouter.navigate(to: .playback) }
             )
             .focused($focusedRoute, equals: .playback)
 
             SettingsListButton(
                 icon: "person.3.fill",
-                heading: "SyncPlay",
-                caption: "Synchronized playback settings",
-                trailingText: prefs[UserPreferences.syncPlayEnabled] ? "On" : "Off",
+                heading: Strings.syncPlay,
+                caption: Strings.syncPlaySummary,
+                trailingText: prefs[UserPreferences.syncPlayEnabled] ? Strings.enabled : Strings.disabled,
                 action: { settingsRouter.navigate(to: .moonfinSyncPlay) }
             )
             .focused($focusedRoute, equals: .moonfinSyncPlay)
@@ -71,8 +71,8 @@ struct SettingsMainScreen: View {
             SettingsListButton(
                 icon: "lock.shield",
                 heading: Strings.parentalControls,
-                caption: "Block content by rating",
-                trailingText: container.parentalControlsRepository.isEnabled ? "On" : "Off",
+                caption: Strings.parentalControlsSummary,
+                trailingText: container.parentalControlsRepository.isEnabled ? Strings.enabled : Strings.disabled,
                 action: { settingsRouter.navigate(to: .moonfinParentalControls) }
             )
             .focused($focusedRoute, equals: .moonfinParentalControls)
@@ -80,7 +80,7 @@ struct SettingsMainScreen: View {
             SettingsListButton(
                 icon: "tv",
                 heading: Strings.liveTvGuide,
-                caption: "Channel order, indicators, filters",
+                caption: Strings.liveTvPreferences,
                 action: { settingsRouter.navigate(to: .liveTvGuideOptions) }
             )
             .focused($focusedRoute, equals: .liveTvGuideOptions)
@@ -88,7 +88,7 @@ struct SettingsMainScreen: View {
             SettingsListButton(
                 icon: "chart.bar",
                 heading: Strings.telemetry,
-                caption: "Analytics & crash reporting",
+                caption: Strings.telemetryDescription,
                 action: { settingsRouter.navigate(to: .telemetry) }
             )
             .focused($focusedRoute, equals: .telemetry)
@@ -96,7 +96,7 @@ struct SettingsMainScreen: View {
             SettingsListButton(
                 icon: "info.circle",
                 heading: Strings.about,
-                caption: "Version & licenses",
+                caption: Strings.aboutSummary,
                 action: { settingsRouter.navigate(to: .about) }
             )
             .focused($focusedRoute, equals: .about)

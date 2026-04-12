@@ -240,15 +240,77 @@ enum Strings {
     static var maxBitrate: String { l("pref_max_bitrate_title") }
     static var maxResolution: String { l("pref_max_resolution_title") }
     static var subtitlesSettings: String { l("pref_subtitles") }
-    static var audioSettings: String { l("pref_audio") }
     static var mediaSegmentActions: String { l("pref_mediasegment_actions") }
     static var nextUpSettings: String { l("pref_playback_next_up") }
     static var prerollsEnabled: String { l("pref_prerolls_enabled") }
     static var prerollsEnabledDescription: String { l("pref_prerolls_enabled_description") }
     static var navbarPosition: String { l("pref_navbar_position") }
     static var liveTvSettings: String { l("pref_live_tv_cat") }
-    static var debugOptions: String { l("lbl_enable_debug") }
     static var licenses: String { l("licenses_link") }
+    static var loginDescription: String { l("pref_login_description") }
+    static var customizationDescription: String { l("pref_customization_description") }
+    static var playbackDescription: String { l("pref_playback_description") }
+    static var telemetryDescription: String { l("pref_telemetry_description") }
+    static var plugin: String { l("pref_plugin_settings") }
+    static var pluginSync: String { l("pref_plugin_sync_enable") }
+    static var pluginSyncDescription: String { l("pref_plugin_sync_description") }
+    static var licensesDescription: String { l("licenses_link_description") }
+    static var advanced: String { l("advanced_settings") }
+    static var liveTvPreferences: String { l("live_tv_preferences") }
+    static var mediaSegmentsSettings: String { l("pref_playback_media_segments") }
+    static var trickPlay: String { l("settings_trickplay") }
+    static var trickPlayDescription: String { l("settings_trickplay_description") }
+    static var authenticationSummary: String { l("settings_authentication_summary") }
+    static var customizationSummary: String { l("settings_customization_summary") }
+    static var homeSummary: String { l("settings_home_summary") }
+    static var pluginSummary: String { l("settings_plugin_summary") }
+    static var screensaverSummary: String { l("settings_screensaver_summary") }
+    static var syncPlaySummary: String { l("settings_syncplay_summary") }
+    static var parentalControlsSummary: String { l("settings_parental_controls_summary") }
+    static var aboutSummary: String { l("settings_about_summary") }
+    static var nextUpBehaviorDescription: String { l("settings_playback_next_up_behavior_description") }
+    static var nextUpBehaviorTitle: String { l("pref_next_up_behavior_title") }
+    static var nextUpTimeoutTitle: String { l("pref_next_up_timeout_title") }
+    static var nextUpTimeoutDescription: String { l("settings_playback_next_up_timeout_description") }
+    static var stillWatchingPrompt: String { l("settings_playback_still_watching") }
+    static var stillWatchingPromptDescription: String { l("settings_playback_still_watching_description") }
+    static var audioBehavior: String { l("settings_playback_audio_behavior") }
+    static var audioBehaviorDescription: String { l("settings_playback_audio_behavior_description") }
+    static var audioOutput: String { l("lbl_audio_output") }
+    static var slideshowInterval: String { l("settings_slideshow_interval") }
+    static var slideshowIntervalDescription: String { l("settings_slideshow_interval_description") }
+    static var mediaSegmentsDescription: String { l("settings_media_segments_description") }
+    static var advancedDescription: String { l("settings_advanced_description") }
+    static var resumePreroll: String { l("lbl_resume_preroll") }
+    static var skipForwardLength: String { l("skip_forward_length") }
+    static var unpauseRewind: String { l("unpause_rewind_duration") }
+    static var videoStartDelay: String { l("video_start_delay") }
+    static var defaultZoom: String { l("default_video_zoom") }
+    static var aboutVersion: String { l("settings_about_version") }
+    static var aboutBuild: String { l("settings_about_build") }
+    static var noLicensesFound: String { l("settings_licenses_none") }
+    static var toolbar: String { l("settings_toolbar") }
+    static var backgrounds: String { l("settings_backgrounds") }
+    static var previewsAndMusic: String { l("settings_plugin_previews_music") }
+    static var integrations: String { l("settings_integrations") }
+    static var pluginToolbarSummary: String { l("settings_plugin_toolbar_summary") }
+    static var pluginMediaBarSummary: String { l("settings_plugin_media_bar_summary") }
+    static var pluginBackgroundsSummary: String { l("settings_plugin_backgrounds_summary") }
+    static var pluginPreviewsMusicSummary: String { l("settings_plugin_previews_music_summary") }
+    static var pluginIntegrationsSummary: String { l("settings_plugin_integrations_summary") }
+    static var fetchLimit: String { l("settings_fetch_limit") }
+    static var syncPlayMinDelaySpeed: String { l("settings_syncplay_min_delay_speed") }
+    static var syncPlayMaxDelaySpeed: String { l("settings_syncplay_max_delay_speed") }
+    static var syncPlaySpeedDuration: String { l("settings_syncplay_speed_duration") }
+    static var syncPlayMinDelaySkip: String { l("settings_syncplay_min_delay_skip") }
+    static var syncPlayExtraOffset: String { l("settings_syncplay_extra_offset") }
+    static var channelOrder: String { l("settings_channel_order") }
+    static var comingSoon: String { l("settings_coming_soon") }
+    static var licenseLabel: String { l("license_license") }
+    static func currentValue(_ value: String) -> String { l("settings_current_value", value) }
+    static func episodeCount(_ count: Int) -> String { l("settings_episode_count", count) }
+    static var secondsShort: String { l("unit_seconds_short") }
+    static var millisecondsShort: String { l("unit_milliseconds_short") }
 
     // MARK: - Settings Values
 

@@ -9,10 +9,10 @@ struct SettingsLicenseDetailScreen: View {
     @State private var entry: LicenseEntry?
 
     var body: some View {
-        SettingsScreenLayout(title: entry?.name ?? "License") {
+        SettingsScreenLayout(title: entry?.name ?? Strings.licenseLabel) {
             SettingsListButton(
                 icon: "chevron.left",
-                heading: "Back",
+                heading: Strings.back,
                 action: { settingsRouter.goBack() }
             )
 
@@ -23,7 +23,7 @@ struct SettingsLicenseDetailScreen: View {
                             .font(.bodyMd)
                             .foregroundColor(theme.colorScheme.listCaption)
                         Spacer()
-                        Text("v\(entry.version)")
+                        Text("\(Strings.aboutVersion): \(entry.version)")
                             .font(.bodySm)
                             .foregroundColor(theme.colorScheme.listCaption)
                     }

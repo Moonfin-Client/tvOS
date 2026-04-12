@@ -10,52 +10,52 @@ struct SettingsMoonfinScreen: View {
     private var pluginEnabled: Bool { prefs[UserPreferences.pluginSyncEnabled] }
 
     var body: some View {
-        SettingsScreenLayout(title: "Plugin") {
+        SettingsScreenLayout(title: Strings.plugin) {
             let _ = refreshTrigger
 
             SettingsToggleButton(
                 icon: "arrow.triangle.2.circlepath",
-                heading: "Plugin Sync",
-                caption: "Sync settings with Moonfin server plugin",
+                heading: Strings.pluginSync,
+                caption: Strings.pluginSyncDescription,
                 isOn: pluginSyncBinding
             )
 
             SettingsListButton(
                 icon: "rectangle.topthird.inset.filled",
-                heading: "Toolbar",
-                caption: "Navbar, shuffle, genres, libraries",
+                heading: Strings.toolbar,
+                caption: Strings.pluginToolbarSummary,
                 action: { settingsRouter.navigate(to: .pluginToolbar) }
             )
             .focused($focusedRoute, equals: .pluginToolbar)
 
             SettingsListButton(
                 icon: "rectangle.inset.filled",
-                heading: "Media Bar",
-                caption: "Featured slideshow on home screen",
+                heading: Strings.mediaBarTitle,
+                caption: Strings.pluginMediaBarSummary,
                 action: { settingsRouter.navigate(to: .pluginMediaBar) }
             )
             .focused($focusedRoute, equals: .pluginMediaBar)
 
             SettingsListButton(
                 icon: "photo.artframe",
-                heading: "Backgrounds",
-                caption: "Backdrop, blur, seasonal effects",
+                heading: Strings.backgrounds,
+                caption: Strings.pluginBackgroundsSummary,
                 action: { settingsRouter.navigate(to: .pluginBackgrounds) }
             )
             .focused($focusedRoute, equals: .pluginBackgrounds)
 
             SettingsListButton(
                 icon: "play.rectangle",
-                heading: "Previews & Music",
-                caption: "Media previews, theme music",
+                heading: Strings.previewsAndMusic,
+                caption: Strings.pluginPreviewsMusicSummary,
                 action: { settingsRouter.navigate(to: .pluginPreviewsMusic) }
             )
             .focused($focusedRoute, equals: .pluginPreviewsMusic)
 
             SettingsListButton(
                 icon: "puzzlepiece.extension",
-                heading: "Integrations",
-                caption: "Seerr, multi-server, ratings",
+                heading: Strings.integrations,
+                caption: Strings.pluginIntegrationsSummary,
                 action: { settingsRouter.navigate(to: .pluginIntegrations) }
             )
             .focused($focusedRoute, equals: .pluginIntegrations)

@@ -16,7 +16,7 @@ struct SettingsSyncPlayValueScreen: View {
 
     var body: some View {
         SettingsScreenLayout(title: title) {
-            Text("Current: \(currentValue)\(suffix)")
+            Text(Strings.currentValue("\(currentValue)\(suffix)"))
                 .font(.captionSm)
                 .foregroundColor(theme.colorScheme.listCaption)
                 .frame(maxWidth: .infinity, alignment: .leading)

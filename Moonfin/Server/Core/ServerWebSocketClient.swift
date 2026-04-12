@@ -56,19 +56,20 @@ final class ServerWebSocketClient: ServerWebSocketApi {
         webSocketTask = nil
     }
 
-    private func buildJellyfinURL(base: URL) -> URL {
-        let str = base.absoluteString
+    private func webSocketBaseURL(from base: URL) -> String {
+        base.absoluteString
             .replacingOccurrences(of: "http://", with: "ws://")
             .replacingOccurrences(of: "https://", with: "wss://")
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+
+    private func buildJellyfinURL(base: URL) -> URL {
+        let str = webSocketBaseURL(from: base)
         return URL(string: "\(str)/socket")!
     }
 
     private func buildEmbyURL(base: URL, token: String, deviceId: String) -> URL {
-        let str = base.absoluteString
-            .replacingOccurrences(of: "http://", with: "ws://")
-            .replacingOccurrences(of: "https://", with: "wss://")
-            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let str = webSocketBaseURL(from: base)
         let encoded = deviceId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? deviceId
         return URL(string: "\(str)/embywebsocket?api_key=\(token)&deviceId=\(encoded)")!
     }

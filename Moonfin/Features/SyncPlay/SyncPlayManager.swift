@@ -26,9 +26,7 @@ final class SyncPlayManager: ObservableObject {
     private var lastCommandKey: String?
     private var lastSyncPositionMs: Int64 = 0
     private var lastSyncTimeMs: Int64 = 0
-    private var commandJitterSamples: [Int64] = []
     private var isRefreshingAfterReconnect = false
-    private let maxCommandJitterSamples = 24
     private let logger = Logger(subsystem: "org.moonfin.appletv", category: "SyncPlay")
 
     private let pingIntervalMs: UInt64 = 15_000
@@ -201,7 +199,6 @@ final class SyncPlayManager: ObservableObject {
         scheduledTask?.cancel()
         scheduledTask = nil
         lastCommandKey = nil
-        commandJitterSamples.removeAll()
         lastSyncPositionMs = 0
         lastSyncTimeMs = 0
         restorePlaybackRate()
@@ -408,8 +405,6 @@ final class SyncPlayManager: ObservableObject {
         let targetTimeMs = command.whenUtcMs
         let delayMs = targetTimeMs - serverTimeNow
 
-        recordCommandJitter(abs(delayMs))
-
         let positionMs = clampedPositionMs(SyncPlayUtils.ticksToMs(command.positionTicks))
         lastSyncPositionMs = positionMs
         lastSyncTimeMs = targetTimeMs
@@ -445,7 +440,6 @@ final class SyncPlayManager: ObservableObject {
     private func handleSeek(_ command: SyncPlayCommand) {
         let serverNow = timeSyncManager?.getServerTimeNow() ?? 0
         let latenessMs = max(0, serverNow - command.whenUtcMs)
-        recordCommandJitter(latenessMs)
 
         let rawPositionMs = SyncPlayUtils.ticksToMs(command.positionTicks)
         let adjustedPositionMs: Int64 = {
@@ -505,20 +499,6 @@ final class SyncPlayManager: ObservableObject {
         }
         let durationMs = Int64(durationSec * 1000)
         return max(0, min(value, max(0, durationMs)))
-    }
-
-    private func recordCommandJitter(_ jitterMs: Int64) {
-        guard advancedCorrectionEnabled else { return }
-        commandJitterSamples.append(max(0, jitterMs))
-        while commandJitterSamples.count > maxCommandJitterSamples {
-            commandJitterSamples.removeFirst()
-        }
-
-        if commandJitterSamples.count >= 6 {
-            let avg = commandJitterSamples.reduce(0, +) / Int64(commandJitterSamples.count)
-            let clockJitter = timeSyncManager?.offsetJitterMs ?? 0
-            logger.debug("Timing jitter avg=\(avg, privacy: .public)ms clock=\(clockJitter, privacy: .public)ms")
-        }
     }
 
     private func restorePlaybackRate() {

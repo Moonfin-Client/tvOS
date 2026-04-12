@@ -17,15 +17,15 @@ struct SettingsLicensesScreen: View {
     @State private var licenses: [LicenseEntry] = []
 
     var body: some View {
-        SettingsScreenLayout(title: "Licenses") {
+        SettingsScreenLayout(title: Strings.licenses) {
             SettingsListButton(
                 icon: "chevron.left",
-                heading: "Back",
+                heading: Strings.back,
                 action: { settingsRouter.goBack() }
             )
 
             if licenses.isEmpty {
-                Text("No licenses found")
+                Text(Strings.noLicensesFound)
                     .font(.bodyMd)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity)

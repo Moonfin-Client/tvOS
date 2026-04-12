@@ -6,22 +6,22 @@ struct SettingsAboutScreen: View {
     @FocusState private var focusedRoute: SettingsRoute?
 
     private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? Strings.unknown
     }
 
     private var buildNumber: String {
-        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
+        Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? Strings.unknown
     }
 
     var body: some View {
-        SettingsScreenLayout(title: "About") {
-            aboutItem(label: "Version", value: appVersion)
-            aboutItem(label: "Build", value: buildNumber)
+        SettingsScreenLayout(title: Strings.about) {
+            aboutItem(label: Strings.aboutVersion, value: appVersion)
+            aboutItem(label: Strings.aboutBuild, value: buildNumber)
 
             SettingsListButton(
                 icon: "doc.text",
-                heading: "Licenses",
-                caption: "Open source licenses",
+                heading: Strings.licenses,
+                caption: Strings.licensesDescription,
                 action: { settingsRouter.navigate(to: .licenses) }
             )
             .focused($focusedRoute, equals: .licenses)

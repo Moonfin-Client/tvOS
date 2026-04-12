@@ -56,13 +56,6 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private static let watchdogStallThreshold: TimeInterval = 5
     private static let watchdogMaxStalls = 3
 
-    private var driftFramesDropped: Int = 0
-    private var driftFramesHeld: Int = 0
-    private var driftMaxAbs: Double = 0
-    private var driftSum: Double = 0
-    private var driftSampleCount: Int = 0
-    private var lastDriftLogTime: CFAbsoluteTime = 0
-
     override init() {
         frameSemaphore = DispatchSemaphore(value: maxFrameQueueDepth)
         super.init()
@@ -611,10 +604,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         let action = evaluateFrameDrift(ptsSec)
         switch action {
         case .drop:
-            driftFramesDropped += 1
             return
         case .hold:
-            driftFramesHeld += 1
+            break
         case .display:
             break
         }
@@ -660,12 +652,6 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         }
         let audioClock = renderer.currentTime
         let drift = ptsSec - audioClock
-        let absDrift = abs(drift)
-
-        driftSum += absDrift
-        driftSampleCount += 1
-        if absDrift > driftMaxAbs { driftMaxAbs = absDrift }
-        logDriftTelemetryIfNeeded()
 
         if drift > 0.040 {
             Thread.sleep(forTimeInterval: min(drift - 0.010, 0.050))
@@ -674,23 +660,6 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             return .drop
         }
         return .display
-    }
-
-    private func resetDriftStats() {
-        driftFramesDropped = 0
-        driftFramesHeld = 0
-        driftMaxAbs = 0
-        driftSum = 0
-        driftSampleCount = 0
-        lastDriftLogTime = CFAbsoluteTimeGetCurrent()
-    }
-
-    private func logDriftTelemetryIfNeeded() {
-        let now = CFAbsoluteTimeGetCurrent()
-        guard now - lastDriftLogTime >= 30, driftSampleCount > 0 else { return }
-        let avg = driftSum / Double(driftSampleCount)
-        nativeLogger.info("drift stats: avg=\(String(format: "%.1f", avg * 1000))ms max=\(String(format: "%.1f", self.driftMaxAbs * 1000))ms dropped=\(self.driftFramesDropped) held=\(self.driftFramesHeld) samples=\(self.driftSampleCount)")
-        resetDriftStats()
     }
 
     private func handleEOF() {
@@ -721,7 +690,6 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         seekTarget = seconds
         consecutiveReadErrors = 0
         lastVideoPtsSeconds = 0
-        resetDriftStats()
 
         videoDecoder?.flush()
         videoDecoder?.resetErrorState()

@@ -168,8 +168,6 @@ final class SeerrRepository: SeerrRepositoryProtocol {
             return
         }
 
-        logger.debug("Auto-initializing from saved preferences for user \(self.lastUserId ?? "")")
-
         if !storedApiKey.isEmpty {
             initialize(serverUrl: serverUrl, apiKey: storedApiKey)
             isAvailable.send(true)
@@ -216,10 +214,8 @@ final class SeerrRepository: SeerrRepositoryProtocol {
 
             let status = try await httpClient?.getMoonfinStatus()
             if status?.authenticated == true {
-                logger.debug("Moonfin session authenticated (via Status)")
                 isAvailable.send(true)
             } else {
-                logger.debug("Moonfin session not authenticated, user needs to login")
                 isAvailable.send(false)
             }
         } catch {
@@ -524,13 +520,11 @@ final class SeerrRepository: SeerrRepositoryProtocol {
         isMoonfinMode.send(true)
 
         if status.authenticated {
-            logger.debug("Moonfin session authenticated in configureWithMoonfin")
             if let seerrUserId = status.jellyseerrUserId {
                 prefs?[SeerrPreferences.moonfinJellyseerrUserId] = String(seerrUserId)
             }
             isAvailable.send(true)
         } else {
-            logger.debug("Moonfin session not authenticated, user needs to login")
             isAvailable.send(false)
         }
 
@@ -555,7 +549,6 @@ final class SeerrRepository: SeerrRepositoryProtocol {
                 prefs?[SeerrPreferences.moonfinJellyseerrUserId] = String(seerrUserId)
             }
             isAvailable.send(true)
-            logger.info("Moonfin login successful")
         }
 
         return response

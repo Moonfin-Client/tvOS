@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-import os
 
 @MainActor
 final class PluginSyncService: ObservableObject {
@@ -11,7 +10,6 @@ final class PluginSyncService: ObservableObject {
     private let resolveSeerrRepository: () -> SeerrRepositoryProtocol?
     private let resolveParentalRepository: () -> ParentalControlsRepository?
     private let defaults: UserDefaults
-    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "PluginSync")
 
     private var serverSchemaVersion = 1
     private var pendingSeerrRowsConfig: [String: Any]?
@@ -183,13 +181,8 @@ final class PluginSyncService: ObservableObject {
 
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: bodyDict)
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
-                print("[PluginSync] Push failed (\(http.statusCode))")
-            }
-        } catch {
-            print("[PluginSync] Push failed: \(error.localizedDescription)")
-        }
+            _ = try await URLSession.shared.data(for: request)
+        } catch { }
     }
 
     // MARK: - Collect local
@@ -563,9 +556,7 @@ final class PluginSyncService: ObservableObject {
                 jellyfinBaseUrl: baseURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")),
                 jellyfinToken: client.accessToken ?? ""
             )
-        } catch {
-            print("[PluginSync] Moonfin proxy auto-configure failed: \(error.localizedDescription)")
-        }
+        } catch { }
     }
 
     private func fetchJellyseerrConfig(client: HttpClient) async {
@@ -604,11 +595,7 @@ final class PluginSyncService: ObservableObject {
             if enabled, let serverUrl, !serverUrl.isEmpty {
                 seerr.set(serverUrl, forKey: SeerrPreferences.serverUrl.key)
             }
-
-            logger.debug("Jellyseerr config synced: variant=\(variant, privacy: .public) enabled=\(enabled, privacy: .public)")
-        } catch {
-            print("[PluginSync] Jellyseerr config fetch failed: \(error.localizedDescription)")
-        }
+        } catch { }
     }
 
     // MARK: - Helpers

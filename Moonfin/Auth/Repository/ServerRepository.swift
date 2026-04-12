@@ -70,7 +70,6 @@ final class ServerRepository: ServerRepositoryProtocol {
                             let ver = ServerVersion(version)
                             if ver < Server.minimumJellyfinVersion {
                                 let msg = "Version \(version) below minimum"
-                                print("[ServerRepository] \(candidate) — \(msg)")
                                 candidateErrors[candidate] = msg
                                 continue
                             }
@@ -78,7 +77,6 @@ final class ServerRepository: ServerRepositoryProtocol {
 
                         guard let idString = info.id, let id = UUID.from(rawId: idString) else {
                             let msg = "Invalid or missing server id (raw: \(info.id ?? "nil"))"
-                            print("[ServerRepository] \(candidate) — \(msg)")
                             candidateErrors[candidate] = msg
                             continue
                         }
@@ -86,11 +84,9 @@ final class ServerRepository: ServerRepositoryProtocol {
                         break
                     } catch let urlError as URLError {
                         let msg = "Network: \(urlError.localizedDescription) (code \(urlError.code.rawValue))"
-                        print("[ServerRepository] \(candidate) — \(msg)")
                         candidateErrors[candidate] = msg
                     } catch {
                         let msg = String(describing: error)
-                        print("[ServerRepository] \(candidate) — \(msg)")
                         candidateErrors[candidate] = msg
                     }
                 }
