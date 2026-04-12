@@ -36,7 +36,7 @@ enum Destination: Hashable {
 
     // MARK: - Item Details
 
-    case itemDetails(itemId: String, serverId: String? = nil)
+    case itemDetails(itemId: String, serverId: String? = nil, autoPlay: Bool = false)
     case channelDetails(itemId: String, channelId: String)
     case seriesTimerDetails(itemId: String)
     case itemList(itemId: String, serverId: String? = nil)

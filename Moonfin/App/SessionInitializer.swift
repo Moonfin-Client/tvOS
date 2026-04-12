@@ -112,6 +112,10 @@ final class SessionInitializer: ObservableObject {
             guard let itemId = components.queryItems?.first(where: { $0.name == "id" })?.value else { return nil }
             let serverId = components.queryItems?.first(where: { $0.name == "serverId" })?.value
             return .itemDetails(itemId: itemId, serverId: serverId)
+        case "play":
+            guard let itemId = components.queryItems?.first(where: { $0.name == "id" })?.value else { return nil }
+            let serverId = components.queryItems?.first(where: { $0.name == "serverId" })?.value
+            return .itemDetails(itemId: itemId, serverId: serverId, autoPlay: true)
         default:
             return nil
         }

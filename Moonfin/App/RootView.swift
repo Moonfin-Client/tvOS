@@ -411,11 +411,12 @@ struct MainNavigationView: View {
             FolderBrowseScreen(container: container)
         case .folderBrowser(let itemId, _, _):
             FolderBrowseScreen(container: container, folderId: itemId)
-        case .itemDetails(let itemId, let serverId):
+        case .itemDetails(let itemId, let serverId, let autoPlay):
             ItemDetailsView(
                 container: container,
                 itemId: itemId,
                 serverId: serverId,
+                autoPlay: autoPlay,
                 sidebarEntryToken: sidebarEntryToken,
                 sidebarHandoffToken: sidebarHandoffToken
             )

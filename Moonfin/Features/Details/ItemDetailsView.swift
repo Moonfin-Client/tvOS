@@ -33,6 +33,8 @@ struct ItemDetailsView: View {
     @State private var restoredEpisodeId: String?
     @State private var restoreEpisodeFocusTrigger: Int = 0
     private let routeServerId: String?
+    private let autoPlay: Bool
+    @State private var didAutoPlay = false
 
     private func focusTrace(_ message: String) {
         _ = message
@@ -83,6 +85,7 @@ struct ItemDetailsView: View {
         container: AppContainer,
         itemId: String,
         serverId: String? = nil,
+        autoPlay: Bool = false,
         sidebarEntryToken: Int = 0,
         sidebarHandoffToken: Int = 0
     ) {
@@ -92,6 +95,7 @@ struct ItemDetailsView: View {
             serverId: serverId
         ))
         self.routeServerId = serverId
+        self.autoPlay = autoPlay
         self.sidebarEntryToken = sidebarEntryToken
         self.sidebarHandoffToken = sidebarHandoffToken
     }
@@ -137,6 +141,12 @@ struct ItemDetailsView: View {
                     focusTrace("initial focusedButton=\(String(describing: focusedButton))")
                 }
                 initializeTrackIndices()
+
+                if autoPlay, !didAutoPlay, let item = viewModel.item {
+                    didAutoPlay = true
+                    let ticks = item.userData?.playbackPositionTicks ?? 0
+                    playVideo(item: item, positionTicks: ticks)
+                }
             }
         }
         .onChange(of: focusedButton) { newValue in

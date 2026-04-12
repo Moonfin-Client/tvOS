@@ -28,6 +28,7 @@ struct TopShelfCachePayload: Codable {
         let id: String
         let title: String
         let imageURL: String?
+        let contentImageURL: String?
         let displayURL: String
         let playURL: String
         let playbackProgress: Double?
@@ -37,58 +38,44 @@ struct TopShelfCachePayload: Codable {
 }
 
 struct TopShelfCacheWriter {
-    private static let maxItemsPerSection = 12
+    private static let maxItems = 15
 
     func write(
         rows: [HomeRow],
         imageURL: (ServerItem, HomeRowType) -> String?,
-        isLandscape: (HomeRowType) -> Bool
+        contentImageURL: (ServerItem) -> String?
     ) {
-        var sections: [TopShelfCachePayload.Section] = []
+        let latestRows = rows.filter { if case .latestMedia = $0.rowType { return true }; return false }
 
-        if let continueWatchingRow = rows.first(where: { $0.rowType == .continueWatching }) {
-            let landscape = isLandscape(.continueWatching)
-            let items = continueWatchingRow.items
-                .prefix(Self.maxItemsPerSection)
-                .compactMap { makeItem(from: $0, imageURL: imageURL($0, .continueWatching)) }
-            if !items.isEmpty {
-                sections.append(
-                    TopShelfCachePayload.Section(
-                        id: "continue_watching",
-                        title: continueWatchingRow.title,
-                        items: items,
-                        landscape: landscape
-                    )
-                )
+        var allItems: [TopShelfCachePayload.Item] = []
+        for row in latestRows {
+            let mapped = row.items.compactMap { serverItem in
+                makeItem(from: serverItem, imageURL: imageURL(serverItem, row.rowType), contentImageURL: contentImageURL(serverItem))
             }
+            allItems.append(contentsOf: mapped)
         }
 
-        for latestRow in rows.filter({ if case .latestMedia = $0.rowType { return true }; return false }) {
-            let landscape = isLandscape(latestRow.rowType)
-            let items = latestRow.items
-                .prefix(Self.maxItemsPerSection)
-                .compactMap { makeItem(from: $0, imageURL: imageURL($0, latestRow.rowType)) }
-            if !items.isEmpty {
-                sections.append(
-                    TopShelfCachePayload.Section(
-                        id: "latest_\(latestRow.id)",
-                        title: latestRow.title,
-                        items: items,
-                        landscape: landscape
-                    )
-                )
+        allItems.shuffle()
+        let selected = Array(allItems.prefix(Self.maxItems))
+
+        guard !selected.isEmpty else {
+            if let fileURL = TopShelfShared.cacheFileURL {
+                try? FileManager.default.removeItem(at: fileURL)
             }
-        }
-
-        guard let fileURL = TopShelfShared.cacheFileURL else { return }
-
-        if sections.isEmpty {
-            try? FileManager.default.removeItem(at: fileURL)
             notifyTopShelfChanged()
             return
         }
 
-        let payload = TopShelfCachePayload(sections: sections)
+        let section = TopShelfCachePayload.Section(
+            id: "latest",
+            title: "Latest",
+            items: selected,
+            landscape: true
+        )
+
+        guard let fileURL = TopShelfShared.cacheFileURL else { return }
+
+        let payload = TopShelfCachePayload(sections: [section])
         let encoder = JSONEncoder()
         do {
             let encoded = try encoder.encode(payload)
@@ -111,23 +98,24 @@ struct TopShelfCacheWriter {
 #endif
     }
 
-    private func makeItem(from item: ServerItem, imageURL: String?) -> TopShelfCachePayload.Item? {
-        guard let link = deepLink(for: item) else { return nil }
-        let linkString = link.absoluteString
+    private func makeItem(from item: ServerItem, imageURL: String?, contentImageURL: String?) -> TopShelfCachePayload.Item? {
+        guard let displayLink = deepLink(for: item, host: "item"),
+              let playLink = deepLink(for: item, host: "play") else { return nil }
         return TopShelfCachePayload.Item(
             id: item.id,
             title: item.name,
             imageURL: imageURL,
-            displayURL: linkString,
-            playURL: linkString,
+            contentImageURL: contentImageURL,
+            displayURL: displayLink.absoluteString,
+            playURL: playLink.absoluteString,
             playbackProgress: playbackProgress(for: item)
         )
     }
 
-    private func deepLink(for item: ServerItem) -> URL? {
+    private func deepLink(for item: ServerItem, host: String = "item") -> URL? {
         var components = URLComponents()
         components.scheme = "moonfin"
-        components.host = "item"
+        components.host = host
 
         var queryItems = [URLQueryItem(name: "id", value: item.id)]
         if let serverId = item.effectiveServerId, !serverId.isEmpty {

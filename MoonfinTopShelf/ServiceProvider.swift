@@ -25,6 +25,7 @@ private struct TopShelfCachePayload: Codable {
         let id: String
         let title: String
         let imageURL: String?
+        let contentImageURL: String?
         let displayURL: String
         let playURL: String
         let playbackProgress: Double?
@@ -46,19 +47,14 @@ final class ServiceProvider: TVTopShelfContentProvider {
 
         guard let payload = try? JSONDecoder().decode(TopShelfCachePayload.self, from: data) else { return nil }
 
-        let sections: [TVTopShelfItemCollection<TVTopShelfSectionedItem>] = payload.sections.compactMap { section in
-            let shape: TVTopShelfSectionedItem.ImageShape = (section.landscape == true) ? .hdtv : .poster
-
-            let items: [TVTopShelfSectionedItem] = section.items.compactMap { cachedItem in
-                let item = TVTopShelfSectionedItem(identifier: cachedItem.id)
+        let carouselItems: [TVTopShelfCarouselItem] = payload.sections.flatMap { section in
+            section.items.compactMap { cachedItem -> TVTopShelfCarouselItem? in
+                let item = TVTopShelfCarouselItem(identifier: cachedItem.id)
                 item.title = cachedItem.title
-                item.imageShape = shape
+                item.contextTitle = section.title
 
-                if let progress = cachedItem.playbackProgress {
-                    item.playbackProgress = max(0, min(1, progress))
-                }
-
-                if let imageURL = cachedItem.imageURL, let url = URL(string: imageURL) {
+                let contentURL = cachedItem.contentImageURL ?? cachedItem.imageURL
+                if let urlString = contentURL, let url = URL(string: urlString) {
                     item.setImageURL(url, for: .screenScale1x)
                     item.setImageURL(url, for: .screenScale2x)
                 }
@@ -73,15 +69,10 @@ final class ServiceProvider: TVTopShelfContentProvider {
 
                 return item
             }
-
-            guard !items.isEmpty else { return nil }
-            let collection = TVTopShelfItemCollection(items: items)
-            collection.title = section.title
-            return collection
         }
 
-        guard !sections.isEmpty else { return nil }
+        guard !carouselItems.isEmpty else { return nil }
 
-        return TVTopShelfSectionedContent(sections: sections)
+        return TVTopShelfCarouselContent(style: .actions, items: carouselItems)
     }
 }

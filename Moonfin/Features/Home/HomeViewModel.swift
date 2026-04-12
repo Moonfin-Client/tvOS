@@ -802,8 +802,8 @@ final class HomeViewModel: ObservableObject {
                     return self.topShelfPosterImageUrl(for: item)
                 }
             },
-            isLandscape: { rowType in
-                displayType(rowType).aspectRatio >= 1.0
+            contentImageURL: { [weak self] item in
+                self?.topShelfThumbImageUrl(for: item)
             }
         )
     }
