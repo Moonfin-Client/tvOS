@@ -21,7 +21,7 @@ struct SeerrMediaDetailsView: View {
            let decoded = try? JSONDecoder().decode(SeerrDiscoverItemDto.self, from: data) {
             item = decoded
         } else {
-            item = SeerrDiscoverItemDto(id: 0, mediaType: nil, title: "Unknown", name: nil,
+            item = SeerrDiscoverItemDto(id: 0, mediaType: nil, title: Strings.seerrUnknown, name: nil,
                                         posterPath: nil, backdropPath: nil, overview: nil,
                                         releaseDate: nil, firstAirDate: nil)
         }
@@ -256,7 +256,7 @@ struct SeerrMediaDetailsView: View {
                 let canRequest = viewModel.canRequestHd || viewModel.canRequest4k
                 SeerrActionButton(
                     icon: canRequest ? "plus.circle.fill" : viewModel.mediaStatus.icon,
-                    label: canRequest ? "Request" : viewModel.mediaStatus.text,
+                    label: canRequest ? Strings.seerrRequestAction : viewModel.mediaStatus.text,
                     action: { if canRequest { viewModel.handleRequestTap() } },
                     isLoading: viewModel.isRequesting
                 )
@@ -267,7 +267,7 @@ struct SeerrMediaDetailsView: View {
                 if viewModel.hasPendingRequests {
                     SeerrActionButton(
                         icon: "trash",
-                        label: "Cancel",
+                        label: Strings.cancel,
                         action: { viewModel.cancelPendingRequests() },
                         isLoading: viewModel.isRequesting
                     )
@@ -278,7 +278,7 @@ struct SeerrMediaDetailsView: View {
                 if viewModel.hasTrailer {
                     SeerrActionButton(
                         icon: "film",
-                        label: "Trailer",
+                        label: Strings.seerrTrailer,
                         action: {
                             router.navigate(to: .trailerPlayer(
                                 videoId: viewModel.trailerYouTubeKey,
@@ -293,7 +293,7 @@ struct SeerrMediaDetailsView: View {
                 if viewModel.showPlayButton {
                     SeerrActionButton(
                         icon: "play.fill",
-                        label: "Play",
+                        label: Strings.play,
                         action: {
                             if let jellyfinId = viewModel.jellyfinItemId {
                                 router.navigate(to: .itemDetails(itemId: jellyfinId))
@@ -379,43 +379,43 @@ struct SeerrMediaDetailsView: View {
     private func buildFactRows() -> [(label: String, value: String)] {
         var rows: [(label: String, value: String)] = []
         if let vote = viewModel.voteAverage, vote > 0 {
-            rows.append(("TMDB Score", String(format: "%.0f%%", vote * 10)))
+            rows.append((Strings.seerrTmdbScore, String(format: "%.0f%%", vote * 10)))
         }
         if let status = viewModel.statusText {
-            rows.append(("Status", status))
+            rows.append((Strings.statusTitle, status))
         }
         if viewModel.isMovie {
             if let date = viewModel.movieDetails?.releaseDate {
-                rows.append(("Release Date", formatDate(date)))
+                rows.append((Strings.seerrReleaseDate, formatDate(date)))
             }
             if let revenue = viewModel.revenueText {
-                rows.append(("Revenue", revenue))
+                rows.append((Strings.seerrRevenue, revenue))
             }
             if let runtime = viewModel.runtimeText {
-                rows.append(("Runtime", runtime))
+                rows.append((Strings.runtime, runtime))
             }
             if let budget = viewModel.budgetText {
-                rows.append(("Budget", budget))
+                rows.append((Strings.seerrBudget, budget))
             }
         } else {
             if let date = viewModel.tvDetails?.firstAirDate {
-                rows.append(("First Aired", formatDate(date)))
+                rows.append((Strings.seerrFirstAired, formatDate(date)))
             }
             if let date = viewModel.tvDetails?.lastAirDate {
-                rows.append(("Last Aired", formatDate(date)))
+                rows.append((Strings.seerrLastAired, formatDate(date)))
             }
             if viewModel.seasonCount > 0 {
-                rows.append(("Seasons", "\(viewModel.seasonCount)"))
+                rows.append((Strings.seasons, "\(viewModel.seasonCount)"))
             }
             if let eps = viewModel.episodeCount {
-                rows.append(("Episodes", "\(eps)"))
+                rows.append((Strings.episodes, "\(eps)"))
             }
             if !viewModel.networks.isEmpty {
-                rows.append(("Networks", viewModel.networks.map(\.name).joined(separator: ", ")))
+                rows.append((Strings.seerrNetworks, viewModel.networks.map(\.name).joined(separator: ", ")))
             }
         }
         if let director = viewModel.director {
-            rows.append(("Director", director))
+            rows.append((Strings.directedBy, director))
         }
         return rows
     }
@@ -425,7 +425,7 @@ struct SeerrMediaDetailsView: View {
         let genres = viewModel.genres
         if !genres.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                sectionTitle("Genres")
+                sectionTitle(Strings.genres)
                 FocusFirstRow(firstItemId: String(genres.first?.id ?? 0)) { focusBinding in
                     HStack(spacing: SpaceTokens.spaceSm) {
                         ForEach(genres) { genre in
@@ -452,7 +452,7 @@ struct SeerrMediaDetailsView: View {
         let cast = viewModel.cast
         if !cast.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                sectionTitle("Cast")
+                sectionTitle(Strings.cast)
                 FocusFirstRow(firstItemId: String(cast.first?.id ?? 0)) { focusBinding in
                     LazyHStack(spacing: SpaceTokens.spaceMd) {
                         ForEach(cast) { member in
@@ -474,7 +474,7 @@ struct SeerrMediaDetailsView: View {
     private var recommendationsSection: some View {
         if !viewModel.recommendations.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                sectionTitle("Recommendations")
+                sectionTitle(Strings.seerrRecommendations)
                 relatedItemsRow(viewModel.recommendations)
             }
         }
@@ -484,7 +484,7 @@ struct SeerrMediaDetailsView: View {
     private var similarSection: some View {
         if !viewModel.similar.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                sectionTitle("Similar")
+                sectionTitle(Strings.moreLikeThis)
                 relatedItemsRow(viewModel.similar)
             }
         }
@@ -517,7 +517,7 @@ struct SeerrMediaDetailsView: View {
         let keywords = viewModel.keywords
         if !keywords.isEmpty {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                sectionTitle("Keywords")
+                sectionTitle(Strings.seerrKeywords)
                 FocusFirstRow(firstItemId: String(keywords.first?.id ?? 0)) { focusBinding in
                     HStack(spacing: SpaceTokens.spaceSm) {
                         ForEach(keywords) { keyword in
@@ -548,7 +548,7 @@ struct SeerrMediaDetailsView: View {
 
     private var seasonPickerSheet: some View {
         VStack(spacing: SpaceTokens.spaceMd) {
-            Text("Select Seasons")
+            Text(Strings.seerrSelectSeasons)
                 .font(.titleLg).fontWeight(.bold)
                 .foregroundColor(theme.colorScheme.onBackground)
 
@@ -577,11 +577,11 @@ struct SeerrMediaDetailsView: View {
             .frame(maxHeight: 400)
 
             HStack(spacing: SpaceTokens.spaceMd) {
-                FocusableDialogButton(title: "Select All") {
+                FocusableDialogButton(title: Strings.seerrSelectAll) {
                     let available = Set((1...viewModel.seasonCount).filter { !unavailable.contains($0) })
                     viewModel.selectedSeasons = available
                 }
-                FocusableDialogButton(title: "Confirm") {
+                FocusableDialogButton(title: Strings.seerrConfirm) {
                     viewModel.confirmSeasonSelection()
                 }
             }
@@ -593,13 +593,13 @@ struct SeerrMediaDetailsView: View {
 
     private var advancedOptionsSheet: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
-            Text("Advanced Options")
+            Text(Strings.seerrAdvancedOptions)
                 .font(.titleLg).fontWeight(.bold)
                 .foregroundColor(theme.colorScheme.onBackground)
 
             if let details = viewModel.serverDetails {
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                    Text("Quality Profile")
+                    Text(Strings.seerrQualityProfile)
                         .font(.bodySm).foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: SpaceTokens.spaceSm) {
@@ -615,7 +615,7 @@ struct SeerrMediaDetailsView: View {
                 }
 
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                    Text("Root Folder")
+                    Text(Strings.seerrRootFolder)
                         .font(.bodySm).foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: SpaceTokens.spaceSm) {
@@ -635,8 +635,8 @@ struct SeerrMediaDetailsView: View {
 
             HStack {
                 Spacer()
-                FocusableDialogButton(title: "Skip") { viewModel.confirmAdvancedOptions() }
-                FocusableDialogButton(title: "Confirm") { viewModel.confirmAdvancedOptions() }
+                FocusableDialogButton(title: Strings.seerrSkip) { viewModel.confirmAdvancedOptions() }
+                FocusableDialogButton(title: Strings.seerrConfirm) { viewModel.confirmAdvancedOptions() }
             }
         }
         .padding(40)
@@ -646,7 +646,7 @@ struct SeerrMediaDetailsView: View {
 
     private var qualityPickerSheet: some View {
         VStack(spacing: SpaceTokens.spaceLg) {
-            Text("Select Quality")
+            Text(Strings.seerrSelectQuality)
                 .font(.titleLg).fontWeight(.bold)
                 .foregroundColor(theme.colorScheme.onBackground)
 
@@ -655,7 +655,7 @@ struct SeerrMediaDetailsView: View {
                     qualityOptionButton(
                         icon: "film",
                         title: viewModel.qualityOptionLabel(is4k: false),
-                        subtitle: "Standard quality request",
+                        subtitle: Strings.seerrQualityStandardRequest,
                         action: { viewModel.beginRequest(is4k: false) }
                     )
                 }
@@ -664,13 +664,13 @@ struct SeerrMediaDetailsView: View {
                     qualityOptionButton(
                         icon: "4k.tv",
                         title: viewModel.qualityOptionLabel(is4k: true),
-                        subtitle: "Ultra HD request",
+                        subtitle: Strings.seerrQualityUltraHdRequest,
                         action: { viewModel.beginRequest(is4k: true) }
                     )
                 }
 
                 if !viewModel.canRequestHd && !viewModel.canRequest4k {
-                    Text("No request qualities are currently available.")
+                    Text(Strings.seerrNoRequestQualitiesAvailable)
                         .font(.bodySm)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.65))
                         .multilineTextAlignment(.center)
@@ -680,7 +680,7 @@ struct SeerrMediaDetailsView: View {
             }
             .frame(maxWidth: 560)
 
-            FocusableDialogButton(title: "Cancel") {
+            FocusableDialogButton(title: Strings.cancel) {
                 viewModel.showQualityPicker = false
             }
         }
@@ -857,7 +857,7 @@ private struct SeerrSeasonButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text("Season \(season)")
+            Text(Strings.seerrSeason(season))
                 .font(.bodySm)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)

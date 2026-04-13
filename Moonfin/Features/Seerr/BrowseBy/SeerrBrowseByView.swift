@@ -59,7 +59,7 @@ struct SeerrBrowseByView: View {
             Image(systemName: "film.stack")
                 .font(.system(size: 48))
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
-            Text("No items found")
+            Text(Strings.noItemsFound)
                 .font(.bodyLg)
                 .foregroundColor(.white.opacity(0.5))
             Spacer()
@@ -109,7 +109,7 @@ struct SeerrBrowseByView: View {
                         .foregroundColor(.white)
 
                     if !viewModel.items.isEmpty {
-                        Text("\(viewModel.resultCountText) Items")
+                        Text(Strings.seerrItemsCount(viewModel.resultCountText))
                             .font(.captionXs)
                             .foregroundColor(.white.opacity(0.4))
                     }
@@ -243,7 +243,7 @@ private struct SeerrBrowseInfoRow: View {
     var body: some View {
         HStack(spacing: 10) {
             if let type = item.mediaType {
-                Text(type == "tv" ? "Series" : "Movie")
+                Text(type == "tv" ? Strings.series : Strings.seerrMovie)
             }
 
             if let voteAverage = item.voteAverage, voteAverage > 0 {
@@ -263,19 +263,19 @@ private struct SeerrBrowseInfoRow: View {
 
     private var statusText: String? {
         if item.isAvailable {
-            return "Available"
+            return Strings.seerrStatusAvailable
         }
 
         guard let requestStatus = item.requestStatus else { return nil }
         switch requestStatus {
         case SeerrRequestDto.statusPending:
-            return "Pending"
+            return Strings.seerrStatusPending
         case SeerrRequestDto.statusApproved:
-            return "Approved"
+            return Strings.seerrStatusApproved
         case SeerrRequestDto.statusDeclined:
-            return "Declined"
+            return Strings.seerrStatusDeclined
         case SeerrRequestDto.statusAvailable:
-            return "Available"
+            return Strings.seerrStatusAvailable
         default:
             return nil
         }
@@ -366,7 +366,7 @@ private struct SeerrFilterSortDialogView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Sort & Filter")
+            Text(Strings.seerrSortAndFilter)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
@@ -374,7 +374,7 @@ private struct SeerrFilterSortDialogView: View {
 
             Divider().background(Color.white.opacity(0.08))
 
-            Text("SORT BY")
+            Text(Strings.seerrSortByUpper)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
                 .padding(.horizontal, 24)
@@ -413,7 +413,7 @@ private struct SeerrFilterSortDialogView: View {
                 .background(Color.white.opacity(0.06))
                 .padding(.horizontal, 24)
 
-            Text("FILTERS")
+            Text(Strings.seerrFiltersUpper)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
                 .padding(.horizontal, 24)
@@ -472,7 +472,7 @@ private struct SeerrDisplaySettingsDialogView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Display Settings")
+            Text(Strings.seerrDisplaySettings)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
@@ -480,7 +480,7 @@ private struct SeerrDisplaySettingsDialogView: View {
 
             Divider().background(Color.white.opacity(0.08))
 
-            Text("POSTER SIZE")
+            Text(Strings.seerrPosterSizeUpper)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
                 .padding(.horizontal, 24)

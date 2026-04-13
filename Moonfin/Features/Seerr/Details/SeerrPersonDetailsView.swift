@@ -129,7 +129,7 @@ struct SeerrPersonDetailsView: View {
 
     private var biographySection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            Text("Biography")
+            Text(Strings.seerrBiography)
                 .font(.titleMd).fontWeight(.bold)
                 .foregroundColor(theme.colorScheme.onBackground)
 
@@ -141,7 +141,7 @@ struct SeerrPersonDetailsView: View {
                     .lineLimit(viewModel.isBioExpanded ? nil : 4)
 
                 Button(action: { viewModel.isBioExpanded.toggle() }) {
-                    Text(viewModel.isBioExpanded ? "Show Less" : "Show More")
+                    Text(viewModel.isBioExpanded ? Strings.seerrShowLess : Strings.seerrShowMore)
                         .font(.bodySm).fontWeight(.semibold)
                         .foregroundColor(theme.accent)
                 }
@@ -152,7 +152,7 @@ struct SeerrPersonDetailsView: View {
 
     private var appearancesSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            Text("Appearances")
+            Text(Strings.seerrAppearances)
                 .font(.titleMd).fontWeight(.bold)
                 .foregroundColor(theme.colorScheme.onBackground)
 

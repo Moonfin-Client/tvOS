@@ -374,7 +374,7 @@ final class SeerrDiscoverViewModel: ObservableObject {
                 title: item.displayTitle,
                 year: year,
                 overview: item.overview ?? "",
-                mediaType: item.mediaType == "tv" ? "Series" : "Movie",
+                mediaType: item.mediaType == "tv" ? Strings.series : Strings.seerrMovie,
                 voteAverage: item.voteAverage ?? 0
             )
         }
@@ -401,7 +401,7 @@ final class SeerrDiscoverViewModel: ObservableObject {
                 title: genre.name,
                 year: "",
                 overview: "",
-                mediaType: mediaType == "tv" ? "Series Genres" : "Movie Genres",
+                mediaType: mediaType == "tv" ? Strings.seerrSeriesGenres : Strings.seerrMovieGenres,
                 voteAverage: 0
             )
         }
@@ -469,12 +469,12 @@ final class SeerrDiscoverViewModel: ObservableObject {
     func connectWithJellyfin(password: String) {
         guard let info = seerrRepository.getJellyfinSessionInfo(),
               !settingsState.serverUrl.isEmpty else {
-            settingsState.connectionStatus = "Enter a server URL first"
+            settingsState.connectionStatus = Strings.seerrEnterServerUrlFirst
             return
         }
 
         settingsState.isConnecting = true
-        settingsState.connectionStatus = "Connecting..."
+        settingsState.connectionStatus = Strings.seerrConnecting
 
         Task {
             do {
@@ -485,21 +485,21 @@ final class SeerrDiscoverViewModel: ObservableObject {
                     seerrUrl: settingsState.serverUrl
                 )
                 settingsState.isConnected = true
-                settingsState.connectionStatus = "Connected"
+                settingsState.connectionStatus = Strings.seerrConnected
                 settingsState.isEnabled = true
             } catch {
-                settingsState.connectionStatus = "Failed: \(error.localizedDescription)"
+                settingsState.connectionStatus = Strings.seerrFailed(error.localizedDescription)
             }
             settingsState.isConnecting = false
         }
     }
 
     func testConnection() {
-        settingsState.connectionStatus = "Testing..."
+        settingsState.connectionStatus = Strings.seerrTesting
         Task {
             let success = await seerrRepository.testConnection()
             settingsState.isConnected = success
-            settingsState.connectionStatus = success ? "Connected" : "Connection failed"
+            settingsState.connectionStatus = success ? Strings.seerrConnected : Strings.seerrConnectionFailed
         }
     }
 }

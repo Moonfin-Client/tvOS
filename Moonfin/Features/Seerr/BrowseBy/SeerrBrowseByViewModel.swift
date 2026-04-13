@@ -9,11 +9,11 @@ enum SeerrBrowseSortOption: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .popularity: return "Popularity"
-        case .rating: return "Rating"
-        case .releaseDate: return "Release Date"
-        case .title: return "Title"
-        case .revenue: return "Revenue"
+        case .popularity: return Strings.seerrSortPopularity
+        case .rating: return Strings.rating
+        case .releaseDate: return Strings.seerrSortReleaseDate
+        case .title: return Strings.name
+        case .revenue: return Strings.seerrRevenue
         }
     }
 }
@@ -25,9 +25,17 @@ enum SeerrBrowseFilter: CaseIterable {
 
     var displayName: String {
         switch self {
-        case .all: return "Show All"
-        case .available: return "Available Only"
-        case .requested: return "Requested Only"
+        case .all: return Strings.seerrFilterShowAll
+        case .available: return Strings.seerrFilterAvailableOnly
+        case .requested: return Strings.seerrFilterRequestedOnly
+        }
+    }
+
+    var shortDisplayName: String {
+        switch self {
+        case .all: return Strings.allItems
+        case .available: return Strings.seerrFilterAvailable
+        case .requested: return Strings.seerrFilterRequested
         }
     }
 }
@@ -57,7 +65,7 @@ final class SeerrBrowseByViewModel: ObservableObject {
     private var hasMorePages: Bool { currentPage < totalPages }
 
     var resultCountText: String {
-        "\(items.count) of \(totalResults)"
+        Strings.seerrCountOf(items.count, totalResults)
     }
 
     var totalItemsCount: Int {
@@ -80,14 +88,10 @@ final class SeerrBrowseByViewModel: ObservableObject {
     }
 
     var statusText: String {
-        var parts = ["Showing"]
-        if activeFilter != .all {
-            parts.append(activeFilter.displayName.replacingOccurrences(of: " Only", with: ""))
-        } else {
-            parts.append("All items")
-        }
-        parts.append("from '\(filterName)'")
-        parts.append("sorted by \(sortOption.displayName)")
+        var parts = [Strings.seerrShowing]
+        parts.append(activeFilter.shortDisplayName)
+        parts.append(Strings.seerrFromFilterName(filterName))
+        parts.append(Strings.seerrSortedBy(sortOption.displayName))
         return parts.joined(separator: " ")
     }
 
@@ -154,7 +158,7 @@ final class SeerrBrowseByViewModel: ObservableObject {
             parts.append(year)
         }
         if let mediaType = item.mediaType {
-            parts.append(mediaType == "tv" ? "Series" : "Movie")
+            parts.append(mediaType == "tv" ? Strings.series : Strings.seerrMovie)
         }
         if let voteAverage = item.voteAverage, voteAverage > 0 {
             parts.append(" \(String(format: "%.1f", voteAverage))")

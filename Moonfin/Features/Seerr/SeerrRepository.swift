@@ -600,9 +600,9 @@ enum SeerrRepositoryError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .notInitialized: return "Seerr HTTP client not initialized"
-        case .noActiveUser: return "No active Jellyfin user"
-        case .notInMoonfinMode: return "Not in Moonfin proxy mode"
+        case .notInitialized: return Strings.seerrHttpClientNotInitialized
+        case .noActiveUser: return Strings.seerrNoActiveJellyfinUser
+        case .notInMoonfinMode: return Strings.seerrNotInMoonfinProxyMode
         }
     }
 }

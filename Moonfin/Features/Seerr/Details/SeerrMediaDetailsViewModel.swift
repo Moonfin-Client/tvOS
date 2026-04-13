@@ -17,7 +17,7 @@ struct SeerrMediaStatus {
         case green, yellow, red, blue, gray, orange
     }
 
-    static let unknown = SeerrMediaStatus(text: "Not Requested", color: .gray, icon: "questionmark.circle")
+    static let unknown = SeerrMediaStatus(text: Strings.seerrStatusNotRequested, color: .gray, icon: "questionmark.circle")
 }
 
 struct SeerrAdvancedOptions {
@@ -330,17 +330,17 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
 
         switch status {
         case SeerrMediaInfoDto.statusPending:
-            return "\(prefix) (Pending)"
+            return Strings.seerrQualityPending(prefix)
         case SeerrMediaInfoDto.statusProcessing:
-            return "\(prefix) (Processing)"
+            return Strings.seerrQualityProcessing(prefix)
         case SeerrMediaInfoDto.statusPartiallyAvailable:
-            return "Request More \(prefix)"
+            return Strings.seerrRequestMore(prefix)
         case SeerrMediaInfoDto.statusAvailable:
-            return "\(prefix) (Available)"
+            return Strings.seerrQualityAvailable(prefix)
         case SeerrMediaInfoDto.statusBlacklisted:
-            return "\(prefix) (Blacklisted)"
+            return Strings.seerrQualityBlacklisted(prefix)
         default:
-            return "Request \(prefix)"
+            return Strings.seerrRequest(prefix)
         }
     }
 
@@ -482,7 +482,7 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
         } else if status != SeerrMediaInfoDto.statusUnknown {
             mediaStatus = hdStatus
         } else if hasOnlyDeclinedRequests(is4k: false) {
-            mediaStatus = SeerrMediaStatus(text: "Declined", color: .red, icon: "xmark.circle.fill")
+            mediaStatus = SeerrMediaStatus(text: Strings.seerrStatusDeclined, color: .red, icon: "xmark.circle.fill")
         } else {
             mediaStatus = .unknown
         }
@@ -491,15 +491,15 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
     private func statusLabel(for status: Int) -> SeerrMediaStatus {
         switch status {
         case SeerrMediaInfoDto.statusAvailable:
-            return SeerrMediaStatus(text: "Available", color: .green, icon: "checkmark.circle.fill")
+            return SeerrMediaStatus(text: Strings.seerrStatusAvailable, color: .green, icon: "checkmark.circle.fill")
         case SeerrMediaInfoDto.statusPartiallyAvailable:
-            return SeerrMediaStatus(text: "Partially Available", color: .yellow, icon: "circle.lefthalf.filled")
+            return SeerrMediaStatus(text: Strings.seerrStatusPartiallyAvailable, color: .yellow, icon: "circle.lefthalf.filled")
         case SeerrMediaInfoDto.statusPending:
-            return SeerrMediaStatus(text: "Pending", color: .orange, icon: "clock.fill")
+            return SeerrMediaStatus(text: Strings.seerrStatusPending, color: .orange, icon: "clock.fill")
         case SeerrMediaInfoDto.statusProcessing:
-            return SeerrMediaStatus(text: "Processing", color: .blue, icon: "arrow.triangle.2.circlepath")
+            return SeerrMediaStatus(text: Strings.seerrStatusProcessing, color: .blue, icon: "arrow.triangle.2.circlepath")
         case SeerrMediaInfoDto.statusBlacklisted:
-            return SeerrMediaStatus(text: "Blacklisted", color: .red, icon: "nosign")
+            return SeerrMediaStatus(text: Strings.seerrStatusBlacklisted, color: .red, icon: "nosign")
         default:
             return .unknown
         }

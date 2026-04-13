@@ -168,7 +168,7 @@ struct SeerrDiscoverItemDto: Codable, Identifiable {
     let mediaInfo: SeerrMediaInfoDto?
     let requestStatus: Int?
 
-    var displayTitle: String { title ?? name ?? "Unknown" }
+    var displayTitle: String { title ?? name ?? Strings.seerrUnknown }
 
     var isAvailable: Bool { mediaInfo?.status == 5 || mediaInfo?.status == 4 }
     var isBlacklisted: Bool { mediaInfo?.status == 6 }
@@ -325,7 +325,7 @@ struct SeerrTvDetailsDto: Codable, Identifiable {
     let keywords: [SeerrKeywordDto]
     let relatedVideos: [SeerrRelatedVideoDto]
 
-    var displayTitle: String { name ?? title ?? "Unknown" }
+    var displayTitle: String { name ?? title ?? Strings.seerrUnknown }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)

@@ -542,6 +542,84 @@ enum Strings {
 
     // MARK: - Jellyseerr
 
+    static var seerrTitle: String { l("seerr_title") }
+    static var seerrUnknown: String { l("seerr_unknown") }
+    static var seerrBiography: String { l("seerr_biography") }
+    static var seerrAppearances: String { l("seerr_appearances") }
+    static var seerrShowMore: String { l("seerr_show_more") }
+    static var seerrShowLess: String { l("seerr_show_less") }
+    static var seerrRequestAction: String { l("seerr_request_action") }
+    static var seerrTrailer: String { l("seerr_trailer") }
+    static var seerrTmdbScore: String { l("seerr_tmdb_score") }
+    static var seerrReleaseDate: String { l("seerr_release_date") }
+    static var seerrRevenue: String { l("seerr_revenue") }
+    static var seerrBudget: String { l("seerr_budget") }
+    static var seerrFirstAired: String { l("seerr_first_aired") }
+    static var seerrLastAired: String { l("seerr_last_aired") }
+    static var seerrNetworks: String { l("seerr_networks") }
+    static var seerrRecommendations: String { l("seerr_recommendations") }
+    static var seerrKeywords: String { l("seerr_keywords") }
+    static var seerrSelectSeasons: String { l("seerr_select_seasons") }
+    static var seerrSelectAll: String { l("seerr_select_all") }
+    static var seerrConfirm: String { l("seerr_confirm") }
+    static var seerrAdvancedOptions: String { l("seerr_advanced_options") }
+    static var seerrQualityProfile: String { l("seerr_quality_profile") }
+    static var seerrRootFolder: String { l("seerr_root_folder") }
+    static var seerrSkip: String { l("seerr_skip") }
+    static var seerrSelectQuality: String { l("seerr_select_quality") }
+    static var seerrQualityStandardRequest: String { l("seerr_quality_standard_request") }
+    static var seerrQualityUltraHdRequest: String { l("seerr_quality_ultra_hd_request") }
+    static var seerrNoRequestQualitiesAvailable: String { l("seerr_no_request_qualities_available") }
+    static var seerrSortAndFilter: String { l("seerr_sort_and_filter") }
+    static var seerrSortByUpper: String { l("seerr_sort_by_upper") }
+    static var seerrFiltersUpper: String { l("seerr_filters_upper") }
+    static var seerrDisplaySettings: String { l("seerr_display_settings") }
+    static var seerrPosterSizeUpper: String { l("seerr_poster_size_upper") }
+    static var seerrSortPopularity: String { l("seerr_sort_popularity") }
+    static var seerrSortReleaseDate: String { l("seerr_sort_release_date") }
+    static var seerrFilterShowAll: String { l("seerr_filter_show_all") }
+    static var seerrFilterAvailableOnly: String { l("seerr_filter_available_only") }
+    static var seerrFilterRequestedOnly: String { l("seerr_filter_requested_only") }
+    static var seerrFilterAvailable: String { l("seerr_filter_available") }
+    static var seerrFilterRequested: String { l("seerr_filter_requested") }
+    static var seerrMovie: String { l("seerr_movie") }
+    static var seerrSeriesGenres: String { l("seerr_series_genres") }
+    static var seerrMovieGenres: String { l("seerr_movie_genres") }
+    static var seerrShowing: String { l("seerr_showing") }
+    static var seerrStatusNotRequested: String { l("seerr_status_not_requested") }
+    static var seerrStatusAvailable: String { l("seerr_status_available") }
+    static var seerrStatusPartiallyAvailable: String { l("seerr_status_partially_available") }
+    static var seerrStatusPending: String { l("seerr_status_pending") }
+    static var seerrStatusApproved: String { l("seerr_status_approved") }
+    static var seerrStatusDeclined: String { l("seerr_status_declined") }
+    static var seerrStatusProcessing: String { l("seerr_status_processing") }
+    static var seerrStatusBlacklisted: String { l("seerr_status_blacklisted") }
+    static var seerrUnknownError: String { l("seerr_unknown_error") }
+    static var seerrHttpClientNotInitialized: String { l("seerr_http_client_not_initialized") }
+    static var seerrNoActiveJellyfinUser: String { l("seerr_no_active_jellyfin_user") }
+    static var seerrNotInMoonfinProxyMode: String { l("seerr_not_in_moonfin_proxy_mode") }
+    static func seerrSeason(_ number: Int) -> String { l("seerr_season", number) }
+    static func seerrBornDate(_ date: String) -> String { l("seerr_born_date", date) }
+    static func seerrInPlace(_ place: String) -> String { l("seerr_in_place", place) }
+    static func seerrDiedDate(_ date: String) -> String { l("seerr_died_date", date) }
+    static func seerrRequestMore(_ quality: String) -> String { l("seerr_request_more", quality) }
+    static func seerrRequest(_ quality: String) -> String { l("seerr_request", quality) }
+    static func seerrQualityPending(_ quality: String) -> String { l("seerr_quality_pending", quality) }
+    static func seerrQualityProcessing(_ quality: String) -> String { l("seerr_quality_processing", quality) }
+    static func seerrQualityAvailable(_ quality: String) -> String { l("seerr_quality_available", quality) }
+    static func seerrQualityBlacklisted(_ quality: String) -> String { l("seerr_quality_blacklisted", quality) }
+    static func seerrItemsCount(_ countText: String) -> String { l("seerr_items_count", countText) }
+    static func seerrCountOf(_ current: Int, _ total: Int) -> String { l("seerr_count_of", current, total) }
+    static func seerrFromFilterName(_ name: String) -> String { l("seerr_from_filter_name", name) }
+    static func seerrSortedBy(_ sort: String) -> String { l("seerr_sorted_by", sort) }
+    static func seerrMoonfinLoginFailed(_ message: String) -> String { l("seerr_moonfin_login_failed", message) }
+    static var seerrEnterServerUrlFirst: String { l("seerr_enter_server_url_first") }
+    static var seerrConnecting: String { l("seerr_connecting") }
+    static var seerrConnected: String { l("seerr_connected") }
+    static var seerrTesting: String { l("seerr_testing") }
+    static var seerrConnectionFailed: String { l("seerr_connection_failed") }
+    static func seerrFailed(_ message: String) -> String { l("seerr_failed", message) }
+
     static var jellyseerr: String { l("jellyseerr") }
     static var jellyseerrEnabled: String { l("jellyseerr_enabled") }
     static var jellyseerrServerUrl: String { l("jellyseerr_server_url") }

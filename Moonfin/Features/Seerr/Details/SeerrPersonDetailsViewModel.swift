@@ -33,10 +33,10 @@ final class SeerrPersonDetailsViewModel: ObservableObject {
     var birthInfo: String? {
         var parts: [String] = []
         if let birthday = details?.birthday {
-            parts.append("Born \(formatDate(birthday))")
+            parts.append(Strings.seerrBornDate(formatDate(birthday)))
         }
         if let place = details?.placeOfBirth, !place.isEmpty {
-            parts.append("in \(place)")
+            parts.append(Strings.seerrInPlace(place))
         }
         guard !parts.isEmpty else { return nil }
         return parts.joined(separator: " ")
@@ -44,7 +44,7 @@ final class SeerrPersonDetailsViewModel: ObservableObject {
 
     var deathInfo: String? {
         guard let deathday = details?.deathday else { return nil }
-        return "Died \(formatDate(deathday))"
+        return Strings.seerrDiedDate(formatDate(deathday))
     }
 
     var knownFor: String? {
