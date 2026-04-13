@@ -181,3 +181,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Alle kanale";
+"live_tv_loading_guide_data" = "Laai tans gidsdata...";
+"live_tv_badge_repeat" = "R";
+"live_tv_watch" = "Kyk";
+"live_tv_movie" = "Fliek";
+"live_tv_live" = "Leef";
+"live_tv_repeat" = "Herhaal";
+"live_tv_minutes" = "%1$d min";
+"live_tv_cancel_series" = "Kanselleer reeks";
+"live_tv_failed_to_update_favorite" = "Kon nie gunsteling opdateer nie: %1$@";
+"live_tv_failed_to_delete_recording" = "Kon nie opname uitvee nie: %1$@";
+"live_tv_failed_to_cancel_recording" = "Kon nie opname kanselleer nie: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Kon nie reeksopname kanselleer nie: %1$@";

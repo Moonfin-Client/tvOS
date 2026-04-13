@@ -464,6 +464,7 @@ enum Strings {
     static var communityRating: String { l("lbl_community_rating") }
     static var rating: String { l("lbl_rating") }
     static var allItems: String { l("lbl_all_items") }
+    static var from: String { l("lbl_from") }
     static var byLetter: String { l("lbl_by_letter") }
     static var byName: String { l("lbl_by_name") }
 
@@ -479,10 +480,59 @@ enum Strings {
     static var today: String { l("lbl_today") }
     static var tomorrow: String { l("lbl_tomorrow") }
     static var tuneToChannel: String { l("lbl_tune_to_channel") }
+    static var statusTitle: String { l("lbl_status_title") }
     static var sports: String { l("lbl_sports") }
     static var kids: String { l("lbl_kids") }
     static var news: String { l("lbl_news") }
     static var premiere: String { l("lbl_premiere") }
+    static var liveTvGuideShort: String { l("live_tv_guide_short") }
+    static var liveTvPreviousDay: String { l("live_tv_previous_day") }
+    static var liveTvNextDay: String { l("live_tv_next_day") }
+    static var liveTvAllChannels: String { l("live_tv_all_channels") }
+    static var liveTvNoProgramInformation: String { l("live_tv_no_program_information") }
+    static var liveTvLoadingGuideData: String { l("live_tv_loading_guide_data") }
+    static var liveTvFailedToLoadGuide: String { l("live_tv_failed_to_load_guide") }
+    static var liveTvRetry: String { l("live_tv_retry") }
+    static var liveTvBadgeHD: String { l("live_tv_badge_hd") }
+    static var liveTvBadgeNew: String { l("live_tv_badge_new") }
+    static var liveTvBadgeRepeat: String { l("live_tv_badge_repeat") }
+    static var liveTvBadgeLive: String { l("live_tv_badge_live") }
+    static var liveTvWatch: String { l("live_tv_watch") }
+    static var liveTvFavoriteChannel: String { l("live_tv_favorite_channel") }
+    static var liveTvUnfavoriteChannel: String { l("live_tv_unfavorite_channel") }
+    static var liveTvOnNow: String { l("live_tv_on_now") }
+    static var liveTvMovie: String { l("live_tv_movie") }
+    static var liveTvLive: String { l("live_tv_live") }
+    static var liveTvRepeat: String { l("live_tv_repeat") }
+    static var liveTvNoRecordingsFound: String { l("live_tv_no_recordings_found") }
+    static var liveTvNoScheduledRecordings: String { l("live_tv_no_scheduled_recordings") }
+    static var liveTvNoSeriesRecordings: String { l("live_tv_no_series_recordings") }
+    static var liveTvLoadingRecordings: String { l("live_tv_loading_recordings") }
+    static var liveTvFailedToLoadRecordings: String { l("live_tv_failed_to_load_recordings") }
+    static var liveTvScheduledRecording: String { l("live_tv_scheduled_recording") }
+    static var liveTvSeriesRecording: String { l("live_tv_series_recording") }
+    static var liveTvScheduled: String { l("live_tv_scheduled") }
+    static var liveTvChannel: String { l("live_tv_channel") }
+    static var liveTvDuration: String { l("live_tv_duration") }
+    static var liveTvYear: String { l("live_tv_year") }
+    static var liveTvAnyTime: String { l("live_tv_any_time") }
+    static var liveTvAnyChannel: String { l("live_tv_any_channel") }
+    static var liveTvNewOnly: String { l("live_tv_new_only") }
+    static var liveTvAll: String { l("live_tv_all") }
+    static var liveTvTime: String { l("live_tv_time") }
+    static var liveTvCancelSeries: String { l("live_tv_cancel_series") }
+    static var liveTvNoServerConnection: String { l("live_tv_no_server_connection") }
+    static var liveTvPast24Hours: String { l("past_24_hours") }
+    static var liveTvPastWeek: String { l("past_week") }
+    static func liveTvMinutes(_ minutes: Int) -> String { l("live_tv_minutes", minutes) }
+    static func liveTvRecordingsCount(_ count: Int) -> String { l("live_tv_recordings_count", count) }
+    static func liveTvScheduledCount(_ count: Int) -> String { l("live_tv_scheduled_count", count) }
+    static func liveTvSeriesCount(_ count: Int) -> String { l("live_tv_series_count", count) }
+    static func liveTvRecordingActionFailed(_ reason: String) -> String { l("live_tv_recording_action_failed", reason) }
+    static func liveTvFailedToUpdateFavorite(_ reason: String) -> String { l("live_tv_failed_to_update_favorite", reason) }
+    static func liveTvFailedToDeleteRecording(_ reason: String) -> String { l("live_tv_failed_to_delete_recording", reason) }
+    static func liveTvFailedToCancelRecording(_ reason: String) -> String { l("live_tv_failed_to_cancel_recording", reason) }
+    static func liveTvFailedToCancelSeriesRecording(_ reason: String) -> String { l("live_tv_failed_to_cancel_series_recording", reason) }
 
     // MARK: - Media Bar
 

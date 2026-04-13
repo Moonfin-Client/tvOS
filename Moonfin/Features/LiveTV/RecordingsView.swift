@@ -66,7 +66,7 @@ struct RecordingsView: View {
 
     private var header: some View {
         HStack {
-            Text("Recordings")
+            Text(Strings.recordings)
                 .font(.title2xl)
                 .foregroundColor(theme.colorScheme.onBackground)
 
@@ -74,7 +74,7 @@ struct RecordingsView: View {
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 Button(action: { viewModel.activeTab = .recordings }) {
-                    Text("Recordings (\(viewModel.filteredRecordings.count))")
+                    Text(Strings.liveTvRecordingsCount(viewModel.filteredRecordings.count))
                 }
                 .buttonStyle(GuideNavButtonStyle(
                     theme: theme,
@@ -82,7 +82,7 @@ struct RecordingsView: View {
                 ))
 
                 Button(action: { viewModel.activeTab = .scheduled }) {
-                    Text("Scheduled (\(viewModel.timers.count))")
+                    Text(Strings.liveTvScheduledCount(viewModel.timers.count))
                 }
                 .buttonStyle(GuideNavButtonStyle(
                     theme: theme,
@@ -90,7 +90,7 @@ struct RecordingsView: View {
                 ))
 
                 Button(action: { viewModel.activeTab = .series }) {
-                    Text("Series (\(viewModel.seriesTimers.count))")
+                    Text(Strings.liveTvSeriesCount(viewModel.seriesTimers.count))
                 }
                 .buttonStyle(GuideNavButtonStyle(
                     theme: theme,
@@ -98,7 +98,7 @@ struct RecordingsView: View {
                 ))
 
                 Button(action: { router.navigate(to: .liveTvGuide) }) {
-                    Label("Guide", systemImage: "tv")
+                    Label(Strings.liveTvGuideShort, systemImage: "tv")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
             }
@@ -129,7 +129,7 @@ struct RecordingsView: View {
         Group {
             filterBar
             if viewModel.filteredRecordings.isEmpty {
-                emptyState("No recordings found")
+                emptyState(Strings.liveTvNoRecordingsFound)
             } else {
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 250, maximum: 300), spacing: SpaceTokens.spaceLg)],
@@ -153,7 +153,7 @@ struct RecordingsView: View {
     private var scheduledGrid: some View {
         Group {
             if viewModel.timers.isEmpty {
-                emptyState("No scheduled recordings")
+                emptyState(Strings.liveTvNoScheduledRecordings)
             } else {
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 250, maximum: 300), spacing: SpaceTokens.spaceLg)],
@@ -178,7 +178,7 @@ struct RecordingsView: View {
         HStack(spacing: SpaceTokens.spaceSm) {
             ForEach(RecordingFilter.allCases, id: \.self) { filter in
                 Button(action: { viewModel.recordingFilter = filter }) {
-                    Text(filter.rawValue)
+                    Text(viewModel.localizedFilterName(filter))
                 }
                 .buttonStyle(GuideNavButtonStyle(
                     theme: theme,
@@ -193,7 +193,7 @@ struct RecordingsView: View {
     private var seriesGrid: some View {
         Group {
             if viewModel.seriesTimers.isEmpty {
-                emptyState("No series recordings")
+                emptyState(Strings.liveTvNoSeriesRecordings)
             } else {
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 250, maximum: 300), spacing: SpaceTokens.spaceLg)],
@@ -227,7 +227,7 @@ struct RecordingsView: View {
         VStack(spacing: SpaceTokens.spaceMd) {
             ProgressView()
                 .tint(theme.accent)
-            Text("Loading recordings…")
+            Text(Strings.liveTvLoadingRecordings)
                 .font(.bodyMd)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
         }
@@ -238,14 +238,14 @@ struct RecordingsView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 40))
                 .foregroundColor(theme.colorScheme.recording)
-            Text("Failed to load recordings")
+            Text(Strings.liveTvFailedToLoadRecordings)
                 .font(.titleXl)
                 .foregroundColor(theme.colorScheme.onBackground)
             Text(message)
                 .font(.bodySm)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                 .multilineTextAlignment(.center)
-            Button("Retry") { Task { await viewModel.loadData() } }
+            Button(Strings.liveTvRetry) { Task { await viewModel.loadData() } }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
         }
         .padding()
@@ -343,7 +343,7 @@ struct TimerCard: View {
 
     private var infoSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-            Text(timer.name ?? "Scheduled Recording")
+            Text(timer.name ?? Strings.liveTvScheduledRecording)
                 .font(.bodyMd)
                 .fontWeight(.medium)
                 .foregroundColor(theme.colorScheme.onBackground)
@@ -397,31 +397,31 @@ struct RecordingDetailPopup: View {
 
             VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
                 if let channelName = recording.channelName {
-                    metadataRow("Channel", channelName, theme: theme)
+                    metadataRow(Strings.liveTvChannel, channelName, theme: theme)
                 }
                 if let ticks = recording.runTimeTicks {
-                    metadataRow("Duration", viewModel.formatDuration(ticks), theme: theme)
+                    metadataRow(Strings.liveTvDuration, viewModel.formatDuration(ticks), theme: theme)
                 }
                 if let year = recording.productionYear {
-                    metadataRow("Year", "\(year)", theme: theme)
+                    metadataRow(Strings.liveTvYear, "\(year)", theme: theme)
                 }
                 if let rating = recording.officialRating {
-                    metadataRow("Rating", rating, theme: theme)
+                    metadataRow(Strings.rating, rating, theme: theme)
                 }
             }
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 Button(action: { dismiss(); onPlay() }) {
-                    Label("Play", systemImage: "play.fill")
+                    Label(Strings.play, systemImage: "play.fill")
                 }
                 .buttonStyle(GuidePrimaryButtonStyle(theme: theme))
 
                 Button(action: { dismiss(); onDelete() }) {
-                    Label("Delete", systemImage: "trash")
+                    Label(Strings.delete, systemImage: "trash")
                 }
                 .buttonStyle(RecordingDangerButtonStyle(theme: theme))
 
-                Button("Close") { dismiss() }
+                Button(Strings.close) { dismiss() }
                     .buttonStyle(GuideSecondaryButtonStyle(theme: theme))
             }
         }
@@ -451,7 +451,7 @@ struct TimerDetailPopup: View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
             HStack {
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                    Text(timer.name ?? "Scheduled Recording")
+                    Text(timer.name ?? Strings.liveTvScheduledRecording)
                         .font(.title2xl)
                         .foregroundColor(theme.colorScheme.onBackground)
 
@@ -465,19 +465,19 @@ struct TimerDetailPopup: View {
             }
 
             VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                metadataRow("Scheduled", viewModel.formatScheduledTime(timer.startDate, timer.endDate), theme: theme)
+                metadataRow(Strings.liveTvScheduled, viewModel.formatScheduledTime(timer.startDate, timer.endDate), theme: theme)
                 if let status = timer.status {
-                    metadataRow("Status", status, theme: theme)
+                    metadataRow(Strings.statusTitle, status, theme: theme)
                 }
             }
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 Button(action: { dismiss(); onCancel() }) {
-                    Label("Cancel Recording", systemImage: "xmark.circle")
+                    Label(Strings.cancelRecording, systemImage: "xmark.circle")
                 }
                 .buttonStyle(RecordingDangerButtonStyle(theme: theme))
 
-                Button("Close") { dismiss() }
+                Button(Strings.close) { dismiss() }
                     .buttonStyle(GuideSecondaryButtonStyle(theme: theme))
             }
         }
@@ -506,7 +506,7 @@ struct SeriesTimerCard: View {
 
     private var infoSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-            Text(seriesTimer.name ?? "Series Recording")
+            Text(seriesTimer.name ?? Strings.liveTvSeriesRecording)
                 .font(.bodyMd)
                 .fontWeight(.medium)
                 .foregroundColor(theme.colorScheme.onBackground)
@@ -520,17 +520,17 @@ struct SeriesTimerCard: View {
 
             HStack(spacing: SpaceTokens.spaceXs) {
                 if seriesTimer.recordNewOnly == true {
-                    Text("New only")
+                    Text(Strings.liveTvNewOnly)
                         .font(.captionXs)
                         .foregroundColor(theme.accent)
                 }
                 if seriesTimer.recordAnyTime == true {
-                    Text("Any time")
+                    Text(Strings.liveTvAnyTime)
                         .font(.captionXs)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
                 }
                 if seriesTimer.recordAnyChannel == true {
-                    Text("Any channel")
+                    Text(Strings.liveTvAnyChannel)
                         .font(.captionXs)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
                 }
@@ -553,7 +553,7 @@ struct SeriesTimerDetailPopup: View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceLg) {
             HStack {
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                    Text(seriesTimer.name ?? "Series Recording")
+                    Text(seriesTimer.name ?? Strings.liveTvSeriesRecording)
                         .font(.title2xl)
                         .foregroundColor(theme.colorScheme.onBackground)
 
@@ -568,30 +568,30 @@ struct SeriesTimerDetailPopup: View {
 
             VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
                 if seriesTimer.recordNewOnly == true {
-                    metadataRow("Episodes", "New only", theme: theme)
+                    metadataRow(Strings.episodes, Strings.liveTvNewOnly, theme: theme)
                 } else {
-                    metadataRow("Episodes", "All", theme: theme)
+                    metadataRow(Strings.episodes, Strings.liveTvAll, theme: theme)
                 }
                 if seriesTimer.recordAnyTime == true {
-                    metadataRow("Time", "Any time", theme: theme)
+                    metadataRow(Strings.liveTvTime, Strings.liveTvAnyTime, theme: theme)
                 }
                 if seriesTimer.recordAnyChannel == true {
-                    metadataRow("Channel", "Any channel", theme: theme)
+                    metadataRow(Strings.liveTvChannel, Strings.liveTvAnyChannel, theme: theme)
                 } else if let channelName = seriesTimer.channelName {
-                    metadataRow("Channel", channelName, theme: theme)
+                    metadataRow(Strings.liveTvChannel, channelName, theme: theme)
                 }
                 if let start = seriesTimer.startDate {
-                    metadataRow("From", viewModel.formatScheduledTime(start, seriesTimer.endDate), theme: theme)
+                    metadataRow(Strings.from, viewModel.formatScheduledTime(start, seriesTimer.endDate), theme: theme)
                 }
             }
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 Button(action: { dismiss(); onCancel() }) {
-                    Label("Cancel Series", systemImage: "xmark.circle")
+                    Label(Strings.liveTvCancelSeries, systemImage: "xmark.circle")
                 }
                 .buttonStyle(RecordingDangerButtonStyle(theme: theme))
 
-                Button("Close") { dismiss() }
+                Button(Strings.close) { dismiss() }
                     .buttonStyle(GuideSecondaryButtonStyle(theme: theme))
             }
         }

@@ -714,3 +714,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Ĉiuj Kanaloj";
+"live_tv_loading_guide_data" = "Ŝarĝante gvidajn datumojn...";
+"live_tv_badge_repeat" = "R";
+"live_tv_watch" = "Rigardu";
+"live_tv_movie" = "Filmo";
+"live_tv_live" = "Vivu";
+"live_tv_repeat" = "Ripeti";
+"live_tv_minutes" = "%1$d min";
+"live_tv_cancel_series" = "Nuligi Serio";
+"live_tv_failed_to_update_favorite" = "Malsukcesis ĝisdatigi favoraton: %1$@";
+"live_tv_failed_to_delete_recording" = "Malsukcesis forigi registradon: %1$@";
+"live_tv_failed_to_cancel_recording" = "Malsukcesis nuligi registradon: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Malsukcesis nuligi serioregistradon: %1$@";

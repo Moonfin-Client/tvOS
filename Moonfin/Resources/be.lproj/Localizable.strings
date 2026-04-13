@@ -716,3 +716,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Усе каналы";
+"live_tv_loading_guide_data" = "Загрузка даных кіраўніцтва...";
+"live_tv_badge_repeat" = "Р";
+"live_tv_watch" = "Глядзець";
+"live_tv_movie" = "Фільм";
+"live_tv_live" = "жыць";
+"live_tv_repeat" = "Паўтарыць";
+"live_tv_minutes" = "%1$d хв";
+"live_tv_cancel_series" = "Адмена серыі";
+"live_tv_failed_to_update_favorite" = "Не ўдалося абнавіць абранае: %1$@";
+"live_tv_failed_to_delete_recording" = "Не ўдалося выдаліць запіс: %1$@";
+"live_tv_failed_to_cancel_recording" = "Не ўдалося адмяніць запіс: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Не ўдалося адмяніць запіс серыі: %1$@";

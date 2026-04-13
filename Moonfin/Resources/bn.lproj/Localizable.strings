@@ -293,3 +293,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "সমস্ত চ্যানেল";
+"live_tv_loading_guide_data" = "গাইড ডেটা লোড হচ্ছে...";
+"live_tv_badge_repeat" = "আর";
+"live_tv_watch" = "ঘড়ি";
+"live_tv_movie" = "মুভি";
+"live_tv_live" = "লাইভ";
+"live_tv_repeat" = "পুনরাবৃত্তি করুন";
+"live_tv_minutes" = "%1$d মিনিট";
+"live_tv_cancel_series" = "সিরিজ বাতিল করুন";
+"live_tv_failed_to_update_favorite" = "প্রিয় আপডেট করতে ব্যর্থ হয়েছে: %1$@";
+"live_tv_failed_to_delete_recording" = "রেকর্ডিং মুছে ফেলতে ব্যর্থ হয়েছে: %1$@";
+"live_tv_failed_to_cancel_recording" = "রেকর্ডিং বাতিল করতে ব্যর্থ হয়েছে: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "সিরিজ রেকর্ডিং বাতিল করতে ব্যর্থ হয়েছে: %1$@";

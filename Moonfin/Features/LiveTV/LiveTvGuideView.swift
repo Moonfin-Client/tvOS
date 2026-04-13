@@ -61,14 +61,14 @@ struct LiveTvGuideView: View {
     private var guideHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-                Text("Live TV Guide")
+                Text(Strings.liveTvGuide)
                     .font(.title2xl)
                     .foregroundColor(theme.colorScheme.onBackground)
 
                 Button(action: {
                     router.reset()
                 }) {
-                    Label("Home", systemImage: "house.fill")
+                    Label(Strings.home, systemImage: "house.fill")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
             }
@@ -77,7 +77,7 @@ struct LiveTvGuideView: View {
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 Button(action: { viewModel.navigateDay(forward: false) }) {
-                    Label("Previous Day", systemImage: "chevron.left")
+                    Label(Strings.liveTvPreviousDay, systemImage: "chevron.left")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
 
@@ -87,18 +87,18 @@ struct LiveTvGuideView: View {
                     .frame(minWidth: 160)
 
                 Button(action: { viewModel.navigateDay(forward: true) }) {
-                    Label("Next Day", systemImage: "chevron.right")
+                    Label(Strings.liveTvNextDay, systemImage: "chevron.right")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
 
                 Button(action: { viewModel.goToToday() }) {
-                    Text("Today")
+                    Text(Strings.today)
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
 
                 Button(action: { viewModel.toggleFavorites() }) {
                     Label(
-                        viewModel.showFavoritesOnly ? "All Channels" : "Favorites",
+                        viewModel.showFavoritesOnly ? Strings.liveTvAllChannels : Strings.favorites,
                         systemImage: viewModel.showFavoritesOnly ? "star.fill" : "star"
                     )
                 }
@@ -108,7 +108,7 @@ struct LiveTvGuideView: View {
                 ))
 
                 Button(action: { router.navigate(to: .liveTvRecordings) }) {
-                    Label("Recordings", systemImage: "recordingtape")
+                    Label(Strings.recordings, systemImage: "recordingtape")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
             }
@@ -220,7 +220,7 @@ struct LiveTvGuideView: View {
         HStack(spacing: SpaceTokens.spaceXs) {
             Image(systemName: "tv.slash")
                 .font(.system(size: 10))
-            Text("No program information available")
+            Text(Strings.liveTvNoProgramInformation)
                 .font(.captionXs)
         }
         .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
@@ -236,7 +236,7 @@ struct LiveTvGuideView: View {
         VStack(spacing: SpaceTokens.spaceMd) {
             ProgressView()
                 .tint(theme.accent)
-            Text("Loading guide data…")
+            Text(Strings.liveTvLoadingGuideData)
                 .font(.bodyMd)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
         }
@@ -247,14 +247,14 @@ struct LiveTvGuideView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 40))
                 .foregroundColor(theme.colorScheme.recording)
-            Text("Failed to load guide")
+            Text(Strings.liveTvFailedToLoadGuide)
                 .font(.titleXl)
                 .foregroundColor(theme.colorScheme.onBackground)
             Text(message)
                 .font(.bodySm)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                 .multilineTextAlignment(.center)
-            Button("Retry") { Task { await viewModel.loadGuide() } }
+            Button(Strings.liveTvRetry) { Task { await viewModel.loadGuide() } }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
         }
         .padding()
@@ -299,7 +299,7 @@ struct LiveTvGuideView: View {
                 }
                 await viewModel.loadGuide()
             } catch {
-                viewModel.error = "Recording action failed: \(error.localizedDescription)"
+                viewModel.error = Strings.liveTvRecordingActionFailed(error.localizedDescription)
             }
         }
     }
@@ -418,22 +418,22 @@ struct ProgramGridCell: View {
                     .foregroundColor(theme.colorScheme.recording)
             }
             if showHD {
-                Text("HD")
+                Text(Strings.liveTvBadgeHD)
                     .font(.system(size: 8, weight: .bold))
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
             }
             if showNew {
-                Text("NEW")
+                Text(Strings.liveTvBadgeNew)
                     .font(.system(size: 7, weight: .bold))
                     .foregroundColor(.colorCyan500)
             }
             if showRepeat {
-                Text("R")
+                Text(Strings.liveTvBadgeRepeat)
                     .font(.system(size: 8, weight: .bold))
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
             }
             if showLive {
-                Text("LIVE")
+                Text(Strings.liveTvBadgeLive)
                     .font(.system(size: 7, weight: .bold))
                     .foregroundColor(theme.colorScheme.recording)
             }
@@ -524,14 +524,14 @@ struct ProgramDetailPopup: View {
             HStack(spacing: SpaceTokens.spaceMd) {
                 if viewModel.isCurrentlyAiring(program) {
                     Button(action: { dismiss(); onPlay() }) {
-                        Label("Watch", systemImage: "play.fill")
+                        Label(Strings.liveTvWatch, systemImage: "play.fill")
                     }
                     .buttonStyle(GuidePrimaryButtonStyle(theme: theme))
                 }
 
                 Button(action: { dismiss(); onRecord() }) {
                     Label(
-                        program.timerId != nil ? "Cancel Recording" : "Record",
+                        program.timerId != nil ? Strings.cancelRecording : Strings.record,
                         systemImage: program.timerId != nil ? "record.circle.fill" : "record.circle"
                     )
                 }
@@ -539,13 +539,13 @@ struct ProgramDetailPopup: View {
 
                 Button(action: { dismiss(); onToggleFavorite() }) {
                     Label(
-                        viewModel.isChannelFavorite(program.channelId) ? "Unfavorite Channel" : "Favorite Channel",
+                        viewModel.isChannelFavorite(program.channelId) ? Strings.liveTvUnfavoriteChannel : Strings.liveTvFavoriteChannel,
                         systemImage: viewModel.isChannelFavorite(program.channelId) ? "star.fill" : "star"
                     )
                 }
                 .buttonStyle(GuideSecondaryButtonStyle(theme: theme))
 
-                Button("Close") { dismiss() }
+                Button(Strings.close) { dismiss() }
                     .buttonStyle(GuideSecondaryButtonStyle(theme: theme))
             }
         }
@@ -567,13 +567,13 @@ struct ProgramDetailPopup: View {
 
             if let start = program.startDate ?? program.premiereDate, let end = program.endDate {
                 let minutes = Int(end.timeIntervalSince(start) / 60)
-                Text("\(minutes) min")
+                Text(Strings.liveTvMinutes(minutes))
                     .font(.bodySm)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
             }
 
             if viewModel.isCurrentlyAiring(program) {
-                Text("ON NOW")
+                Text(Strings.liveTvOnNow)
                     .font(.system(size: 10, weight: .bold))
                     .padding(.horizontal, SpaceTokens.spaceSm)
                     .padding(.vertical, 2)
@@ -587,15 +587,15 @@ struct ProgramDetailPopup: View {
     @ViewBuilder
     private var metadataBadges: some View {
         HStack(spacing: SpaceTokens.spaceSm) {
-            if program.isMovie == true { badge("Movie") }
-            if program.isSeries == true { badge("Series") }
-            if program.isNews == true { badge("News") }
-            if program.isSports == true { badge("Sports") }
-            if program.isKids == true { badge("Kids") }
-            if program.isPremiere == true { badge("Premiere", highlight: true) }
-            if program.isHD == true { badge("HD") }
-            if program.isLive == true { badge("Live", highlight: true) }
-            if program.isRepeat == true { badge("Repeat") }
+            if program.isMovie == true { badge(Strings.liveTvMovie) }
+            if program.isSeries == true { badge(Strings.series) }
+            if program.isNews == true { badge(Strings.news) }
+            if program.isSports == true { badge(Strings.sports) }
+            if program.isKids == true { badge(Strings.kids) }
+            if program.isPremiere == true { badge(Strings.premiere, highlight: true) }
+            if program.isHD == true { badge(Strings.liveTvBadgeHD) }
+            if program.isLive == true { badge(Strings.liveTvLive, highlight: true) }
+            if program.isRepeat == true { badge(Strings.liveTvRepeat) }
             if let rating = program.officialRating {
                 badge(rating)
             }

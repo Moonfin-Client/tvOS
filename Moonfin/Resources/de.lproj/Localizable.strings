@@ -858,3 +858,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Alle Kanäle";
+"live_tv_loading_guide_data" = "Leitdaten werden geladen...";
+"live_tv_badge_repeat" = "R";
+"live_tv_watch" = "Betrachten";
+"live_tv_movie" = "Film";
+"live_tv_live" = "Live";
+"live_tv_repeat" = "Wiederholen";
+"live_tv_minutes" = "%1$d min";
+"live_tv_cancel_series" = "Serie abbrechen";
+"live_tv_failed_to_update_favorite" = "Favorit konnte nicht aktualisiert werden: %1$@";
+"live_tv_failed_to_delete_recording" = "Aufzeichnung konnte nicht gelöscht werden: %1$@";
+"live_tv_failed_to_cancel_recording" = "Aufnahme konnte nicht abgebrochen werden: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Serienaufnahme konnte nicht abgebrochen werden: %1$@";

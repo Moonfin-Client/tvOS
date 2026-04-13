@@ -818,3 +818,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Όλα τα κανάλια";
+"live_tv_loading_guide_data" = "Φόρτωση δεδομένων οδηγού...";
+"live_tv_badge_repeat" = "R";
+"live_tv_watch" = "Ρολόι";
+"live_tv_movie" = "Ταινία";
+"live_tv_live" = "Ζω";
+"live_tv_repeat" = "Επαναλαμβάνω";
+"live_tv_minutes" = "%1$d λεπ";
+"live_tv_cancel_series" = "Ακύρωση σειράς";
+"live_tv_failed_to_update_favorite" = "Αποτυχία ενημέρωσης αγαπημένου: %1$@";
+"live_tv_failed_to_delete_recording" = "Αποτυχία διαγραφής εγγραφής: %1$@";
+"live_tv_failed_to_cancel_recording" = "Η ακύρωση της εγγραφής απέτυχε: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Απέτυχε η ακύρωση της εγγραφής σειράς: %1$@";

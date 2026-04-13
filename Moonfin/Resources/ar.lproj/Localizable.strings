@@ -748,3 +748,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "جميع القنوات";
+"live_tv_loading_guide_data" = "جارٍ تحميل بيانات الدليل...";
+"live_tv_badge_repeat" = "ر";
+"live_tv_watch" = "يشاهد";
+"live_tv_movie" = "فيلم";
+"live_tv_live" = "يعيش";
+"live_tv_repeat" = "يكرر";
+"live_tv_minutes" = "%1$d دقيقة";
+"live_tv_cancel_series" = "إلغاء السلسلة";
+"live_tv_failed_to_update_favorite" = "فشل تحديث المفضلة: %1$@";
+"live_tv_failed_to_delete_recording" = "فشل في حذف التسجيل: %1$@";
+"live_tv_failed_to_cancel_recording" = "فشل إلغاء التسجيل: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "فشل إلغاء تسجيل المسلسل: %1$@";

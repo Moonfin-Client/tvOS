@@ -428,3 +428,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Pob Sianel";
+"live_tv_loading_guide_data" = "Wrthi'n llwytho data canllaw...";
+"live_tv_badge_repeat" = "R";
+"live_tv_watch" = "Gwylio";
+"live_tv_movie" = "Ffilm";
+"live_tv_live" = "Byw";
+"live_tv_repeat" = "Ailadrodd";
+"live_tv_minutes" = "_PH_0__ mun";
+"live_tv_cancel_series" = "Canslo'r Gyfres";
+"live_tv_failed_to_update_favorite" = "Wedi methu diweddaru'r ffefryn: %1$@";
+"live_tv_failed_to_delete_recording" = "Wedi methu dileu recordiad: %1$@";
+"live_tv_failed_to_cancel_recording" = "Wedi methu canslo recordiad: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Wedi methu canslo recordiad cyfres: %1$@";

@@ -858,3 +858,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "All Channels";
+"live_tv_loading_guide_data" = "Loading guide data...";
+"live_tv_badge_repeat" = "R";
+"live_tv_watch" = "Watch";
+"live_tv_movie" = "Movie";
+"live_tv_live" = "Live";
+"live_tv_repeat" = "Repeat";
+"live_tv_minutes" = "%1$d min";
+"live_tv_cancel_series" = "Cancel Series";
+"live_tv_failed_to_update_favorite" = "Failed to update favorite: %1$@";
+"live_tv_failed_to_delete_recording" = "Failed to delete recording: %1$@";
+"live_tv_failed_to_cancel_recording" = "Failed to cancel recording: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Failed to cancel series recording: %1$@";

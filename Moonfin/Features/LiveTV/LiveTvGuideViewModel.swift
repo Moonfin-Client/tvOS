@@ -55,7 +55,7 @@ final class LiveTvGuideViewModel: ObservableObject {
     func loadGuide() async {
         guard !isLoading else { return }
         guard let client else {
-            error = "No server connection"
+            error = Strings.liveTvNoServerConnection
             return
         }
         isLoading = true
@@ -165,7 +165,7 @@ final class LiveTvGuideViewModel: ObservableObject {
             }
             await loadGuide()
         } catch {
-            self.error = "Failed to update favorite: \(error.localizedDescription)"
+            self.error = Strings.liveTvFailedToUpdateFavorite(error.localizedDescription)
         }
     }
 

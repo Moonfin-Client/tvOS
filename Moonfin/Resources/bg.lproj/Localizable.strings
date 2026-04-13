@@ -478,3 +478,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Всички канали";
+"live_tv_loading_guide_data" = "Данните за ръководството се зареждат...";
+"live_tv_badge_repeat" = "Р";
+"live_tv_watch" = "Гледай";
+"live_tv_movie" = "Филм";
+"live_tv_live" = "На живо";
+"live_tv_repeat" = "Повторете";
+"live_tv_minutes" = "%1$d мин";
+"live_tv_cancel_series" = "Отказ от серията";
+"live_tv_failed_to_update_favorite" = "Неуспешно актуализиране на любимите: %1$@";
+"live_tv_failed_to_delete_recording" = "Неуспешно изтриване на запис: %1$@";
+"live_tv_failed_to_cancel_recording" = "Неуспешно анулиране на записа: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "Неуспешно анулиране на запис на серия: %1$@";

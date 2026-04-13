@@ -748,3 +748,16 @@
 "live_tv_delete_recording_failed" = "Failed to delete recording: %1$@";
 "live_tv_cancel_recording_failed" = "Failed to cancel recording: %1$@";
 "live_tv_cancel_series_failed" = "Failed to cancel series recording: %1$@";
+"live_tv_all_channels" = "Tots els canals";
+"live_tv_loading_guide_data" = "S'estan carregant les dades de la guia...";
+"live_tv_badge_repeat" = "R";
+"live_tv_watch" = "Mira";
+"live_tv_movie" = "Pel·lícula";
+"live_tv_live" = "Viu";
+"live_tv_repeat" = "Repetiu";
+"live_tv_minutes" = "%1$d min";
+"live_tv_cancel_series" = "Cancel·la la sèrie";
+"live_tv_failed_to_update_favorite" = "No s'ha pogut actualitzar el favorit: %1$@";
+"live_tv_failed_to_delete_recording" = "No s'ha pogut suprimir la gravació: %1$@";
+"live_tv_failed_to_cancel_recording" = "No s'ha pogut cancel·lar la gravació: %1$@";
+"live_tv_failed_to_cancel_series_recording" = "No s'ha pogut cancel·lar la gravació de la sèrie: %1$@";

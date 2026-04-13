@@ -52,7 +52,7 @@ final class RecordingsViewModel: ObservableObject {
 
     func loadData() async {
         guard let client else {
-            error = "No server connection"
+            error = Strings.liveTvNoServerConnection
             return
         }
         isLoading = true
@@ -88,7 +88,7 @@ final class RecordingsViewModel: ObservableObject {
             recordings.removeAll { $0.id == recording.id }
             selectedRecording = nil
         } catch {
-            self.error = "Failed to delete recording: \(error.localizedDescription)"
+            self.error = Strings.liveTvFailedToDeleteRecording(error.localizedDescription)
         }
     }
 
@@ -100,7 +100,7 @@ final class RecordingsViewModel: ObservableObject {
             timers.removeAll { $0.id == timer.id }
             selectedTimer = nil
         } catch {
-            self.error = "Failed to cancel recording: \(error.localizedDescription)"
+            self.error = Strings.liveTvFailedToCancelRecording(error.localizedDescription)
         }
     }
 
@@ -112,7 +112,18 @@ final class RecordingsViewModel: ObservableObject {
             seriesTimers.removeAll { $0.id == seriesTimer.id }
             selectedSeriesTimer = nil
         } catch {
-            self.error = "Failed to cancel series recording: \(error.localizedDescription)"
+            self.error = Strings.liveTvFailedToCancelSeriesRecording(error.localizedDescription)
+        }
+    }
+
+    func localizedFilterName(_ filter: RecordingFilter) -> String {
+        switch filter {
+        case .all:
+            return Strings.liveTvAll
+        case .past24h:
+            return Strings.liveTvPast24Hours
+        case .pastWeek:
+            return Strings.liveTvPastWeek
         }
     }
 
