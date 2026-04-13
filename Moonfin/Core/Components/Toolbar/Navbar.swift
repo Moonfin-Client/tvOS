@@ -120,7 +120,7 @@ struct Navbar: View {
         HStack(spacing: 6) {
             ExpandableToolbarButton(
                 icon: "house",
-                label: "Home",
+                label: Strings.home,
                 action: { routeHomeAndHandoffFocus() }
             )
             .focused($navFocusItem, equals: .home)
@@ -129,7 +129,7 @@ struct Navbar: View {
             Group {
                 ExpandableToolbarButton(
                     icon: "magnifyingglass",
-                    label: "Search",
+                    label: Strings.search,
                     action: { router.navigatePrimary(to: .search()) }
                 )
                 .focused($navFocusItem, equals: .search)
@@ -138,7 +138,7 @@ struct Navbar: View {
                 if viewModel.showShuffle {
                     ExpandableToolbarButton(
                         icon: "shuffle",
-                        label: viewModel.isShuffling ? "..." : "Shuffle",
+                        label: viewModel.isShuffling ? "..." : Strings.shuffle,
                         isAssetIcon: true,
                         action: { showShuffleDialog = true }
                     )
@@ -149,7 +149,7 @@ struct Navbar: View {
                 if viewModel.showFavorites {
                     ExpandableToolbarButton(
                         icon: "heart.fill",
-                        label: "Favorites",
+                        label: Strings.favorites,
                         action: { router.navigatePrimary(to: .allFavorites) }
                     )
                     .focused($navFocusItem, equals: .favorites)
@@ -159,7 +159,7 @@ struct Navbar: View {
                 if viewModel.showGenres {
                     ExpandableToolbarButton(
                         icon: "theatermasks",
-                        label: "Genres",
+                        label: Strings.genres,
                         action: { router.navigatePrimary(to: .allGenres) }
                     )
                     .focused($navFocusItem, equals: .genres)
@@ -197,7 +197,7 @@ struct Navbar: View {
                 if viewModel.showSyncPlay {
                     ExpandableToolbarButton(
                         icon: "person.3.fill",
-                        label: "SyncPlay",
+                        label: Strings.syncPlay,
                         action: { settingsRouter.open(to: .syncPlay) }
                     )
                     .focused($navFocusItem, equals: .syncPlay)
@@ -206,7 +206,7 @@ struct Navbar: View {
 
                 ExpandableToolbarButton(
                     icon: "gearshape.fill",
-                    label: "Settings",
+                    label: Strings.settings,
                     action: { settingsRouter.open() }
                 )
                 .focused($navFocusItem, equals: .settings)

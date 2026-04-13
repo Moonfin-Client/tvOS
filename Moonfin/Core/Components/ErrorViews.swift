@@ -84,10 +84,10 @@ struct RetryableErrorView: View {
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 if let retryAction {
-                    FocusableDialogButton(title: "Retry", action: retryAction)
+                    FocusableDialogButton(title: Strings.retry, action: retryAction)
                 }
                 if let backAction {
-                    FocusableDialogButton(title: "Go Back", action: backAction)
+                    FocusableDialogButton(title: Strings.goBack, action: backAction)
                 }
             }
         }
@@ -108,20 +108,20 @@ struct ServerUnavailableView: View {
                 .font(.system(size: 56))
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
 
-            Text("Server Unavailable")
+            Text(Strings.serverUnavailableTitle)
                 .font(.titleXl)
                 .foregroundColor(theme.colorScheme.onBackground)
 
-            Text("Unable to connect to \(serverName)")
+            Text(Strings.unableToConnectTo(serverName))
                 .font(.bodyMd)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 if let onRetry {
-                    FocusableDialogButton(title: "Retry", action: onRetry)
+                    FocusableDialogButton(title: Strings.retry, action: onRetry)
                 }
                 if let onSwitchServer {
-                    FocusableDialogButton(title: "Switch Server", action: onSwitchServer)
+                    FocusableDialogButton(title: Strings.switchServerAction, action: onSwitchServer)
                 }
             }
         }
@@ -153,9 +153,9 @@ struct NetworkRetryDialog: View {
 
             HStack(spacing: SpaceTokens.spaceMd) {
                 if error.isRetryable {
-                    FocusableDialogButton(title: "Retry", action: onRetry)
+                    FocusableDialogButton(title: Strings.retry, action: onRetry)
                 }
-                FocusableDialogButton(title: "Dismiss", action: onCancel)
+                FocusableDialogButton(title: Strings.dismiss, action: onCancel)
             }
         }
         .padding(SpaceTokens.spaceXl)
@@ -177,10 +177,10 @@ struct NetworkRetryDialog: View {
 
     private var dialogTitle: String {
         switch error {
-        case .unauthorized: return "Authentication Required"
-        case .serverUnavailable: return "Server Unavailable"
-        case .networkError: return "Connection Error"
-        default: return "Error"
+        case .unauthorized: return Strings.authenticationRequired
+        case .serverUnavailable: return Strings.serverUnavailableTitle
+        case .networkError: return Strings.connectionError
+        default: return Strings.errorTitle
         }
     }
 }

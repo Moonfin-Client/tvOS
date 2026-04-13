@@ -204,7 +204,7 @@ struct LeftSidebar: View {
         VStack(spacing: 28) {
             SidebarIconItem(
                 systemIcon: "house",
-                label: "Home",
+                label: Strings.home,
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .home,
                 action: { routeHomeAndHandoffFocus() }
@@ -213,7 +213,7 @@ struct LeftSidebar: View {
 
             SidebarIconItem(
                 systemIcon: "magnifyingglass",
-                label: "Search",
+                label: Strings.search,
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .search,
                 action: {
@@ -226,7 +226,7 @@ struct LeftSidebar: View {
             if viewModel.showShuffle {
                 SidebarIconItem(
                     assetIcon: "shuffle",
-                    label: viewModel.isShuffling ? "..." : "Shuffle",
+                    label: viewModel.isShuffling ? "..." : Strings.shuffle,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .shuffle,
                     action: { showShuffleDialog = true }
@@ -237,7 +237,7 @@ struct LeftSidebar: View {
             if viewModel.showFavorites {
                 SidebarIconItem(
                     systemIcon: "heart.fill",
-                    label: "Favorites",
+                    label: Strings.favorites,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .favorites,
                     action: {
@@ -251,7 +251,7 @@ struct LeftSidebar: View {
             if viewModel.showGenres {
                 SidebarIconItem(
                     systemIcon: "theatermasks",
-                    label: "Genres",
+                    label: Strings.genres,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .genres,
                     action: {
@@ -265,7 +265,7 @@ struct LeftSidebar: View {
             if viewModel.showSyncPlay {
                 SidebarIconItem(
                     systemIcon: "person.3.fill",
-                    label: "SyncPlay",
+                    label: Strings.syncPlay,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .syncPlay,
                     action: {
@@ -293,7 +293,7 @@ struct LeftSidebar: View {
             if viewModel.showLibraries {
                 SidebarIconItem(
                     systemIcon: "movieclapper.fill",
-                    label: "Libraries",
+                    label: Strings.libraries,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .libraries,
                     action: { isLibraryExpanded.toggle() }
@@ -320,7 +320,7 @@ struct LeftSidebar: View {
             if isExpanded {
                 SidebarIconItem(
                     systemIcon: "gearshape.fill",
-                    label: "Settings",
+                    label: Strings.settings,
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .settings,
                     action: { settingsRouter.open() }
@@ -333,7 +333,7 @@ struct LeftSidebar: View {
     private var settingsSection: some View {
         SidebarIconItem(
             systemIcon: "gearshape.fill",
-            label: "Settings",
+            label: Strings.settings,
             isExpanded: isExpanded,
             isFocused: focusedItem == .settings,
             action: { settingsRouter.open() }

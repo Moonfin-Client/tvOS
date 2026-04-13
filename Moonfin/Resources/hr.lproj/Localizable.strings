@@ -902,3 +902,21 @@
 "go_to_album" = "Go to Album";
 "go_to_artist" = "Go to Artist";
 "press_to_expand" = "Press to expand";
+
+// Toolbar and Core Components
+"lbl_libraries" = "Libraries";
+"shuffle_by" = "Shuffle By";
+"select_library" = "Select Library";
+"select_genre" = "Select Genre";
+"quick_shuffle" = "Quick Shuffle";
+"lbl_library" = "Library";
+"lbl_genre" = "Genre";
+"loading_genres" = "Loading genres...";
+"server_unavailable_title" = "Server Unavailable";
+"unable_to_connect_to" = "Unable to connect to %@";
+"lbl_retry" = "Retry";
+"lbl_switch_server" = "Switch Server";
+"lbl_dismiss" = "Dismiss";
+"authentication_required" = "Authentication Required";
+"connection_error" = "Connection Error";
+"error_title" = "Error";

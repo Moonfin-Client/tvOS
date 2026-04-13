@@ -41,7 +41,7 @@ struct ShuffleOptionsDialog: View {
 
             HStack {
                 Spacer()
-                FocusableDialogButton(title: "Cancel", action: onDismiss)
+                FocusableDialogButton(title: Strings.cancel, action: onDismiss)
                 Spacer()
             }
             .padding(.vertical, SpaceTokens.spaceMd)
@@ -76,28 +76,28 @@ struct ShuffleOptionsDialog: View {
 
     private var headerTitle: String {
         switch mode {
-        case .main: return "Shuffle By"
-        case .libraries: return "Select Library"
-        case .genres: return "Select Genre"
+        case .main: return Strings.shuffleBy
+        case .libraries: return Strings.selectLibrary
+        case .genres: return Strings.selectGenre
         }
     }
 
     private var mainContent: some View {
         Group {
             FocusableTrackSelectorRow(
-                label: "Quick Shuffle",
+                label: Strings.quickShuffle,
                 detail: nil,
                 isSelected: false,
                 action: { onQuickShuffle() }
             )
             FocusableTrackSelectorRow(
-                label: "Library",
+                label: Strings.librarySingular,
                 detail: nil,
                 isSelected: false,
                 action: { mode = .libraries }
             )
             FocusableTrackSelectorRow(
-                label: "Genre",
+                label: Strings.genreSingular,
                 detail: nil,
                 isSelected: false,
                 action: {
@@ -126,14 +126,14 @@ struct ShuffleOptionsDialog: View {
         if isLoadingGenres {
             HStack(spacing: SpaceTokens.spaceSm) {
                 ProgressView()
-                Text("Loading genres...")
+                Text(Strings.loadingGenres)
                     .font(.bodySm)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, SpaceTokens.spaceMd)
         } else if genres.isEmpty {
-            Text("No genres found")
+            Text(Strings.noGenresFound)
                 .font(.bodySm)
                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                 .padding(.vertical, SpaceTokens.spaceMd)

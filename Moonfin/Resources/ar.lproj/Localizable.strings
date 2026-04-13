@@ -949,3 +949,37 @@
 "go_to_album" = "اذهب إلى الألبوم";
 "go_to_artist" = "اذهب إلى الفنان";
 "press_to_expand" = "اضغط للتوسيع";
+
+// Toolbar and Core Components
+"lbl_libraries" = "Libraries";
+"shuffle_by" = "Shuffle By";
+"select_library" = "Select Library";
+"select_genre" = "Select Genre";
+"quick_shuffle" = "Quick Shuffle";
+"lbl_library" = "Library";
+"lbl_genre" = "Genre";
+"loading_genres" = "Loading genres...";
+"server_unavailable_title" = "Server Unavailable";
+"unable_to_connect_to" = "Unable to connect to %@";
+"lbl_retry" = "Retry";
+"lbl_switch_server" = "Switch Server";
+"lbl_dismiss" = "Dismiss";
+"authentication_required" = "Authentication Required";
+"connection_error" = "Connection Error";
+"error_title" = "Error";
+"lbl_libraries" = "المكتبات";
+"shuffle_by" = "خلط ورق اللعب بواسطة";
+"select_library" = "حدد المكتبة";
+"select_genre" = "حدد النوع";
+"quick_shuffle" = "خلط ورق اللعب السريع";
+"lbl_library" = "مكتبة";
+"lbl_genre" = "النوع";
+"loading_genres" = "جارٍ تحميل الأنواع...";
+"server_unavailable_title" = "الخادم غير متاح";
+"unable_to_connect_to" = "غير قادر على الاتصال بـ %@";
+"lbl_retry" = "أعد المحاولة";
+"lbl_switch_server" = "تبديل الخادم";
+"lbl_dismiss" = "رفض";
+"authentication_required" = "المصادقة مطلوبة";
+"connection_error" = "خطأ في الاتصال";
+"error_title" = "خطأ";

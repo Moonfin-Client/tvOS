@@ -734,4 +734,28 @@ enum Strings {
     static var goToAlbum: String { l("go_to_album") }
     static var goToArtist: String { l("go_to_artist") }
     static var pressToExpand: String { l("press_to_expand") }
+
+    // MARK: - Toolbar and Core Components
+
+    // Navigation labels
+    static var libraries: String { l("lbl_libraries") }
+
+    // Shuffle Dialog
+    static var shuffleBy: String { l("shuffle_by") }
+    static var selectLibrary: String { l("select_library") }
+    static var selectGenre: String { l("select_genre") }
+    static var quickShuffle: String { l("quick_shuffle") }
+    static var librarySingular: String { l("lbl_library") }
+    static var genreSingular: String { l("lbl_genre") }
+    static var loadingGenres: String { l("loading_genres") }
+
+    // Error Views
+    static var serverUnavailableTitle: String { l("server_unavailable_title") }
+    static func unableToConnectTo(_ name: String) -> String { l("unable_to_connect_to", name) }
+    static var retry: String { l("lbl_retry") }
+    static var switchServerAction: String { l("lbl_switch_server") }
+    static var dismiss: String { l("lbl_dismiss") }
+    static var authenticationRequired: String { l("authentication_required") }
+    static var connectionError: String { l("connection_error") }
+    static var errorTitle: String { l("error_title") }
 }

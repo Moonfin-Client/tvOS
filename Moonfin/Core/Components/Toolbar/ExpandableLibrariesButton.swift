@@ -48,7 +48,7 @@ struct ExpandableLibrariesButton: View {
                     Image(systemName: "movieclapper.fill")
                         .font(.system(size: 26))
 
-                    Text("Libraries")
+                    Text(Strings.libraries)
                         .font(.bodyMd)
                         .fontWeight(.bold)
                         .padding(.trailing, 4)
