@@ -657,6 +657,28 @@ enum Strings {
     static var shuffleError: String { l("shuffle_error") }
     static var shuffleNoItems: String { l("shuffle_no_items_found") }
 
+    // Networking and Shared Error Strings
+    static var networkErrorInvalidUrl: String { l("network_error_invalid_url") }
+    static func networkErrorHttpError(_ code: Int) -> String { l("network_error_http_error", code) }
+    static func networkErrorDecodingError(_ detail: String) -> String { l("network_error_decoding_error", detail) }
+    static var networkErrorUnauthorized: String { l("network_error_unauthorized") }
+    static var networkErrorServerUnavailable: String { l("network_error_server_unavailable") }
+    static var networkUserInvalidServerAddress: String { l("network_user_invalid_server_address") }
+    static var networkUserSessionExpired: String { l("network_user_session_expired") }
+    static var networkUserAccessDenied: String { l("network_user_access_denied") }
+    static var networkUserContentNotFound: String { l("network_user_content_not_found") }
+    static var networkUserRequestTimedOut: String { l("network_user_request_timed_out") }
+    static var networkUserTooManyRequests: String { l("network_user_too_many_requests") }
+    static var networkUserServerError: String { l("network_user_server_error") }
+    static func networkUserRequestFailedHttp(_ code: Int) -> String { l("network_user_request_failed_http", code) }
+    static var networkUserUnexpectedServerResponse: String { l("network_user_unexpected_server_response") }
+    static var networkUserNoInternet: String { l("network_user_no_internet") }
+    static var networkUserConnectionTimedOut: String { l("network_user_connection_timed_out") }
+    static var networkUserUnableToReachServer: String { l("network_user_unable_to_reach_server") }
+    static var networkUserSecureConnectionFailed: String { l("network_user_secure_connection_failed") }
+    static var networkUserNetworkError: String { l("network_user_network_error") }
+    static var networkUserServerIsUnavailable: String { l("network_user_server_is_unavailable") }
+
     // MARK: - Search, Library, and Details
 
     // Search

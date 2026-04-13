@@ -8,20 +8,28 @@ enum NetworkError: LocalizedError, Equatable {
     case unauthorized
     case serverUnavailable
 
+    private static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
+    private static func l(_ key: String, _ args: CVarArg...) -> String {
+        String(format: l(key), arguments: args)
+    }
+
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid URL"
+            return Self.l("network_error_invalid_url")
         case .httpError(let code, _):
-            return "HTTP error \(code)"
+            return Self.l("network_error_http_error", code)
         case .decodingError(let error):
-            return "Decoding error: \(error.localizedDescription)"
+            return Self.l("network_error_decoding_error", error.localizedDescription)
         case .networkError(let error):
             return error.localizedDescription
         case .unauthorized:
-            return "Unauthorized"
+            return Self.l("network_error_unauthorized")
         case .serverUnavailable:
-            return "Server unavailable"
+            return Self.l("network_error_server_unavailable")
         }
     }
 

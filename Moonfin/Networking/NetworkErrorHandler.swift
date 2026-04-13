@@ -93,6 +93,14 @@ actor NetworkErrorHandler {
 }
 
 extension NetworkError {
+    private static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
+    private static func l(_ key: String, _ args: CVarArg...) -> String {
+        String(format: l(key), arguments: args)
+    }
+
     var isRetryable: Bool {
         switch self {
         case .serverUnavailable: return true
@@ -115,34 +123,34 @@ extension NetworkError {
     var userFacingMessage: String {
         switch self {
         case .invalidURL:
-            return "Invalid server address"
+            return Self.l("network_user_invalid_server_address")
         case .httpError(let code, _):
             switch code {
-            case 401: return "Session expired. Please sign in again."
-            case 403: return "Access denied"
-            case 404: return "Content not found"
-            case 408: return "Request timed out"
-            case 429: return "Too many requests. Please wait."
-            case 500...599: return "Server error. Please try again."
-            default: return "Request failed (HTTP \(code))"
+            case 401: return Self.l("network_user_session_expired")
+            case 403: return Self.l("network_user_access_denied")
+            case 404: return Self.l("network_user_content_not_found")
+            case 408: return Self.l("network_user_request_timed_out")
+            case 429: return Self.l("network_user_too_many_requests")
+            case 500...599: return Self.l("network_user_server_error")
+            default: return Self.l("network_user_request_failed_http", code)
             }
         case .decodingError:
-            return "Unexpected server response"
+            return Self.l("network_user_unexpected_server_response")
         case .networkError(let error):
             if let urlError = error as? URLError {
                 switch urlError.code {
-                case .notConnectedToInternet: return "No internet connection"
-                case .timedOut: return "Connection timed out"
-                case .cannotFindHost, .cannotConnectToHost: return "Unable to reach server"
-                case .secureConnectionFailed: return "Secure connection failed"
-                default: return "Network error"
+                case .notConnectedToInternet: return Self.l("network_user_no_internet")
+                case .timedOut: return Self.l("network_user_connection_timed_out")
+                case .cannotFindHost, .cannotConnectToHost: return Self.l("network_user_unable_to_reach_server")
+                case .secureConnectionFailed: return Self.l("network_user_secure_connection_failed")
+                default: return Self.l("network_user_network_error")
                 }
             }
-            return "Network error"
+            return Self.l("network_user_network_error")
         case .unauthorized:
-            return "Session expired. Please sign in again."
+            return Self.l("network_user_session_expired")
         case .serverUnavailable:
-            return "Server is unavailable"
+            return Self.l("network_user_server_is_unavailable")
         }
     }
 }

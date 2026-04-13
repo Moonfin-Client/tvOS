@@ -1092,3 +1092,25 @@
 "rating_roger_ebert" = "Roger Ebert";
 "rating_myanimelist" = "MyAnimeList";
 "rating_anilist" = "AniList";
+
+// Networking and Shared Error Strings
+"network_error_invalid_url" = "Invalid URL";
+"network_error_http_error" = "HTTP error %1$d";
+"network_error_decoding_error" = "Decoding error: %@";
+"network_error_unauthorized" = "Unauthorized";
+"network_error_server_unavailable" = "Server unavailable";
+"network_user_invalid_server_address" = "Invalid server address";
+"network_user_session_expired" = "Session expired. Please sign in again.";
+"network_user_access_denied" = "Access denied";
+"network_user_content_not_found" = "Content not found";
+"network_user_request_timed_out" = "Request timed out";
+"network_user_too_many_requests" = "Too many requests. Please wait.";
+"network_user_server_error" = "Server error. Please try again.";
+"network_user_request_failed_http" = "Request failed (HTTP %1$d)";
+"network_user_unexpected_server_response" = "Unexpected server response";
+"network_user_no_internet" = "No internet connection";
+"network_user_connection_timed_out" = "Connection timed out";
+"network_user_unable_to_reach_server" = "Unable to reach server";
+"network_user_secure_connection_failed" = "Secure connection failed";
+"network_user_network_error" = "Network error";
+"network_user_server_is_unavailable" = "Server is unavailable";
