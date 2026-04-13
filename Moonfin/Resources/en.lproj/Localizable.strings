@@ -1569,6 +1569,7 @@
 "syncplay_repeat_off" = "Off";
 "syncplay_repeat_one" = "One";
 "syncplay_repeat_all" = "All";
+"syncplay_shuffle_on" = "On";
 "syncplay_participant_singular" = "participant";
 "syncplay_participant_plural" = "participants";
 "syncplay_participants_line" = "%1$d %2$@ · %3$@";

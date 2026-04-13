@@ -1176,3 +1176,4 @@
 "syncplay_participants_line" = "%1$d %2$@ · %3$@";
 "season_episode_compact" = "S%1$dE%2$d";
 "episode_only_compact" = "E%1$d";
+"syncplay_shuffle_on" = "On";

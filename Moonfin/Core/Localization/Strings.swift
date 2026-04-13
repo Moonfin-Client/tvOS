@@ -680,6 +680,7 @@ enum Strings {
     static var syncPlayRepeatOff: String { l("syncplay_repeat_off") }
     static var syncPlayRepeatOne: String { l("syncplay_repeat_one") }
     static var syncPlayRepeatAll: String { l("syncplay_repeat_all") }
+    static var syncPlayShuffleOn: String { l("syncplay_shuffle_on") }
     static var syncPlayParticipantSingular: String { l("syncplay_participant_singular") }
     static var syncPlayParticipantPlural: String { l("syncplay_participant_plural") }
     static func syncPlayRepeatValue(_ value: String) -> String { l("syncplay_repeat_value", value) }

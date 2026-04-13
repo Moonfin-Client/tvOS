@@ -244,7 +244,7 @@ struct SyncPlayScreen: View {
     }
 
     private var shuffleLabel: String {
-        syncPlayManager.state.shuffleMode == .shuffle ? Strings.on : Strings.syncPlayRepeatOff
+        syncPlayManager.state.shuffleMode == .shuffle ? Strings.syncPlayShuffleOn : Strings.syncPlayRepeatOff
     }
 
     private var createGroupSection: some View {
