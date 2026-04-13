@@ -41,7 +41,7 @@ struct LibraryBrowseScreen: View {
                     Spacer()
                 } else if viewModel.items.isEmpty {
                     Spacer()
-                    Text("No items found")
+                    Text(Strings.noItemsFound)
                         .font(.bodyLg)
                         .foregroundColor(.white.opacity(0.5))
                     Spacer()
@@ -95,7 +95,7 @@ struct LibraryBrowseScreen: View {
                         .foregroundColor(.white)
 
                     if viewModel.totalItems > 0 {
-                        Text("\(viewModel.totalItems) Items")
+                        Text(Strings.itemsCount(viewModel.totalItems))
                             .font(.captionXs)
                             .foregroundColor(.white.opacity(0.4))
                     }
@@ -524,7 +524,7 @@ struct FilterSortDialogView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Sort & Filter")
+            Text(Strings.sortAndFilter)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
@@ -532,7 +532,7 @@ struct FilterSortDialogView: View {
 
             Divider().background(Color.white.opacity(0.08))
 
-            Text("SORT BY")
+            Text(Strings.sortByUpper)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
                 .padding(.horizontal, 24)
@@ -571,16 +571,16 @@ struct FilterSortDialogView: View {
                 .background(Color.white.opacity(0.06))
                 .padding(.horizontal, 24)
 
-            Text("FILTERS")
+            Text(Strings.filtersUpper)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
                 .padding(.horizontal, 24)
                 .padding(.vertical, 8)
 
-            filterToggleRow(label: "Favorites Only", isActive: filterFavorites, action: onToggleFavorites)
+            filterToggleRow(label: Strings.favoritesOnly, isActive: filterFavorites, action: onToggleFavorites)
 
             if showUnwatchedToggle {
-                filterToggleRow(label: "Unwatched Only", isActive: filterUnwatched, action: onToggleUnwatched)
+                filterToggleRow(label: Strings.unwatchedOnly, isActive: filterUnwatched, action: onToggleUnwatched)
             }
 
             Spacer()

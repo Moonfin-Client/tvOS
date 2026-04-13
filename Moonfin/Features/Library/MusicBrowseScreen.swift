@@ -97,7 +97,7 @@ struct MusicBrowseScreen: View {
             LazyHStack(spacing: 12) {
                 MusicViewButton(
                     icon: "opticaldisc",
-                    label: "Albums",
+                    label: Strings.albums,
                     theme: theme,
                     focusBinding: focusBinding,
                     focusId: "view_albums"
@@ -109,7 +109,7 @@ struct MusicBrowseScreen: View {
 
                 MusicViewButton(
                     icon: "person.2",
-                    label: "Album Artists",
+                    label: Strings.albumArtists,
                     theme: theme,
                     focusBinding: focusBinding,
                     focusId: "view_album_artists"
@@ -121,7 +121,7 @@ struct MusicBrowseScreen: View {
 
                 MusicViewButton(
                     icon: "person",
-                    label: "Artists",
+                    label: Strings.artists,
                     theme: theme,
                     focusBinding: focusBinding,
                     focusId: "view_artists"
@@ -133,7 +133,7 @@ struct MusicBrowseScreen: View {
 
                 MusicViewButton(
                     icon: "theatermasks",
-                    label: "Genres",
+                    label: Strings.genres,
                     theme: theme,
                     focusBinding: focusBinding,
                     focusId: "view_genres"
@@ -145,7 +145,7 @@ struct MusicBrowseScreen: View {
 
                 MusicViewButton(
                     icon: "shuffle",
-                    label: "Random Album",
+                    label: Strings.randomAlbum,
                     isAssetIcon: true,
                     theme: theme,
                     focusBinding: focusBinding,
@@ -170,7 +170,7 @@ struct MusicBrowseScreen: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Views")
+                    Text(Strings.views)
                         .font(.bodyLg)
                         .fontWeight(.semibold)
                         .foregroundColor(theme.colorScheme.onBackground)
@@ -275,7 +275,7 @@ struct MusicBrowseScreen: View {
     private var statusBar: some View {
         HStack {
             let totalItems = viewModel.rows.reduce(0) { $0 + $1.items.count }
-            Text("\(totalItems) items across \(viewModel.rows.filter { !$0.items.isEmpty }.count) sections")
+            Text(Strings.musicItemsAcrossSections(totalItems, viewModel.rows.filter { !$0.items.isEmpty }.count))
                 .font(.system(size: 11))
                 .foregroundColor(.white.opacity(0.3))
             Spacer()

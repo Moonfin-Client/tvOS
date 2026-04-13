@@ -132,12 +132,12 @@ final class MusicBrowseViewModel: ObservableObject {
             if let count = item.childCount {
                 return "\(count) items"
             }
-            return "Playlist"
+            return Strings.playlist
         case .musicArtist:
             if let count = item.albumCount {
                 return "\(count) albums"
             }
-            return "Artist"
+            return Strings.artistSingular
         default:
             return item.productionYear.map { String($0) } ?? ""
         }

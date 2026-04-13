@@ -142,7 +142,7 @@ final class SearchViewModel: ObservableObject {
 
     private func formatEpisode(_ item: ServerItem) -> String {
         guard let season = item.parentIndexNumber, let episode = item.indexNumber else { return "" }
-        return "S\(season):E\(episode)"
+        return Strings.searchEpisodeFormat(season, episode)
     }
 
     private func performSearch(query: String) async {

@@ -10,11 +10,11 @@ enum GenreSortOption: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .nameAsc: return "Name (A-Z)"
-        case .nameDesc: return "Name (Z-A)"
-        case .mostItems: return "Most Items"
-        case .leastItems: return "Least Items"
-        case .random: return "Random"
+        case .nameAsc: return Strings.genreSortNameAsc
+        case .nameDesc: return Strings.genreSortNameDesc
+        case .mostItems: return Strings.genreSortMostItems
+        case .leastItems: return Strings.genreSortLeastItems
+        case .random: return Strings.random
         }
     }
 }

@@ -17,7 +17,7 @@ struct TrackSelectorDialog: View {
     @FocusState private var focusedIndex: Int?
 
     private var title: String {
-        mode == .audio ? "Audio" : "Subtitles"
+        mode == .audio ? Strings.audioAction : Strings.subtitlesAction
     }
 
     private var filteredStreams: [ServerMediaStream] {
@@ -37,7 +37,7 @@ struct TrackSelectorDialog: View {
                 VStack(spacing: SpaceTokens.spaceXs) {
                     if mode == .subtitle {
                         FocusableTrackSelectorRow(
-                            label: "None",
+                            label: Strings.none,
                             detail: nil,
                             isSelected: selectedIndex == nil || selectedIndex == -1,
                             action: { onSelect(-1) }
@@ -60,7 +60,7 @@ struct TrackSelectorDialog: View {
                             .padding(.vertical, SpaceTokens.spaceXs)
 
                         FocusableTrackSelectorRow(
-                            label: "Download subtitles...",
+                            label: Strings.playerDownloadSubtitles,
                             detail: "Search using OpenSubtitles",
                             isSelected: false,
                             action: onDownloadSubtitles
@@ -72,7 +72,7 @@ struct TrackSelectorDialog: View {
 
             HStack {
                 Spacer()
-                DetailsGlassDialogButton(title: "Cancel", action: onDismiss)
+                DetailsGlassDialogButton(title: Strings.cancel, action: onDismiss)
                 Spacer()
             }
             .padding(.vertical, SpaceTokens.spaceMd)
@@ -96,8 +96,8 @@ struct TrackSelectorDialog: View {
         }
         if let channels = stream.channels {
             switch channels {
-            case 1: parts.append("Mono")
-            case 2: parts.append("Stereo")
+            case 1: parts.append(Strings.playerMono)
+            case 2: parts.append(Strings.playerStereo)
             case 6: parts.append("5.1")
             case 8: parts.append("7.1")
             default: parts.append("\(channels)ch")
@@ -200,7 +200,7 @@ struct VersionSelectorDialog: View {
 
             HStack {
                 Spacer()
-                DetailsGlassDialogButton(title: "Cancel", action: onDismiss)
+                DetailsGlassDialogButton(title: Strings.cancel, action: onDismiss)
                 Spacer()
             }
             .padding(.vertical, SpaceTokens.spaceMd)

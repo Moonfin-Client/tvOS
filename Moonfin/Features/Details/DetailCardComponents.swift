@@ -203,7 +203,7 @@ struct FocusableEpisodeCard: View {
     private var episodeInfoView: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
             if let num = item.indexNumber {
-                Text("Episode \(num)")
+                Text(Strings.episodeLabel(num))
                     .font(.captionXs)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
             }
@@ -324,7 +324,7 @@ struct FocusableTrackRow: View {
             Button(Strings.play, action: onSelect)
 
             if let onPlayNext {
-                Button("Play Next", action: onPlayNext)
+                Button(Strings.playerPlayNext, action: onPlayNext)
             }
 
             if let onAddToQueue {
@@ -336,27 +336,27 @@ struct FocusableTrackRow: View {
             }
 
             if let onRemoveFromPlaylist {
-                Button("Delete from Playlist", role: .destructive, action: onRemoveFromPlaylist)
+                Button(Strings.deleteFromPlaylist, role: .destructive, action: onRemoveFromPlaylist)
             }
 
             if let onMoveUp {
-                Button("Move Up", action: onMoveUp)
+                Button(Strings.moveUp, action: onMoveUp)
             }
 
             if let onMoveDown {
-                Button("Move Down", action: onMoveDown)
+                Button(Strings.moveDown, action: onMoveDown)
             }
 
             if let onToggleFavorite {
-                Button((track.userData?.isFavorite ?? false) ? "Remove from Favorites" : "Add to Favorites", action: onToggleFavorite)
+                Button((track.userData?.isFavorite ?? false) ? Strings.removeFromFavorites : Strings.addToFavorites, action: onToggleFavorite)
             }
 
             if let onGoToAlbum {
-                Button("Go to Album", action: onGoToAlbum)
+                Button(Strings.goToAlbum, action: onGoToAlbum)
             }
 
             if let onGoToArtist {
-                Button("Go to Artist", action: onGoToArtist)
+                Button(Strings.goToArtist, action: onGoToArtist)
             }
         }
     }
@@ -451,7 +451,7 @@ struct ExpandableBioText: View {
                     .padding(.horizontal, SpaceTokens.spaceSm)
 
                 if !isExpanded {
-                    Text("Press to expand")
+                    Text(Strings.pressToExpand)
                         .font(.captionXs)
                         .foregroundColor(isFocused ? .white.opacity(0.7) : theme.colorScheme.onBackground.opacity(0.4))
                         .padding(.horizontal, SpaceTokens.spaceSm)

@@ -32,7 +32,7 @@ struct GenreBrowseScreen: View {
                     Spacer()
                 } else if viewModel.genres.isEmpty {
                     Spacer()
-                    Text("No genres found")
+                    Text(Strings.noGenresFound)
                         .font(.bodyLg)
                         .foregroundColor(.white.opacity(0.5))
                     Spacer()
@@ -79,7 +79,7 @@ struct GenreBrowseScreen: View {
                         .foregroundColor(.white)
 
                     if viewModel.totalGenres > 0 {
-                        Text("\(viewModel.totalGenres) Genres")
+                        Text(Strings.genresCount(viewModel.totalGenres))
                             .font(.captionXs)
                             .foregroundColor(.white.opacity(0.4))
                     }
@@ -298,7 +298,7 @@ struct GenreSortDialogView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Sort Genres")
+            Text(Strings.sortGenres)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
@@ -365,7 +365,7 @@ struct GenreDisplaySettingsDialogView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Display Settings")
+            Text(Strings.displaySettings)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 24)
@@ -373,7 +373,7 @@ struct GenreDisplaySettingsDialogView: View {
 
             Divider().background(Color.white.opacity(0.08))
 
-            Text("IMAGE TYPE")
+            Text(Strings.imageTypeUpper)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
                 .padding(.horizontal, 24)
@@ -412,7 +412,7 @@ struct GenreDisplaySettingsDialogView: View {
                 .background(Color.white.opacity(0.06))
                 .padding(.horizontal, 24)
 
-            Text("POSTER SIZE")
+            Text(Strings.posterSizeUpper)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.white.opacity(0.45))
                 .padding(.horizontal, 24)

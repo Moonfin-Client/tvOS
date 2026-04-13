@@ -56,7 +56,7 @@ struct FavoritesScreen: View {
                     Image(systemName: "heart.fill")
                         .font(.system(size: 18))
                         .foregroundColor(.colorRed300)
-                    Text("Favorites")
+                    Text(Strings.favorites)
                         .font(.titleXl)
                         .foregroundColor(.white)
                 }
@@ -95,7 +95,7 @@ struct FavoritesScreen: View {
             Image(systemName: "heart.slash")
                 .font(.system(size: 48))
                 .foregroundColor(.white.opacity(0.15))
-            Text("No favorites yet")
+            Text(Strings.noFavoritesYet)
                 .font(.bodyLg)
                 .foregroundColor(.white.opacity(0.3))
             Spacer()

@@ -46,7 +46,7 @@ struct AddToPlaylistDialog: View {
 
             HStack {
                 Spacer()
-                DetailsGlassDialogButton(title: "Cancel", action: onDismiss)
+                DetailsGlassDialogButton(title: Strings.cancel, action: onDismiss)
                 Spacer()
             }
             .padding(.vertical, SpaceTokens.spaceMd)
@@ -82,7 +82,7 @@ struct AddToPlaylistDialog: View {
                 VStack(spacing: SpaceTokens.spaceXs) {
                     FocusablePlaylistRow(
                         icon: "plus.circle.fill",
-                        label: "Create New Playlist",
+                        label: Strings.createNewPlaylist,
                         iconColor: theme.accent,
                         action: { showCreateView() }
                     )
@@ -157,7 +157,7 @@ struct AddToPlaylistDialog: View {
                 let result = try await client.playlistApi.getPlaylists(userId: userId)
                 playlists = result.items
             } catch {
-                errorMessage = "Failed to load playlists"
+                errorMessage = Strings.failedLoadPlaylists
             }
             isLoading = false
         }
@@ -174,7 +174,7 @@ struct AddToPlaylistDialog: View {
                 )
                 onAdded()
             } catch {
-                errorMessage = "Failed to add to playlist"
+                errorMessage = Strings.failedAddToPlaylist
             }
         }
     }
@@ -193,7 +193,7 @@ struct AddToPlaylistDialog: View {
                 )
                 onAdded()
             } catch {
-                errorMessage = "Failed to create playlist"
+                errorMessage = Strings.failedCreatePlaylist
             }
         }
     }

@@ -71,7 +71,7 @@ struct FolderBrowseScreen: View {
                     HStack(spacing: 4) {
                         Image(systemName: "folder.fill")
                             .font(.system(size: 16))
-                        Text("Folders")
+                        Text(Strings.folders)
                             .font(.bodySm)
                     }
                     .foregroundColor(viewModel.breadcrumbs.isEmpty ? .white : .white.opacity(0.5))

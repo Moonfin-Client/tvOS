@@ -127,7 +127,7 @@ struct SearchScreen: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 48))
                 .foregroundColor(.white.opacity(0.15))
-            Text("Search your library")
+            Text(Strings.searchYourLibrary)
                 .font(.bodyLg)
                 .foregroundColor(.white.opacity(0.3))
             Spacer()
@@ -141,7 +141,7 @@ struct SearchScreen: View {
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: 48))
                 .foregroundColor(.white.opacity(0.15))
-            Text("No results found")
+            Text(Strings.searchNoResults)
                 .font(.bodyLg)
                 .foregroundColor(.white.opacity(0.3))
             Spacer()
@@ -168,7 +168,7 @@ struct SearchScreen: View {
     private var seerrResultRow: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             HStack(spacing: 6) {
-                Text("Jellyseerr")
+                Text(Strings.jellyseerr)
                     .font(.bodyLg)
                     .fontWeight(.semibold)
                     .foregroundColor(theme.colorScheme.onBackground)

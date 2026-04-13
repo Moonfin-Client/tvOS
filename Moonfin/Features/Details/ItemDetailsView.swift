@@ -111,7 +111,7 @@ struct ItemDetailsView: View {
             isPresented: $showDeleteConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) {
+            Button(Strings.delete, role: .destructive) {
                 Task {
                     let deleted = await deleteCurrentItem()
                     if deleted {
@@ -119,9 +119,9 @@ struct ItemDetailsView: View {
                     }
                 }
             }
-            Button("Cancel", role: .cancel) { }
+            Button(Strings.cancel, role: .cancel) { }
         } message: {
-            Text("This item will be permanently deleted from the server.")
+            Text(Strings.deleteItemConfirmation)
         }
     }
 
@@ -394,10 +394,10 @@ struct ItemDetailsView: View {
 
     private var errorView: some View {
         VStack(spacing: SpaceTokens.spaceMd) {
-            Text("Unable to load item")
+            Text(Strings.unableToLoadItem)
                 .font(.titleXl)
                 .foregroundColor(theme.colorScheme.onBackground)
-            Button("Go Back") { router.goBack() }
+            Button(Strings.goBack) { router.goBack() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -731,7 +731,7 @@ struct ItemDetailsView: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
                 if showLabel {
-                    Text("Community rating")
+                    Text(Strings.communityRating)
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.5))
                 }

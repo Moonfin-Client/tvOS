@@ -32,7 +32,7 @@ struct ActionButtonsRow: View {
         HStack(alignment: .top, spacing: SpaceTokens.space3xl) {
             if canResume {
                 ActionButton(
-                    label: "Resume",
+                    label: Strings.resume,
                     icon: "play.fill",
                     detail: resumePositionText.map { "at \($0)" },
                     action: onResume
@@ -41,7 +41,7 @@ struct ActionButtonsRow: View {
             }
 
             ActionButton(
-                label: canResume ? "Restart" : "Play",
+                label: canResume ? Strings.restart : Strings.play,
                 icon: canResume ? "arrow.counterclockwise" : "play.fill",
                 action: onPlay
             )
@@ -49,7 +49,7 @@ struct ActionButtonsRow: View {
 
             if let onShuffle {
                 ActionButton(
-                    label: "Shuffle",
+                    label: Strings.shuffle,
                     icon: "shuffle",
                     isAssetIcon: true,
                     action: onShuffle
@@ -59,7 +59,7 @@ struct ActionButtonsRow: View {
 
             if let onInstantMix {
                 ActionButton(
-                    label: "Instant Mix",
+                    label: Strings.instantMix,
                     icon: "wand.and.stars",
                     action: onInstantMix
                 )
@@ -68,7 +68,7 @@ struct ActionButtonsRow: View {
 
             if let onNextEpisode {
                 ActionButton(
-                    label: "Next",
+                    label: Strings.nextShort,
                     icon: "forward.fill",
                     action: onNextEpisode
                 )
@@ -77,7 +77,7 @@ struct ActionButtonsRow: View {
 
             if let onSelectVersion {
                 ActionButton(
-                    label: "Version",
+                    label: Strings.versionAction,
                     icon: "film.stack",
                     action: onSelectVersion
                 )
@@ -86,7 +86,7 @@ struct ActionButtonsRow: View {
 
             if let onAudioTrack {
                 ActionButton(
-                    label: "Audio",
+                    label: Strings.audioAction,
                     icon: "speaker.wave.2",
                     action: onAudioTrack
                 )
@@ -95,7 +95,7 @@ struct ActionButtonsRow: View {
 
             if let onSubtitleTrack {
                 ActionButton(
-                    label: "Subtitles",
+                    label: Strings.subtitlesAction,
                     icon: "captions.bubble",
                     action: onSubtitleTrack
                 )
@@ -104,7 +104,7 @@ struct ActionButtonsRow: View {
 
             if let onDownloadSubtitles {
                 ActionButton(
-                    label: "Get Subs",
+                    label: Strings.getSubs,
                     icon: "square.and.arrow.down",
                     action: onDownloadSubtitles
                 )
@@ -113,7 +113,7 @@ struct ActionButtonsRow: View {
 
             if let onTrailer {
                 ActionButton(
-                    label: "Trailer",
+                    label: Strings.trailer,
                     icon: "film",
                     action: onTrailer
                 )
@@ -121,7 +121,7 @@ struct ActionButtonsRow: View {
             }
 
             ActionButton(
-                label: isPlayed ? "Watched" : "Unwatched",
+                label: isPlayed ? Strings.watched : Strings.unwatched,
                 icon: "checkmark",
                 isActive: isPlayed,
                 activeColor: Color(hex: 0x2196F3),
@@ -130,7 +130,7 @@ struct ActionButtonsRow: View {
             .focused(focusedButton, equals: .watched)
 
             ActionButton(
-                label: isFavorite ? "Favorited" : "Favorite",
+                label: isFavorite ? Strings.favorited : Strings.favorite,
                 icon: isFavorite ? "heart.fill" : "heart",
                 isActive: isFavorite,
                 activeColor: Color(hex: 0xFF4757),
@@ -140,7 +140,7 @@ struct ActionButtonsRow: View {
 
             if let onAddToPlaylist {
                 ActionButton(
-                    label: "Add to List",
+                    label: Strings.addToList,
                     icon: "text.badge.plus",
                     action: onAddToPlaylist
                 )
@@ -149,7 +149,7 @@ struct ActionButtonsRow: View {
 
             if let onGoToSeries {
                 ActionButton(
-                    label: "Go to Series",
+                    label: Strings.goToSeries,
                     icon: "tv",
                     action: onGoToSeries
                 )
@@ -158,7 +158,7 @@ struct ActionButtonsRow: View {
 
             if let onDelete {
                 ActionButton(
-                    label: "Delete",
+                    label: Strings.delete,
                     icon: "trash",
                     action: onDelete
                 )

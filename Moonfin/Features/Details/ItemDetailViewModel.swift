@@ -152,7 +152,7 @@ final class ItemDetailViewModel: ObservableObject {
     var endsAtText: String? {
         guard let ticks = item?.runTimeTicks, ticks > 0 else { return nil }
         let endDate = Date().addingTimeInterval(TimeInterval(ticks) / 10_000_000.0)
-        return "Ends at \(Self.endsAtFormatter.string(from: endDate))"
+        return Strings.endsAt(Self.endsAtFormatter.string(from: endDate))
     }
 
     private func resetState() {
@@ -846,8 +846,8 @@ final class ItemDetailViewModel: ObservableObject {
 
     private static func audioChannelLabel(channels: Int) -> String {
         switch channels {
-        case 1: return "Mono"
-        case 2: return "Stereo"
+        case 1: return Strings.playerMono
+        case 2: return Strings.playerStereo
         case 6: return "5.1"
         case 8: return "7.1"
         default: return "\(channels)ch"

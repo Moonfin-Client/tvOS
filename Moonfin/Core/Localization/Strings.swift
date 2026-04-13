@@ -656,4 +656,82 @@ enum Strings {
     static var errorLoadingData: String { l("msg_error_loading_data") }
     static var shuffleError: String { l("shuffle_error") }
     static var shuffleNoItems: String { l("shuffle_no_items_found") }
+
+    // MARK: - Search, Library, and Details
+
+    // Search
+    static var searchYourLibrary: String { l("search_your_library") }
+    static var searchNoResults: String { l("search_no_results") }
+    static func searchEpisodeFormat(_ s: Int, _ e: Int) -> String { l("search_episode_format", s, e) }
+
+    // Library — Suggestions
+    static var suggestionsTitle: String { l("suggestions_title") }
+    static var noSuggestionsAvailable: String { l("no_suggestions_available") }
+    static var watchMoviesForRecommendations: String { l("watch_movies_for_recommendations") }
+
+    // Library — Genres
+    static var noGenresFound: String { l("no_genres_found") }
+    static func genresCount(_ n: Int) -> String { l("genres_count", n) }
+    static var sortGenres: String { l("sort_genres") }
+
+    // Library — General
+    static var noItemsFound: String { l("no_items_found") }
+    static func itemsCount(_ n: Int) -> String { l("items_count", n) }
+    static var displaySettings: String { l("display_settings") }
+    static var imageTypeUpper: String { l("image_type_upper") }
+    static var posterSizeUpper: String { l("poster_size_upper") }
+    static var sortAndFilter: String { l("sort_and_filter") }
+    static var sortByUpper: String { l("sort_by_upper") }
+    static var filtersUpper: String { l("filters_upper") }
+    static var favoritesOnly: String { l("favorites_only") }
+    static var unwatchedOnly: String { l("unwatched_only") }
+    static var noFavoritesYet: String { l("no_favorites_yet") }
+
+    // Library — Music
+    static var albumArtists: String { l("album_artists") }
+    static var randomAlbum: String { l("random_album") }
+    static var views: String { l("lbl_views") }
+    static func musicItemsAcrossSections(_ items: Int, _ sections: Int) -> String { l("music_items_across_sections", items, sections) }
+    static var playlist: String { l("playlist_singular") }
+    static var artistSingular: String { l("artist_singular") }
+
+    // Library — Genre Sort
+    static var genreSortNameAsc: String { l("genre_sort_name_asc") }
+    static var genreSortNameDesc: String { l("genre_sort_name_desc") }
+    static var genreSortMostItems: String { l("genre_sort_most_items") }
+    static var genreSortLeastItems: String { l("genre_sort_least_items") }
+
+    // Details — Item
+    static var deleteItemConfirmation: String { l("delete_item_confirmation") }
+    static var unableToLoadItem: String { l("unable_to_load_item") }
+    static var goBack: String { l("go_back") }
+
+    // Details — Action Buttons
+    static var resume: String { l("lbl_resume_action") }
+    static var restart: String { l("lbl_restart_action") }
+    static var shuffle: String { l("lbl_shuffle_action") }
+    static var nextShort: String { l("lbl_next_short") }
+    static var versionAction: String { l("lbl_version_action") }
+    static var audioAction: String { l("lbl_audio_action") }
+    static var subtitlesAction: String { l("lbl_subtitles_action") }
+    static var getSubs: String { l("lbl_get_subs") }
+    static var trailer: String { l("lbl_trailer_short") }
+    static var favorited: String { l("lbl_favorited") }
+    static var addToList: String { l("lbl_add_to_list") }
+    static var addToFavorites: String { l("add_to_favorites_action") }
+    static var removeFromFavorites: String { l("remove_from_favorites_action") }
+
+    // Details — Playlist
+    static var failedLoadPlaylists: String { l("failed_load_playlists") }
+    static var failedAddToPlaylist: String { l("failed_add_to_playlist") }
+    static var failedCreatePlaylist: String { l("failed_create_playlist") }
+
+    // Details — Cards & Context Menus
+    static func episodeLabel(_ num: Int) -> String { l("episode_label", num) }
+    static var deleteFromPlaylist: String { l("delete_from_playlist") }
+    static var moveUp: String { l("move_up") }
+    static var moveDown: String { l("move_down") }
+    static var goToAlbum: String { l("go_to_album") }
+    static var goToArtist: String { l("go_to_artist") }
+    static var pressToExpand: String { l("press_to_expand") }
 }
