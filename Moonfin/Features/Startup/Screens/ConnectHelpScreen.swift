@@ -10,11 +10,11 @@ struct ConnectHelpScreen: View {
 
             HStack(spacing: SpaceTokens.space3xl) {
                 VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
-                    Text("Getting Started")
+                    Text(Strings.startupGettingStarted)
                         .font(.token(45, weight: .bold))
                         .foregroundColor(theme.colorScheme.onBackground)
 
-                    Text("To use Moonfin, you need a Jellyfin or Emby media server running on your network or accessible via the internet.\n\nEnter your server's address (e.g. https://your-server.com) on the previous screen to connect.\n\nVisit jellyfin.org for setup instructions.")
+                    Text(Strings.startupConnectHelpDescription)
                         .font(.bodyMd)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                         .lineSpacing(4)
@@ -24,7 +24,7 @@ struct ConnectHelpScreen: View {
                     } label: {
                         HStack(spacing: SpaceTokens.spaceXs) {
                             Image(systemName: "checkmark")
-                            Text("Got it")
+                            Text(Strings.gotIt)
                         }
                         .font(.bodyMd)
                         .foregroundColor(theme.colorScheme.onButtonFocused)

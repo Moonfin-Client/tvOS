@@ -42,11 +42,11 @@ struct UserLoginScreen: View {
                         VStack(spacing: SpaceTokens.spaceLg) {
                             if let server = viewModel.server {
                                 VStack(spacing: SpaceTokens.spaceXs) {
-                                    Text("Sign In")
+                                    Text(Strings.actionLogin)
                                         .font(.title2xl)
                                         .foregroundColor(.white)
 
-                                    Text("Connecting to \(server.name)")
+                                    Text(Strings.connectingTo(server.name))
                                         .font(.bodyMd)
                                         .foregroundColor(.white.opacity(0.7))
                                 }
@@ -107,8 +107,8 @@ struct UserLoginScreen: View {
 
     private var tabSelector: some View {
         HStack(spacing: SpaceTokens.spaceMd) {
-            tabButton("Quick Connect", tab: .quickConnect)
-            tabButton("Password", tab: .credentials)
+            tabButton(Strings.useQuickConnect, tab: .quickConnect)
+            tabButton(Strings.usePassword, tab: .credentials)
         }
     }
 
@@ -131,17 +131,17 @@ struct UserLoginScreen: View {
             case .unknown:
                 ProgressView()
                     .tint(.colorCyan500)
-                Text("Connecting to Quick Connect...")
+                Text(Strings.loginQuickConnectConnecting)
                     .font(.bodyMd)
                     .foregroundColor(.white.opacity(0.6))
 
             case .unavailable:
-                Text("Quick Connect is not available on this server")
+                Text(Strings.loginQuickConnectUnavailable)
                     .font(.bodyMd)
                     .foregroundColor(.white.opacity(0.6))
 
             case .pending:
-                Text("Enter this code on your server's web dashboard:")
+                Text(Strings.loginQuickConnectEnterCode)
                     .font(.bodyMd)
                     .foregroundColor(.white.opacity(0.6))
 
@@ -152,14 +152,14 @@ struct UserLoginScreen: View {
 
                 ProgressView()
                     .tint(.colorCyan500)
-                Text("Waiting for authorization...")
+                Text(Strings.loginQuickConnectWaiting)
                     .font(.bodySm)
                     .foregroundColor(.white.opacity(0.4))
 
             case .connected:
                 ProgressView()
                     .tint(.colorCyan500)
-                Text("Authorized! Signing in...")
+                Text(Strings.loginQuickConnectAuthorized)
                     .font(.bodyMd)
                     .foregroundColor(.colorCyan500)
             }
@@ -172,13 +172,13 @@ struct UserLoginScreen: View {
         VStack(spacing: SpaceTokens.spaceMd) {
             if viewModel.forcedUsername == nil {
                 LoginTextField(
-                    placeholder: "Username",
+                    placeholder: Strings.usernameField,
                     text: $viewModel.username
                 )
             }
 
             LoginTextField(
-                placeholder: "Password",
+                placeholder: Strings.passwordField,
                 text: $viewModel.password,
                 isSecure: true,
                 onSubmit: { viewModel.login() }
@@ -192,7 +192,7 @@ struct UserLoginScreen: View {
             loginError
 
             LoginButton(
-                title: "Sign In",
+                title: Strings.actionLogin,
                 isDisabled: viewModel.loginState == .authenticating,
                 action: { viewModel.login() }
             )
@@ -203,13 +203,13 @@ struct UserLoginScreen: View {
     private var loginError: some View {
         switch viewModel.loginState {
         case .requireSignIn:
-            LoginErrorText(message: "Invalid credentials")
+            LoginErrorText(message: Strings.invalidCredentials)
         case .serverUnavailable:
-            LoginErrorText(message: "Server unavailable")
+            LoginErrorText(message: Strings.serverUnavailable)
         case .apiClientError(let message):
             LoginErrorText(message: message)
         case .versionNotSupported(let server):
-            LoginErrorText(message: "Server version \(server.version ?? "unknown") is not supported")
+            LoginErrorText(message: Strings.serverUnsupportedVersion(server.version ?? Strings.unknown))
         default:
             EmptyView()
         }

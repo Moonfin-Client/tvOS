@@ -66,13 +66,13 @@ final class EmbyConnectViewModel: ObservableObject {
 
     private func connectToServer(_ server: EmbyConnectServer) async -> UUID? {
         guard let connectUserId else {
-            phase = .error("No server address available")
+            phase = .error(Strings.embyConnectNoServerAddress)
             return nil
         }
 
         let addresses = server.candidateAddresses
         guard !addresses.isEmpty else {
-            phase = .error("No server address available")
+            phase = .error(Strings.embyConnectNoServerAddress)
             return nil
         }
 
@@ -93,19 +93,19 @@ final class EmbyConnectViewModel: ObservableObject {
                     case .connected(let id, _):
                         serverId = id
                     case .unableToConnect:
-                        lastError = EmbyConnectError.networkError("Unable to connect to \(address)")
+                        lastError = EmbyConnectError.networkError(Strings.embyConnectUnableToConnect(address))
                     default:
                         break
                     }
                 }
 
                 guard let serverId else {
-                    lastError = EmbyConnectError.networkError("Failed to add server at \(address)")
+                    lastError = EmbyConnectError.networkError(Strings.embyConnectFailedToAddServer(address))
                     continue
                 }
 
                 guard let userId = UUID.from(rawId: exchange.localUserId) else {
-                    phase = .error("Server returned an invalid local user id")
+                    phase = .error(Strings.embyConnectInvalidLocalUserId)
                     return nil
                 }
                 let user = AuthenticationStore.AuthStoreUser(
@@ -121,7 +121,7 @@ final class EmbyConnectViewModel: ObservableObject {
             }
         }
 
-        phase = .error(lastError?.localizedDescription ?? "Unable to connect to \(server.name)")
+        phase = .error(lastError?.localizedDescription ?? Strings.embyConnectUnableToConnect(server.name))
         return nil
     }
 

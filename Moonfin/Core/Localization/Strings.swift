@@ -281,6 +281,7 @@ enum Strings {
     // MARK: - Auth / Login
 
     static var signIn: String { l("lbl_sign_in") }
+    static var actionLogin: String { l("action_login") }
     static var signOut: String { l("lbl_sign_out") }
     static var switchUser: String { l("lbl_switch_user") }
     static var addUser: String { l("add_user") }
@@ -299,11 +300,37 @@ enum Strings {
     static var discoveredServers: String { l("discovered_servers_title") }
     static var noDiscoveredServers: String { l("discovered_servers_empty") }
     static var welcomeTitle: String { l("welcome_title") }
+    static var startupWelcomeContent: String { l("startup_welcome_content") }
     static var welcomeContent: String { l("welcome_content") }
     static var selectServer: String { l("lbl_select_server") }
     static var removeServer: String { l("lbl_remove_server") }
     static var manageServers: String { l("lbl_manage_servers") }
     static var gotIt: String { l("btn_got_it") }
+    static var startupNoUsersFound: String { l("startup_no_users_found") }
+    static var startupChangeServer: String { l("startup_change_server") }
+    static var connectManually: String { l("startup_connect_manually") }
+    static var embyConnect: String { l("startup_emby_connect") }
+    static var startupDeleteServer: String { l("startup_delete_server") }
+    static var startupTryAgain: String { l("startup_try_again") }
+    static var startupEnterValidServerAddress: String { l("startup_enter_valid_server_address") }
+    static var startupServerAddressPlaceholder: String { l("startup_server_address_placeholder") }
+    static var loginQuickConnectConnecting: String { l("startup_quick_connect_connecting") }
+    static var loginQuickConnectUnavailable: String { l("startup_quick_connect_unavailable") }
+    static var loginQuickConnectEnterCode: String { l("startup_quick_connect_enter_code") }
+    static var loginQuickConnectWaiting: String { l("startup_quick_connect_waiting") }
+    static var loginQuickConnectAuthorized: String { l("startup_quick_connect_authorized") }
+    static var startupGettingStarted: String { l("startup_getting_started") }
+    static var startupConnectHelpDescription: String { l("startup_connect_help_description") }
+    static var embyConnectSignInDescription: String { l("startup_emby_connect_sign_in_description") }
+    static var embyConnectEmailOrUsername: String { l("startup_emby_connect_email_or_username") }
+    static var embyConnectSigningIn: String { l("startup_emby_connect_signing_in") }
+    static var embyConnectConnectingToServer: String { l("startup_emby_connect_connecting_to_server") }
+    static var embyConnectNoServerAddress: String { l("startup_emby_connect_no_server_address") }
+    static var embyConnectInvalidLocalUserId: String { l("startup_emby_connect_invalid_local_user_id") }
+    static func startupRemoveSavedServer(_ server: String) -> String { l("startup_remove_saved_server", server) }
+    static func serverUnsupportedVersionMinimum(_ version: String, _ minimum: String) -> String { l("startup_server_unsupported_minimum", version, minimum) }
+    static func embyConnectUnableToConnect(_ address: String) -> String { l("startup_emby_connect_unable_to_connect", address) }
+    static func embyConnectFailedToAddServer(_ address: String) -> String { l("startup_emby_connect_failed_to_add_server", address) }
 
     // MARK: - PIN
 
@@ -317,6 +344,7 @@ enum Strings {
     static var pinIncorrect: String { l("lbl_pin_code_incorrect") }
     static var pinMismatch: String { l("lbl_pin_code_mismatch") }
     static var forgotPin: String { l("lbl_forgot_pin") }
+    static func pinTooShort(_ digits: Int) -> String { l("startup_pin_too_short", digits) }
 
     // MARK: - Server Issues
 

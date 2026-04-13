@@ -30,11 +30,11 @@ struct EmbyConnectScreen: View {
                             case .credentials:
                                 credentialsView
                             case .authenticating, .loadingServers:
-                                loadingView("Signing in to Emby Connect...")
+                                loadingView(Strings.embyConnectSigningIn)
                             case .serverList:
                                 serverListView
                             case .connectingToServer:
-                                loadingView("Connecting to server...")
+                                loadingView(Strings.embyConnectConnectingToServer)
                             case .error(let message):
                                 errorView(message)
                             }
@@ -57,12 +57,12 @@ struct EmbyConnectScreen: View {
         VStack(spacing: SpaceTokens.spaceXs) {
             HStack(spacing: SpaceTokens.spaceSm) {
                 EmbyLogo(size: 28, color: .white)
-                Text("Emby Connect")
+                Text(Strings.embyConnect)
                     .font(.title2xl)
                     .foregroundColor(.white)
             }
 
-            Text("Sign in with your Emby Connect account")
+            Text(Strings.embyConnectSignInDescription)
                 .font(.bodyMd)
                 .foregroundColor(.white.opacity(0.7))
         }
@@ -71,20 +71,20 @@ struct EmbyConnectScreen: View {
     private var credentialsView: some View {
         VStack(spacing: SpaceTokens.spaceMd) {
             LoginTextField(
-                placeholder: "Email or Username",
+                placeholder: Strings.embyConnectEmailOrUsername,
                 text: $viewModel.username,
                 keyboardType: .emailAddress
             )
 
             LoginTextField(
-                placeholder: "Password",
+                placeholder: Strings.passwordField,
                 text: $viewModel.password,
                 isSecure: true,
                 onSubmit: { viewModel.login() }
             )
 
             LoginButton(
-                title: "Sign In",
+                title: Strings.actionLogin,
                 action: { viewModel.login() }
             )
         }
@@ -103,7 +103,7 @@ struct EmbyConnectScreen: View {
 
     private var serverListView: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
-            Text("Select a Server")
+            Text(Strings.selectServer)
                 .font(.titleXl)
                 .foregroundColor(.white)
 
@@ -123,7 +123,7 @@ struct EmbyConnectScreen: View {
             LoginErrorText(message: message)
 
             LoginButton(
-                title: "Try Again",
+                title: Strings.startupTryAgain,
                 style: .secondary,
                 action: { viewModel.clearError() }
             )

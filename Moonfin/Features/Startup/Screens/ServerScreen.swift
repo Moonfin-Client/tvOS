@@ -108,7 +108,7 @@ struct ServerScreen: View {
 
                         LoginDivider()
 
-                        Text("Who's watching?")
+                        Text(Strings.whoIsWatching)
                             .font(.titleXl)
                             .foregroundColor(.white.opacity(0.7))
 
@@ -169,7 +169,7 @@ struct ServerScreen: View {
             Image(systemName: "person.slash")
                 .font(.system(size: 40))
                 .foregroundColor(.white.opacity(0.3))
-            Text("No users found")
+            Text(Strings.startupNoUsersFound)
                 .font(.bodyMd)
                 .foregroundColor(.white.opacity(0.5))
         }
@@ -207,14 +207,14 @@ struct ServerScreen: View {
                     Button {
                         viewModel.logoutUser(user)
                     } label: {
-                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                        Label(Strings.signOut, systemImage: "rectangle.portrait.and.arrow.right")
                     }
                 }
 
                 Button(role: .destructive) {
                     viewModel.deleteUser(privateUser)
                 } label: {
-                    Label("Remove", systemImage: "trash")
+                    Label(Strings.remove, systemImage: "trash")
                 }
             }
         }
@@ -238,14 +238,14 @@ struct ServerScreen: View {
     private func actionButtons(_ server: Server) -> some View {
         HStack(spacing: SpaceTokens.spaceMd) {
             LoginButton(
-                title: "Add User",
+                title: Strings.addUser,
                 icon: "person.badge.plus",
                 style: .secondary,
                 action: { router.navigate(to: .userLogin(serverId: server.id, username: nil)) }
             )
 
             LoginButton(
-                title: "Change Server",
+                title: Strings.startupChangeServer,
                 icon: "arrow.left",
                 style: .secondary,
                 action: { router.goBack() }

@@ -49,9 +49,9 @@ final class ServerViewModel: ObservableObject {
             let minVersion = server.serverType == .jellyfin
                 ? Server.minimumJellyfinVersion.description
                 : Server.minimumEmbyVersion.description
-            notification = "Server version \(server.version ?? "unknown") is not supported. Minimum: \(minVersion)"
+            notification = Strings.serverUnsupportedVersionMinimum(server.version ?? Strings.unknown, minVersion)
         } else if !server.setupCompleted {
-            notification = "Server setup is not complete. Please finish setup in the web dashboard."
+            notification = Strings.serverSetupIncomplete
         } else {
             notification = nil
         }

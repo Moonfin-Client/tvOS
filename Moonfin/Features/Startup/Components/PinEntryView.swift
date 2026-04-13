@@ -57,7 +57,7 @@ struct PinEntryView: View {
                     Button {
                         onForgotPin()
                     } label: {
-                        Text("Forgot PIN?")
+                        Text(Strings.forgotPin)
                             .font(.bodySm)
                             .foregroundColor(theme.accent)
                     }
@@ -78,9 +78,9 @@ struct PinEntryView: View {
     private var title: String {
         switch mode {
         case .set:
-            return isConfirming ? "Confirm PIN" : "Enter New PIN"
+            return isConfirming ? Strings.confirmPin : Strings.enterNewPin
         case .verify:
-            return "Enter PIN"
+            return Strings.enterPin
         }
     }
 
@@ -182,7 +182,7 @@ struct PinEntryView: View {
         case .set:
             if !isConfirming {
                 guard pin.count >= minLength else {
-                    errorMessage = "PIN must be at least \(minLength) digits"
+                    errorMessage = Strings.pinTooShort(minLength)
                     return
                 }
                 isConfirming = true
@@ -190,7 +190,7 @@ struct PinEntryView: View {
                 if confirmPin == pin {
                     onComplete(confirmPin)
                 } else {
-                    errorMessage = "PINs don't match"
+                    errorMessage = Strings.pinMismatch
                     confirmPin = ""
                 }
             }

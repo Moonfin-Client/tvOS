@@ -43,14 +43,14 @@ struct SelectServerScreen: View {
 
                             HStack(spacing: SpaceTokens.spaceMd) {
                                 LoginButton(
-                                    title: "Connect manually",
+                                    title: Strings.connectManually,
                                     icon: "plus",
                                     style: .secondary,
                                     action: { router.navigate(to: .serverAdd) }
                                 )
 
                                 LoginButton(
-                                    title: "Emby Connect",
+                                    title: Strings.embyConnect,
                                     iconView: AnyView(EmbyLogo(size: 14, color: .white)),
                                     style: .secondary,
                                     action: { router.navigate(to: .embyConnect) }
@@ -75,26 +75,26 @@ struct SelectServerScreen: View {
         .onDisappear {
             discovery.stopDiscovery()
         }
-        .alert("Delete Server", isPresented: $showDeleteAlert, presenting: viewModel.serverToDelete) { server in
-            Button("Delete", role: .destructive) {
+        .alert(Strings.startupDeleteServer, isPresented: $showDeleteAlert, presenting: viewModel.serverToDelete) { server in
+            Button(Strings.delete, role: .destructive) {
                 viewModel.deleteServer(server)
                 viewModel.serverToDelete = nil
             }
-            Button("Cancel", role: .cancel) {
+            Button(Strings.cancel, role: .cancel) {
                 viewModel.serverToDelete = nil
             }
         } message: { server in
-            Text("Remove \(server.name) from your saved servers?")
+            Text(Strings.startupRemoveSavedServer(server.name))
         }
     }
 
     private var welcomeContent: some View {
         VStack(spacing: SpaceTokens.spaceMd) {
-            Text("Welcome to Moonfin")
+            Text(Strings.welcomeTitle)
                 .font(.title2xl)
                 .foregroundColor(.white)
 
-            Text("Connect to a Jellyfin or Emby server to get started")
+            Text(Strings.startupWelcomeContent)
                 .font(.bodyMd)
                 .foregroundColor(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -103,7 +103,7 @@ struct SelectServerScreen: View {
 
     private var savedServersContent: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            Text("Saved Servers")
+            Text(Strings.savedServers)
                 .font(.titleXl)
                 .foregroundColor(.white)
 
@@ -125,7 +125,7 @@ struct SelectServerScreen: View {
             }
 
             HStack(spacing: SpaceTokens.spaceSm) {
-                Text("Discovered Servers")
+                Text(Strings.discoveredServers)
                     .font(.titleXl)
                     .foregroundColor(.white)
 
@@ -184,7 +184,7 @@ private struct ServerRow: View {
             Button(role: .destructive) {
                 onDelete()
             } label: {
-                Label("Remove", systemImage: "trash")
+                Label(Strings.remove, systemImage: "trash")
             }
         }
     }

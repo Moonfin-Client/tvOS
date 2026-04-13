@@ -23,16 +23,16 @@ struct ServerAddScreen: View {
 
                     LoginCard {
                         VStack(spacing: SpaceTokens.spaceLg) {
-                            Text("Enter server address")
+                            Text(Strings.enterServerAddress)
                                 .font(.title2xl)
                                 .foregroundColor(.white)
 
-                            Text("Enter a valid server address")
+                            Text(Strings.startupEnterValidServerAddress)
                                 .font(.bodyMd)
                                 .foregroundColor(.white.opacity(0.7))
 
                             LoginTextField(
-                                placeholder: "192.168.1.100 or jellyfin.example.com",
+                                placeholder: Strings.startupServerAddressPlaceholder,
                                 text: $viewModel.address,
                                 isDisabled: viewModel.isConnecting,
                                 keyboardType: .URL,
@@ -49,13 +49,13 @@ struct ServerAddScreen: View {
                             }
 
                             LoginButton(
-                                title: "Connect",
+                                title: Strings.connect,
                                 isDisabled: viewModel.isConnecting || viewModel.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                                 action: { viewModel.connect() }
                             )
 
                             LoginButton(
-                                title: "Change Server",
+                                title: Strings.startupChangeServer,
                                 icon: "arrow.left",
                                 style: .secondary,
                                 action: { router.goBack() }
