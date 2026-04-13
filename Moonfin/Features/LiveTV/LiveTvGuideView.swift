@@ -404,7 +404,7 @@ struct ProgramGridCell: View {
 
     private var episodeLabel: String? {
         if let sn = program.parentIndexNumber, let en = program.indexNumber {
-            return "S\(sn)E\(en)"
+            return Strings.seasonEpisodeCompact(sn, en)
         }
         return nil
     }

@@ -9,11 +9,11 @@ struct SyncPlayScreen: View {
     private var syncPlayManager: SyncPlayManager { container.syncPlayManager }
 
     var body: some View {
-        SettingsScreenLayout(title: "SyncPlay") {
+        SettingsScreenLayout(title: Strings.syncPlay) {
             if !syncPlayManager.syncPlayConfigured {
-                unavailableSection(title: "SyncPlay Disabled", message: "Enable SyncPlay in settings to use synchronized playback.")
+                unavailableSection(title: Strings.syncPlayDisabledTitle, message: Strings.syncPlayDisabledMessage)
             } else if !syncPlayManager.syncPlayEnabled {
-                unavailableSection(title: "Server Unsupported", message: "Current server does not support SyncPlay. Jellyfin with SyncPlay support is required.")
+                unavailableSection(title: Strings.syncPlayServerUnsupportedTitle, message: Strings.syncPlayServerUnsupportedMessage)
             } else if syncPlayManager.state.enabled {
                 activeGroupSection
             } else {
@@ -54,7 +54,7 @@ struct SyncPlayScreen: View {
             HStack {
                 Image(systemName: "person.3.fill")
                     .foregroundColor(theme.accent)
-                Text("In Group")
+                Text(Strings.syncPlayInGroup)
                     .font(.bodyMd)
                     .foregroundColor(theme.colorScheme.listHeadline)
                 Spacer()
@@ -73,7 +73,7 @@ struct SyncPlayScreen: View {
 
             if !syncPlayManager.state.participants.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Participants")
+                    Text(Strings.syncPlayParticipants)
                         .font(.caption)
                         .foregroundColor(theme.colorScheme.listCaption)
                     Text(syncPlayManager.state.participants.joined(separator: " • "))
@@ -92,7 +92,7 @@ struct SyncPlayScreen: View {
             } label: {
                 HStack {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
-                    Text("Leave Group")
+                    Text(Strings.syncPlayLeaveGroup)
                         .font(.bodyMd)
                     Spacer()
                 }
@@ -106,7 +106,7 @@ struct SyncPlayScreen: View {
 
     private var groupOptionsSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-            Text("Group Options")
+            Text(Strings.syncPlayGroupOptions)
                 .font(.bodySm)
                 .bold()
                 .foregroundColor(theme.colorScheme.listCaption)
@@ -116,7 +116,7 @@ struct SyncPlayScreen: View {
                 Button {
                     syncPlayManager.cycleRepeatMode()
                 } label: {
-                    Text("Repeat: \(repeatLabel)")
+                    Text(Strings.syncPlayRepeatValue(repeatLabel))
                         .font(.caption)
                 }
                 .buttonStyle(CleanButtonStyle())
@@ -124,7 +124,7 @@ struct SyncPlayScreen: View {
                 Button {
                     syncPlayManager.toggleShuffleMode()
                 } label: {
-                    Text("Shuffle: \(shuffleLabel)")
+                    Text(Strings.syncPlayShuffleValue(shuffleLabel))
                         .font(.caption)
                 }
                 .buttonStyle(CleanButtonStyle())
@@ -133,8 +133,8 @@ struct SyncPlayScreen: View {
 
             SettingsToggleButton(
                 icon: "hourglass",
-                heading: "Ignore Wait",
-                caption: "Let playback continue without waiting for everyone",
+                heading: Strings.syncPlayIgnoreWait,
+                caption: Strings.syncPlayIgnoreWaitDescription,
                 isOn: Binding(
                     get: { syncPlayManager.ignoreWaitEnabled },
                     set: { syncPlayManager.requestSetIgnoreWait($0) }
@@ -146,7 +146,7 @@ struct SyncPlayScreen: View {
             } label: {
                 HStack {
                     Image(systemName: "rectangle.stack.badge.play")
-                    Text("Sync Current Playback Queue")
+                    Text(Strings.syncPlaySyncCurrentQueue)
                         .font(.bodyMd)
                     Spacer()
                 }
@@ -160,7 +160,7 @@ struct SyncPlayScreen: View {
     private var groupQueueSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
             HStack {
-                Text("Group Queue")
+                Text(Strings.syncPlayGroupQueue)
                     .font(.bodySm)
                     .bold()
                     .foregroundColor(theme.colorScheme.listCaption)
@@ -168,7 +168,7 @@ struct SyncPlayScreen: View {
                 Button {
                     syncPlayManager.requestQueueCurrentPlaybackItem(mode: .queue)
                 } label: {
-                    Text("Queue Current")
+                    Text(Strings.syncPlayQueueCurrent)
                         .font(.caption)
                 }
                 .buttonStyle(CleanButtonStyle())
@@ -176,7 +176,7 @@ struct SyncPlayScreen: View {
                 Button {
                     syncPlayManager.requestQueueCurrentPlaybackItem(mode: .queueNext)
                 } label: {
-                    Text("Queue Next")
+                    Text(Strings.syncPlayQueueNext)
                         .font(.caption)
                 }
                 .buttonStyle(CleanButtonStyle())
@@ -184,7 +184,7 @@ struct SyncPlayScreen: View {
             .padding(.horizontal, SpaceTokens.spaceMd)
 
             if syncPlayManager.state.queue.isEmpty {
-                Text("Queue is empty")
+                Text(Strings.syncPlayQueueEmpty)
                     .font(.caption)
                     .foregroundColor(theme.colorScheme.listCaption)
                     .padding(.horizontal, SpaceTokens.spaceMd)
@@ -206,24 +206,24 @@ struct SyncPlayScreen: View {
 
                         Spacer()
 
-                        Button("Set") {
+                        Button(Strings.syncPlaySet) {
                             syncPlayManager.requestSetCurrentItem(playlistItemId: item.playlistItemId)
                         }
                         .buttonStyle(CleanButtonStyle())
 
-                        Button("Up") {
+                        Button(Strings.syncPlayUp) {
                             syncPlayManager.requestMoveQueueItem(playlistItemId: item.playlistItemId, to: max(0, index - 1))
                         }
                         .buttonStyle(CleanButtonStyle())
                         .disabled(index == 0)
 
-                        Button("Down") {
+                        Button(Strings.syncPlayDown) {
                             syncPlayManager.requestMoveQueueItem(playlistItemId: item.playlistItemId, to: index + 1)
                         }
                         .buttonStyle(CleanButtonStyle())
                         .disabled(index == syncPlayManager.state.queue.count - 1)
 
-                        Button("Remove") {
+                        Button(Strings.remove) {
                             syncPlayManager.requestRemoveFromQueue(playlistItemId: item.playlistItemId)
                         }
                         .buttonStyle(CleanButtonStyle())
@@ -237,31 +237,31 @@ struct SyncPlayScreen: View {
 
     private var repeatLabel: String {
         switch syncPlayManager.state.repeatMode {
-        case .repeatNone: return "Off"
-        case .repeatOne: return "One"
-        case .repeatAll: return "All"
+        case .repeatNone: return Strings.syncPlayRepeatOff
+        case .repeatOne: return Strings.syncPlayRepeatOne
+        case .repeatAll: return Strings.syncPlayRepeatAll
         }
     }
 
     private var shuffleLabel: String {
-        syncPlayManager.state.shuffleMode == .shuffle ? "On" : "Off"
+        syncPlayManager.state.shuffleMode == .shuffle ? Strings.on : Strings.syncPlayRepeatOff
     }
 
     private var createGroupSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
-            Text("Create Group")
+            Text(Strings.syncPlayCreateGroup)
                 .font(.bodySm)
                 .bold()
                 .foregroundColor(theme.colorScheme.listCaption)
                 .padding(.horizontal, SpaceTokens.spaceMd)
 
             Button {
-                let name = groupName.isEmpty ? "SyncPlay Group" : groupName
+                let name = groupName.isEmpty ? Strings.syncPlayDefaultGroupName : groupName
                 Task { await syncPlayManager.createGroup(name: name) }
             } label: {
                 HStack {
                     Image(systemName: "plus.circle.fill")
-                    Text("New Group")
+                    Text(Strings.syncPlayNewGroup)
                         .font(.bodyMd)
                     Spacer()
                 }
@@ -276,7 +276,7 @@ struct SyncPlayScreen: View {
     private var availableGroupsSection: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
             HStack {
-                Text("Available Groups")
+                Text(Strings.syncPlayAvailableGroups)
                     .font(.bodySm)
                     .bold()
                     .foregroundColor(theme.colorScheme.listCaption)
@@ -289,7 +289,7 @@ struct SyncPlayScreen: View {
             .padding(.horizontal, SpaceTokens.spaceMd)
 
             if syncPlayManager.availableGroups.isEmpty && !syncPlayManager.isLoading {
-                Text("No groups found")
+                Text(Strings.syncPlayNoGroups)
                     .font(.caption)
                     .foregroundColor(theme.colorScheme.listCaption)
                     .padding(.horizontal, SpaceTokens.spaceMd)
@@ -310,7 +310,7 @@ struct SyncPlayScreen: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.clockwise")
-                    Text("Refresh")
+                    Text(Strings.syncPlayRefresh)
                         .font(.bodyMd)
                     Spacer()
                 }
@@ -334,7 +334,7 @@ private struct SyncPlayGroupRow: View {
                 Text(group.groupName)
                     .font(.bodyMd)
                     .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : theme.colorScheme.listHeadline)
-                Text("\(group.participants.count) participant\(group.participants.count == 1 ? "" : "s") · \(group.state)")
+                Text(Strings.syncPlayParticipantsLine(group.participants.count, group.participants.count == 1 ? Strings.syncPlayParticipantSingular : Strings.syncPlayParticipantPlural, group.state))
                     .font(.caption)
                     .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
             }

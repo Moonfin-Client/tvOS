@@ -11,11 +11,11 @@ struct SettingsHomeScreen: View {
     @State private var sections: [HomeSectionEntry] = []
 
     var body: some View {
-        SettingsScreenLayout(title: "Home") {
+        SettingsScreenLayout(title: Strings.home) {
             SettingsListButton(
                 icon: "rectangle.expand.vertical",
-                heading: "Poster Size",
-                caption: "Size of cards on the home screen",
+                heading: Strings.settingsPosterSize,
+                caption: Strings.settingsHomePosterSizeDescription,
                 trailingText: prefs[UserPreferences.homePosterSize].displayName,
                 action: { settingsRouter.navigate(to: .homePosterSize) }
             )
@@ -23,8 +23,8 @@ struct SettingsHomeScreen: View {
 
             SettingsListButton(
                 icon: "photo",
-                heading: "Image Type",
-                caption: "Type of image shown on cards",
+                heading: Strings.settingsImageType,
+                caption: Strings.settingsHomeImageTypeDescription,
                 action: { settingsRouter.navigate(to: .homeRowsImageType) }
             )
             .focused($focusedRoute, equals: .homeRowsImageType)
@@ -33,13 +33,13 @@ struct SettingsHomeScreen: View {
                 .background(theme.colorScheme.listCaption.opacity(0.3))
                 .padding(.vertical, SpaceTokens.spaceXs)
 
-            Text("Sections")
+            Text(Strings.settingsSections)
                 .font(.bodyLg)
                 .fontWeight(.semibold)
                 .foregroundColor(theme.colorScheme.onBackground)
                 .padding(.bottom, SpaceTokens.space2xs)
 
-            Text("Press left or right to rearrange")
+            Text(Strings.settingsRearrangeHint)
                 .font(.caption)
                 .foregroundColor(theme.colorScheme.listCaption)
                 .padding(.bottom, SpaceTokens.space2xs)
@@ -56,7 +56,7 @@ struct SettingsHomeScreen: View {
             }
 
             Button(action: resetToDefaults) {
-                FocusAwareActionLabel(icon: "arrow.counterclockwise", text: "Reset to Defaults")
+                FocusAwareActionLabel(icon: "arrow.counterclockwise", text: Strings.settingsResetToDefaults)
             }
             .buttonStyle(CleanButtonStyle())
             .padding(.top, SpaceTokens.spaceMd)

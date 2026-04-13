@@ -315,7 +315,7 @@ struct RecordingCard: View {
 
     private var recordingEpisodeLabel: String? {
         if let sn = recording.parentIndexNumber, let en = recording.indexNumber {
-            return "S\(sn)E\(en)"
+            return Strings.seasonEpisodeCompact(sn, en)
         }
         return recording.seriesName
     }

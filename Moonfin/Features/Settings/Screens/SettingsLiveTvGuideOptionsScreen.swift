@@ -9,10 +9,10 @@ struct SettingsLiveTvGuideOptionsScreen: View {
     private var prefs: UserPreferences { container.userPreferences }
 
     var body: some View {
-        SettingsScreenLayout(title: "Live TV Guide") {
+        SettingsScreenLayout(title: Strings.liveTvGuide) {
             SettingsListButton(
                 icon: "arrow.up.arrow.down",
-                heading: "Channel Order",
+                heading: Strings.channelOrder,
                 caption: prefs[UserPreferences.liveTvChannelOrder].displayName,
                 action: { settingsRouter.navigate(to: .liveTvGuideChannelOrder) }
             )
@@ -20,19 +20,19 @@ struct SettingsLiveTvGuideOptionsScreen: View {
 
             SettingsToggleButton(
                 icon: "star",
-                heading: "Favorites at Top",
-                caption: "Show favorite channels first",
+                heading: Strings.liveTvFavoritesAtTop,
+                caption: Strings.liveTvShowFavoriteChannelsFirst,
                 isOn: prefs.binding(for: UserPreferences.liveTvFavsAtTop)
             )
 
             SettingsToggleButton(
                 icon: "paintpalette",
-                heading: "Color-Coded Backgrounds",
-                caption: "Color guide entries by genre",
+                heading: Strings.liveTvColorCodedBackgrounds,
+                caption: Strings.liveTvColorGuideEntriesByGenre,
                 isOn: prefs.binding(for: UserPreferences.liveTvColorCodeGuide)
             )
 
-            Text("INDICATORS")
+            Text(Strings.liveTvGuideIndicatorsUpper)
                 .font(.captionSm)
                 .foregroundColor(theme.colorScheme.listCaption)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -40,36 +40,36 @@ struct SettingsLiveTvGuideOptionsScreen: View {
 
             SettingsToggleButton(
                 icon: "sparkle",
-                heading: "Show HD Indicator",
-                caption: "Display HD badge on channels",
+                heading: Strings.liveTvShowHdIndicator,
+                caption: Strings.liveTvDisplayHdBadge,
                 isOn: prefs.binding(for: UserPreferences.liveTvShowHDIndicator)
             )
 
             SettingsToggleButton(
                 icon: "dot.radiowaves.left.and.right",
-                heading: "Show Live Indicator",
-                caption: "Display live badge on programs",
+                heading: Strings.liveTvShowLiveIndicator,
+                caption: Strings.liveTvDisplayLiveBadge,
                 isOn: prefs.binding(for: UserPreferences.liveTvShowLiveIndicator)
             )
 
             SettingsToggleButton(
                 icon: "bell.badge",
-                heading: "Show New Indicator",
-                caption: "Display badge on new programs",
+                heading: Strings.liveTvShowNewIndicator,
+                caption: Strings.liveTvDisplayNewBadge,
                 isOn: prefs.binding(for: UserPreferences.liveTvShowNewIndicator)
             )
 
             SettingsToggleButton(
                 icon: "arrow.2.squarepath",
-                heading: "Show Repeat Indicator",
-                caption: "Display badge on repeat programs",
+                heading: Strings.liveTvShowRepeatIndicator,
+                caption: Strings.liveTvDisplayRepeatBadge,
                 isOn: prefs.binding(for: UserPreferences.liveTvShowRepeatIndicator)
             )
 
             SettingsListButton(
                 icon: "line.3.horizontal.decrease.circle",
-                heading: "Guide Filters",
-                caption: "Filter guide by content type",
+                heading: Strings.liveTvGuideFilters,
+                caption: Strings.liveTvFilterGuideByContentType,
                 action: { settingsRouter.navigate(to: .liveTvGuideFilters) }
             )
             .focused($focusedRoute, equals: .liveTvGuideFilters)

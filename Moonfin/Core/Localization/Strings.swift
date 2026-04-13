@@ -439,6 +439,13 @@ enum Strings {
     static var syncPlayMinDelaySkip: String { l("settings_syncplay_min_delay_skip") }
     static var syncPlayExtraOffset: String { l("settings_syncplay_extra_offset") }
     static var channelOrder: String { l("settings_channel_order") }
+    static var settingsPosterSize: String { l("settings_poster_size") }
+    static var settingsHomePosterSizeDescription: String { l("settings_home_poster_size_description") }
+    static var settingsImageType: String { l("settings_image_type") }
+    static var settingsHomeImageTypeDescription: String { l("settings_home_image_type_description") }
+    static var settingsSections: String { l("settings_sections") }
+    static var settingsRearrangeHint: String { l("settings_rearrange_hint") }
+    static var settingsResetToDefaults: String { l("settings_reset_to_defaults") }
     static var comingSoon: String { l("settings_coming_soon") }
     static var licenseLabel: String { l("license_license") }
     static func currentValue(_ value: String) -> String { l("settings_current_value", value) }
@@ -518,6 +525,21 @@ enum Strings {
     static var liveTvAnyTime: String { l("live_tv_any_time") }
     static var liveTvAnyChannel: String { l("live_tv_any_channel") }
     static var liveTvNewOnly: String { l("live_tv_new_only") }
+    static var liveTvGuideIndicatorsUpper: String { l("live_tv_guide_indicators_upper") }
+    static var liveTvFavoritesAtTop: String { l("live_tv_favorites_at_top") }
+    static var liveTvShowFavoriteChannelsFirst: String { l("live_tv_show_favorite_channels_first") }
+    static var liveTvColorCodedBackgrounds: String { l("live_tv_color_coded_backgrounds") }
+    static var liveTvColorGuideEntriesByGenre: String { l("live_tv_color_guide_entries_by_genre") }
+    static var liveTvShowHdIndicator: String { l("live_tv_show_hd_indicator") }
+    static var liveTvDisplayHdBadge: String { l("live_tv_display_hd_badge") }
+    static var liveTvShowLiveIndicator: String { l("live_tv_show_live_indicator") }
+    static var liveTvDisplayLiveBadge: String { l("live_tv_display_live_badge") }
+    static var liveTvShowNewIndicator: String { l("live_tv_show_new_indicator") }
+    static var liveTvDisplayNewBadge: String { l("live_tv_display_new_badge") }
+    static var liveTvShowRepeatIndicator: String { l("live_tv_show_repeat_indicator") }
+    static var liveTvDisplayRepeatBadge: String { l("live_tv_display_repeat_badge") }
+    static var liveTvGuideFilters: String { l("live_tv_guide_filters") }
+    static var liveTvFilterGuideByContentType: String { l("live_tv_filter_guide_by_content_type") }
     static var liveTvAll: String { l("live_tv_all") }
     static var liveTvTime: String { l("live_tv_time") }
     static var liveTvCancelSeries: String { l("live_tv_cancel_series") }
@@ -634,6 +656,35 @@ enum Strings {
     static var syncPlayJoinGroup: String { l("syncplay_join_group") }
     static var syncPlayLeaveGroup: String { l("syncplay_leave_group") }
     static var syncPlayNoGroups: String { l("syncplay_no_groups") }
+    static var syncPlayDisabledTitle: String { l("syncplay_disabled_title") }
+    static var syncPlayDisabledMessage: String { l("syncplay_disabled_message") }
+    static var syncPlayServerUnsupportedTitle: String { l("syncplay_server_unsupported_title") }
+    static var syncPlayServerUnsupportedMessage: String { l("syncplay_server_unsupported_message") }
+    static var syncPlayInGroup: String { l("syncplay_in_group") }
+    static var syncPlayParticipants: String { l("syncplay_participants") }
+    static var syncPlayGroupOptions: String { l("syncplay_group_options") }
+    static var syncPlayIgnoreWait: String { l("syncplay_ignore_wait") }
+    static var syncPlayIgnoreWaitDescription: String { l("syncplay_ignore_wait_description") }
+    static var syncPlaySyncCurrentQueue: String { l("syncplay_sync_current_queue") }
+    static var syncPlayGroupQueue: String { l("syncplay_group_queue") }
+    static var syncPlayQueueCurrent: String { l("syncplay_queue_current") }
+    static var syncPlayQueueNext: String { l("syncplay_queue_next") }
+    static var syncPlayQueueEmpty: String { l("syncplay_queue_empty") }
+    static var syncPlayDefaultGroupName: String { l("syncplay_default_group_name") }
+    static var syncPlayNewGroup: String { l("syncplay_new_group") }
+    static var syncPlayAvailableGroups: String { l("syncplay_available_groups") }
+    static var syncPlayRefresh: String { l("syncplay_refresh") }
+    static var syncPlaySet: String { l("syncplay_set") }
+    static var syncPlayUp: String { l("syncplay_up") }
+    static var syncPlayDown: String { l("syncplay_down") }
+    static var syncPlayRepeatOff: String { l("syncplay_repeat_off") }
+    static var syncPlayRepeatOne: String { l("syncplay_repeat_one") }
+    static var syncPlayRepeatAll: String { l("syncplay_repeat_all") }
+    static var syncPlayParticipantSingular: String { l("syncplay_participant_singular") }
+    static var syncPlayParticipantPlural: String { l("syncplay_participant_plural") }
+    static func syncPlayRepeatValue(_ value: String) -> String { l("syncplay_repeat_value", value) }
+    static func syncPlayShuffleValue(_ value: String) -> String { l("syncplay_shuffle_value", value) }
+    static func syncPlayParticipantsLine(_ count: Int, _ label: String, _ state: String) -> String { l("syncplay_participants_line", count, label, state) }
 
     // MARK: - Parental Controls
 
@@ -690,6 +741,8 @@ enum Strings {
     static var searchYourLibrary: String { l("search_your_library") }
     static var searchNoResults: String { l("search_no_results") }
     static func searchEpisodeFormat(_ s: Int, _ e: Int) -> String { l("search_episode_format", s, e) }
+    static func seasonEpisodeCompact(_ s: Int, _ e: Int) -> String { l("season_episode_compact", s, e) }
+    static func episodeOnlyCompact(_ e: Int) -> String { l("episode_only_compact", e) }
 
     // Library — Suggestions
     static var suggestionsTitle: String { l("suggestions_title") }
