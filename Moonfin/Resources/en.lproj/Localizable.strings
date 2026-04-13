@@ -526,7 +526,6 @@
 "pref_accounts" = "Accounts";
 "pref_behavior" = "Behavior";
 "pref_browsing" = "Browsing";
-"pref_theme" = "Theme";
 "pref_home_description" = "Configure shown sections";
 "pref_libraries" = "Libraries";
 "pref_libraries_description" = "Change how libraries are displayed";
@@ -1342,7 +1341,6 @@
 "suggestions_title" = "Suggestions";
 "no_suggestions_available" = "No suggestions available";
 "watch_movies_for_recommendations" = "Watch some movies to get personalized recommendations";
-"no_genres_found" = "No genres found";
 "genres_count" = "%1$d Genres";
 "no_items_found" = "No items found";
 "items_count" = "%1$d Items";
@@ -1450,15 +1448,8 @@
 "auth_last_user" = "Last User";
 "auth_specific_user" = "Specific User";
 "last_used" = "Last Used";
-"color_white" = "White";
-"color_black" = "Black";
 "color_gray" = "Gray";
-"color_red" = "Red";
-"color_green" = "Green";
-"color_blue" = "Blue";
-"color_yellow" = "Yellow";
 "color_magenta" = "Magenta";
-"color_cyan" = "Cyan";
 "color_purple" = "Purple";
 "color_teal" = "Teal";
 "color_navy" = "Navy";
@@ -1547,7 +1538,6 @@
 "syncplay_disabled_message" = "Enable SyncPlay in settings to use synchronized playback.";
 "syncplay_server_unsupported_title" = "Server Unsupported";
 "syncplay_server_unsupported_message" = "Current server does not support SyncPlay. Jellyfin with SyncPlay support is required.";
-"syncplay_in_group" = "In Group";
 "syncplay_participants" = "Participants";
 "syncplay_group_options" = "Group Options";
 "syncplay_repeat_value" = "Repeat: %@";
@@ -1561,7 +1551,6 @@
 "syncplay_queue_empty" = "Queue is empty";
 "syncplay_default_group_name" = "SyncPlay Group";
 "syncplay_new_group" = "New Group";
-"syncplay_available_groups" = "Available Groups";
 "syncplay_refresh" = "Refresh";
 "syncplay_set" = "Set";
 "syncplay_up" = "Up";

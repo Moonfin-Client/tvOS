@@ -365,7 +365,6 @@ enum Strings {
     static var telemetry: String { l("pref_telemetry_category") }
     static var screensaver: String { l("pref_screensaver") }
     static var appearance: String { l("pref_appearance") }
-    static var theme: String { l("pref_theme") }
     static var homeSections: String { l("home_sections") }
     static var focusColor: String { l("pref_focus_color") }
     static var librariesSettings: String { l("pref_libraries") }

@@ -99,8 +99,6 @@ struct SettingsOverlayView: View {
             SettingsAuthServerUserScreen(serverId: serverId, userId: userId)
         case .customization:
             SettingsCustomizationScreen()
-        case .customizationTheme:
-            SettingsThemePickerScreen()
         case .customizationClock:
             SettingsPickerScreen(
                 title: "Clock",

@@ -251,7 +251,6 @@
 		CEBE19AA7A814A37EFFD6D1F /* StillWatchingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634C718BADDB00E36F5891D6 /* StillWatchingOverlay.swift */; };
 		D00BF3EB70D5C5BB65903977 /* PluginSyncConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1188B2AD37F68983EDA9FF54 /* PluginSyncConstants.swift */; };
 		D3D9E67F5AA1CB47DD677623 /* ItemCardOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32BF0285D5448ABF4905FE29 /* ItemCardOverlays.swift */; };
-		D449921FEECD4D04626400B6 /* SettingsThemePickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36CF13F3E90E0CB513F23184 /* SettingsThemePickerScreen.swift */; };
 		D456E5C9A41E43D4D9786AD7 /* MediaSegmentRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6194CE9C28CEDB6615316AD1 /* MediaSegmentRepository.swift */; };
 		D472C2746A6C7236CC75E23A /* BookReaderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44BD2D5ECE74FF888DF9EB23 /* BookReaderViewModel.swift */; };
 		D4E8126047B60894A04B8B77 /* LibraryBrowseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C877A9EFA2B193E0D44113DB /* LibraryBrowseViewModel.swift */; };
@@ -403,7 +402,6 @@
 		3526BCC6628461DABF06EC44 /* MiniAudioPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniAudioPlayerView.swift; sourceTree = "<group>"; };
 		36770028892A3EF8A3AEC80A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
 		36892F89FCB6FDDA0932F860 /* SessionInitializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionInitializer.swift; sourceTree = "<group>"; };
-		36CF13F3E90E0CB513F23184 /* SettingsThemePickerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsThemePickerScreen.swift; sourceTree = "<group>"; };
 		36F113B795D6EA29F5BC2B94 /* SettingsAuthServerUserScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAuthServerUserScreen.swift; sourceTree = "<group>"; };
 		378FE14405D46ACB4C73D0B7 /* mn */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = mn; path = mn.lproj/Localizable.strings; sourceTree = "<group>"; };
 		3931864E47A7032AFC95477F /* SettingsAuthServerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAuthServerScreen.swift; sourceTree = "<group>"; };
@@ -1108,7 +1106,6 @@
 				704499E2DBDF2AED58ABA84B /* SettingsSyncPlayScreen.swift */,
 				DBBAFEB231637AF0C3257C86 /* SettingsSyncPlayValueScreen.swift */,
 				BFE06509FFEA054C3BB3F408 /* SettingsTelemetryScreen.swift */,
-				36CF13F3E90E0CB513F23184 /* SettingsThemePickerScreen.swift */,
 				D10256EC8BACAA177ADD2AC0 /* StillWatchingSettingsScreen.swift */,
 			);
 			path = Screens;
@@ -1908,7 +1905,6 @@
 				4953C9006854B851B4D39E4D /* SettingsSyncPlayScreen.swift in Sources */,
 				6A08CA13A79864DE7209372B /* SettingsSyncPlayValueScreen.swift in Sources */,
 				F6635A47F59537CE23A1B0F7 /* SettingsTelemetryScreen.swift in Sources */,
-				D449921FEECD4D04626400B6 /* SettingsThemePickerScreen.swift in Sources */,
 				811F295116CF98F76797DFC5 /* SettingsToggleButton.swift in Sources */,
 				E862448D0815D23CC677A4C1 /* ShuffleOptionsDialog.swift in Sources */,
 				AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */,
