@@ -81,11 +81,11 @@ struct BookReaderScreen: View {
 
             HStack(spacing: SpaceTokens.spaceSm) {
                 Image(systemName: "chevron.left")
-                Text("Previous")
+                Text(Strings.playerPrevious)
                 Text("•")
                 Text(viewModel.progressText)
                 Text("•")
-                Text("Next")
+                Text(Strings.playerNext)
                 Image(systemName: "chevron.right")
             }
             .font(.bodySm)

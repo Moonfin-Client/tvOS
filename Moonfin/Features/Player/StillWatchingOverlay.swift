@@ -15,17 +15,17 @@ struct StillWatchingOverlay: View {
                     .font(.system(size: 56))
                     .foregroundColor(theme.accent)
 
-                Text("Still Watching?")
+                Text(Strings.stillWatchingLabel)
                     .font(.title2xl)
                     .foregroundColor(.white)
 
-                Text("You've been watching for a while")
+                Text(Strings.playerStillWatchingDetail)
                     .font(.bodyMd)
                     .foregroundColor(theme.colorScheme.listCaption)
 
                 HStack(spacing: SpaceTokens.spaceMd) {
-                    actionButton(label: "Continue", icon: "play.fill", isAccent: true, action: onContinue)
-                    actionButton(label: "Stop", icon: "stop.fill", isAccent: false, action: onStop)
+                    actionButton(label: Strings.playerContinue, icon: "play.fill", isAccent: true, action: onContinue)
+                    actionButton(label: Strings.playerStop, icon: "stop.fill", isAccent: false, action: onStop)
                 }
                 .padding(.top, SpaceTokens.spaceMd)
             }

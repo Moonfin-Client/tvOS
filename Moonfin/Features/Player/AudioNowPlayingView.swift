@@ -122,7 +122,7 @@ struct AudioNowPlayingView: View {
 
     private var lyricsPanel: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-            Text("Lyrics")
+            Text(Strings.playerLyrics)
                 .font(.titleXl)
                 .foregroundColor(.white)
 
@@ -377,11 +377,11 @@ struct AudioNowPlayingView: View {
     private var queueList: some View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             HStack {
-                Text("Queue")
+                Text(Strings.playerQueue)
                     .font(.titleXl)
                     .foregroundColor(.white)
                 Spacer()
-                Text("\(viewModel.audioManager.queue.count) tracks")
+                Text(Strings.playerTrackCount(viewModel.audioManager.queue.count))
                     .font(.bodySm)
                     .foregroundColor(.white.opacity(0.5))
             }

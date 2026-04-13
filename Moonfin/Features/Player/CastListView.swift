@@ -10,7 +10,7 @@ struct CastListView: View {
             Spacer()
 
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                Text("Cast")
+                Text(Strings.cast)
                     .font(.title2xl)
                     .foregroundColor(.white)
                     .padding(.horizontal, 80)

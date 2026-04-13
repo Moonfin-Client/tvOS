@@ -55,7 +55,7 @@ final class BookReaderViewModel: ObservableObject {
         errorMessage = nil
 
         guard let client = await resolveClient() else {
-            errorMessage = "Could not connect to server"
+            errorMessage = Strings.playerBookCouldNotConnect
             isLoading = false
             return
         }
@@ -65,7 +65,7 @@ final class BookReaderViewModel: ObservableObject {
             title = item.name
 
             guard let format = detectFormat(item: item) else {
-                throw NSError(domain: "BookReader", code: -104, userInfo: [NSLocalizedDescriptionKey: "Unsupported book format"])
+                throw NSError(domain: "BookReader", code: -104, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookUnsupportedFormat])
             }
 
             if format == .cbr {
@@ -78,7 +78,7 @@ final class BookReaderViewModel: ObservableObject {
             totalCount = pageProvider?.count ?? 0
 
             guard totalCount > 0 else {
-                throw NSError(domain: "BookReader", code: -108, userInfo: [NSLocalizedDescriptionKey: "No readable pages found"])
+                throw NSError(domain: "BookReader", code: -108, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookNoReadablePages])
             }
 
             currentIndex = min(max(0, currentIndex), totalCount - 1)
@@ -86,7 +86,7 @@ final class BookReaderViewModel: ObservableObject {
             isLoading = false
             showOverlay()
         } catch {
-            errorMessage = (error as NSError?)?.userInfo[NSLocalizedDescriptionKey] as? String ?? "Unable to load book"
+            errorMessage = (error as NSError?)?.userInfo[NSLocalizedDescriptionKey] as? String ?? Strings.playerBookUnableToLoad
             isLoading = false
         }
     }
@@ -173,7 +173,7 @@ final class BookReaderViewModel: ObservableObject {
             }
         }
 
-        throw lastError ?? NSError(domain: "BookReader", code: -100, userInfo: [NSLocalizedDescriptionKey: "Failed to download book data"])
+        throw lastError ?? NSError(domain: "BookReader", code: -100, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookDownloadFailed])
     }
 
     private func buildDownloadURLs(item: ServerItem, client: MediaServerClient) -> [URL] {
@@ -227,7 +227,7 @@ final class BookReaderViewModel: ObservableObject {
             guard let provider = CGDataProvider(data: data as CFData),
                   let document = CGPDFDocument(provider),
                   document.numberOfPages > 0 else {
-                throw NSError(domain: "BookReader", code: -102, userInfo: [NSLocalizedDescriptionKey: "Invalid PDF data"])
+                                throw NSError(domain: "BookReader", code: -102, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookInvalidPdf])
             }
             return .pdf(document)
 
@@ -236,13 +236,13 @@ final class BookReaderViewModel: ObservableObject {
             return .images(pages)
 
         case .cbr:
-            throw NSError(domain: "BookReader", code: -107, userInfo: [NSLocalizedDescriptionKey: "CBR files require server chapter data"])
+            throw NSError(domain: "BookReader", code: -107, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookCbrNeedsServerChapters])
         }
     }
 
     private func extractCBZPages(data: Data) throws -> [Data] {
         guard let archive = Archive(data: data, accessMode: .read) else {
-            throw NSError(domain: "BookReader", code: -103, userInfo: [NSLocalizedDescriptionKey: "Invalid CBZ archive"])
+            throw NSError(domain: "BookReader", code: -103, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookInvalidCbz])
         }
         let imageEntries = archive
             .filter { $0.type == .file && isImagePath($0.path) }
@@ -265,7 +265,7 @@ final class BookReaderViewModel: ObservableObject {
     private func loadServerComicPages(item: ServerItem, client: MediaServerClient) async throws -> [Data] {
         let chapterCount = max(item.chapters?.count ?? 0, 0)
         guard chapterCount > 0 else {
-            throw NSError(domain: "BookReader", code: -105, userInfo: [NSLocalizedDescriptionKey: "Comic has no chapters"])
+            throw NSError(domain: "BookReader", code: -105, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookNoChapters])
         }
 
         let headers = buildAuthHeaders(client: client)
@@ -297,7 +297,7 @@ final class BookReaderViewModel: ObservableObject {
         }
 
         if pages.isEmpty {
-            throw NSError(domain: "BookReader", code: -106, userInfo: [NSLocalizedDescriptionKey: "Failed to load comic pages"])
+            throw NSError(domain: "BookReader", code: -106, userInfo: [NSLocalizedDescriptionKey: Strings.playerBookComicPagesFailed])
         }
 
         return pages

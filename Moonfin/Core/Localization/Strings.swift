@@ -135,6 +135,112 @@ enum Strings {
     static var rewind: String { l("rewind") }
     static var fastForward: String { l("fast_forward") }
     static var currentQueue: String { l("current_queue") }
+    static var playerLyrics: String { l("player_lyrics") }
+    static var playerQueue: String { l("player_queue") }
+    static var playerPlayNext: String { l("player_play_next") }
+    static var playerDownloadSubtitles: String { l("player_download_subtitles") }
+    static var playerDownloadSubtitlesTitle: String { l("player_download_subtitles_title") }
+    static var playerOpenSubtitlesSearch: String { l("player_open_subtitles_search") }
+    static var playerSpeedNormal: String { l("player_speed_normal") }
+    static var playerSearching: String { l("player_searching") }
+    static var playerSubtitleSearchFailed: String { l("player_subtitle_search_failed") }
+    static var playerSubtitleDownloadFailed: String { l("player_subtitle_download_failed") }
+    static var playerStillWatchingDetail: String { l("player_still_watching_detail") }
+    static var playerContinue: String { l("player_continue") }
+    static var playerStop: String { l("player_stop") }
+    static var playerPrevious: String { l("player_previous") }
+    static var playerNext: String { l("player_next") }
+    static var playerSubtitleDelayDown: String { l("player_subtitle_delay_down") }
+    static var playerSubtitleDelayReset: String { l("player_subtitle_delay_reset") }
+    static var playerSubtitleDelayUp: String { l("player_subtitle_delay_up") }
+    static var playerPlaybackInformation: String { l("player_playback_information") }
+    static var playerPlaybackSection: String { l("player_playback_section") }
+    static var playerPlayMethod: String { l("player_play_method") }
+    static var playerBackend: String { l("player_backend") }
+    static var playerFallback: String { l("player_fallback") }
+    static var playerContainer: String { l("player_container") }
+    static var playerBitrate: String { l("player_bitrate") }
+    static var playerVideoSection: String { l("player_video_section") }
+    static var playerResolution: String { l("player_resolution") }
+    static var playerHdr: String { l("player_hdr") }
+    static var playerPlayerType: String { l("player_player_type") }
+    static var playerCodec: String { l("player_codec") }
+    static var playerBitDepth: String { l("player_bit_depth") }
+    static var playerVideoBitrate: String { l("player_video_bitrate") }
+    static var playerFrames: String { l("player_frames") }
+    static var playerHdrMetadata: String { l("player_hdr_metadata") }
+    static var playerMaxCll: String { l("player_max_cll") }
+    static var playerMaxFall: String { l("player_max_fall") }
+    static var playerTelemetry: String { l("player_telemetry") }
+    static var playerToneMap: String { l("player_tone_map") }
+    static var playerSinkHdr: String { l("player_sink_hdr") }
+    static var playerContent: String { l("player_content") }
+    static var playerInColor: String { l("player_in_color") }
+    static var playerOutColor: String { l("player_out_color") }
+    static var playerTarget: String { l("player_target") }
+    static var playerActiveToneMapping: String { l("player_active_tone_mapping") }
+    static var playerHardwareDecode: String { l("player_hardware_decode") }
+    static var playerAudioSection: String { l("player_audio_section") }
+    static var playerTrack: String { l("player_track") }
+    static var playerChannels: String { l("player_channels") }
+    static var playerAudioBitrate: String { l("player_audio_bitrate") }
+    static var playerSampleRate: String { l("player_sample_rate") }
+    static var playerFormat: String { l("player_format") }
+    static var playerType: String { l("player_type") }
+    static var playerExternal: String { l("player_external") }
+    static var playerEmbedded: String { l("player_embedded") }
+    static var playerUnknown: String { l("player_unknown") }
+    static var playerUnknownShort: String { l("player_unknown_short") }
+    static var playerNA: String { l("player_na") }
+    static var playerDolbyVision: String { l("player_dolby_vision") }
+    static var playerHdr10Plus: String { l("player_hdr10_plus") }
+    static var playerHdr10: String { l("player_hdr10") }
+    static var playerHlg: String { l("player_hlg") }
+    static var playerHdrValue: String { l("player_hdr_value") }
+    static var playerSdr: String { l("player_sdr") }
+    static var playerCodecHevc: String { l("player_codec_hevc") }
+    static var playerCodecAvc: String { l("player_codec_avc") }
+    static var playerCodecAv1: String { l("player_codec_av1") }
+    static var playerCodecVp9: String { l("player_codec_vp9") }
+    static var playerAudioCodecEac3: String { l("player_audio_codec_eac3") }
+    static var playerAudioCodecAc3: String { l("player_audio_codec_ac3") }
+    static var playerAudioCodecTrueHd: String { l("player_audio_codec_truehd") }
+    static var playerAudioCodecDts: String { l("player_audio_codec_dts") }
+    static var playerAudioCodecAac: String { l("player_audio_codec_aac") }
+    static var playerAudioCodecFlac: String { l("player_audio_codec_flac") }
+    static var playerAudioCodecOpus: String { l("player_audio_codec_opus") }
+    static var playerAudioCodecVorbis: String { l("player_audio_codec_vorbis") }
+    static var playerMono: String { l("player_mono") }
+    static var playerStereo: String { l("player_stereo") }
+    static var playerBookCouldNotConnect: String { l("player_book_could_not_connect") }
+    static var playerBookUnsupportedFormat: String { l("player_book_unsupported_format") }
+    static var playerBookNoReadablePages: String { l("player_book_no_readable_pages") }
+    static var playerBookUnableToLoad: String { l("player_book_unable_to_load") }
+    static var playerBookDownloadFailed: String { l("player_book_download_failed") }
+    static var playerBookInvalidPdf: String { l("player_book_invalid_pdf") }
+    static var playerBookCbrNeedsServerChapters: String { l("player_book_cbr_needs_server_chapters") }
+    static var playerBookInvalidCbz: String { l("player_book_invalid_cbz") }
+    static var playerBookNoChapters: String { l("player_book_no_chapters") }
+    static var playerBookComicPagesFailed: String { l("player_book_comic_pages_failed") }
+    static func playerTrackCount(_ count: Int) -> String { l("player_track_count", count) }
+    static func playerChapter(_ number: Int) -> String { l("player_chapter", number) }
+    static func playerSubtitleDelay(_ delay: String) -> String { l("player_subtitle_delay", delay) }
+    static func playerNoSubtitlesFound(_ language: String) -> String { l("player_no_subtitles_found", language) }
+    static func playerFpsSuffix(_ fps: Int) -> String { l("player_fps_suffix", fps) }
+    static func playerResolutionValue(_ width: Int, _ height: Int, _ fpsSuffix: String) -> String { l("player_resolution_value", width, height, fpsSuffix) }
+    static func playerBitDepthValue(_ bitDepth: Int) -> String { l("player_bit_depth_value", bitDepth) }
+    static func playerFramesValue(_ decoded: String, _ dropped: String) -> String { l("player_frames_value", decoded, dropped) }
+    static func playerNitsValue(_ value: String) -> String { l("player_nits_value", value) }
+    static func playerEmpty(_ count: Int) -> String { l("player_empty", count) }
+    static func playerColorPair(_ first: String, _ second: String) -> String { l("player_color_pair", first, second) }
+    static func playerSampleRateValue(_ khz: Double) -> String { l("player_sample_rate_value", khz) }
+    static func playerBitrateMbps(_ mbps: Double) -> String { l("player_bitrate_mbps", mbps) }
+    static func playerBitrateKbps(_ kbps: Int) -> String { l("player_bitrate_kbps", kbps) }
+    static func playerBitrateBps(_ bps: Int) -> String { l("player_bitrate_bps", bps) }
+    static func playerDolbyVisionProfile(_ profile: String, _ level: String) -> String { l("player_dolby_vision_profile", profile, level) }
+    static func playerCodecProfileSuffix(_ profile: String) -> String { l("player_codec_profile_suffix", profile) }
+    static func playerCodecLevelSuffix(_ level: Int) -> String { l("player_codec_level_suffix", level) }
+    static func playerChannelsCount(_ channels: Int) -> String { l("player_channels_count", channels) }
 
     // MARK: - Playback Status
 

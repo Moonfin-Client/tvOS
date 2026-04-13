@@ -13,7 +13,7 @@ struct ChapterSelectionView: View {
             Spacer()
 
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
-                Text("Chapters")
+                Text(Strings.chapters)
                     .font(.title2xl)
                     .foregroundColor(.white)
                     .padding(.horizontal, 80)
@@ -92,7 +92,7 @@ struct ChapterSelectionView: View {
                 }
                 .cornerRadius(RadiusTokens.small)
 
-                Text(chapter.name ?? "Chapter \(index + 1)")
+                Text(chapter.name ?? Strings.playerChapter(index + 1))
                     .font(.bodySm)
                     .foregroundColor(.white)
                     .lineLimit(1)

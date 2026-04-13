@@ -21,7 +21,7 @@ struct NextUpOverlay: View {
             Color.black.opacity(0.85).ignoresSafeArea()
 
             VStack(spacing: SpaceTokens.spaceLg) {
-                Text("Up Next")
+                Text(Strings.nextUp)
                     .font(.title2xl)
                     .foregroundColor(.white)
 
@@ -29,7 +29,7 @@ struct NextUpOverlay: View {
 
                 HStack(spacing: SpaceTokens.spaceLg) {
                     actionButton(
-                        label: countdown > 0 ? "Play Next (\(countdown))" : "Play Next",
+                        label: countdown > 0 ? Strings.playNextCountdown(countdown) : Strings.playerPlayNext,
                         icon: "play.fill",
                         isAccent: true,
                         focused: $focusedButton,
@@ -38,7 +38,7 @@ struct NextUpOverlay: View {
                     )
 
                     actionButton(
-                        label: "Close",
+                        label: Strings.close,
                         icon: "xmark",
                         isAccent: false,
                         focused: $focusedButton,
@@ -89,7 +89,7 @@ struct NextUpOverlay: View {
 
                 if let ticks = nextItem.runTimeTicks {
                     let minutes = Int(ticks / 600_000_000)
-                    Text("\(minutes) min")
+                    Text(Strings.runtimeMinutes(minutes))
                         .font(.bodySm)
                         .foregroundColor(theme.colorScheme.listCaption)
                 }

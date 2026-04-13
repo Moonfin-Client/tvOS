@@ -34,7 +34,7 @@ struct PlayerDialogShell<Content: View>: View {
 
             HStack {
                 Spacer()
-                FocusableDialogButton(title: "Cancel", action: onDismiss)
+                FocusableDialogButton(title: Strings.cancel, action: onDismiss)
                 Spacer()
             }
             .padding(.vertical, SpaceTokens.spaceMd)
@@ -52,7 +52,7 @@ struct PlayerAudioTrackDialog: View {
     @ObservedObject var viewModel: VideoPlayerViewModel
 
     var body: some View {
-        PlayerDialogShell(title: "Audio", onDismiss: { viewModel.hideTrackSelection() }) {
+        PlayerDialogShell(title: Strings.audioTrack, onDismiss: { viewModel.hideTrackSelection() }) {
             ForEach(viewModel.player.audioTracks) { track in
                 FocusableTrackSelectorRow(
                     label: track.name,
@@ -71,9 +71,9 @@ struct PlayerSubtitleTrackDialog: View {
     @ObservedObject var viewModel: VideoPlayerViewModel
 
     var body: some View {
-        PlayerDialogShell(title: "Subtitles", onDismiss: { viewModel.hideTrackSelection() }) {
+        PlayerDialogShell(title: Strings.subtitleTrack, onDismiss: { viewModel.hideTrackSelection() }) {
             FocusableTrackSelectorRow(
-                label: "None",
+                label: Strings.none,
                 detail: nil,
                 isSelected: viewModel.player.currentSubtitleTrackIndex == -1,
                 action: { viewModel.player.disableSubtitles() }
@@ -96,8 +96,8 @@ struct PlayerSubtitleTrackDialog: View {
                 Divider().background(Color.white.opacity(0.2))
 
                 FocusableTrackSelectorRow(
-                    label: "Download subtitles...",
-                    detail: "Search using OpenSubtitles",
+                    label: Strings.playerDownloadSubtitles,
+                    detail: Strings.playerOpenSubtitlesSearch,
                     isSelected: false,
                     action: {
                         viewModel.hideTrackSelection()
@@ -110,15 +110,15 @@ struct PlayerSubtitleTrackDialog: View {
 
     private var subtitleDelayControls: some View {
         VStack(spacing: SpaceTokens.spaceSm) {
-            Text("Subtitle Delay: \(subtitleDelayLabel)")
+            Text(Strings.playerSubtitleDelay(subtitleDelayLabel))
                 .font(.bodySm)
                 .foregroundColor(.white.opacity(0.7))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             HStack(spacing: SpaceTokens.spaceMd) {
-                delayButton("−0.25s") { viewModel.adjustSubtitleDelay(by: -0.25) }
-                delayButton("Reset") { viewModel.resetSubtitleDelay() }
-                delayButton("+0.25s") { viewModel.adjustSubtitleDelay(by: 0.25) }
+                delayButton(Strings.playerSubtitleDelayDown) { viewModel.adjustSubtitleDelay(by: -0.25) }
+                delayButton(Strings.playerSubtitleDelayReset) { viewModel.resetSubtitleDelay() }
+                delayButton(Strings.playerSubtitleDelayUp) { viewModel.adjustSubtitleDelay(by: 0.25) }
             }
         }
         .padding(.horizontal, SpaceTokens.spaceMd)
@@ -152,7 +152,7 @@ struct PlayerSpeedDialog: View {
     private let speedOptions: [Float] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
 
     var body: some View {
-        PlayerDialogShell(title: "Speed", onDismiss: { viewModel.hideTrackSelection() }) {
+        PlayerDialogShell(title: Strings.playbackSpeed, onDismiss: { viewModel.hideTrackSelection() }) {
             ForEach(speedOptions, id: \.self) { speed in
                 FocusableTrackSelectorRow(
                     label: speedLabel(speed),
@@ -165,7 +165,7 @@ struct PlayerSpeedDialog: View {
     }
 
     private func speedLabel(_ speed: Float) -> String {
-        if speed == 1.0 { return "Normal" }
+        if speed == 1.0 { return Strings.playerSpeedNormal }
         if speed == floor(speed) { return "\(Int(speed))x" }
         return String(format: "%gx", speed)
     }

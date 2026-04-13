@@ -16,11 +16,11 @@ struct SubtitleDownloadDialog: View {
     @EnvironmentObject private var theme: MoonfinTheme
 
     var body: some View {
-        PlayerDialogShell(title: "Download Subtitles", onDismiss: onDismiss) {
+        PlayerDialogShell(title: Strings.playerDownloadSubtitlesTitle, onDismiss: onDismiss) {
             if isLoading {
                 HStack(spacing: SpaceTokens.spaceSm) {
                     ProgressView()
-                    Text("Searching...")
+                    Text(Strings.playerSearching)
                         .font(.bodySm)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                 }
@@ -34,7 +34,7 @@ struct SubtitleDownloadDialog: View {
                     .padding(.vertical, SpaceTokens.spaceMd)
                     .padding(.horizontal, SpaceTokens.spaceMd)
             } else if results.isEmpty {
-                Text("No subtitles found for \"\(defaultLanguage.uppercased())\".")
+                Text(Strings.playerNoSubtitlesFound(defaultLanguage.uppercased()))
                     .font(.bodySm)
                     .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
                     .padding(.vertical, SpaceTokens.spaceMd)
@@ -62,7 +62,7 @@ struct SubtitleDownloadDialog: View {
                 results = (try? await onSearch("eng")) ?? []
             }
         } catch {
-            self.error = "Search failed. Make sure the OpenSubtitles plugin is installed and configured on your Jellyfin server."
+            self.error = Strings.playerSubtitleSearchFailed
         }
         isLoading = false
     }
@@ -77,7 +77,7 @@ struct SubtitleDownloadDialog: View {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 onDownloaded()
             } catch {
-                self.error = "Download failed."
+                self.error = Strings.playerSubtitleDownloadFailed
                 isDownloading = false
             }
         }
