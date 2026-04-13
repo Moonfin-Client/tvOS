@@ -157,9 +157,9 @@ enum NextUpBehavior: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .extended: return "Extended"
-        case .minimal: return "Minimal"
-        case .disabled: return "Disabled"
+        case .extended: return Strings.nextUpExtended
+        case .minimal: return Strings.nextUpMinimal
+        case .disabled: return Strings.disabled
         }
     }
 }
@@ -170,8 +170,8 @@ enum AudioBehavior: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .defaultTrack: return "Default Track"
-        case .previouslySelected: return "Previously Selected"
+        case .defaultTrack: return Strings.defaultTrack
+        case .previouslySelected: return Strings.previouslySelected
         }
     }
 }
@@ -182,8 +182,8 @@ enum AudioOutput: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .directStream: return "Direct Stream"
-        case .downmixToStereo: return "Downmix to Stereo"
+        case .directStream: return Strings.directStream
+        case .downmixToStereo: return Strings.downmixToStereo
         }
     }
 }
@@ -194,8 +194,8 @@ enum NavbarPosition: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .top: return "Top"
-        case .left: return "Left"
+        case .top: return Strings.top
+        case .left: return Strings.left
         }
     }
 }
@@ -215,9 +215,9 @@ enum ShuffleContentType: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .movies: return "Movies"
-        case .tvShows: return "TV Shows"
-        case .both: return "Both"
+        case .movies: return Strings.movies
+        case .tvShows: return Strings.tvShows
+        case .both: return Strings.both
         }
     }
 }
@@ -231,11 +231,11 @@ enum PosterSize: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .smallest: return "Smallest"
-        case .small: return "Small"
-        case .medium: return "Medium"
-        case .large: return "Large"
-        case .xLarge: return "X-Large"
+        case .smallest: return Strings.posterSizeSmallest
+        case .small: return Strings.posterSizeSmall
+        case .medium: return Strings.posterSizeMedium
+        case .large: return Strings.posterSizeLarge
+        case .xLarge: return Strings.posterSizeXLarge
         }
     }
 
@@ -258,10 +258,10 @@ enum ImageDisplayType: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .poster: return "Poster"
-        case .thumb: return "Thumbnail"
-        case .banner: return "Banner"
-        case .square: return "Square"
+        case .poster: return Strings.imageTypePoster
+        case .thumb: return Strings.imageTypeThumbnail
+        case .banner: return Strings.imageTypeBanner
+        case .square: return Strings.imageTypeSquare
         }
     }
 
@@ -284,9 +284,9 @@ enum ScreensaverMode: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .logo: return "Logo"
-        case .showcase: return "Library Showcase"
-        case .nowPlaying: return "Now Playing"
+        case .logo: return Strings.screensaverLogo
+        case .showcase: return Strings.screensaverLibraryShowcase
+        case .nowPlaying: return Strings.screensaverNowPlaying
         }
     }
 }
@@ -299,10 +299,10 @@ enum ClockBehavior: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .always: return "Always"
-        case .inNavOnly: return "Navigation Only"
-        case .inVideo: return "In Video"
-        case .never: return "Never"
+        case .always: return Strings.always
+        case .inNavOnly: return Strings.navigationOnly
+        case .inVideo: return Strings.inVideo
+        case .never: return Strings.never
         }
     }
 }
@@ -315,10 +315,10 @@ enum WatchedIndicatorBehavior: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .always: return "Always"
-        case .never: return "Never"
-        case .hideAfterWatched: return "Hide After Watched"
-        case .episodesOnly: return "Episodes Only"
+        case .always: return Strings.always
+        case .never: return Strings.never
+        case .hideAfterWatched: return Strings.hideAfterWatched
+        case .episodesOnly: return Strings.episodesOnly
         }
     }
 }
@@ -337,16 +337,16 @@ enum SubtitleColor: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .transparent: return "None"
-        case .white: return "White"
-        case .black: return "Black"
-        case .gray: return "Gray"
-        case .red: return "Red"
-        case .green: return "Green"
-        case .blue: return "Blue"
-        case .yellow: return "Yellow"
-        case .magenta: return "Magenta"
-        case .cyan: return "Cyan"
+        case .transparent: return Strings.none
+        case .white: return Strings.colorWhite
+        case .black: return Strings.colorBlack
+        case .gray: return Strings.colorGray
+        case .red: return Strings.colorRed
+        case .green: return Strings.colorGreen
+        case .blue: return Strings.colorBlue
+        case .yellow: return Strings.colorYellow
+        case .magenta: return Strings.colorMagenta
+        case .cyan: return Strings.colorCyan
         }
     }
 
@@ -396,10 +396,10 @@ enum SlideshowInterval: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .short: return "3 seconds"
-        case .medium: return "5 seconds"
-        case .long: return "8 seconds"
-        case .extraLong: return "10 seconds"
+        case .short: return Strings.slideshowSeconds(3)
+        case .medium: return Strings.slideshowSeconds(5)
+        case .long: return Strings.slideshowSeconds(8)
+        case .extraLong: return Strings.slideshowSeconds(10)
         }
     }
 }
@@ -410,8 +410,8 @@ enum LiveTvChannelOrder: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .channelNumber: return "Channel Number"
-        case .lastPlayed: return "Last Played"
+        case .channelNumber: return Strings.channelNumber
+        case .lastPlayed: return Strings.lastPlayed
         }
     }
 }
@@ -425,7 +425,7 @@ enum MaxVideoResolution: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .auto: return "Auto"
+        case .auto: return Strings.optionAuto
         case .res480p: return "480p"
         case .res720p: return "720p"
         case .res1080p: return "1080p"
@@ -444,12 +444,12 @@ enum SeasonalSurprise: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .none: return "None"
-        case .winter: return "Winter"
-        case .spring: return "Spring"
-        case .summer: return "Summer"
-        case .halloween: return "Halloween"
-        case .fall: return "Fall"
+        case .none: return Strings.none
+        case .winter: return Strings.seasonWinter
+        case .spring: return Strings.seasonSpring
+        case .summer: return Strings.seasonSummer
+        case .halloween: return Strings.seasonHalloween
+        case .fall: return Strings.seasonFall
         }
     }
 }

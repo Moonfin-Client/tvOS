@@ -93,17 +93,17 @@ enum RatingSource: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .tomatoes: return "Rotten Tomatoes"
-        case .popcorn: return "RT Audience"
-        case .imdb: return "IMDB"
-        case .tmdb, .tmdbEpisode: return "TMDB"
-        case .metacritic: return "Metacritic"
-        case .metacriticuser: return "Metacritic User"
-        case .trakt: return "Trakt"
-        case .letterboxd: return "Letterboxd"
-        case .rogerebert: return "Roger Ebert"
-        case .myanimelist: return "MyAnimeList"
-        case .anilist: return "AniList"
+        case .tomatoes: return Strings.ratingRottenTomatoes
+        case .popcorn: return Strings.ratingRtAudience
+        case .imdb: return Strings.ratingImdb
+        case .tmdb, .tmdbEpisode: return Strings.ratingTmdb
+        case .metacritic: return Strings.ratingMetacritic
+        case .metacriticuser: return Strings.ratingMetacriticUser
+        case .trakt: return Strings.ratingTrakt
+        case .letterboxd: return Strings.ratingLetterboxd
+        case .rogerebert: return Strings.ratingRogerEbert
+        case .myanimelist: return Strings.ratingMyAnimeList
+        case .anilist: return Strings.ratingAniList
         }
     }
 

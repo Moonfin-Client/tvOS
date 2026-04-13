@@ -55,8 +55,8 @@ enum GridDirection: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .vertical: return "Vertical"
-        case .horizontal: return "Horizontal"
+        case .vertical: return Strings.vertical
+        case .horizontal: return Strings.horizontal
         }
     }
 }

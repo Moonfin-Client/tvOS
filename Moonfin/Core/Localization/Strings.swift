@@ -758,4 +758,98 @@ enum Strings {
     static var authenticationRequired: String { l("authentication_required") }
     static var connectionError: String { l("connection_error") }
     static var errorTitle: String { l("error_title") }
+
+    // MARK: - Preferences and Shared Models
+
+    // Shared labels
+    static var tvShows: String { l("tv_shows") }
+    static var both: String { l("both") }
+    static var top: String { l("top") }
+    static var left: String { l("left") }
+    static var vertical: String { l("vertical") }
+    static var horizontal: String { l("horizontal") }
+    static var optionAuto: String { l("option_auto") }
+    static var collectionSingular: String { l("collection_singular") }
+    static var liveTv: String { l("live_tv") }
+    static var systemDefault: String { l("system_default") }
+    static func slideshowSeconds(_ seconds: Int) -> String { l("slideshow_seconds", seconds) }
+
+    // Preference values
+    static var nextUpExtended: String { l("next_up_extended") }
+    static var nextUpMinimal: String { l("next_up_minimal") }
+    static var defaultTrack: String { l("default_track") }
+    static var previouslySelected: String { l("previously_selected") }
+    static var directStream: String { l("direct_stream") }
+    static var downmixToStereo: String { l("downmix_to_stereo") }
+    static var posterSizeSmallest: String { l("poster_size_smallest") }
+    static var posterSizeSmall: String { l("poster_size_small") }
+    static var posterSizeMedium: String { l("poster_size_medium") }
+    static var posterSizeLarge: String { l("poster_size_large") }
+    static var posterSizeXLarge: String { l("poster_size_x_large") }
+    static var screensaverLogo: String { l("screensaver_logo") }
+    static var screensaverLibraryShowcase: String { l("screensaver_library_showcase") }
+    static var screensaverNowPlaying: String { l("screensaver_now_playing") }
+    static var navigationOnly: String { l("navigation_only") }
+    static var inVideo: String { l("in_video") }
+    static var hideAfterWatched: String { l("hide_after_watched") }
+    static var episodesOnly: String { l("episodes_only") }
+    static var channelNumber: String { l("channel_number") }
+    static var lastPlayed: String { l("last_played") }
+    static var seasonWinter: String { l("season_winter") }
+    static var seasonSpring: String { l("season_spring") }
+    static var seasonSummer: String { l("season_summer") }
+    static var seasonHalloween: String { l("season_halloween") }
+    static var seasonFall: String { l("season_fall") }
+    static var authLastUser: String { l("auth_last_user") }
+    static var authSpecificUser: String { l("auth_specific_user") }
+    static var lastUsed: String { l("last_used") }
+    static var alphabetical: String { l("alphabetical") }
+
+    // Colors
+    static var colorWhite: String { l("color_white") }
+    static var colorBlack: String { l("color_black") }
+    static var colorGray: String { l("color_gray") }
+    static var colorRed: String { l("color_red") }
+    static var colorGreen: String { l("color_green") }
+    static var colorBlue: String { l("color_blue") }
+    static var colorYellow: String { l("color_yellow") }
+    static var colorMagenta: String { l("color_magenta") }
+    static var colorCyan: String { l("color_cyan") }
+    static var colorPurple: String { l("color_purple") }
+    static var colorTeal: String { l("color_teal") }
+    static var colorNavy: String { l("color_navy") }
+    static var colorCharcoal: String { l("color_charcoal") }
+    static var colorBrown: String { l("color_brown") }
+    static var colorDarkBlue: String { l("color_dark_blue") }
+    static var colorDarkRed: String { l("color_dark_red") }
+    static var colorDarkGreen: String { l("color_dark_green") }
+    static var colorSlate: String { l("color_slate") }
+    static var colorIndigo: String { l("color_indigo") }
+
+    // Home / Media Bar
+    static var latestMedia: String { l("latest_media") }
+    static var myMediaSmall: String { l("my_media_small") }
+
+    // Seerr row labels
+    static var seerrRecentRequests: String { l("seerr_recent_requests") }
+    static var seerrRecentlyAdded: String { l("seerr_recently_added") }
+    static var seerrTrending: String { l("seerr_trending") }
+    static var seerrPopularMovies: String { l("seerr_popular_movies") }
+    static var seerrUpcomingMovies: String { l("seerr_upcoming_movies") }
+    static var seerrStudios: String { l("seerr_studios") }
+    static var seerrPopularSeries: String { l("seerr_popular_series") }
+    static var seerrUpcomingSeries: String { l("seerr_upcoming_series") }
+
+    // Rating sources
+    static var ratingRottenTomatoes: String { l("rating_rotten_tomatoes") }
+    static var ratingRtAudience: String { l("rating_rt_audience") }
+    static var ratingImdb: String { l("rating_imdb") }
+    static var ratingTmdb: String { l("rating_tmdb") }
+    static var ratingMetacritic: String { l("rating_metacritic") }
+    static var ratingMetacriticUser: String { l("rating_metacritic_user") }
+    static var ratingTrakt: String { l("rating_trakt") }
+    static var ratingLetterboxd: String { l("rating_letterboxd") }
+    static var ratingRogerEbert: String { l("rating_roger_ebert") }
+    static var ratingMyAnimeList: String { l("rating_myanimelist") }
+    static var ratingAniList: String { l("rating_anilist") }
 }

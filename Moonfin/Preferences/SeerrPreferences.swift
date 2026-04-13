@@ -37,17 +37,17 @@ enum SeerrRowType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .recentRequests: return "Recent Requests"
-        case .recentlyAdded: return "Recently Added"
-        case .trending: return "Trending"
-        case .popularMovies: return "Popular Movies"
-        case .movieGenres: return "Movie Genres"
-        case .upcomingMovies: return "Upcoming Movies"
-        case .studios: return "Studios"
-        case .popularSeries: return "Popular Series"
-        case .seriesGenres: return "Series Genres"
-        case .upcomingSeries: return "Upcoming Series"
-        case .networks: return "Networks"
+        case .recentRequests: return Strings.seerrRecentRequests
+        case .recentlyAdded: return Strings.seerrRecentlyAdded
+        case .trending: return Strings.seerrTrending
+        case .popularMovies: return Strings.seerrPopularMovies
+        case .movieGenres: return Strings.seerrMovieGenres
+        case .upcomingMovies: return Strings.seerrUpcomingMovies
+        case .studios: return Strings.seerrStudios
+        case .popularSeries: return Strings.seerrPopularSeries
+        case .seriesGenres: return Strings.seerrSeriesGenres
+        case .upcomingSeries: return Strings.seerrUpcomingSeries
+        case .networks: return Strings.seerrNetworks
         }
     }
 }

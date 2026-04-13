@@ -76,18 +76,18 @@ enum MediaBarOverlayColor: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .gray:      return "Gray"
-        case .black:     return "Black"
-        case .darkBlue:  return "Dark Blue"
-        case .purple:    return "Purple"
-        case .teal:      return "Teal"
-        case .navy:      return "Navy"
-        case .charcoal:  return "Charcoal"
-        case .brown:     return "Brown"
-        case .darkRed:   return "Dark Red"
-        case .darkGreen: return "Dark Green"
-        case .slate:     return "Slate"
-        case .indigo:    return "Indigo"
+        case .gray:      return Strings.colorGray
+        case .black:     return Strings.colorBlack
+        case .darkBlue:  return Strings.colorDarkBlue
+        case .purple:    return Strings.colorPurple
+        case .teal:      return Strings.colorTeal
+        case .navy:      return Strings.colorNavy
+        case .charcoal:  return Strings.colorCharcoal
+        case .brown:     return Strings.colorBrown
+        case .darkRed:   return Strings.colorDarkRed
+        case .darkGreen: return Strings.colorDarkGreen
+        case .slate:     return Strings.colorSlate
+        case .indigo:    return Strings.colorIndigo
         }
     }
 }
@@ -115,9 +115,9 @@ enum MediaBarContentType: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .movies:  return "Movies"
-        case .tvShows: return "TV Shows"
-        case .both:    return "Both"
+        case .movies:  return Strings.movies
+        case .tvShows: return Strings.tvShows
+        case .both:    return Strings.both
         }
     }
 }
@@ -139,8 +139,8 @@ enum MediaBarSourceType: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .library:    return "Library"
-        case .collection: return "Collection"
+        case .library:    return Strings.librarySingular
+        case .collection: return Strings.collectionSingular
         }
     }
 }

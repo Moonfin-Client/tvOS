@@ -13,15 +13,15 @@ enum HomeSectionType: String, CaseIterable, Codable {
 
     var displayName: String {
         switch self {
-        case .resume: return "Continue Watching"
-        case .nextUp: return "Next Up"
-        case .latestMedia: return "Latest Media"
-        case .myMedia: return "My Media"
-        case .myMediaSmall: return "My Media (small)"
-        case .resumeAudio: return "Continue Listening"
-        case .playlists: return "Playlists"
-        case .liveTv: return "Live TV"
-        case .none: return "None"
+        case .resume: return Strings.continueWatching
+        case .nextUp: return Strings.nextUp
+        case .latestMedia: return Strings.latestMedia
+        case .myMedia: return Strings.myMedia
+        case .myMediaSmall: return Strings.myMediaSmall
+        case .resumeAudio: return Strings.continueListening
+        case .playlists: return Strings.playlists
+        case .liveTv: return Strings.liveTv
+        case .none: return Strings.none
         }
     }
 
