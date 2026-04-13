@@ -36,6 +36,7 @@ final class PlaybackManager: ObservableObject {
     private var prefetchTask: Task<Void, Never>?
     private var prefetchedStreamInfo: StreamInfo?
     private var prefetchedItemId: String?
+    private var suppressNextUpEvaluation = false
     private var lastEvaluatedSecond: Int = -1
     private let logger = Logger(subsystem: "org.moonfin.appletv", category: "PlaybackManager")
     private var startupBeganAt: Date?
@@ -130,8 +131,12 @@ final class PlaybackManager: ObservableObject {
         }
 
         nextUpManager.onPlayNext = { [weak self] in
-            self?.autoAdvanceOnEnd = false
-            await self?.playNext()
+            guard let self else { return }
+            self.suppressNextUpEvaluation = true
+            self.autoAdvanceOnEnd = false
+            await self.playNext(startFromBeginning: true)
+            self.autoAdvanceOnEnd = true
+            self.suppressNextUpEvaluation = false
         }
 
         nextUpManager.onDismiss = { [weak self] in
@@ -177,8 +182,14 @@ final class PlaybackManager: ObservableObject {
         await playCurrentEntry()
     }
 
-    func playNext() async {
+    func playNext(startFromBeginning: Bool = false) async {
         guard hasNext else { return }
+        if startFromBeginning {
+            let nextIndex = currentIndex + 1
+            if queue.indices.contains(nextIndex) {
+                queue[nextIndex].startPositionTicks = 0
+            }
+        }
         await stopAndReport(failed: false)
         currentIndex += 1
         episodesPlayed += 1
@@ -629,6 +640,8 @@ final class PlaybackManager: ObservableObject {
                 let second = Int(time)
                 guard second != self.lastEvaluatedSecond else { return }
                 self.lastEvaluatedSecond = second
+
+                guard !self.suppressNextUpEvaluation else { return }
 
                 self.nextUpManager.evaluateEndOfPlayback(
                     currentTime: time,
