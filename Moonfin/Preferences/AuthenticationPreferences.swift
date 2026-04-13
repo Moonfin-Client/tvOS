@@ -1,5 +1,9 @@
 import Foundation
 
+private func authenticationPreferencesLocalized(_ key: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+}
+
 final class AuthenticationPreferences {
     private var store: PreferenceStore
 
@@ -58,9 +62,9 @@ enum AutoLoginBehavior: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .lastUser: return Strings.authLastUser
-        case .disabled: return Strings.disabled
-        case .specificUser: return Strings.authSpecificUser
+        case .lastUser: return authenticationPreferencesLocalized("auth_last_user")
+        case .disabled: return authenticationPreferencesLocalized("disabled")
+        case .specificUser: return authenticationPreferencesLocalized("auth_specific_user")
         }
     }
 }
@@ -71,8 +75,8 @@ enum ServerSortBy: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .lastUsed: return Strings.lastUsed
-        case .alphabetical: return Strings.alphabetical
+        case .lastUsed: return authenticationPreferencesLocalized("last_used")
+        case .alphabetical: return authenticationPreferencesLocalized("alphabetical")
         }
     }
 }

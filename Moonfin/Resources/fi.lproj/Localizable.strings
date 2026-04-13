@@ -1111,3 +1111,6 @@
 "network_user_secure_connection_failed" = "Secure connection failed";
 "network_user_network_error" = "Network error";
 "network_user_server_is_unavailable" = "Server is unavailable";
+"app_loading_trailer" = "Ladataan traileria...";
+"app_unable_to_play_trailer" = "Traileria ei voi toistaa";
+"app_trailer_playback_failed" = "Trailerin toisto epäonnistui";

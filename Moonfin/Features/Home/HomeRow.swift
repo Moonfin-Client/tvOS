@@ -1,5 +1,9 @@
 import Foundation
 
+private func homeRowLocalized(_ key: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+}
+
 enum HomeSectionType: String, CaseIterable, Codable {
     case resume
     case nextUp
@@ -13,15 +17,15 @@ enum HomeSectionType: String, CaseIterable, Codable {
 
     var displayName: String {
         switch self {
-        case .resume: return Strings.continueWatching
-        case .nextUp: return Strings.nextUp
-        case .latestMedia: return Strings.latestMedia
-        case .myMedia: return Strings.myMedia
-        case .myMediaSmall: return Strings.myMediaSmall
-        case .resumeAudio: return Strings.continueListening
-        case .playlists: return Strings.playlists
-        case .liveTv: return Strings.liveTv
-        case .none: return Strings.none
+        case .resume: return homeRowLocalized("continue_watching")
+        case .nextUp: return homeRowLocalized("next_up")
+        case .latestMedia: return homeRowLocalized("latest_media")
+        case .myMedia: return homeRowLocalized("my_media")
+        case .myMediaSmall: return homeRowLocalized("my_media_small")
+        case .resumeAudio: return homeRowLocalized("continue_listening")
+        case .playlists: return homeRowLocalized("playlists")
+        case .liveTv: return homeRowLocalized("live_tv")
+        case .none: return homeRowLocalized("none")
         }
     }
 

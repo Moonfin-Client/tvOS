@@ -1,6 +1,10 @@
 import Foundation
 import Combine
 
+private func genreBrowseLocalized(_ key: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+}
+
 enum GenreSortOption: String, CaseIterable {
     case nameAsc
     case nameDesc
@@ -10,11 +14,11 @@ enum GenreSortOption: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .nameAsc: return Strings.genreSortNameAsc
-        case .nameDesc: return Strings.genreSortNameDesc
-        case .mostItems: return Strings.genreSortMostItems
-        case .leastItems: return Strings.genreSortLeastItems
-        case .random: return Strings.random
+        case .nameAsc: return genreBrowseLocalized("genre_sort_name_asc")
+        case .nameDesc: return genreBrowseLocalized("genre_sort_name_desc")
+        case .mostItems: return genreBrowseLocalized("genre_sort_most_items")
+        case .leastItems: return genreBrowseLocalized("genre_sort_least_items")
+        case .random: return genreBrowseLocalized("random")
         }
     }
 }

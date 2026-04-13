@@ -1008,3 +1008,6 @@
 "network_user_secure_connection_failed" = "Secure connection failed";
 "network_user_network_error" = "Network error";
 "network_user_server_is_unavailable" = "Server is unavailable";
+"app_loading_trailer" = "Načítání přívěsu...";
+"app_unable_to_play_trailer" = "Trailer nelze přehrát";
+"app_trailer_playback_failed" = "Přehrávání upoutávky se nezdařilo";

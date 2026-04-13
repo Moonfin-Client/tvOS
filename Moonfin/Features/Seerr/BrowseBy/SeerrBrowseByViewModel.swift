@@ -1,5 +1,9 @@
 import Foundation
 
+private func seerrBrowseByLocalized(_ key: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+}
+
 enum SeerrBrowseSortOption: String, CaseIterable {
     case popularity = "popularity.desc"
     case rating = "vote_average.desc"
@@ -9,11 +13,11 @@ enum SeerrBrowseSortOption: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .popularity: return Strings.seerrSortPopularity
-        case .rating: return Strings.rating
-        case .releaseDate: return Strings.seerrSortReleaseDate
-        case .title: return Strings.name
-        case .revenue: return Strings.seerrRevenue
+        case .popularity: return seerrBrowseByLocalized("seerr_sort_popularity")
+        case .rating: return seerrBrowseByLocalized("rating")
+        case .releaseDate: return seerrBrowseByLocalized("seerr_sort_release_date")
+        case .title: return seerrBrowseByLocalized("name")
+        case .revenue: return seerrBrowseByLocalized("seerr_revenue")
         }
     }
 }
@@ -25,17 +29,17 @@ enum SeerrBrowseFilter: CaseIterable {
 
     var displayName: String {
         switch self {
-        case .all: return Strings.seerrFilterShowAll
-        case .available: return Strings.seerrFilterAvailableOnly
-        case .requested: return Strings.seerrFilterRequestedOnly
+        case .all: return seerrBrowseByLocalized("seerr_filter_show_all")
+        case .available: return seerrBrowseByLocalized("seerr_filter_available_only")
+        case .requested: return seerrBrowseByLocalized("seerr_filter_requested_only")
         }
     }
 
     var shortDisplayName: String {
         switch self {
-        case .all: return Strings.allItems
-        case .available: return Strings.seerrFilterAvailable
-        case .requested: return Strings.seerrFilterRequested
+        case .all: return seerrBrowseByLocalized("all_items")
+        case .available: return seerrBrowseByLocalized("seerr_filter_available")
+        case .requested: return seerrBrowseByLocalized("seerr_filter_requested")
         }
     }
 }

@@ -565,7 +565,7 @@ final class SeerrHttpClient {
     func moonfinLogin(username: String, password: String, authType: String = "jellyfin") async throws -> MoonfinLoginResponse {
         let body = MoonfinLoginRequest(username: username, password: password, authType: authType)
         let result: MoonfinLoginResponse = try await post(url: moonfinUrl("Login"), body: body)
-        guard result.success else { throw SeerrError.moonfinLoginFailed(result.error ?? Strings.seerrUnknownError) }
+        guard result.success else { throw SeerrError.moonfinLoginFailed(result.error ?? SeerrError.l("seerr_unknown_error")) }
         return result
     }
 
@@ -583,9 +583,17 @@ final class SeerrHttpClient {
 enum SeerrError: LocalizedError {
     case moonfinLoginFailed(String)
 
+    fileprivate static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
+    fileprivate static func l(_ key: String, _ args: CVarArg...) -> String {
+        String(format: l(key), arguments: args)
+    }
+
     var errorDescription: String? {
         switch self {
-        case .moonfinLoginFailed(let msg): return Strings.seerrMoonfinLoginFailed(msg)
+        case .moonfinLoginFailed(let msg): return SeerrError.l("seerr_moonfin_login_failed", msg)
         }
     }
 }

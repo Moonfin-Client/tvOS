@@ -522,3 +522,6 @@
 "network_user_secure_connection_failed" = "Veilige verbinding het misluk";
 "network_user_network_error" = "Netwerkfout";
 "network_user_server_is_unavailable" = "Bediener is nie beskikbaar nie";
+"app_loading_trailer" = "Laai tans sleepwa...";
+"app_unable_to_play_trailer" = "Kan nie sleepwa speel nie";
+"app_trailer_playback_failed" = "Voorskou-terugspeel het misluk";

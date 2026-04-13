@@ -1008,3 +1008,6 @@
 "network_user_secure_connection_failed" = "Secure connection failed";
 "network_user_network_error" = "Network error";
 "network_user_server_is_unavailable" = "Server is unavailable";
+"app_loading_trailer" = "S'està carregant el tràiler...";
+"app_unable_to_play_trailer" = "No es pot reproduir el tràiler";
+"app_trailer_playback_failed" = "La reproducció del tràiler ha fallat";

@@ -679,6 +679,11 @@ enum Strings {
     static var networkUserNetworkError: String { l("network_user_network_error") }
     static var networkUserServerIsUnavailable: String { l("network_user_server_is_unavailable") }
 
+    // App-Level UI
+    static var loadingTrailer: String { l("app_loading_trailer") }
+    static var unableToPlayTrailer: String { l("app_unable_to_play_trailer") }
+    static var trailerPlaybackFailed: String { l("app_trailer_playback_failed") }
+
     // MARK: - Search, Library, and Details
 
     // Search

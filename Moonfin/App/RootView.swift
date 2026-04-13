@@ -636,7 +636,7 @@ struct TrailerPlayerScreen: View {
                 VStack(spacing: SpaceTokens.spaceMd) {
                     ProgressView()
                         .progressViewStyle(.circular)
-                    Text("Loading trailer...")
+                    Text(Strings.loadingTrailer)
                         .font(.titleLg)
                         .foregroundColor(.white.opacity(0.9))
                 }
@@ -648,7 +648,7 @@ struct TrailerPlayerScreen: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.title2xl)
                             .foregroundColor(.yellow)
-                        Text("Unable to play trailer")
+                        Text(Strings.unableToPlayTrailer)
                             .font(.titleLg)
                             .foregroundColor(.white)
                         Text(resolveError)
@@ -667,7 +667,7 @@ struct TrailerPlayerScreen: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.title2xl)
                         .foregroundColor(.yellow)
-                    Text("Trailer playback failed")
+                    Text(Strings.trailerPlaybackFailed)
                         .font(.titleLg)
                         .foregroundColor(.white)
                 }

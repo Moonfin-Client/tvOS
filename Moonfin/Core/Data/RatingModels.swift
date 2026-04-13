@@ -91,19 +91,23 @@ enum RatingSource: String, CaseIterable {
     case myanimelist
     case anilist
 
+    private static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
     var label: String {
         switch self {
-        case .tomatoes: return Strings.ratingRottenTomatoes
-        case .popcorn: return Strings.ratingRtAudience
-        case .imdb: return Strings.ratingImdb
-        case .tmdb, .tmdbEpisode: return Strings.ratingTmdb
-        case .metacritic: return Strings.ratingMetacritic
-        case .metacriticuser: return Strings.ratingMetacriticUser
-        case .trakt: return Strings.ratingTrakt
-        case .letterboxd: return Strings.ratingLetterboxd
-        case .rogerebert: return Strings.ratingRogerEbert
-        case .myanimelist: return Strings.ratingMyAnimeList
-        case .anilist: return Strings.ratingAniList
+        case .tomatoes: return Self.l("rating_rotten_tomatoes")
+        case .popcorn: return Self.l("rating_rt_audience")
+        case .imdb: return Self.l("rating_imdb")
+        case .tmdb, .tmdbEpisode: return Self.l("rating_tmdb")
+        case .metacritic: return Self.l("rating_metacritic")
+        case .metacriticuser: return Self.l("rating_metacritic_user")
+        case .trakt: return Self.l("rating_trakt")
+        case .letterboxd: return Self.l("rating_letterboxd")
+        case .rogerebert: return Self.l("rating_roger_ebert")
+        case .myanimelist: return Self.l("rating_myanimelist")
+        case .anilist: return Self.l("rating_anilist")
         }
     }
 

@@ -1,5 +1,9 @@
 import SwiftUI
 
+private func mediaBarLocalized(_ key: String) -> String {
+    Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+}
+
 struct MediaBarSlideItem: Identifiable, Equatable {
     let id: String
     let serverId: String?
@@ -76,18 +80,18 @@ enum MediaBarOverlayColor: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .gray:      return Strings.colorGray
-        case .black:     return Strings.colorBlack
-        case .darkBlue:  return Strings.colorDarkBlue
-        case .purple:    return Strings.colorPurple
-        case .teal:      return Strings.colorTeal
-        case .navy:      return Strings.colorNavy
-        case .charcoal:  return Strings.colorCharcoal
-        case .brown:     return Strings.colorBrown
-        case .darkRed:   return Strings.colorDarkRed
-        case .darkGreen: return Strings.colorDarkGreen
-        case .slate:     return Strings.colorSlate
-        case .indigo:    return Strings.colorIndigo
+        case .gray:      return mediaBarLocalized("color_gray")
+        case .black:     return mediaBarLocalized("color_black")
+        case .darkBlue:  return mediaBarLocalized("color_dark_blue")
+        case .purple:    return mediaBarLocalized("color_purple")
+        case .teal:      return mediaBarLocalized("color_teal")
+        case .navy:      return mediaBarLocalized("color_navy")
+        case .charcoal:  return mediaBarLocalized("color_charcoal")
+        case .brown:     return mediaBarLocalized("color_brown")
+        case .darkRed:   return mediaBarLocalized("color_dark_red")
+        case .darkGreen: return mediaBarLocalized("color_dark_green")
+        case .slate:     return mediaBarLocalized("color_slate")
+        case .indigo:    return mediaBarLocalized("color_indigo")
         }
     }
 }
@@ -115,9 +119,9 @@ enum MediaBarContentType: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .movies:  return Strings.movies
-        case .tvShows: return Strings.tvShows
-        case .both:    return Strings.both
+        case .movies:  return mediaBarLocalized("lbl_movies")
+        case .tvShows: return mediaBarLocalized("tv_shows")
+        case .both:    return mediaBarLocalized("both")
         }
     }
 }
@@ -139,8 +143,8 @@ enum MediaBarSourceType: String, StringRepresentableEnum, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .library:    return Strings.librarySingular
-        case .collection: return Strings.collectionSingular
+        case .library:    return mediaBarLocalized("lbl_library")
+        case .collection: return mediaBarLocalized("collection_singular")
         }
     }
 }

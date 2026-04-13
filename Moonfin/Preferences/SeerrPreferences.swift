@@ -35,19 +35,23 @@ enum SeerrRowType: String, Codable, CaseIterable {
     case upcomingSeries = "upcoming_series"
     case networks
 
+    private static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
     var displayName: String {
         switch self {
-        case .recentRequests: return Strings.seerrRecentRequests
-        case .recentlyAdded: return Strings.seerrRecentlyAdded
-        case .trending: return Strings.seerrTrending
-        case .popularMovies: return Strings.seerrPopularMovies
-        case .movieGenres: return Strings.seerrMovieGenres
-        case .upcomingMovies: return Strings.seerrUpcomingMovies
-        case .studios: return Strings.seerrStudios
-        case .popularSeries: return Strings.seerrPopularSeries
-        case .seriesGenres: return Strings.seerrSeriesGenres
-        case .upcomingSeries: return Strings.seerrUpcomingSeries
-        case .networks: return Strings.seerrNetworks
+        case .recentRequests: return Self.l("seerr_recent_requests")
+        case .recentlyAdded: return Self.l("seerr_recently_added")
+        case .trending: return Self.l("seerr_trending")
+        case .popularMovies: return Self.l("seerr_popular_movies")
+        case .movieGenres: return Self.l("seerr_movie_genres")
+        case .upcomingMovies: return Self.l("seerr_upcoming_movies")
+        case .studios: return Self.l("seerr_studios")
+        case .popularSeries: return Self.l("seerr_popular_series")
+        case .seriesGenres: return Self.l("seerr_series_genres")
+        case .upcomingSeries: return Self.l("seerr_upcoming_series")
+        case .networks: return Self.l("seerr_networks")
         }
     }
 }

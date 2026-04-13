@@ -598,11 +598,15 @@ enum SeerrRepositoryError: LocalizedError {
     case noActiveUser
     case notInMoonfinMode
 
+    private static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
     var errorDescription: String? {
         switch self {
-        case .notInitialized: return Strings.seerrHttpClientNotInitialized
-        case .noActiveUser: return Strings.seerrNoActiveJellyfinUser
-        case .notInMoonfinMode: return Strings.seerrNotInMoonfinProxyMode
+        case .notInitialized: return Self.l("seerr_http_client_not_initialized")
+        case .noActiveUser: return Self.l("seerr_no_active_jellyfin_user")
+        case .notInMoonfinMode: return Self.l("seerr_not_in_moonfin_proxy_mode")
         }
     }
 }

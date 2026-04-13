@@ -1099,3 +1099,6 @@
 "network_user_secure_connection_failed" = "فشل الاتصال الآمن";
 "network_user_network_error" = "خطأ في الشبكة";
 "network_user_server_is_unavailable" = "الخادم غير متوفر";
+"app_loading_trailer" = "جارٍ تحميل المقطع الدعائي...";
+"app_unable_to_play_trailer" = "غير قادر على تشغيل المقطع الدعائي";
+"app_trailer_playback_failed" = "فشل تشغيل المقطع الدعائي";

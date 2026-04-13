@@ -53,10 +53,14 @@ enum GridDirection: String, StringRepresentableEnum, CaseIterable {
     case vertical
     case horizontal
 
+    private static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
     var displayName: String {
         switch self {
-        case .vertical: return Strings.vertical
-        case .horizontal: return Strings.horizontal
+        case .vertical: return Self.l("vertical")
+        case .horizontal: return Self.l("horizontal")
         }
     }
 }

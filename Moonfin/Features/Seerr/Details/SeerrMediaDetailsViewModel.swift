@@ -13,11 +13,15 @@ struct SeerrMediaStatus {
     let color: StatusColor
     let icon: String
 
+    private static func l(_ key: String) -> String {
+        Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+    }
+
     enum StatusColor {
         case green, yellow, red, blue, gray, orange
     }
 
-    static let unknown = SeerrMediaStatus(text: Strings.seerrStatusNotRequested, color: .gray, icon: "questionmark.circle")
+    static let unknown = SeerrMediaStatus(text: l("seerr_status_not_requested"), color: .gray, icon: "questionmark.circle")
 }
 
 struct SeerrAdvancedOptions {

@@ -745,3 +745,6 @@
 "network_user_secure_connection_failed" = "Secure connection failed";
 "network_user_network_error" = "Network error";
 "network_user_server_is_unavailable" = "Server is unavailable";
+"app_loading_trailer" = "Зарежда се трейлър...";
+"app_unable_to_play_trailer" = "Трейлърът не може да се пусне";
+"app_trailer_playback_failed" = "Възпроизвеждането на трейлъра не бе успешно";

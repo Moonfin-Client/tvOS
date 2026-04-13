@@ -17,7 +17,9 @@ enum SupportedLocale: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var displayName: String {
-        if self == .system { return Strings.systemDefault }
+        if self == .system {
+            return Bundle.main.localizedString(forKey: "system_default", value: nil, table: nil)
+        }
         let name = Locale.current.localizedString(forIdentifier: rawValue) ?? rawValue
         return name.prefix(1).uppercased() + name.dropFirst()
     }

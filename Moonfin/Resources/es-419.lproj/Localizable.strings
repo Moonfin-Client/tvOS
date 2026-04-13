@@ -1072,3 +1072,6 @@
 "network_user_secure_connection_failed" = "Secure connection failed";
 "network_user_network_error" = "Network error";
 "network_user_server_is_unavailable" = "Server is unavailable";
+"app_loading_trailer" = "Cargando remolque...";
+"app_unable_to_play_trailer" = "No se puede reproducir el tráiler";
+"app_trailer_playback_failed" = "Falló la reproducción del tráiler";
