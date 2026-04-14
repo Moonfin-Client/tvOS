@@ -12,7 +12,9 @@ final class NavigationRouter: ObservableObject {
     @Published var path = NavigationPath()
     @Published var startupPath = NavigationPath()
     @Published var hideNavbar = false
+    @Published var isPlaybackActive = false
     private var navbarHideRequestCount = 0
+    private var playbackActiveRequestCount = 0
 
     func pushNavbarHidden() {
         navbarHideRequestCount += 1
@@ -31,6 +33,25 @@ final class NavigationRouter: ObservableObject {
     func resetNavbarVisibility() {
         navbarHideRequestCount = 0
         hideNavbar = false
+    }
+
+    func pushPlaybackActive() {
+        playbackActiveRequestCount += 1
+        isPlaybackActive = true
+    }
+
+    func popPlaybackActive() {
+        guard playbackActiveRequestCount > 0 else {
+            resetPlaybackActive()
+            return
+        }
+        playbackActiveRequestCount -= 1
+        isPlaybackActive = playbackActiveRequestCount > 0
+    }
+
+    func resetPlaybackActive() {
+        playbackActiveRequestCount = 0
+        isPlaybackActive = false
     }
 
     private var activePath: NavigationPath {

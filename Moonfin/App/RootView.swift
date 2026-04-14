@@ -343,9 +343,11 @@ struct MainNavigationView: View {
     @ViewBuilder
     private var clockOverlay: some View {
         let clock = container.userPreferences[UserPreferences.clockBehavior]
-        if clock == .always
+        let showClock = (clock == .always && !router.isPlaybackActive)
             || (clock == .inNavOnly && !router.hideNavbar)
-            || (clock == .inVideo && router.hideNavbar) {
+            || (clock == .inVideo && router.isPlaybackActive)
+
+        if showClock {
             VStack {
                 HStack {
                     Spacer()
@@ -466,8 +468,12 @@ struct MainNavigationView: View {
     private var videoPlayerDestination: some View {
         if let manager = container.playbackCoordinator.videoPlayerManager {
             VideoPlayerScreen(playbackManager: manager, syncPlayManager: container.syncPlayManager)
-                .onAppear { router.pushNavbarHidden() }
+                .onAppear {
+                    router.pushNavbarHidden()
+                    router.pushPlaybackActive()
+                }
                 .onDisappear {
+                    router.popPlaybackActive()
                     router.popNavbarHidden()
                     Task { await container.playbackCoordinator.stopVideoPlayback() }
                 }
@@ -484,8 +490,14 @@ struct MainNavigationView: View {
             AudioNowPlayingView(
                 viewModel: AudioNowPlayingViewModel(audioManager: audio, client: client)
             )
-            .onAppear { router.pushNavbarHidden() }
-            .onDisappear { router.popNavbarHidden() }
+            .onAppear {
+                router.pushNavbarHidden()
+                router.pushPlaybackActive()
+            }
+            .onDisappear {
+                router.popPlaybackActive()
+                router.popNavbarHidden()
+            }
         } else {
             PlaceholderView(title: "Now Playing")
         }
@@ -501,8 +513,12 @@ struct MainNavigationView: View {
                 onLiveTvChannelUp: { await switchLiveTvChannel(by: -1) },
                 onLiveTvChannelDown: { await switchLiveTvChannel(by: 1) }
             )
-                .onAppear { router.pushNavbarHidden() }
+                .onAppear {
+                    router.pushNavbarHidden()
+                    router.pushPlaybackActive()
+                }
                 .onDisappear {
+                    router.popPlaybackActive()
                     router.popNavbarHidden()
                     Task { await container.playbackCoordinator.stopVideoPlayback() }
                 }
@@ -676,12 +692,14 @@ struct TrailerPlayerScreen: View {
         }
         .onAppear {
             router.pushNavbarHidden()
+            router.pushPlaybackActive()
         }
         .onDisappear {
             playbackWatchdogTask?.cancel()
             player.stop()
             nativePlayer?.pause()
             nativePlayer = nil
+            router.popPlaybackActive()
             router.popNavbarHidden()
         }
         .task {
