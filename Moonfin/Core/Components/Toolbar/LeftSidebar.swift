@@ -9,6 +9,7 @@ struct LeftSidebar: View {
     @StateObject private var viewModel: NavbarViewModel
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
+    @EnvironmentObject var sessionInitializer: SessionInitializer
 
     @State private var isExpanded = false
     @State private var isLibraryExpanded = false
@@ -22,7 +23,7 @@ struct LeftSidebar: View {
     let onSidebarEntered: (() -> Void)?
 
     static let sidebarInset: CGFloat = 90
-    private static let expandedWidth: CGFloat = 280
+    private static let expandedWidth: CGFloat = 560
 
     init(
         container: AppContainer,
@@ -193,7 +194,9 @@ struct LeftSidebar: View {
             isExpanded: isExpanded,
             isFocused: focusedItem == .user,
             action: {
-                viewModel.switchUser()
+                let serverId = viewModel.switchUser()
+                sessionInitializer.suppressAutoLogin = true
+                sessionInitializer.restoredServerId = serverId
                 router.switchFlow(to: .startup)
             }
         )
@@ -421,9 +424,7 @@ private struct SidebarIconItem: View {
                 case .success(let image):
                     image.resizable().aspectRatio(contentMode: .fill)
                 default:
-                    Image(systemName: systemIcon ?? "questionmark")
-                        .font(.system(size: 24))
-                        .foregroundColor(.white)
+                    defaultPersonIconOrSystemIcon
                 }
             }
             .clipShape(Circle())
@@ -433,6 +434,17 @@ private struct SidebarIconItem: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 28, height: 28)
+        } else {
+            defaultPersonIconOrSystemIcon
+        }
+    }
+
+    @ViewBuilder
+    private var defaultPersonIconOrSystemIcon: some View {
+        if systemIcon == "person.fill" {
+            PersonAvatarShape()
+                .fill(.white)
+                .frame(width: 18, height: 18)
         } else {
             Image(systemName: systemIcon ?? "questionmark")
                 .font(.system(size: 24))

@@ -104,6 +104,7 @@ struct Navbar: View {
     private var startSection: some View {
         UserAvatarToolbarButton(
             imageUrl: viewModel.userImageUrl,
+            userName: viewModel.userName,
             isFocused: navFocusItem == .user,
             onTap: {
                 let serverId = viewModel.switchUser()
@@ -250,6 +251,7 @@ enum NavbarItem: Hashable {
 
 private struct UserAvatarToolbarButton: View {
     let imageUrl: String?
+    let userName: String
     let isFocused: Bool
     let onTap: () -> Void
 
@@ -257,28 +259,38 @@ private struct UserAvatarToolbarButton: View {
 
     var body: some View {
         Button(action: onTap) {
-            ZStack {
-                if let imageUrl, let url = URL(string: imageUrl) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        default:
-                            fallbackIcon
+            HStack(spacing: 10) {
+                ZStack {
+                    if let imageUrl, let url = URL(string: imageUrl) {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            default:
+                                fallbackIcon
+                            }
                         }
+                    } else {
+                        fallbackIcon
                     }
-                } else {
-                    fallbackIcon
+                }
+                .frame(width: 52, height: 52)
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                )
+
+                if isFocused {
+                    Text(userName.isEmpty ? "User" : userName)
+                        .font(.bodyMd)
+                        .foregroundColor(theme.colorScheme.onBackground)
+                        .lineLimit(1)
+                        .transition(.opacity)
                 }
             }
-            .frame(width: 52, height: 52)
-            .clipShape(Circle())
-            .overlay(
-                Circle()
-                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
-            )
         }
         .buttonStyle(CleanButtonStyle())
         .scaleEffect(isFocused ? 1.1 : 1.0)
@@ -289,9 +301,9 @@ private struct UserAvatarToolbarButton: View {
         ZStack {
             Circle()
                 .fill(theme.colorScheme.button)
-            Image(systemName: "person.fill")
-                .font(.system(size: 24))
-                .foregroundColor(theme.colorScheme.onButton)
+            PersonAvatarShape()
+                .fill(theme.colorScheme.onButton)
+                .frame(width: 26, height: 26)
         }
     }
 }

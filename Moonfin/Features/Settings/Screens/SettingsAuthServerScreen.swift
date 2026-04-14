@@ -195,8 +195,14 @@ struct SettingsUserAvatarView: View {
     }
 
     private var defaultAvatar: some View {
-        Image(systemName: "person.circle.fill")
-            .font(.system(size: size))
-            .foregroundColor(theme.colorScheme.listCaption)
+        ZStack {
+            Circle()
+                .fill(theme.colorScheme.listButton)
+
+            PersonAvatarShape()
+                .fill(theme.colorScheme.listCaption)
+                .frame(width: size * 0.46, height: size * 0.46)
+        }
+        .frame(width: size, height: size)
     }
 }
