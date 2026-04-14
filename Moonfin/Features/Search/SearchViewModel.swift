@@ -112,11 +112,41 @@ final class SearchViewModel: ObservableObject {
 
     func posterUrl(for item: ServerItem) -> String? {
         guard let imageApi else { return nil }
-        let tag = item.imageTags?["Primary"]
-        return imageApi.getItemImageUrl(
-            itemId: item.id, imageType: .primary,
-            maxWidth: 300, maxHeight: nil, tag: tag
-        )
+
+        if item.type == .episode {
+            if let thumbTag = item.imageTags?["Thumb"] {
+                return imageApi.getItemImageUrl(
+                    itemId: item.id, imageType: .thumb,
+                    maxWidth: 300, maxHeight: nil, tag: thumbTag
+                )
+            }
+
+            if let parentThumbId = item.parentThumbItemId,
+               let parentThumbTag = item.parentThumbImageTag {
+                return imageApi.getItemImageUrl(
+                    itemId: parentThumbId, imageType: .thumb,
+                    maxWidth: 300, maxHeight: nil, tag: parentThumbTag
+                )
+            }
+        }
+
+        if let primaryTag = item.imageTags?["Primary"] {
+            return imageApi.getItemImageUrl(
+                itemId: item.id, imageType: .primary,
+                maxWidth: 300, maxHeight: nil, tag: primaryTag
+            )
+        }
+
+        if item.type == .episode,
+           let seriesId = item.seriesId,
+           let seriesTag = item.seriesPrimaryImageTag {
+            return imageApi.getItemImageUrl(
+                itemId: seriesId, imageType: .primary,
+                maxWidth: 300, maxHeight: nil, tag: seriesTag
+            )
+        }
+
+        return nil
     }
 
     func subtitle(for item: ServerItem) -> String {

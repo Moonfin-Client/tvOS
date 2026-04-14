@@ -295,14 +295,31 @@ final class ItemDetailViewModel: ObservableObject {
     }
 
     func posterUrl(for item: ServerItem) -> String? {
-        guard let client, let tag = item.imageTags?["Primary"] else { return nil }
-        return client.imageApi.getItemImageUrl(
-            itemId: item.id,
-            imageType: .primary,
-            maxWidth: 400,
-            maxHeight: nil,
-            tag: tag
-        )
+        guard let client else { return nil }
+
+        if let tag = item.imageTags?["Primary"] {
+            return client.imageApi.getItemImageUrl(
+                itemId: item.id,
+                imageType: .primary,
+                maxWidth: 400,
+                maxHeight: nil,
+                tag: tag
+            )
+        }
+
+        if item.type == .episode,
+           let seriesId = item.seriesId,
+           let seriesTag = item.seriesPrimaryImageTag {
+            return client.imageApi.getItemImageUrl(
+                itemId: seriesId,
+                imageType: .primary,
+                maxWidth: 400,
+                maxHeight: nil,
+                tag: seriesTag
+            )
+        }
+
+        return nil
     }
 
     func imageUrl(for person: ServerPerson) -> String? {
@@ -322,8 +339,23 @@ final class ItemDetailViewModel: ObservableObject {
         let tag: String?
         switch imageType {
         case .primary:
-            tag = item.imageTags?["Primary"]
-            resolvedType = .primary
+            if let primaryTag = item.imageTags?["Primary"] {
+                tag = primaryTag
+                resolvedType = .primary
+            } else if item.type == .episode,
+                      let seriesId = item.seriesId,
+                      let seriesTag = item.seriesPrimaryImageTag {
+                return client.imageApi.getItemImageUrl(
+                    itemId: seriesId,
+                    imageType: .primary,
+                    maxWidth: maxWidth,
+                    maxHeight: nil,
+                    tag: seriesTag
+                )
+            } else {
+                tag = nil
+                resolvedType = .primary
+            }
         case .backdrop:
             tag = item.backdropImageTags?.first
             resolvedType = .backdrop
