@@ -14,6 +14,7 @@ final class InactivityTracker: ObservableObject {
     private weak var playbackCoordinator: PlaybackCoordinator?
     private var timer: DispatchWorkItem?
     private var lockCount = 0
+    private var lastInteractionAt = Date()
 
     init(userPreferences: UserPreferences, playbackCoordinator: PlaybackCoordinator) {
         self.userPreferences = userPreferences
@@ -43,6 +44,7 @@ final class InactivityTracker: ObservableObject {
 
     func notifyInteraction() {
         timer?.cancel()
+        lastInteractionAt = Date()
         if isScreensaverVisible {
             isScreensaverVisible = false
         }
@@ -52,6 +54,9 @@ final class InactivityTracker: ObservableObject {
     func addLock() {
         lockCount += 1
         timer?.cancel()
+        if isScreensaverVisible {
+            isScreensaverVisible = false
+        }
     }
 
     func removeLock() {
@@ -67,7 +72,19 @@ final class InactivityTracker: ObservableObject {
 
         let work = DispatchWorkItem { [weak self] in
             Task { @MainActor [weak self] in
-                guard let self, self.isEnabled, self.lockCount == 0, !self.isPlaybackActive else { return }
+                guard let self, self.isEnabled else { return }
+
+                if self.lockCount > 0 || self.isPlaybackActive {
+                    self.resetTimer()
+                    return
+                }
+
+                let elapsed = Date().timeIntervalSince(self.lastInteractionAt)
+                guard elapsed >= self.timeout else {
+                    self.resetTimer()
+                    return
+                }
+
                 self.isScreensaverVisible = true
             }
         }
