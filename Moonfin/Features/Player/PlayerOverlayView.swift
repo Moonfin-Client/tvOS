@@ -23,6 +23,7 @@ struct PlayerOverlayView: View {
         case chapters
         case cast
         case channels
+        case jumpToLive
         case queueNext
         case speed
         case zoom
@@ -127,6 +128,12 @@ struct PlayerOverlayView: View {
             overlayButton(icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill",
                           focus: .playPause) {
                 viewModel.togglePlayPause()
+            }
+
+            if viewModel.isLiveTV, viewModel.canJumpToLive {
+                overlayButton(icon: "dot.radiowaves.left.and.right", focus: .jumpToLive) {
+                    Task { await viewModel.jumpToLive() }
+                }
             }
 
             if !viewModel.isLiveTV {

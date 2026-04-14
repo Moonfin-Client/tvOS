@@ -17,6 +17,7 @@ final class VideoPlayerViewModel: ObservableObject {
     @Published var scrubPosition: Float = 0
     @Published private(set) var liveTvChannels: [ServerItem] = []
     @Published private(set) var isLoadingLiveTvChannels = false
+    @Published private(set) var canJumpToLive = false
 
     let playbackManager: PlaybackManager
     let isLiveTV: Bool
@@ -25,6 +26,8 @@ final class VideoPlayerViewModel: ObservableObject {
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
     private var castPrefetchTask: Task<Void, Never>?
+    private var livePauseThresholdTask: Task<Void, Never>?
+    private var livePauseStartedAt: Date?
     private var lastExitCommandHandledAt: CFAbsoluteTime = 0
     private var cancellables = Set<AnyCancellable>()
     private let overlayTimeout: TimeInterval = 5
@@ -97,7 +100,6 @@ final class VideoPlayerViewModel: ObservableObject {
         self.isLiveTV = isLiveTV
         syncPlayManager?.attachPlaybackStateObserverIfNeeded()
 
-        bindObjectWillChange(playbackManager.player.$state.removeDuplicates())
         bindObjectWillChange(playbackManager.player.$audioTracks.removeDuplicates())
         bindObjectWillChange(playbackManager.player.$subtitleTracks.removeDuplicates())
         bindObjectWillChange(playbackManager.player.$currentAudioTrackIndex.removeDuplicates())
@@ -123,6 +125,16 @@ final class VideoPlayerViewModel: ObservableObject {
             .store(in: &cancellables)
 
         bindObjectWillChange(playbackManager.player.$zoomMode.removeDuplicates())
+
+        playbackManager.player.$state
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] state in
+                guard let self else { return }
+                self.objectWillChange.send()
+                self.handleLiveTvStateChange(state)
+            }
+            .store(in: &cancellables)
 
         prefetchCastForCurrentItem()
     }
@@ -421,14 +433,7 @@ final class VideoPlayerViewModel: ObservableObject {
 
     func selectLiveTvChannel(_ channel: ServerItem) async {
         channelListVisible = false
-        overlayVisible = true
-        resetHideTimer()
-        // Stop the current stream cleanly before loading the new channel.
-        // Calling play() without stopping first causes mpv to call loadFile()
-        // on a still-active engine, which triggers a Vulkan context teardown
-        // on the VO thread with an open CATransaction, freezing the stream.
-        player.stopPlaybackOnly()
-        await playbackManager.play(items: [channel])
+        await restartLiveTvStream(with: channel)
     }
 
     private func loadLiveTvChannelsIfNeeded() async {
@@ -440,6 +445,58 @@ final class VideoPlayerViewModel: ObservableObject {
         if let channels = await playbackManager.fetchLiveTvChannels() {
             liveTvChannels = channels
         }
+    }
+
+    func jumpToLive() async {
+        guard isLiveTV, let channel = playbackManager.currentEntry?.item else { return }
+        await restartLiveTvStream(with: channel)
+    }
+
+    private func restartLiveTvStream(with channel: ServerItem) async {
+        overlayVisible = true
+        resetHideTimer()
+        resetLivePauseTracking()
+        // Stop the current stream cleanly before loading the new channel.
+        // Calling play() without stopping first causes mpv to call loadFile()
+        // on a still-active engine, which triggers a Vulkan context teardown
+        // on the VO thread with an open CATransaction, freezing the stream.
+        player.stopPlaybackOnly()
+        await playbackManager.play(items: [channel])
+    }
+
+    private func handleLiveTvStateChange(_ state: PlayerState) {
+        guard isLiveTV else { return }
+
+        switch state {
+        case .paused:
+            if livePauseStartedAt == nil {
+                livePauseStartedAt = Date()
+            }
+
+            if canJumpToLive {
+                return
+            }
+
+            livePauseThresholdTask?.cancel()
+            livePauseThresholdTask = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                guard !Task.isCancelled, let self else { return }
+                guard self.isLiveTV, case .paused = self.player.state else { return }
+                if let startedAt = self.livePauseStartedAt,
+                   Date().timeIntervalSince(startedAt) >= 60 {
+                    self.canJumpToLive = true
+                }
+            }
+        case .playing, .buffering, .opening, .idle, .stopped, .ended, .error:
+            resetLivePauseTracking()
+        }
+    }
+
+    private func resetLivePauseTracking() {
+        livePauseThresholdTask?.cancel()
+        livePauseThresholdTask = nil
+        livePauseStartedAt = nil
+        canJumpToLive = false
     }
 
     private func ensureCastForCurrentItem() async -> Bool {
