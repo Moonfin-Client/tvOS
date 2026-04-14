@@ -78,7 +78,9 @@
 "lbl_search_hint" = "Buscar texto (seleccionar para teclado)";
 "lbl_play_first_unwatched" = "Reproducir el primero no visto";
 "lbl_mark_unplayed" = "Marcar como no reproducido";
+"lbl_mark_unwatched" = "Marcar como no reproducido";
 "lbl_mark_played" = "Marcar como reproducido";
+"lbl_mark_watched" = "Marcar como reproducido";
 "lbl_remove_favorite" = "Quitar favorito";
 "lbl_add_favorite" = "Agregar a favoritos";
 "msg_no_playable_items" = "No hay elementos reproducibles";

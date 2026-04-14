@@ -113,6 +113,7 @@
 "lbl_new_episodes" = "Nuevos episodios";
 "lbl_news" = "Noticias";
 "lbl_mark_unplayed" = "Marcar como no reproducido";
+"lbl_mark_unwatched" = "Marcar como no reproducido";
 "byletter_letters" = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
 "pref_next_up_timeout_title" = "Duración del temporizador de «A continuación»";
 "pref_next_up_timeout_summary" = "Cuánto tiempo hay que esperar antes de reproducir el siguiente elemento";
@@ -185,6 +186,7 @@
 "lbl_add_favorite" = "Agregar a favoritos";
 "lbl_remove_favorite" = "Quitar de favoritos";
 "lbl_mark_played" = "Marcar como reproducido";
+"lbl_mark_watched" = "Marcar como reproducido";
 "lbl_play_first_unwatched" = "Reproducir el primero no visto";
 "lbl_tv_queuing" = "Reproducir automáticamente el siguiente episodio";
 "lbl_no_items" = "No hay elementos";

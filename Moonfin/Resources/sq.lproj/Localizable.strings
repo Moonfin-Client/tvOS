@@ -96,7 +96,9 @@
 "msg_cannot_play" = "Kjo nuk mund të luhet";
 "msg_playback_restricted" = "Administratori ka ndaluar luajtjen e këtij objekti tani";
 "lbl_mark_unplayed" = "Shëno si i paparë";
+"lbl_mark_unwatched" = "Shëno si i paparë";
 "lbl_mark_played" = "Shëno si i parë";
+"lbl_mark_watched" = "Shëno si i parë";
 "lbl_search_hint" = "kërko tekst (zgjidh për tastier)";
 "lbl_unwatched" = "Të paparat";
 "lbl_similar_items_library" = "Objekt i ngjashëm në librarin tuaj";

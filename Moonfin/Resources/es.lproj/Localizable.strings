@@ -96,7 +96,9 @@
 "lbl_add_favorite" = "Agregar Favorito";
 "lbl_remove_favorite" = "Quitar favorito";
 "lbl_mark_played" = "Marcar como visto";
+"lbl_mark_watched" = "Marcar como visto";
 "lbl_mark_unplayed" = "Marcar No Reproducido";
+"lbl_mark_unwatched" = "Marcar No Reproducido";
 "lbl_play_first_unwatched" = "Reproducir Primero Lo No Visto";
 "lbl_search_hint" = "Buscar texto (seleccionar por teclado)";
 "lbl_play_trailers" = "Reproducir Tráiler(s)";

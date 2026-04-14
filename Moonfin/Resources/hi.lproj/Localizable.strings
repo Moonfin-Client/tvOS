@@ -92,7 +92,9 @@
 "lbl_search_hint" = "टेक्स्ट खोजें (कीबोर्ड के लिए सिलेक्ट करें)";
 "lbl_play_first_unwatched" = "पहले जो नहीं देखा वह चलाएं";
 "lbl_mark_unplayed" = "नहीं चलाया हुआ मार्क करें";
+"lbl_mark_unwatched" = "नहीं चलाया हुआ मार्क करें";
 "lbl_mark_played" = "चलाया हुआ मार्क करें";
+"lbl_mark_watched" = "चलाया हुआ मार्क करें";
 "lbl_only_new_episodes" = "केवल नए एपिसोड";
 "lbl_remove_favorite" = "पसंदीदा हटाएं";
 "msg_no_playable_items" = "कोई चलाने योग्य आइटम नहीं";

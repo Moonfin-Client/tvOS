@@ -104,7 +104,9 @@
 "lbl_add_favorite" = "Aggiungi preferito";
 "lbl_remove_favorite" = "Rimuovi preferito";
 "lbl_mark_played" = "Segna come visto";
+"lbl_mark_watched" = "Segna come visto";
 "lbl_mark_unplayed" = "Segna come non visto";
+"lbl_mark_unwatched" = "Segna come non visto";
 "lbl_recordings" = "Registrazioni";
 "lbl_videos" = "Video";
 "lbl_watched" = "Visto";

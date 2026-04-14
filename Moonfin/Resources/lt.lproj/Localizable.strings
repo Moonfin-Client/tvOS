@@ -95,7 +95,9 @@
 "state_disabled" = "Išjungta";
 "lbl_valid_server_address" = "Prašome įvesti serverio adresą (IP arba domeną/įrenginio pavadinimą)";
 "lbl_mark_unplayed" = "Pažymėti kaip nežiūrėtą";
+"lbl_mark_unwatched" = "Pažymėti kaip nežiūrėtą";
 "lbl_mark_played" = "Pažymėti kaip peržiūrėtą";
+"lbl_mark_watched" = "Pažymėti kaip peržiūrėtą";
 "lbl_similar_items_library" = "Panašūs elementai bibliotekoje";
 "lbl_record_any_time" = "Įrašyti bet kuriuo metu";
 "lbl_goto_series" = "Eiti į serialus";

@@ -57,7 +57,9 @@
 "lbl_add_favorite" = "新增收藏";
 "lbl_remove_favorite" = "移除收藏";
 "lbl_mark_unplayed" = "標記為未播放";
+"lbl_mark_unwatched" = "標記為未播放";
 "lbl_mark_played" = "標記為已播放";
+"lbl_mark_watched" = "標記為已播放";
 "lbl_play_first_unwatched" = "播放未觀看中的第一部影片";
 "lbl_no_items" = "沒有項目";
 "lbl_empty" = "空項";

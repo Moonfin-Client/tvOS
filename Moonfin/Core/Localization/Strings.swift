@@ -268,8 +268,8 @@ enum Strings {
     static var favorite: String { l("lbl_favorite") }
     static var addFavorite: String { l("lbl_add_favorite") }
     static var removeFavorite: String { l("lbl_remove_favorite") }
-    static var markPlayed: String { l("lbl_mark_played") }
-    static var markUnplayed: String { l("lbl_mark_unplayed") }
+    static var markWatched: String { l("lbl_mark_watched") }
+    static var markUnwatched: String { l("lbl_mark_unwatched") }
     static var watched: String { l("lbl_watched") }
     static var unwatched: String { l("lbl_unwatched") }
     static var addToPlaylist: String { l("lbl_add_to_playlist") }

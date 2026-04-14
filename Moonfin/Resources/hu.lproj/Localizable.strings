@@ -82,7 +82,9 @@
 "lbl_add_favorite" = "Hozzáadás a kedvencekhez";
 "lbl_remove_favorite" = "Eltávolítás a kedvencek közül";
 "lbl_mark_played" = "Lejátszottnak jelölés";
+"lbl_mark_watched" = "Lejátszottnak jelölés";
 "lbl_mark_unplayed" = "Nem lejátszottnak jelölés";
+"lbl_mark_unwatched" = "Nem lejátszottnak jelölés";
 "lbl_play_first_unwatched" = "Az első még nem látott elem lejátszása";
 "lbl_search_hint" = "Keresés";
 "lbl_tv_queuing" = "Következő epizód automatikus lejátszása";

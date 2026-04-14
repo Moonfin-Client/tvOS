@@ -11,6 +11,8 @@ struct ItemPreview: View {
     var showLabels: Bool = true
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
+    var onToggleWatched: (() -> Void)?
+    var onToggleFavorite: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
     @State private var isCardFocused = false
@@ -27,7 +29,9 @@ struct ItemPreview: View {
                 serverName: serverName,
                 onFocused: onFocused,
                 onSelect: onSelect,
-                onFocusChange: { isCardFocused = $0 }
+                onFocusChange: { isCardFocused = $0 },
+                onToggleWatched: onToggleWatched,
+                onToggleFavorite: onToggleFavorite
             )
 
             if showLabels {

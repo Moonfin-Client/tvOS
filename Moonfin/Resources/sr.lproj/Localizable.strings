@@ -239,7 +239,9 @@
 "lbl_add_favorite" = "Додај као омиљено";
 "lbl_remove_favorite" = "Уклони омиљено";
 "lbl_mark_played" = "Означи као погледано";
+"lbl_mark_watched" = "Означи као погледано";
 "lbl_mark_unplayed" = "Означи као непогледано";
+"lbl_mark_unwatched" = "Означи као непогледано";
 "lbl_play_first_unwatched" = "Репродукуј прво негледано";
 "lbl_search_hint" = "Претражи текст (изаберите за тастатуру)";
 "lbl_tv_queuing" = "Аутоматски пусти следећу епизоду";

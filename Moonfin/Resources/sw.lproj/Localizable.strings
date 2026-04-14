@@ -95,7 +95,9 @@
 "lbl_search_hint" = "Tafuta (bonyeza ili kuandika)";
 "lbl_play_first_unwatched" = "Cheza kwanza ambayo haijatazamwa";
 "lbl_mark_unplayed" = "Badili kuwa haijachezwa";
+"lbl_mark_unwatched" = "Badili kuwa haijachezwa";
 "lbl_mark_played" = "Badili kuwa imechezwa";
+"lbl_mark_watched" = "Badili kuwa imechezwa";
 "lbl_remove_favorite" = "Ondoa kipendwa";
 "lbl_add_favorite" = "Ongeza kipendwa";
 "lbl_now_playing_track" = "%1$@ kati ya %2$@";

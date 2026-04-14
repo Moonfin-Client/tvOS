@@ -100,7 +100,9 @@
 "lbl_add_favorite" = "Προσθήκη στα αγαπημένα";
 "lbl_remove_favorite" = "Κατάργηση απο τα αγαπημένα";
 "lbl_mark_played" = "Το έχω δει";
+"lbl_mark_watched" = "Το έχω δει";
 "lbl_mark_unplayed" = "Δεν το έχω δει";
+"lbl_mark_unwatched" = "Δεν το έχω δει";
 "lbl_play_first_unwatched" = "Παίξε πρώτα όσα δεν έχω παρακολουθήσει";
 "lbl_search_hint" = "Αναζήτηση κειμένου (επιλέξτε πληκτρολόγιο)";
 "lbl_tv_queuing" = "Αναπαραγωγή του επόμενου επεισοδίου αυτόματα";

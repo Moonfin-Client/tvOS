@@ -78,7 +78,9 @@
 "lbl_search_hint" = "Suche Text (Auswahl für Tastatur)";
 "lbl_play_first_unwatched" = "Starte ungesehende zuerst";
 "lbl_mark_unplayed" = "Markiere als ungesehen";
+"lbl_mark_unwatched" = "Markiere als ungesehen";
 "lbl_mark_played" = "Markiere als gesehen";
+"lbl_mark_watched" = "Markiere als gesehen";
 "lbl_remove_favorite" = "Favorit entfernen";
 "lbl_add_favorite" = "Favorit hinzufügen";
 "msg_no_playable_items" = "Keine abspielbaren Einträge";

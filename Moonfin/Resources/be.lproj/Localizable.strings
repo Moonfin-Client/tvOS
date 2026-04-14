@@ -86,6 +86,7 @@
 "lbl_tv_queuing" = "Прайграць наступны эпізод аўтаматычна";
 "because_you_watched" = "Таму што вы глядзелі %1$@";
 "lbl_mark_unplayed" = "Пазначыць непрайграваным";
+"lbl_mark_unwatched" = "Пазначыць непрайграваным";
 "msg_recording_now" = "Запісваецца зараз";
 "lbl_runs" = "Працягвацца";
 "lbl_search_hint" = "Пошук тэксту (выбраць для клавіятуры)";
@@ -99,6 +100,7 @@
 "home_section_library" = "Мая мультымедыя";
 "lbl_play_first_unwatched" = "Спачатку прайграваць непрагледжанае";
 "lbl_mark_played" = "Пазначыць прайграваным";
+"lbl_mark_watched" = "Пазначыць прайграваным";
 "lbl_remove_favorite" = "Выдаліць з абранага";
 "lbl_tune_to_channel" = "Пераключыць на канал";
 "msg_will_record" = "Будзе запісана";

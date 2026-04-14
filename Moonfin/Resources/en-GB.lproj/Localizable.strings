@@ -4,6 +4,7 @@
 "lbl_add_favorite" = "Add favourite";
 "lbl_starting_with" = "beginning with those whose name starts with";
 "lbl_mark_unplayed" = "Mark unplayed";
+"lbl_mark_unwatched" = "Mark unwatched";
 "lbl_song_title" = "Song title";
 "lbl_album_name" = "Album name";
 "lbl_next_episode" = "Next episode";
@@ -72,6 +73,7 @@
 "msg_no_playable_items" = "No playable items";
 "lbl_now_playing_album" = "from %1$@";
 "lbl_mark_played" = "Mark played";
+"lbl_mark_watched" = "Mark watched";
 "lbl_play_first_unwatched" = "Play first unwatched";
 "lbl_search_hint" = "Search text (select for keyboard)";
 "lbl_tv_queuing" = "Play next episode automatically";

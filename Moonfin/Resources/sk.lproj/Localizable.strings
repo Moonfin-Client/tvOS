@@ -207,7 +207,9 @@
 "lbl_unwatched" = "Nepozreté";
 "msg_no_playable_items" = "Žiadne prehrateľné položky";
 "lbl_mark_played" = "Označiť ako prehrané";
+"lbl_mark_watched" = "Označiť ako prehrané";
 "lbl_mark_unplayed" = "Označiť ako neprehrané";
+"lbl_mark_unwatched" = "Označiť ako neprehrané";
 "lbl_play_first_unwatched" = "Prehrať najskôr nepozreté";
 "lbl_tv_queuing" = "Automatické prehrávanie nasledujúcej epizódy";
 "msg_cannot_play" = "Táto položka sa nedá prehrať";

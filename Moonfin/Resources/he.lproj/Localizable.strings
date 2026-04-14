@@ -81,7 +81,9 @@
 "lbl_add_favorite" = "הוסף למועדפים";
 "lbl_remove_favorite" = "הסר ממועדפים";
 "lbl_mark_played" = "סמן כנוגן";
+"lbl_mark_watched" = "סמן כנוגן";
 "lbl_mark_unplayed" = "סמן כלא נצפה";
+"lbl_mark_unwatched" = "סמן כלא נצפה";
 "lbl_play_first_unwatched" = "נגן תחילה את מה שלא נצפה";
 "lbl_search_hint" = "טקסט לחיפוש (בחר לפתיחת מקלדת)";
 "lbl_tv_queuing" = "נגן את הפרק הבא אוטומטית";

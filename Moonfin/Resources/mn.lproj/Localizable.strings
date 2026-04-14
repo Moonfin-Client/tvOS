@@ -78,7 +78,9 @@
 "lbl_search_hint" = "Текст хайх (гарнаас сонгох)";
 "lbl_play_first_unwatched" = "Эхлээд тоглогдоогүйг тоглуул";
 "lbl_mark_unplayed" = "Тоглогдоогүй гэж тэмдэглэ";
+"lbl_mark_unwatched" = "Тоглогдоогүй гэж тэмдэглэ";
 "lbl_mark_played" = "Тоглосон гэж тэмдэглэ";
+"lbl_mark_watched" = "Тоглосон гэж тэмдэглэ";
 "lbl_remove_favorite" = "Дуртайг устгах";
 "lbl_add_favorite" = "Дуртайд нэмэх";
 "lbl_now_playing_album" = "- %1$@";

@@ -12,7 +12,9 @@
 "lbl_add_favorite" = "Thêm ưa thích";
 "lbl_remove_favorite" = "Xóa ưa thích";
 "lbl_mark_played" = "Đánh dấu đã phát";
+"lbl_mark_watched" = "Đánh dấu đã phát";
 "lbl_mark_unplayed" = "Đánh dấu chưa phát";
+"lbl_mark_unwatched" = "Đánh dấu chưa phát";
 "lbl_play_first_unwatched" = "Phát chưa xem đầu tiên";
 "lbl_search_hint" = "Tìm kiếm văn bản (chọn cho bàn phím)";
 "lbl_tv_queuing" = "Tự động phát tập tiếp theo";

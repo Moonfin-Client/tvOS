@@ -76,7 +76,9 @@
 "lbl_search_hint" = "Søg i tekst (vælg for tastatur)";
 "lbl_play_first_unwatched" = "Afspil første ikke-afspillede";
 "lbl_mark_unplayed" = "Marker som ikke afspillet";
+"lbl_mark_unwatched" = "Marker som ikke afspillet";
 "lbl_mark_played" = "Marker som afspillet";
+"lbl_mark_watched" = "Marker som afspillet";
 "lbl_remove_favorite" = "Fjern favorit";
 "lbl_add_favorite" = "Tilføj favorit";
 "msg_no_playable_items" = "Ingen filer der kan afspilles";

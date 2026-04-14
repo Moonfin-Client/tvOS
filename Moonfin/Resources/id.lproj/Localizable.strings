@@ -96,7 +96,9 @@
 "lbl_add_favorite" = "Tambah ke favorit";
 "lbl_remove_favorite" = "Hapus dari favorit";
 "lbl_mark_played" = "Tandai sudah diputar";
+"lbl_mark_watched" = "Tandai sudah diputar";
 "lbl_mark_unplayed" = "Tandai belum diputar";
+"lbl_mark_unwatched" = "Tandai belum diputar";
 "lbl_play_first_unwatched" = "Putar yang belum ditonton terlebih dahulu";
 "lbl_search_hint" = "Teks pencarian (pilih untuk membuka papan ketik)";
 "lbl_tv_queuing" = "Putar Episode berikutnya secara otomatis";

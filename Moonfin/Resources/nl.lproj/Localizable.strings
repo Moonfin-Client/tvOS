@@ -78,7 +78,9 @@
 "lbl_search_hint" = "Zoektekst (selecteer voor toetsenbord)";
 "lbl_play_first_unwatched" = "Eerste ongekeken aflevering afspelen";
 "lbl_mark_unplayed" = "Markeren als niet afgespeeld";
+"lbl_mark_unwatched" = "Markeren als niet afgespeeld";
 "lbl_mark_played" = "Markeren als afgespeeld";
+"lbl_mark_watched" = "Markeren als afgespeeld";
 "lbl_remove_favorite" = "Favoriet verwijderen";
 "lbl_add_favorite" = "Favoriet toevoegen";
 "msg_no_playable_items" = "Geen afspeelbare items";

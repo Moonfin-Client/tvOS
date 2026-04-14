@@ -80,6 +80,7 @@
 "lbl_trailer" = "Treiler- ";
 "lbl_search_hint" = "Otsi teksti (vali klaviatuur)";
 "lbl_mark_unplayed" = "Märgi mitteesitatuks";
+"lbl_mark_unwatched" = "Märgi mitteesitatuks";
 "msg_no_playable_items" = "Esitatavaid pole";
 "lbl__continuing" = "JÄTKUB";
 "lbl_filters" = "Telekanalite filtrid";
@@ -180,6 +181,7 @@
 "lbl_no_items" = "Puuduvad";
 "lbl_play_first_unwatched" = "Esita esimene vaatamata";
 "lbl_mark_played" = "Märgi esitatuks";
+"lbl_mark_watched" = "Märgi esitatuks";
 "lbl_remove_favorite" = "Eemalda lemmik";
 "lbl_add_favorite" = "Lisa lemmikutesse";
 "lbl_load_channels" = "Lae kanalid- ";

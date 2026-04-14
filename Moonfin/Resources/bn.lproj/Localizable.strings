@@ -96,7 +96,9 @@
 "lbl_now_playing_album" = "%1$@ হতে";
 "pref_audio_direct" = "সরাসরি";
 "lbl_mark_unplayed" = "অদেখা হিসেবে চিহ্নিত করুন";
+"lbl_mark_unwatched" = "অদেখা হিসেবে চিহ্নিত করুন";
 "lbl_mark_played" = "দেখা হিসেবে চিহ্নিত করুন";
+"lbl_mark_watched" = "দেখা হিসেবে চিহ্নিত করুন";
 "lbl_remove_favorite" = "প্রিয়ের তালিকা থেকে বাদ দিন";
 "lbl_load_channels" = "চ্যানেলগুলো লোড করুন ";
 "msg_will_record" = "রেকর্ড হবে";

@@ -137,7 +137,9 @@
 "lbl_add_favorite" = "Lägg till favorit";
 "lbl_remove_favorite" = "Ta bort favorit";
 "lbl_mark_played" = "Markera som uppspelat";
+"lbl_mark_watched" = "Markera som uppspelat";
 "lbl_mark_unplayed" = "Markera som ej uppspelat";
+"lbl_mark_unwatched" = "Markera som ej uppspelat";
 "lbl_play_first_unwatched" = "Spela först osedda";
 "lbl_search_hint" = "Sök text (välj för tangentbord)";
 "lbl_tv_queuing" = "Spela nästa avsnitt automatiskt";

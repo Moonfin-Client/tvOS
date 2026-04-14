@@ -83,7 +83,9 @@
 "lbl_add_favorite" = "Dodaj do ulubionych";
 "lbl_remove_favorite" = "Usuń z ulubionych";
 "lbl_mark_played" = "Oznacz jako odtworzone";
+"lbl_mark_watched" = "Oznacz jako odtworzone";
 "lbl_mark_unplayed" = "Oznacz jako nieodtworzone";
+"lbl_mark_unwatched" = "Oznacz jako nieodtworzone";
 "lbl_play_first_unwatched" = "Odtwórz pierwszy nieobejrzany";
 "lbl_search_hint" = "Wyszukaj (wybierz, aby wyświetlić klawiaturę)";
 "lbl_cancel_series" = "Anuluj serię";

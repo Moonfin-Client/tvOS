@@ -238,7 +238,9 @@
 "msg_no_playable_items" = "No hay elementos reproducibles";
 "lbl_remove_favorite" = "Remover de favoritos";
 "lbl_mark_played" = "Marcar como visto";
+"lbl_mark_watched" = "Marcar como visto";
 "lbl_mark_unplayed" = "Marcar como no reproducido";
+"lbl_mark_unwatched" = "Marcar como no reproducido";
 "lbl_play_first_unwatched" = "Reproducir el primero no visto";
 "lbl_search_hint" = "Buscar texto (seleccionar para teclado)";
 "lbl_tv_queuing" = "Reproducir el siguiente episodio automáticamente";

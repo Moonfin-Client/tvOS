@@ -16,6 +16,8 @@ struct ItemCard: View {
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
     var onFocusChange: ((Bool) -> Void)? = nil
+    var onToggleWatched: (() -> Void)?
+    var onToggleFavorite: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var container: AppContainer
@@ -60,6 +62,28 @@ struct ItemCard: View {
                 }
             }
             onFocusChange?(focused)
+        }
+        .contextMenu {
+            if let onToggleWatched {
+                Button {
+                    onToggleWatched()
+                } label: {
+                    Label(
+                        item.userData?.played == true ? Strings.markUnwatched : Strings.markWatched,
+                        systemImage: item.userData?.played == true ? "eye.slash" : "checkmark.circle"
+                    )
+                }
+            }
+            if let onToggleFavorite {
+                Button {
+                    onToggleFavorite()
+                } label: {
+                    Label(
+                        item.userData?.isFavorite == true ? Strings.removeFavorite : Strings.addFavorite,
+                        systemImage: item.userData?.isFavorite == true ? "heart.slash" : "heart"
+                    )
+                }
+            }
         }
     }
     

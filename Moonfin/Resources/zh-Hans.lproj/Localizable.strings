@@ -71,7 +71,9 @@
 "lbl_add_favorite" = "添加收藏";
 "lbl_remove_favorite" = "移除收藏";
 "lbl_mark_played" = "标记为已播放";
+"lbl_mark_watched" = "标记为已播放";
 "lbl_mark_unplayed" = "标记为未播放";
+"lbl_mark_unwatched" = "标记为未播放";
 "lbl_play_first_unwatched" = "播放未观看中的第一部影片";
 "lbl_search_hint" = "搜索文本(选择键盘)";
 "lbl_play_trailers" = "播放预告片";

@@ -19,7 +19,9 @@
 "lbl_add_favorite" = "Добавяне на фаворит";
 "lbl_remove_favorite" = "Премахване на фаворита";
 "lbl_mark_played" = "Маркирай като гледан";
+"lbl_mark_watched" = "Маркирай като гледан";
 "lbl_mark_unplayed" = "Маркирай като негледан";
+"lbl_mark_unwatched" = "Маркирай като негледан";
 "lbl_play_first_unwatched" = "Пускане на първия негледан";
 "lbl_search_hint" = "Търсене на текст (изберете от клавиатурата)";
 "lbl_empty" = "Празно";

@@ -78,7 +78,9 @@
 "lbl_search_hint" = "Hledaný text (vyberte pro klávesnici)";
 "lbl_play_first_unwatched" = "Přehrát první neshlédnuté";
 "lbl_mark_unplayed" = "Označit jako nepřehrané";
+"lbl_mark_unwatched" = "Označit jako nepřehrané";
 "lbl_mark_played" = "Označit jako přehrané";
+"lbl_mark_watched" = "Označit jako přehrané";
 "lbl_remove_favorite" = "Odebrat z oblíbených";
 "lbl_add_favorite" = "Přidat k oblíbeným";
 "msg_no_playable_items" = "Žádné přehratelné položky";

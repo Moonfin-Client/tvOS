@@ -8,6 +8,8 @@ struct ContentRow: View {
     var onRowFocused: (() -> Void)?
     var onItemFocused: ((ServerItem) -> Void)?
     var onItemSelected: ((ServerItem) -> Void)?
+    var onToggleWatched: ((ServerItem) -> Void)?
+    var onToggleFavorite: ((ServerItem) -> Void)?
     var restoredItemId: String?
     var focusTrigger: Int = 0
     @EnvironmentObject var theme: MoonfinTheme
@@ -172,7 +174,9 @@ struct ContentRow: View {
                     onItemFocused?(item)
                     onRowFocused?()
                 },
-                onSelect: { onItemSelected?(item) }
+                onSelect: { onItemSelected?(item) },
+                onToggleWatched: onToggleWatched.map { cb in { cb(item) } },
+                onToggleFavorite: onToggleFavorite.map { cb in { cb(item) } }
             )
         }
     }

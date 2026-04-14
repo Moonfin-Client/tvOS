@@ -45,7 +45,9 @@
 "lbl_add_favorite" = "Lisää suosikkeihin";
 "lbl_remove_favorite" = "Poista suosikeista";
 "lbl_mark_played" = "Merkitse toistetuksi";
+"lbl_mark_watched" = "Merkitse toistetuksi";
 "lbl_mark_unplayed" = "Merkitse toistamattomaksi";
+"lbl_mark_unwatched" = "Merkitse toistamattomaksi";
 "lbl_empty" = "Tyhjä";
 "lbl_no_items" = "Ei kohteita";
 "lbl_never" = "Ei koskaan";

@@ -6,7 +6,9 @@
 "lbl_critic_rating" = "Taksado de kritikistoj";
 "lbl_date_added" = "Dato Aldonita";
 "lbl_mark_played" = "Marki Ludita";
+"lbl_mark_watched" = "Marki Ludita";
 "lbl_mark_unplayed" = "Marki Neludita";
+"lbl_mark_unwatched" = "Marki Neludita";
 "msg_recording_cancelled" = "Rikordado estis rezignita";
 "lbl_record_series" = "Rikordu serion";
 "lbl_cancel_series" = "Rezigni Serion";

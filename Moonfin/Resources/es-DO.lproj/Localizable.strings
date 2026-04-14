@@ -18,7 +18,9 @@
 "lbl_add_favorite" = "Añadir a favoritos";
 "lbl_remove_favorite" = "Quitar de favoritos";
 "lbl_mark_played" = "Marcar como reproducido";
+"lbl_mark_watched" = "Marcar como reproducido";
 "lbl_mark_unplayed" = "Marcar como sin reproducir";
+"lbl_mark_unwatched" = "Marcar como sin reproducir";
 "lbl_play_first_unwatched" = "Reproducir primero los no vistos";
 "lbl_search_hint" = "Buscar texto (Seleccionar teclado)";
 "lbl_tv_queuing" = "Poner en cola todos los próximos episodios";

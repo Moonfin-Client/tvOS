@@ -55,7 +55,9 @@
 "lbl_add_favorite" = "Додади во омилени";
 "lbl_remove_favorite" = "Отстрани омилено";
 "lbl_mark_played" = "Означи како пуштено";
+"lbl_mark_watched" = "Означи како пуштено";
 "lbl_mark_unplayed" = "Означи како негледано";
+"lbl_mark_unwatched" = "Означи како негледано";
 "lbl_search_hint" = "Пребарувај текст (одбери за приказ на тастатура)";
 "lbl_empty" = "Празно";
 "lbl_never" = "Никогаш";

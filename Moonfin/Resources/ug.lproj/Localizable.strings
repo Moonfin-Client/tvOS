@@ -16,6 +16,7 @@
 "msg_cannot_play" = "بۇ تۈرنى قويۇشقا بولمايدۇ";
 "lbl_play_first_unwatched" = "كۆرۈپ باقمىغان قىسىمنى قويۇش";
 "lbl_mark_played" = "قويۇلدى";
+"lbl_mark_watched" = "قويۇلدى";
 "settings_title" = "قىزىقىش";
 "lbl_remove_favorite" = "ياقتۇرغانلىرىمدىن چىقىرۋېتىش";
 "pref_authentication_cat" = "دەلىللەش";
@@ -88,6 +89,7 @@
 "lbl_tv_queuing" = "پۈتۈن قىسىمنى سەپكە كىرگۈزۈش";
 "lbl_search_hint" = "خەتچە ئىزدەش(كونۇپكا تاختىسى تاللاش)";
 "lbl_mark_unplayed" = "قويۇلمىدى";
+"lbl_mark_unwatched" = "قويۇلمىدى";
 "lbl_add_favorite" = "ياقتۇرغانلىرىمغا قوشۇش";
 "lbl_now_playing_track" = "%1$@ دىكى %2$@";
 "lbl_now_playing_album" = "مەنبەسى %1$@";

@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import OSLog
 
 @MainActor
 final class HomeViewModel: ObservableObject {
@@ -31,6 +32,7 @@ final class HomeViewModel: ObservableObject {
     private var myMediaSummaryTasks: [String: Task<Void, Never>] = [:]
     private var cancellables = Set<AnyCancellable>()
     private let topShelfCacheWriter = TopShelfCacheWriter()
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "HomeViewModel")
     private static let selectionDebounceMs: UInt64 = 150_000_000
     private static let backdropDebounceMs: UInt64 = 200_000_000
     private static let chunkSize = 15
@@ -292,6 +294,39 @@ final class HomeViewModel: ObservableObject {
         guard count > 0 else { return }
         let label = count == 1 ? singular : plural
         parts.append("\(count) \(label)")
+    }
+
+    func toggleWatched(_ item: ServerItem) {
+        Task {
+            let newValue = !(item.userData?.played ?? false)
+            do {
+                _ = try await container.itemMutationService.setPlayed(itemId: item.id, isPlayed: newValue)
+                switch item.type {
+                case .movie, .video, .trailer:
+                    container.dataRefreshService.recordMoviePlayback()
+                case .audio:
+                    container.dataRefreshService.recordPlayback()
+                default:
+                    container.dataRefreshService.recordTvPlayback()
+                }
+                refreshContent()
+            } catch {
+                logger.error("Failed to toggle watched for item \(item.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    func toggleFavorite(_ item: ServerItem) {
+        Task {
+            let newValue = !(item.userData?.isFavorite ?? false)
+            do {
+                _ = try await container.itemMutationService.setFavorite(itemId: item.id, isFavorite: newValue)
+                container.dataRefreshService.recordFavoriteUpdate()
+                refreshContent()
+            } catch {
+                logger.error("Failed to toggle favorite for item \(item.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
+        }
     }
 
     func refreshContent() {

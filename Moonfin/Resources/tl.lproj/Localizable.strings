@@ -595,7 +595,9 @@
 "lbl_search_hint" = "Search text (select for keyboard)";
 "lbl_play_first_unwatched" = "Play first unwatched";
 "lbl_mark_unplayed" = "Mark unplayed";
+"lbl_mark_unwatched" = "Mark unwatched";
 "lbl_mark_played" = "Mark played";
+"lbl_mark_watched" = "Mark watched";
 "lbl_remove_favorite" = "Remove favorite";
 "lbl_add_favorite" = "Add favorite";
 "lbl_now_playing_track" = "%1$@ of %2$@";

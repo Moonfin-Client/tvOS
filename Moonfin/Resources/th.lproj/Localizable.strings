@@ -151,7 +151,9 @@
 "lbl_sports" = "กีฬา";
 "lbl_play_first_unwatched" = "เล่นรายการแรก ที่ไม่ได้รับชม";
 "lbl_mark_unplayed" = "ทำเครื่องหมาย ยังไม่ได้เล่น";
+"lbl_mark_unwatched" = "ทำเครื่องหมาย ยังไม่ได้เล่น";
 "lbl_mark_played" = "ทำเครื่องหมาย เล่นแล้ว";
+"lbl_mark_watched" = "ทำเครื่องหมาย เล่นแล้ว";
 "lbl_remove_favorite" = "นำออกจากรายการโปรด";
 "msg_recording_now" = "กำลังบันทึก เดี๋ยวนี้";
 "lbl_program_ended" = "โปรแกรมสิ้นสุด";

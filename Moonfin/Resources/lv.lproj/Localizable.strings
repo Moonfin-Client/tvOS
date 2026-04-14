@@ -97,7 +97,9 @@
 "lbl_add_favorite" = "Pievienot favorītu";
 "lbl_remove_favorite" = "Noņemt favorītu";
 "lbl_mark_played" = "Atzīmēt skatītu";
+"lbl_mark_watched" = "Atzīmēt skatītu";
 "lbl_mark_unplayed" = "Atzīmēt neskatītu";
+"lbl_mark_unwatched" = "Atzīmēt neskatītu";
 "lbl_play_first_unwatched" = "Atskaņot pirmo neskatīto";
 "lbl_search_hint" = "Meklēt tekstu (izvēlies priekš klaviatūras)";
 "lbl_empty" = "Tukšs";

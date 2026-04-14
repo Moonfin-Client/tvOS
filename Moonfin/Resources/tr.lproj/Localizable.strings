@@ -100,7 +100,9 @@
 "lbl_add_favorite" = "Favorilere ekle";
 "lbl_remove_favorite" = "Favorilerden kaldır";
 "lbl_mark_played" = "Oynatıldı olarak işaretle";
+"lbl_mark_watched" = "Oynatıldı olarak işaretle";
 "lbl_mark_unplayed" = "Oynatılmadı olarak işaretle";
+"lbl_mark_unwatched" = "Oynatılmadı olarak işaretle";
 "lbl_play_first_unwatched" = "İlk izlenmeyeni oynat";
 "lbl_search_hint" = "Arama metni (klavye için seçin)";
 "lbl_tv_queuing" = "Sonraki bölümü otomatik olarak oynat";

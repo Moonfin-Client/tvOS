@@ -130,7 +130,9 @@
 "lbl_add_favorite" = "Dodaj priljubljeno";
 "lbl_remove_favorite" = "Odstrani priljubljeno";
 "lbl_mark_played" = "Označi kot ogledano";
+"lbl_mark_watched" = "Označi kot ogledano";
 "lbl_mark_unplayed" = "Označi kot neogledano";
+"lbl_mark_unwatched" = "Označi kot neogledano";
 "lbl_play_first_unwatched" = "Predvajaj prvo neogledano";
 "lbl_search_hint" = "Išči besedilo (izberi za tipkovnico)";
 "msg_set_to_record" = "Program nastavljen za snemanje";

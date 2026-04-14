@@ -46,7 +46,9 @@
 "lbl_add_favorite" = "أضف إلى المفضلة";
 "lbl_remove_favorite" = "حذف من المفضلة";
 "lbl_mark_played" = "علمها كمشغلة";
+"lbl_mark_watched" = "علمها كمشغلة";
 "lbl_mark_unplayed" = "علمها كغير مشغلة";
+"lbl_mark_unwatched" = "علمها كغير مشغلة";
 "lbl_play_first_unwatched" = "شغّل أول ما لم تتم مشاهدته";
 "lbl_search_hint" = "البحث بنص (اختر للوحة المفاتيح)";
 "lbl_tv_queuing" = "تشغيل الحلقة التالية تلقائيًا";

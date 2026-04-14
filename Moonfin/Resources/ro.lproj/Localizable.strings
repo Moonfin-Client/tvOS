@@ -194,7 +194,9 @@
 "lbl_add_favorite" = "Adaugă la favorite";
 "lbl_remove_favorite" = "Elimină favorit";
 "lbl_mark_played" = "Marchează ca redat";
+"lbl_mark_watched" = "Marchează ca redat";
 "lbl_mark_unplayed" = "Marchează ca nevizionat";
+"lbl_mark_unwatched" = "Marchează ca nevizionat";
 "lbl_play_first_unwatched" = "Redă primul nevizionat";
 "lbl_search_hint" = "Căută text (selectează pentru tastatură)";
 "lbl_tv_queuing" = "Redare automată a episodului următor";

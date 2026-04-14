@@ -78,7 +78,9 @@
 "lbl_search_hint" = "Mätındı ızdeu (pernetaqta üşın tañdau)";
 "lbl_play_first_unwatched" = "Qaralmağandardyñ bırınşısın oinatu";
 "lbl_mark_unplayed" = "Oinatylmağan dep belgıleu";
+"lbl_mark_unwatched" = "Oinatylmağan dep belgıleu";
 "lbl_mark_played" = "Oinatylğan dep belgıleu";
+"lbl_mark_watched" = "Oinatylğan dep belgıleu";
 "lbl_remove_favorite" = "Tañdaulyny alastau";
 "lbl_add_favorite" = "Tañdaulyny üsteu";
 "msg_no_playable_items" = "Oinatylatyn tarmaqtar joq";

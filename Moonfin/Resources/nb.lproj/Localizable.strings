@@ -78,7 +78,9 @@
 "lbl_search_hint" = "Søk tekst (velg for tastatur)";
 "lbl_play_first_unwatched" = "Spill av første som ikke er sett";
 "lbl_mark_unplayed" = "Merk som usett";
+"lbl_mark_unwatched" = "Merk som usett";
 "lbl_mark_played" = "Merk som sett";
+"lbl_mark_watched" = "Merk som sett";
 "lbl_remove_favorite" = "Fjern favoritt";
 "lbl_add_favorite" = "Legg til favoritt";
 "msg_no_playable_items" = "Ingen spillbare elementer";

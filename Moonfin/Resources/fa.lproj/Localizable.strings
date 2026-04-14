@@ -68,7 +68,9 @@
 "lbl_add_favorite" = "افزودن به علاقه مندی‌ها";
 "lbl_remove_favorite" = "حذف از لیست مورد علاقه";
 "lbl_mark_played" = "علامت‌گذاری پخش شده";
+"lbl_mark_watched" = "علامت‌گذاری پخش شده";
 "lbl_mark_unplayed" = "علامت‌گذاری پخش نشده";
+"lbl_mark_unwatched" = "علامت‌گذاری پخش نشده";
 "lbl_play_first_unwatched" = "پخش نخشتین تماشا نشده";
 "lbl_search_hint" = "جستجوی متن (برای صفحه کلید انتخاب را بزنید)";
 "lbl_tv_queuing" = "پخش قسمت بعد به صورت خودکار";

@@ -121,7 +121,9 @@
 "lbl_add_favorite" = "Dodaj u omiljene";
 "lbl_remove_favorite" = "Ukloni iz omiljenih";
 "lbl_mark_played" = "Označi da je izvedeno";
+"lbl_mark_watched" = "Označi da je izvedeno";
 "lbl_mark_unplayed" = "Označi da nije izvedeno";
+"lbl_mark_unwatched" = "Označi da nije izvedeno";
 "lbl_play_first_unwatched" = "Izvedi prvo negledane";
 "lbl_search_hint" = "Traži tekst (tipka izaberi za tipkovnicu)";
 "lbl_tv_queuing" = "Stavi u red sve sljedeće epizode";

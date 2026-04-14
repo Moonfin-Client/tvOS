@@ -67,7 +67,9 @@
 "lbl_search_hint" = "검색 (선택 버튼을 눌러서 키보드 표시)";
 "lbl_play_first_unwatched" = "시청하지 않은 항목부터 재생";
 "lbl_mark_unplayed" = "시청하지 않은 것으로 표시";
+"lbl_mark_unwatched" = "시청하지 않은 것으로 표시";
 "lbl_mark_played" = "시청함으로 표시";
+"lbl_mark_watched" = "시청함으로 표시";
 "lbl_remove_favorite" = "즐겨찾기에서 제거";
 "lbl_add_favorite" = "즐겨찾기에 추가";
 "msg_no_playable_items" = "재생 가능한 항목 없음";

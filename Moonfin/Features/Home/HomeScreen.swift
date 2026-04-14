@@ -454,6 +454,8 @@ struct HomeScreen: View {
                                             router.navigateToItem(item, serverId: item.effectiveServerId)
                                         }
                                     },
+                                    onToggleWatched: viewModel.toggleWatched,
+                                    onToggleFavorite: viewModel.toggleFavorite,
                                     restoredItemId: lastFocusedRowId == row.id ? lastFocusedItemId : nil,
                                     focusTrigger: {
                                         if lastFocusedRowId == row.id {
