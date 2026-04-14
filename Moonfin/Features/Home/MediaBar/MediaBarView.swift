@@ -118,11 +118,15 @@ struct MediaBarView: View {
 
             VStack {
                 Spacer().frame(height: navbarClearance + 20)
-                Color.clear
-                    .contentShape(Rectangle())
-                    .frame(maxWidth: .infinity)
-                    .frame(height: screenHeight - navbarClearance - 120)
-                    .focusable()
+                Button {
+                    selectCurrentItem()
+                } label: {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .frame(maxWidth: .infinity)
+                        .frame(height: screenHeight - navbarClearance - 120)
+                }
+                    .buttonStyle(MediaBarButtonStyle())
                     .focused($isFocused)
                     .padding(.leading, sidebarInset)
                     .onMoveCommand { direction in
@@ -132,11 +136,6 @@ struct MediaBarView: View {
                         case .up:    onNavigateUp()
                         case .down:  onNavigateDown()
                         default:     break
-                        }
-                    }
-                    .onLongPressGesture(minimumDuration: 0.01) {
-                        if let item = viewModel.currentItem {
-                            onItemSelected(item)
                         }
                     }
                     .onPlayPauseCommand {
@@ -165,6 +164,12 @@ struct MediaBarView: View {
         .frame(maxWidth: .infinity)
         .frame(height: screenHeight)
         .clipped()
+    }
+
+    private func selectCurrentItem() {
+        if let item = viewModel.currentItem {
+            onItemSelected(item)
+        }
     }
 
     private func backdropLayer(items: [MediaBarSlideItem]) -> some View {
