@@ -26,6 +26,7 @@ struct LiveTvGuideView: View {
             } else {
                 VStack(spacing: 0) {
                     guideHeader
+                    guideFilterChips
                     guideGrid
                 }
             }
@@ -55,7 +56,9 @@ struct LiveTvGuideView: View {
                 .focusSection()
             }
         }
-        .task { await viewModel.loadGuide() }
+        .task {
+            await viewModel.loadGuide(windowHours: recommendedGuideHours(for: UIScreen.main.bounds.width))
+        }
     }
 
     private var guideHeader: some View {
@@ -68,15 +71,16 @@ struct LiveTvGuideView: View {
                 Button(action: {
                     router.reset()
                 }) {
-                    Label(Strings.home, systemImage: "house.fill")
+                    Image(systemName: "house.fill")
                 }
+                .accessibilityLabel(Text(Strings.home))
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
             }
 
             Spacer()
 
             HStack(spacing: SpaceTokens.spaceMd) {
-                Button(action: { viewModel.navigateDay(forward: false) }) {
+                Button(action: { viewModel.shiftWindow(hours: -viewModel.guideWindowHours) }) {
                     Label(Strings.liveTvPreviousDay, systemImage: "chevron.left")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
@@ -84,28 +88,17 @@ struct LiveTvGuideView: View {
                 Text(guideDateLabel)
                     .font(.bodyLg)
                     .foregroundColor(theme.colorScheme.onBackground)
-                    .frame(minWidth: 160)
+                    .frame(minWidth: 280)
 
-                Button(action: { viewModel.navigateDay(forward: true) }) {
+                Button(action: { viewModel.shiftWindow(hours: viewModel.guideWindowHours) }) {
                     Label(Strings.liveTvNextDay, systemImage: "chevron.right")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
 
-                Button(action: { viewModel.goToToday() }) {
-                    Text(Strings.today)
+                Button(action: { viewModel.goToNow() }) {
+                    Text("Now")
                 }
                 .buttonStyle(GuideNavButtonStyle(theme: theme))
-
-                Button(action: { viewModel.toggleFavorites() }) {
-                    Label(
-                        viewModel.showFavoritesOnly ? Strings.liveTvAllChannels : Strings.favorites,
-                        systemImage: viewModel.showFavoritesOnly ? "star.fill" : "star"
-                    )
-                }
-                .buttonStyle(GuideNavButtonStyle(
-                    theme: theme,
-                    isActive: viewModel.showFavoritesOnly
-                ))
 
                 Button(action: { router.navigate(to: .liveTvRecordings) }) {
                     Label(Strings.recordings, systemImage: "recordingtape")
@@ -118,14 +111,56 @@ struct LiveTvGuideView: View {
         .padding(.bottom, SpaceTokens.spaceSm)
     }
 
+    private var guideFilterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: SpaceTokens.spaceSm) {
+                ForEach(GuideQuickFilter.allCases, id: \.self) { filter in
+                    let isSelected = viewModel.quickFilter == filter
+                    Button(action: { viewModel.quickFilter = filter }) {
+                        Text(label(for: filter))
+                    }
+                    .buttonStyle(GuideNavButtonStyle(theme: theme, isActive: isSelected))
+                }
+            }
+            .padding(.horizontal, SpaceTokens.space3xl)
+            .padding(.bottom, SpaceTokens.spaceSm)
+        }
+    }
+
+    private func label(for filter: GuideQuickFilter) -> String {
+        switch filter {
+        case .all: return Strings.allItems
+        case .movies: return Strings.movies
+        case .series: return Strings.series
+        case .sports: return Strings.sports
+        case .news: return Strings.news
+        case .kids: return Strings.kids
+        case .premiere: return Strings.premiere
+        case .favorites: return Strings.favorites
+        }
+    }
+
     private static let guideDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "EEEE, MMM d"
         return f
     }()
 
+    private static let guideTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return f
+    }()
+
     private var guideDateLabel: String {
-        Self.guideDateFormatter.string(from: viewModel.guideStartTime)
+        "\(Self.guideDateFormatter.string(from: viewModel.guideStartTime))  \(Self.guideTimeFormatter.string(from: viewModel.guideStartTime)) - \(Self.guideTimeFormatter.string(from: viewModel.guideEndTime))"
+    }
+
+    private func recommendedGuideHours(for screenWidth: CGFloat) -> Int {
+        let guideWidth = max(screenWidth - LiveTvGuideViewModel.channelHeaderWidth, 0)
+        guard guideWidth > 0 else { return LiveTvGuideViewModel.minGuideHours }
+        let hours = Int((guideWidth / (LiveTvGuideViewModel.pixelsPerMinute * 60)).rounded(.down))
+        return min(max(hours, LiveTvGuideViewModel.minGuideHours), LiveTvGuideViewModel.maxGuideHours)
     }
 
     private var guideGrid: some View {
@@ -187,7 +222,7 @@ struct LiveTvGuideView: View {
     private func programRow(for channel: ServerItem) -> some View {
         let programs = viewModel.programs(for: channel.id)
         return ZStack(alignment: .leading) {
-            let totalWidth = CGFloat(LiveTvGuideViewModel.visibleHours * 60) * LiveTvGuideViewModel.pixelsPerMinute
+            let totalWidth = CGFloat(viewModel.guideWindowHours * 60) * LiveTvGuideViewModel.pixelsPerMinute
             Color.clear.frame(width: totalWidth, height: LiveTvGuideViewModel.rowHeight)
 
             if programs.isEmpty {
@@ -224,7 +259,8 @@ struct LiveTvGuideView: View {
                 .font(.captionXs)
         }
         .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
-        .frame(width: width, height: LiveTvGuideViewModel.rowHeight)
+        .padding(.horizontal, SpaceTokens.spaceSm)
+        .frame(width: width, height: LiveTvGuideViewModel.rowHeight, alignment: .leading)
         .background(theme.colorScheme.surface.opacity(0.15))
         .overlay(
             Rectangle()
@@ -343,10 +379,10 @@ struct ChannelHeaderCell: View {
                         .foregroundColor(theme.colorScheme.onBackground)
                         .lineLimit(1)
                 }
-
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, SpaceTokens.spaceSm)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .frame(maxHeight: .infinity)
             .background(theme.colorScheme.surface.opacity(0.2))
             .overlay(
@@ -388,6 +424,7 @@ struct ProgramGridCell: View {
                             .lineLimit(1)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Spacer(minLength: 0)
 

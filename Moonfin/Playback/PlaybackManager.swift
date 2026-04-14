@@ -79,6 +79,23 @@ final class PlaybackManager: ObservableObject {
         return client.imageApi.getItemImageUrl(itemId: personId, imageType: .primary, maxWidth: maxWidth, maxHeight: maxHeight, tag: tag)
     }
 
+    func fetchLiveTvChannels() async -> [ServerItem]? {
+        do {
+            let result = try await client.liveTvApi.getChannels(
+                userId: client.userId,
+                startIndex: nil,
+                limit: nil,
+                sortBy: "SortName",
+                sortOrder: "Ascending",
+                isFavorite: nil,
+                addCurrentProgram: true
+            )
+            return result.items
+        } catch {
+            return nil
+        }
+    }
+
     func fetchItem(itemId: String) async -> ServerItem? {
         try? await client.userLibraryApi.getItem(itemId: itemId)
     }

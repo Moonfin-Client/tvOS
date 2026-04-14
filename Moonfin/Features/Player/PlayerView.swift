@@ -11,16 +11,12 @@ struct VideoPlayerScreen: View {
     init(
         playbackManager: PlaybackManager,
         isLiveTV: Bool = false,
-        syncPlayManager: SyncPlayManager? = nil,
-        onLiveTvChannelUp: (() async -> Void)? = nil,
-        onLiveTvChannelDown: (() async -> Void)? = nil
+        syncPlayManager: SyncPlayManager? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VideoPlayerViewModel(
             playbackManager: playbackManager,
             isLiveTV: isLiveTV,
-            syncPlayManager: syncPlayManager,
-            onLiveTvChannelUp: onLiveTvChannelUp,
-            onLiveTvChannelDown: onLiveTvChannelDown
+            syncPlayManager: syncPlayManager
         ))
         _segmentHandler = ObservedObject(wrappedValue: playbackManager.segmentHandler)
         _nextUpManager = ObservedObject(wrappedValue: playbackManager.nextUpManager)
@@ -34,6 +30,10 @@ struct VideoPlayerScreen: View {
                 .equatable()
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
+
+            if isBuffering {
+                bufferingOverlay
+            }
 
             gestureLayer
 
@@ -67,6 +67,11 @@ struct VideoPlayerScreen: View {
 
             if viewModel.castListVisible {
                 castListOverlay
+                    .focusSection()
+            }
+
+            if viewModel.channelListVisible {
+                liveTvChannelListOverlay
                     .focusSection()
             }
 
@@ -134,6 +139,7 @@ struct VideoPlayerScreen: View {
         .animation(.easeInOut(duration: 0.25), value: viewModel.speedSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.chapterSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.castListVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.channelListVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.playbackInfoVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.subtitleDownloadVisible)
         .animation(.easeInOut(duration: 0.3), value: segmentHandler.activeSkipPrompt != nil)
@@ -153,6 +159,9 @@ struct VideoPlayerScreen: View {
         .onChange(of: viewModel.castListVisible) { visible in
             if !visible { remoteInputFocusToken = UUID() }
         }
+        .onChange(of: viewModel.channelListVisible) { visible in
+            if !visible { remoteInputFocusToken = UUID() }
+        }
         .onChange(of: viewModel.playbackInfoVisible) { visible in
             if !visible { remoteInputFocusToken = UUID() }
         }
@@ -163,6 +172,22 @@ struct VideoPlayerScreen: View {
 
     private var isNextUpOrStillWatchingVisible: Bool {
         nextUpManager.promptState != .hidden
+    }
+
+    private var isBuffering: Bool {
+        if case .buffering = viewModel.player.state {
+            return true
+        }
+        return false
+    }
+
+    private var bufferingOverlay: some View {
+        ProgressView()
+            .tint(.white)
+            .scaleEffect(1.2)
+            .padding(18)
+            .background(.black.opacity(0.35), in: Circle())
+            .allowsHitTesting(false)
     }
 
     private var gestureLayer: some View {
@@ -177,21 +202,7 @@ struct VideoPlayerScreen: View {
                     viewModel.showOverlay()
                 }
             },
-            onDirection: { direction in
-                if viewModel.isLiveTV && !viewModel.overlayVisible {
-                    switch direction {
-                    case .upArrow:
-                        viewModel.channelUp()
-                        viewModel.showOverlay()
-                        return
-                    case .downArrow:
-                        viewModel.channelDown()
-                        viewModel.showOverlay()
-                        return
-                    default:
-                        break
-                    }
-                }
+            onDirection: { _ in
                 if !viewModel.overlayVisible {
                     viewModel.showOverlay()
                 }
@@ -207,6 +218,7 @@ struct VideoPlayerScreen: View {
                 }
                 if viewModel.overlayVisible || viewModel.trackSelectionVisible
                     || viewModel.chapterSelectionVisible || viewModel.castListVisible
+                    || viewModel.channelListVisible
                     || viewModel.playbackInfoVisible || viewModel.subtitleDownloadVisible {
                     return
                 }
@@ -216,6 +228,7 @@ struct VideoPlayerScreen: View {
         )
         .allowsHitTesting(!viewModel.overlayVisible && !viewModel.trackSelectionVisible
             && !viewModel.chapterSelectionVisible && !viewModel.castListVisible
+            && !viewModel.channelListVisible
             && !viewModel.playbackInfoVisible && !viewModel.subtitleDownloadVisible
             && !isNextUpOrStillWatchingVisible)
     }
@@ -260,5 +273,137 @@ struct VideoPlayerScreen: View {
         .onExitCommand {
             viewModel.hideCastList()
         }
+    }
+
+    private var liveTvChannelListOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+
+            PlayerLiveTvChannelListOverlayView(viewModel: viewModel)
+        }
+        .transition(.opacity)
+    }
+}
+
+private struct PlayerLiveTvChannelListOverlayView: View {
+    @ObservedObject var viewModel: VideoPlayerViewModel
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedChannelId: String?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+                Text(Strings.playerChannels)
+                    .font(.title2xl)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 80)
+
+                if viewModel.isLoadingLiveTvChannels && viewModel.liveTvChannels.isEmpty {
+                    HStack {
+                        ProgressView()
+                            .tint(.white)
+                        Text(Strings.liveTvLoadingGuideData)
+                            .font(.bodySm)
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                    .padding(.horizontal, 80)
+                    .padding(.vertical, SpaceTokens.spaceMd)
+                } else {
+                    ScrollView(.vertical, showsIndicators: true) {
+                        LazyVStack(spacing: SpaceTokens.spaceXs) {
+                            ForEach(viewModel.liveTvChannels, id: \.id) { channel in
+                                channelRow(channel)
+                            }
+                        }
+                        .padding(.horizontal, 80)
+                        .padding(.vertical, SpaceTokens.spaceSm)
+                    }
+                    .frame(maxHeight: 480)
+                    .onAppear {
+                        focusedChannelId = viewModel.currentLiveTvChannelId ?? viewModel.liveTvChannels.first?.id
+                    }
+                }
+            }
+            .padding(.vertical, 40)
+            .background(
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.92)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .padding(.bottom, -60)
+            )
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .onExitCommand {
+            viewModel.hideChannelList()
+        }
+    }
+
+    private func channelRow(_ channel: ServerItem) -> some View {
+        let isFocused = focusedChannelId == channel.id
+        let isCurrent = viewModel.currentLiveTvChannelId == channel.id
+
+        return Button {
+            Task { @MainActor in
+                await viewModel.selectLiveTvChannel(channel)
+            }
+        } label: {
+            HStack(spacing: SpaceTokens.spaceSm) {
+                Text(channel.channelNumber ?? "-")
+                    .font(.captionXs)
+                    .foregroundColor(.white.opacity(0.65))
+                    .frame(width: 44, alignment: .leading)
+
+                Group {
+                    if let urlString = viewModel.channelLogoUrl(for: channel),
+                       let url = URL(string: urlString) {
+                        AsyncImage(url: url) { phase in
+                            if case .success(let image) = phase {
+                                image.resizable().aspectRatio(contentMode: .fit)
+                            } else {
+                                Color.clear
+                            }
+                        }
+                    } else {
+                        Image(systemName: "tv")
+                            .font(.captionXs)
+                            .foregroundColor(.white.opacity(0.35))
+                    }
+                }
+                .frame(width: 34, height: 34)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(channel.name)
+                        .font(.bodySm)
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+
+                    Text(viewModel.currentProgramName(for: channel))
+                        .font(.caption2xs)
+                        .foregroundColor(.white.opacity(0.65))
+                        .lineLimit(1)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if isCurrent {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.captionXs)
+                        .foregroundColor(theme.accent)
+                }
+            }
+            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, SpaceTokens.spaceXs)
+            .background(theme.colorScheme.surface.opacity(isFocused ? 0.35 : 0.2))
+            .overlay(
+                RoundedRectangle(cornerRadius: RadiusTokens.small)
+                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 2.5 : 0)
+            )
+        }
+        .buttonStyle(PopupCardButtonStyle())
+        .focused($focusedChannelId, equals: channel.id)
     }
 }

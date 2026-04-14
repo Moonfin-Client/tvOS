@@ -9,16 +9,17 @@ final class VideoPlayerViewModel: ObservableObject {
     @Published var speedSelectionVisible = false
     @Published var chapterSelectionVisible = false
     @Published var castListVisible = false
+    @Published var channelListVisible = false
     @Published var playbackInfoVisible = false
     @Published var subtitleDownloadVisible = false
     @Published var subtitleDelay: TimeInterval = 0
     @Published var isScrubbing = false
     @Published var scrubPosition: Float = 0
+    @Published private(set) var liveTvChannels: [ServerItem] = []
+    @Published private(set) var isLoadingLiveTvChannels = false
 
     let playbackManager: PlaybackManager
     let isLiveTV: Bool
-    private let onLiveTvChannelUp: (() async -> Void)?
-    private let onLiveTvChannelDown: (() async -> Void)?
     weak var syncPlayManager: SyncPlayManager?
 
     private var hideTask: Task<Void, Never>?
@@ -89,16 +90,12 @@ final class VideoPlayerViewModel: ObservableObject {
     init(
         playbackManager: PlaybackManager,
         isLiveTV: Bool = false,
-        syncPlayManager: SyncPlayManager? = nil,
-        onLiveTvChannelUp: (() async -> Void)? = nil,
-        onLiveTvChannelDown: (() async -> Void)? = nil
+        syncPlayManager: SyncPlayManager? = nil
     ) {
         self.syncPlayManager = syncPlayManager
         self.playbackManager = playbackManager
         self.isLiveTV = isLiveTV
         syncPlayManager?.attachPlaybackStateObserverIfNeeded()
-        self.onLiveTvChannelUp = onLiveTvChannelUp
-        self.onLiveTvChannelDown = onLiveTvChannelDown
 
         bindObjectWillChange(playbackManager.player.$state.removeDuplicates())
         bindObjectWillChange(playbackManager.player.$audioTracks.removeDuplicates())
@@ -135,16 +132,6 @@ final class VideoPlayerViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
-    }
-
-    func channelUp() {
-        guard isLiveTV else { return }
-        Task { await onLiveTvChannelUp?() }
-    }
-
-    func channelDown() {
-        guard isLiveTV else { return }
-        Task { await onLiveTvChannelDown?() }
     }
 
     private func ensureItemCache() {
@@ -192,7 +179,8 @@ final class VideoPlayerViewModel: ObservableObject {
         hideTask = Task {
             try? await Task.sleep(nanoseconds: UInt64(overlayTimeout * 1_000_000_000))
             guard !Task.isCancelled else { return }
-            if !trackSelectionVisible && !chapterSelectionVisible && !castListVisible && !playbackInfoVisible && !isScrubbing {
+            if !trackSelectionVisible && !chapterSelectionVisible && !castListVisible
+                && !channelListVisible && !playbackInfoVisible && !isScrubbing {
                 overlayVisible = false
             }
         }
@@ -397,6 +385,61 @@ final class VideoPlayerViewModel: ObservableObject {
         castListVisible = false
         overlayVisible = true
         resetHideTimer()
+    }
+
+    var currentLiveTvChannelId: String? {
+        guard isLiveTV else { return nil }
+        return playbackManager.currentEntry?.item.id
+    }
+
+    func channelLogoUrl(for channel: ServerItem) -> String? {
+        playbackManager.imageUrl(for: channel, type: .primary, maxWidth: 120, maxHeight: 120)
+    }
+
+    func currentProgramName(for channel: ServerItem) -> String {
+        if let name = channel.currentProgram?.value.name, !name.isEmpty {
+            return name
+        }
+        return Strings.liveTvNoProgramInformation
+    }
+
+    func showChannelList() {
+        guard isLiveTV else { return }
+        hideTask?.cancel()
+        Task {
+            await loadLiveTvChannelsIfNeeded()
+            overlayVisible = false
+            channelListVisible = true
+        }
+    }
+
+    func hideChannelList() {
+        channelListVisible = false
+        overlayVisible = true
+        resetHideTimer()
+    }
+
+    func selectLiveTvChannel(_ channel: ServerItem) async {
+        channelListVisible = false
+        overlayVisible = true
+        resetHideTimer()
+        // Stop the current stream cleanly before loading the new channel.
+        // Calling play() without stopping first causes mpv to call loadFile()
+        // on a still-active engine, which triggers a Vulkan context teardown
+        // on the VO thread with an open CATransaction, freezing the stream.
+        player.stopPlaybackOnly()
+        await playbackManager.play(items: [channel])
+    }
+
+    private func loadLiveTvChannelsIfNeeded() async {
+        guard isLiveTV else { return }
+        guard !isLoadingLiveTvChannels else { return }
+        if !liveTvChannels.isEmpty { return }
+        isLoadingLiveTvChannels = true
+        defer { isLoadingLiveTvChannels = false }
+        if let channels = await playbackManager.fetchLiveTvChannels() {
+            liveTvChannels = channels
+        }
     }
 
     private func ensureCastForCurrentItem() async -> Bool {

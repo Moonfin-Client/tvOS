@@ -6,6 +6,17 @@ struct GuideTimeSlot: Identifiable {
     let label: String
 }
 
+enum GuideQuickFilter: CaseIterable {
+    case all
+    case movies
+    case series
+    case sports
+    case news
+    case kids
+    case premiere
+    case favorites
+}
+
 @MainActor
 final class LiveTvGuideViewModel: ObservableObject {
 
@@ -16,12 +27,15 @@ final class LiveTvGuideViewModel: ObservableObject {
     @Published var selectedProgram: ServerItem?
     @Published private(set) var guideStartTime: Date = Date()
     @Published private(set) var guideEndTime: Date = Date()
+    @Published private(set) var guideWindowHours: Int = LiveTvGuideViewModel.defaultGuideHours
     @Published private(set) var timeSlots: [GuideTimeSlot] = []
     @Published var selectedDate: Date = Date()
     @Published var showProgramDetail = false
-    @Published var showFavoritesOnly = false
+    @Published var quickFilter: GuideQuickFilter = .all
 
-    static let visibleHours = 9
+    static let defaultGuideHours = 9
+    static let minGuideHours = 3
+    static let maxGuideHours = 12
     static let pixelsPerMinute: CGFloat = 7
     static let channelHeaderWidth: CGFloat = 200
     static let rowHeight: CGFloat = 55
@@ -37,12 +51,23 @@ final class LiveTvGuideViewModel: ObservableObject {
     private var preferences: UserPreferences { container.userPreferences }
 
     var filteredChannels: [ServerItem] {
-        let base = showFavoritesOnly
+        let base = (quickFilter == .favorites)
             ? channels.filter { $0.userData?.isFavorite == true }
             : channels
 
-        guard hasProgramTypeFiltersEnabled else { return base }
-        return base.filter { channel in
+        let quickFiltered: [ServerItem]
+        switch quickFilter {
+        case .all, .favorites:
+            quickFiltered = base
+        default:
+            quickFiltered = base.filter { channel in
+                let programs = programsByChannel[channel.id] ?? []
+                return programs.contains(where: matchesQuickFilter)
+            }
+        }
+
+        guard hasProgramTypeFiltersEnabled else { return quickFiltered }
+        return quickFiltered.filter { channel in
             let programs = programsByChannel[channel.id] ?? []
             return programs.contains(where: matchesProgramTypeFilter)
         }
@@ -52,7 +77,7 @@ final class LiveTvGuideViewModel: ObservableObject {
         self.container = container
     }
 
-    func loadGuide() async {
+    func loadGuide(windowHours: Int? = nil, resetWindowToSelectedDate: Bool = true) async {
         guard !isLoading else { return }
         guard let client else {
             error = Strings.liveTvNoServerConnection
@@ -61,17 +86,26 @@ final class LiveTvGuideViewModel: ObservableObject {
         isLoading = true
         error = nil
 
+        if let windowHours {
+            guideWindowHours = min(max(windowHours, Self.minGuideHours), Self.maxGuideHours)
+        }
+
         do {
-            let cal = Calendar.current
-            let now = selectedDate
-            let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: now)
-            let roundedMinute = ((comps.minute ?? 0) / 30) * 30
-            var startComps = comps
-            startComps.minute = roundedMinute
-            startComps.second = 0
-            let start = cal.date(from: startComps) ?? now
-            guideStartTime = start
-            guideEndTime = cal.date(byAdding: .hour, value: Self.visibleHours, to: start) ?? start
+            if resetWindowToSelectedDate {
+                let cal = Calendar.current
+                let now = selectedDate
+                let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: now)
+                let roundedMinute = ((comps.minute ?? 0) / 30) * 30
+                var startComps = comps
+                startComps.minute = roundedMinute
+                startComps.second = 0
+                let start = cal.date(from: startComps) ?? now
+                guideStartTime = start
+                guideEndTime = cal.date(byAdding: .hour, value: guideWindowHours, to: start) ?? start
+            } else if guideEndTime <= guideStartTime {
+                let cal = Calendar.current
+                guideEndTime = cal.date(byAdding: .hour, value: guideWindowHours, to: guideStartTime) ?? guideStartTime
+            }
 
             buildTimeSlots()
 
@@ -132,20 +166,18 @@ final class LiveTvGuideViewModel: ObservableObject {
         }
     }
 
-    func navigateDay(forward: Bool) {
-        let cal = Calendar.current
-        let days = forward ? 1 : -1
-        selectedDate = cal.date(byAdding: .day, value: days, to: selectedDate) ?? selectedDate
-        Task { await loadGuide() }
-    }
-
-    func goToToday() {
+    func goToNow() {
         selectedDate = Date()
-        Task { await loadGuide() }
+        Task { await loadGuide(resetWindowToSelectedDate: true) }
     }
 
-    func toggleFavorites() {
-        showFavoritesOnly.toggle()
+    func shiftWindow(hours: Int) {
+        let cal = Calendar.current
+        guideStartTime = cal.date(byAdding: .hour, value: hours, to: guideStartTime) ?? guideStartTime
+        guideEndTime = cal.date(byAdding: .hour, value: guideWindowHours, to: guideStartTime) ?? guideStartTime
+        selectedDate = guideStartTime
+        buildTimeSlots()
+        Task { await loadGuide(resetWindowToSelectedDate: false) }
     }
 
     func isChannelFavorite(_ channelId: String?) -> Bool {
@@ -175,9 +207,17 @@ final class LiveTvGuideViewModel: ObservableObject {
     }
 
     func programs(for channelId: String) -> [ServerItem] {
-        let programs = programsByChannel[channelId] ?? []
-        guard hasProgramTypeFiltersEnabled else { return programs }
-        return programs.filter(matchesProgramTypeFilter)
+        let basePrograms = programsByChannel[channelId] ?? []
+        let quickPrograms: [ServerItem]
+        switch quickFilter {
+        case .all, .favorites:
+            quickPrograms = basePrograms
+        default:
+            quickPrograms = basePrograms.filter(matchesQuickFilter)
+        }
+
+        guard hasProgramTypeFiltersEnabled else { return quickPrograms }
+        return quickPrograms.filter(matchesProgramTypeFilter)
     }
 
     func programWidth(for program: ServerItem) -> CGFloat {
@@ -264,6 +304,25 @@ final class LiveTvGuideViewModel: ObservableObject {
             matched = matched || (program.isPremiere == true)
         }
         return matched
+    }
+
+    private func matchesQuickFilter(_ program: ServerItem) -> Bool {
+        switch quickFilter {
+        case .all, .favorites:
+            return true
+        case .movies:
+            return program.isMovie == true
+        case .series:
+            return program.isSeries == true
+        case .sports:
+            return program.isSports == true
+        case .news:
+            return program.isNews == true
+        case .kids:
+            return program.isKids == true
+        case .premiere:
+            return program.isPremiere == true
+        }
     }
 
 }

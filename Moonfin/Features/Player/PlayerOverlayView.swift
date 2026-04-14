@@ -22,6 +22,7 @@ struct PlayerOverlayView: View {
         case next
         case chapters
         case cast
+        case channels
         case queueNext
         case speed
         case zoom
@@ -37,8 +38,16 @@ struct PlayerOverlayView: View {
         .padding(.horizontal, 80)
         .padding(.vertical, 60)
         .transition(.opacity)
-        .onAppear { focusedControl = .seekbar }
-        .defaultFocus($focusedControl, .seekbar)
+        .onAppear { focusedControl = initialFocusControl }
+        .defaultFocus($focusedControl, initialFocusControl)
+        .onPlayPauseCommand {
+            if viewModel.isScrubbing {
+                viewModel.commitScrub()
+            } else {
+                viewModel.togglePlayPause()
+            }
+            viewModel.resetHideTimer()
+        }
         .onExitCommand {
             viewModel.markExitCommandHandled()
             if viewModel.isScrubbing {
@@ -53,6 +62,10 @@ struct PlayerOverlayView: View {
                 viewModel.commitScrub()
             }
         }
+    }
+
+    private var initialFocusControl: ControlFocus {
+        viewModel.isLiveTV ? .playPause : .seekbar
     }
 
     // MARK: - Header
@@ -221,13 +234,6 @@ struct PlayerOverlayView: View {
                 break
             }
         }
-        .onPlayPauseCommand {
-            if viewModel.isScrubbing {
-                viewModel.commitScrub()
-            } else {
-                viewModel.togglePlayPause()
-            }
-        }
         .onTapGesture {
             viewModel.togglePlayPause()
             viewModel.resetHideTimer()
@@ -265,6 +271,10 @@ struct PlayerOverlayView: View {
                     overlayButton(icon: "text.line.first.and.arrowtriangle.forward", focus: .queueNext) {
                         viewModel.queueNextItemForSyncPlay()
                     }
+                }
+            } else {
+                overlayButton(icon: "list.bullet", focus: .channels) {
+                    viewModel.showChannelList()
                 }
             }
 
