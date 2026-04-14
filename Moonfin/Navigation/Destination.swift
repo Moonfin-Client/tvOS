@@ -56,15 +56,11 @@ enum Destination: Hashable {
     case photoPlayer(itemId: String, autoPlay: Bool, sortBy: String? = nil, sortOrder: String? = nil)
     case bookReader(itemId: String, serverId: String? = nil)
     case videoPlayer
-    case nextUp(itemId: String)
-    case stillWatching(itemId: String)
     case trailerPlayer(videoId: String? = nil, trailerUrl: String? = nil, startSeconds: Double = 0, segmentsJson: String = "[]")
 
     // MARK: - Seerr
 
     case seerrDiscover
-    case seerrRequests
-    case seerrSettings
     case seerrBrowseBy(filterId: Int, filterName: String, mediaType: String, filterType: String = "genre")
     case seerrMediaDetails(itemJson: String)
     case seerrPersonDetails(personId: Int)

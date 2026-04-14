@@ -136,7 +136,7 @@ struct NextUpOverlay: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: RadiusTokens.medium)
-                    .strokeBorder(Color.white.opacity(isFocused ? 0.6 : 0), lineWidth: 2)
+                    .strokeBorder(theme.focusBorder.color.opacity(isFocused ? 0.6 : 0), lineWidth: 2)
             )
             .scaleEffect(isFocused ? 1.05 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isFocused)

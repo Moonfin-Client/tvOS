@@ -99,6 +99,15 @@ struct SettingsOverlayView: View {
             SettingsAuthServerUserScreen(serverId: serverId, userId: userId)
         case .customization:
             SettingsCustomizationScreen()
+        case .customizationTheme:
+            SettingsPickerScreen(
+                title: "Focus Border Color",
+                selection: Binding(
+                    get: { theme.focusBorder },
+                    set: { theme.focusBorder = $0 }
+                ),
+                displayName: \.displayName
+            )
         case .customizationClock:
             SettingsPickerScreen(
                 title: "Clock",

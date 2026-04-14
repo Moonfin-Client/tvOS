@@ -3,6 +3,7 @@ import SwiftUI
 struct CastListView: View {
     @ObservedObject var viewModel: VideoPlayerViewModel
     var onSelectPerson: (ServerPerson) -> Void
+    @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var focusedIndex: Int?
 
     var body: some View {
@@ -89,7 +90,7 @@ struct CastListView: View {
             .frame(width: 130)
             .overlay(
                 RoundedRectangle(cornerRadius: RadiusTokens.small)
-                    .stroke(Color.white, lineWidth: isFocused ? 2.5 : 0)
+                    .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 2.5 : 0)
             )
         }
         .buttonStyle(PopupCardButtonStyle())
