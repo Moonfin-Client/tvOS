@@ -704,7 +704,7 @@ struct TrailerPlayerScreen: View {
         }
         .onChange(of: player.state) { newState in
             if newState == .error && resolveError == nil {
-                attemptNativeFallbackOrFail(reason: "VLC state: \(stateDescription(newState))")
+                attemptNativeFallbackOrFail(reason: "MPV state: \(stateDescription(newState))")
             }
         }
         .onExitCommand {
@@ -794,7 +794,7 @@ struct TrailerPlayerScreen: View {
                     return
                 case .error:
                     attemptNativeFallbackOrFail(
-                        reason: "VLC state: \(stateDescription(player.state))\nURL host: \(streamURL.host ?? "unknown")"
+                        reason: "MPV state: \(stateDescription(player.state))\nURL host: \(streamURL.host ?? "unknown")"
                     )
                     return
                 default:
@@ -804,7 +804,7 @@ struct TrailerPlayerScreen: View {
 
             if resolveError == nil {
                 attemptNativeFallbackOrFail(
-                    reason: "VLC state: \(stateDescription(player.state))\nURL host: \(streamURL.host ?? "unknown")"
+                    reason: "MPV state: \(stateDescription(player.state))\nURL host: \(streamURL.host ?? "unknown")"
                 )
             }
         }
@@ -832,7 +832,7 @@ struct TrailerPlayerScreen: View {
                 guard let player = nativePlayer else { return }
 
                 if player.timeControlStatus != .playing {
-                    resolveError = "Trailer playback failed after stream resolution.\n\n\(reason)\nAVPlayer status: \(player.status == .failed ? "failed" : "not-playing")\n\n\(resolverDiagnostics)"
+                    resolveError = "Trailer playback failed after stream resolution.\n\n\(reason)\nNative fallback (AVPlayer) status: \(player.status == .failed ? "failed" : "not-playing")\n\n\(resolverDiagnostics)"
                 }
             }
             return

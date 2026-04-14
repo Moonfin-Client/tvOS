@@ -365,8 +365,7 @@ enum YouTubeStreamResolver {
 
     private static func validatePlayableStream(_ stream: StreamInfo) async -> Bool {
         if stream.isHLS {
-            log("[Validate] HLS stream accepted")
-            return true
+            return await validateHLSStream(stream.url)
         }
 
         var request = URLRequest(url: stream.url)
@@ -397,6 +396,86 @@ enum YouTubeStreamResolver {
             return false
         } catch {
             log("[Validate] \u{2717} Request failed: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    private static func validateHLSStream(_ manifestURL: URL, depth: Int = 0) async -> Bool {
+        guard depth <= 2 else {
+            log("[Validate] HLS playlist nesting too deep")
+            return false
+        }
+
+        var request = URLRequest(url: manifestURL)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 8
+        request.setValue(browserUA, forHTTPHeaderField: "User-Agent")
+        request.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
+        request.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
+        request.setValue("application/x-mpegURL, application/vnd.apple.mpegurl, */*", forHTTPHeaderField: "Accept")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                log("[Validate] HLS manifest non-HTTP response")
+                return false
+            }
+
+            guard (200...299).contains(http.statusCode),
+                  let body = String(data: data, encoding: .utf8) else {
+                log("[Validate] HLS manifest HTTP \(http.statusCode) from \(manifestURL.host ?? "unknown")")
+                return false
+            }
+
+            let entries = body
+                .components(separatedBy: .newlines)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+
+            guard let firstEntry = entries.first,
+                  let firstURL = URL(string: firstEntry, relativeTo: manifestURL)?.absoluteURL else {
+                log("[Validate] HLS manifest has no playable entries")
+                return false
+            }
+
+            if looksLikeHLSManifest(firstEntry) {
+                return await validateHLSStream(firstURL, depth: depth + 1)
+            }
+
+            let ok = await validateDirectMediaURL(firstURL)
+            log("[Validate] HLS segment probe \(ok ? "OK" : "FAILED") from \(firstURL.host ?? "unknown")")
+            return ok
+        } catch {
+            log("[Validate] HLS manifest request failed: \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    private static func looksLikeHLSManifest(_ path: String) -> Bool {
+        let lower = path.lowercased()
+        return lower.contains(".m3u8") || lower.contains("format=m3u8")
+    }
+
+    private static func validateDirectMediaURL(_ url: URL) async -> Bool {
+        var head = URLRequest(url: url)
+        head.httpMethod = "HEAD"
+        head.timeoutInterval = 8
+        head.setValue(browserUA, forHTTPHeaderField: "User-Agent")
+        head.setValue("https://www.youtube.com/", forHTTPHeaderField: "Referer")
+        head.setValue("https://www.youtube.com", forHTTPHeaderField: "Origin")
+        head.setValue("*/*", forHTTPHeaderField: "Accept")
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: head)
+            guard let http = response as? HTTPURLResponse else { return false }
+            if (200...206).contains(http.statusCode) || http.statusCode == 301 || http.statusCode == 302 {
+                return true
+            }
+            if http.statusCode == 405 {
+                return await validateViaGetProbe(StreamInfo(url: url, isHLS: false))
+            }
+            return false
+        } catch {
             return false
         }
     }
