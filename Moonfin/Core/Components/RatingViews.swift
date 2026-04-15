@@ -13,20 +13,20 @@ struct RatingChipView: View {
             let label = ratingSource?.label ?? source
 
             HStack(spacing: 8) {
-                Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 30, height: 30)
+                Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 36, height: 36)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(formatted)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
                     if showLabel {
                         Text(label)
-                            .font(.system(size: 14))
+                            .font(.system(size: 16))
                             .foregroundColor(.white.opacity(0.5))
                     }
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
             .background(Color.white.opacity(0.1))
             .cornerRadius(8)
         }

@@ -500,14 +500,14 @@ struct ItemDetailsView: View {
                     if let imageUrlString, let url = URL(string: imageUrlString) {
                         if isEpisode {
                             CachedImage(url: url, contentMode: .fill)
-                                .frame(maxWidth: 320, maxHeight: 180)
+                                .frame(maxWidth: 380, maxHeight: 214)
                                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
                                 .clipped()
                                 .cornerRadius(RadiusTokens.medium)
                                 .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                         } else {
                             CachedImage(url: url, contentMode: .fit)
-                                .frame(maxWidth: 240, maxHeight: isMusic ? 240 : 360)
+                                .frame(maxWidth: 340, maxHeight: isMusic ? 340 : 510)
                                 .cornerRadius(RadiusTokens.medium)
                                 .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                         }
@@ -527,7 +527,7 @@ struct ItemDetailsView: View {
             if let imageUrlString = viewModel.posterUrl(for: item),
                let url = URL(string: imageUrlString) {
                 CachedImage(url: url, contentMode: .fit)
-                    .frame(width: 280, height: 280)
+                    .frame(width: 360, height: 360)
                     .cornerRadius(RadiusTokens.medium)
                     .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
             }
@@ -585,7 +585,7 @@ struct ItemDetailsView: View {
             if let imageUrlString = viewModel.posterUrl(for: item),
                let url = URL(string: imageUrlString) {
                 CachedImage(url: url, contentMode: .fit)
-                    .frame(width: 260, height: 260)
+                    .frame(width: 340, height: 340)
                     .cornerRadius(RadiusTokens.medium)
                     .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
             }
@@ -724,21 +724,21 @@ struct ItemDetailsView: View {
     private func starRatingChip(value: Float, showLabel: Bool) -> some View {
         HStack(spacing: 8) {
             Image(systemName: "star.fill")
-                .font(.system(size: 24))
+                .font(.system(size: 30))
                 .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
             VStack(alignment: .leading, spacing: 1) {
                 Text(String(format: "%.1f", value))
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
                 if showLabel {
                     Text(Strings.communityRating)
-                        .font(.system(size: 14))
+                        .font(.system(size: 16))
                         .foregroundColor(.white.opacity(0.5))
                 }
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .background(Color.white.opacity(0.1))
         .cornerRadius(8)
     }
@@ -1209,17 +1209,17 @@ struct ItemDetailsView: View {
 
         if !movies.isEmpty {
             detailSection(title: "Movies", id: "collectionMovies") {
-                itemRow(items: movies)
+                itemRow(items: movies, cardWidth: 190)
             }
         }
         if !series.isEmpty {
             detailSection(title: "Series", id: "collectionSeries") {
-                itemRow(items: series)
+                itemRow(items: series, cardWidth: 190)
             }
         }
         if !other.isEmpty {
             detailSection(title: "Other", id: "collectionOther") {
-                itemRow(items: other)
+                itemRow(items: other, cardWidth: 190)
             }
         }
     }
@@ -1252,7 +1252,7 @@ struct ItemDetailsView: View {
     private var similarSection: some View {
         if !viewModel.similar.isEmpty {
             detailSection(title: "More Like This", id: "similar") {
-                itemRow(items: viewModel.similar)
+                itemRow(items: viewModel.similar, cardWidth: 190)
             }
         }
     }
@@ -1261,7 +1261,7 @@ struct ItemDetailsView: View {
     private var specialFeaturesSection: some View {
         if !viewModel.specialFeatures.isEmpty {
             detailSection(title: "Special Features", id: "specials") {
-                itemRow(items: viewModel.specialFeatures, imageType: .primary, aspectRatio: 16.0/9.0)
+                itemRow(items: viewModel.specialFeatures, imageType: .primary, aspectRatio: 16.0/9.0, cardWidth: 240)
             }
         }
     }
@@ -1270,7 +1270,7 @@ struct ItemDetailsView: View {
     private var parentCollectionSection: some View {
         if !viewModel.parentCollectionItems.isEmpty {
             detailSection(title: viewModel.parentCollectionName ?? "Collection", id: "parentCollection") {
-                itemRow(items: viewModel.parentCollectionItems)
+                itemRow(items: viewModel.parentCollectionItems, cardWidth: 190)
             }
         }
     }
@@ -1342,8 +1342,8 @@ struct ItemDetailsView: View {
     }
 
     private func chapterRow(item: ServerItem, chapters: [ServerChapter]) -> some View {
-        let cardWidth: CGFloat = 240
-        let cardHeight: CGFloat = 135
+        let cardWidth: CGFloat = 320
+        let cardHeight: CGFloat = 180
 
         return FocusFirstRow(
             firstItemId: chapters.first.map(chapterFocusId),
