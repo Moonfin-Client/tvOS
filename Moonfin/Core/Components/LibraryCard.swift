@@ -8,6 +8,7 @@ struct LibraryCard: View {
     var onSelect: (() -> Void)?
 
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var container: AppContainer
     @FocusState private var isFocused: Bool
 
     private let aspectRatio: CGFloat = 16.0 / 9.0
@@ -53,7 +54,10 @@ struct LibraryCard: View {
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
-            if focused { onFocused?(item) }
+            if focused {
+                container.inactivityTracker.notifyInteraction()
+                onFocused?(item)
+            }
         }
     }
 

@@ -12,6 +12,7 @@ struct FocusableDialogButton: View {
     let action: () -> Void
 
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var container: AppContainer
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -29,5 +30,10 @@ struct FocusableDialogButton: View {
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+            if focused {
+                container.inactivityTracker.notifyInteraction()
+            }
+        }
     }
 }

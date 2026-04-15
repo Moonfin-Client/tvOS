@@ -56,6 +56,7 @@ struct ItemCard: View {
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
             if focused {
+                container.inactivityTracker.notifyInteraction()
                 onFocused?(item)
                 if !shouldShowPreview {
                     previewManager.stop()

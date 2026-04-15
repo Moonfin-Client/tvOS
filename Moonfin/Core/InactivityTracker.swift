@@ -6,7 +6,7 @@ final class InactivityTracker: ObservableObject {
 
     @Published private(set) var isScreensaverVisible = false {
         didSet {
-            UIApplication.shared.isIdleTimerDisabled = isScreensaverVisible
+            updateIdleTimerState()
         }
     }
 
@@ -20,6 +20,7 @@ final class InactivityTracker: ObservableObject {
         self.userPreferences = userPreferences
         self.playbackCoordinator = playbackCoordinator
         resetTimer()
+        updateIdleTimerState()
     }
 
     private var isEnabled: Bool {
@@ -42,12 +43,17 @@ final class InactivityTracker: ObservableObject {
         return false
     }
 
+    private var shouldDisableSystemIdleTimer: Bool {
+        isEnabled || lockCount > 0 || isPlaybackActive || isScreensaverVisible
+    }
+
     func notifyInteraction() {
         timer?.cancel()
         lastInteractionAt = Date()
         if isScreensaverVisible {
             isScreensaverVisible = false
         }
+        updateIdleTimerState()
         resetTimer()
     }
 
@@ -57,10 +63,12 @@ final class InactivityTracker: ObservableObject {
         if isScreensaverVisible {
             isScreensaverVisible = false
         }
+        updateIdleTimerState()
     }
 
     func removeLock() {
         lockCount = max(0, lockCount - 1)
+        updateIdleTimerState()
         if lockCount == 0 {
             resetTimer()
         }
@@ -68,6 +76,7 @@ final class InactivityTracker: ObservableObject {
 
     private func resetTimer() {
         timer?.cancel()
+        updateIdleTimerState()
         guard isEnabled, lockCount == 0 else { return }
 
         let work = DispatchWorkItem { [weak self] in
@@ -90,5 +99,11 @@ final class InactivityTracker: ObservableObject {
         }
         timer = work
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: work)
+    }
+
+    private func updateIdleTimerState() {
+        let shouldDisable = shouldDisableSystemIdleTimer
+        guard UIApplication.shared.isIdleTimerDisabled != shouldDisable else { return }
+        UIApplication.shared.isIdleTimerDisabled = shouldDisable
     }
 }
