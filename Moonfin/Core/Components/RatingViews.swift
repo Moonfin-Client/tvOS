@@ -1,9 +1,77 @@
 import SwiftUI
 
+private struct RatingChipHeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
+struct EqualHeightRatingRow<Content: View>: View {
+    let spacing: CGFloat
+    let content: (CGFloat?) -> Content
+
+    @State private var sharedHeight: CGFloat?
+
+    var body: some View {
+        HStack(alignment: .top, spacing: spacing) {
+            content(sharedHeight)
+        }
+        .onPreferenceChange(RatingChipHeightPreferenceKey.self) { measuredHeight in
+            sharedHeight = measuredHeight > 0 ? measuredHeight : nil
+        }
+    }
+}
+
+private struct BaseRatingChipView<Icon: View>: View {
+    let valueText: String
+    let labelText: String?
+    let sharedHeight: CGFloat?
+    let icon: Icon
+
+    init(valueText: String, labelText: String?, sharedHeight: CGFloat?, @ViewBuilder icon: () -> Icon) {
+        self.valueText = valueText
+        self.labelText = labelText
+        self.sharedHeight = sharedHeight
+        self.icon = icon()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                icon
+                Text(valueText)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.white)
+            }
+            if let labelText {
+                Text(labelText)
+                    .font(.system(size: 16))
+                    .foregroundColor(.white.opacity(0.5))
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .frame(height: sharedHeight)
+        .background(
+            GeometryReader { geometry in
+                Color.clear
+                    .preference(key: RatingChipHeightPreferenceKey.self, value: geometry.size.height)
+            }
+        )
+        .background(Color.white.opacity(0.1))
+        .cornerRadius(8)
+    }
+}
+
 struct RatingChipView: View {
     let source: String
     let normalizedValue: Float
     let showLabel: Bool
+    let sharedHeight: CGFloat? = nil
 
     var body: some View {
         let scorePercent = Int(normalizedValue * 100)
@@ -12,23 +80,26 @@ struct RatingChipView: View {
             let formatted = ratingSource?.format(normalizedValue) ?? "\(scorePercent)%"
             let label = ratingSource?.label ?? source
 
-            HStack(spacing: 8) {
-                Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 36, height: 36)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(formatted)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
-                    if showLabel {
-                        Text(label)
-                            .font(.system(size: 16))
-                            .foregroundColor(.white.opacity(0.5))
-                    }
-                }
+            BaseRatingChipView(valueText: formatted, labelText: showLabel ? label : nil, sharedHeight: sharedHeight) {
+                Image(iconName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 36, height: 36)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(8)
+        }
+    }
+}
+
+struct StarRatingChipView: View {
+    let value: Float
+    let showLabel: Bool
+    let sharedHeight: CGFloat? = nil
+
+    var body: some View {
+        BaseRatingChipView(valueText: String(format: "%.1f", value), labelText: showLabel ? Strings.communityRating : nil, sharedHeight: sharedHeight) {
+            Image(systemName: "star.fill")
+                .font(.system(size: 30))
+                .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
         }
     }
 }
@@ -103,9 +174,9 @@ struct RatingsFlowView: View {
         }
 
         if !filtered.isEmpty {
-            HStack(spacing: 8) {
+            EqualHeightRatingRow(spacing: 8) { sharedHeight in
                 ForEach(filtered, id: \.0) { source, value in
-                    RatingChipView(source: source, normalizedValue: value, showLabel: showLabels)
+                    RatingChipView(source: source, normalizedValue: value, showLabel: showLabels, sharedHeight: sharedHeight)
                 }
             }
         }

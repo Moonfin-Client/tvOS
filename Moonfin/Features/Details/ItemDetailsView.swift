@@ -710,37 +710,15 @@ struct ItemDetailsView: View {
 
     private var ratingsRow: some View {
         let showLabels = viewModel.showRatingLabels
-        return HStack(spacing: SpaceTokens.spaceSm) {
+        return EqualHeightRatingRow(spacing: SpaceTokens.spaceSm) { sharedHeight in
             ForEach(viewModel.ratings, id: \.0) { source, value in
                 if source == "stars" {
-                    starRatingChip(value: value, showLabel: showLabels)
+                    StarRatingChipView(value: value, showLabel: showLabels, sharedHeight: sharedHeight)
                 } else {
-                    RatingChipView(source: source, normalizedValue: value, showLabel: showLabels)
+                    RatingChipView(source: source, normalizedValue: value, showLabel: showLabels, sharedHeight: sharedHeight)
                 }
             }
         }
-    }
-
-    private func starRatingChip(value: Float, showLabel: Bool) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "star.fill")
-                .font(.system(size: 30))
-                .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
-            VStack(alignment: .leading, spacing: 1) {
-                Text(String(format: "%.1f", value))
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-                if showLabel {
-                    Text(Strings.communityRating)
-                        .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.5))
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(8)
     }
 
     @ViewBuilder
