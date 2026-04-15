@@ -4,6 +4,16 @@ private func homeRowLocalized(_ key: String) -> String {
     Bundle.main.localizedString(forKey: key, value: nil, table: nil)
 }
 
+private func homeRowLocalized(_ keys: [String]) -> String {
+    for key in keys {
+        let localized = homeRowLocalized(key)
+        if localized != key {
+            return localized
+        }
+    }
+    return keys.last ?? ""
+}
+
 enum HomeSectionType: String, CaseIterable, Codable {
     case resume
     case nextUp
@@ -17,15 +27,24 @@ enum HomeSectionType: String, CaseIterable, Codable {
 
     var displayName: String {
         switch self {
-        case .resume: return homeRowLocalized("continue_watching")
-        case .nextUp: return homeRowLocalized("next_up")
-        case .latestMedia: return homeRowLocalized("latest_media")
-        case .myMedia: return homeRowLocalized("my_media")
-        case .myMediaSmall: return homeRowLocalized("my_media_small")
-        case .resumeAudio: return homeRowLocalized("continue_listening")
-        case .playlists: return homeRowLocalized("playlists")
-        case .liveTv: return homeRowLocalized("live_tv")
-        case .none: return homeRowLocalized("none")
+        case .resume:
+            return homeRowLocalized(["lbl_continue_watching", "continue_watching"])
+        case .nextUp:
+            return homeRowLocalized(["lbl_next_up", "next_up"])
+        case .latestMedia:
+            return homeRowLocalized(["lbl_latest", "latest_media"])
+        case .myMedia:
+            return homeRowLocalized(["lbl_my_media", "my_media"])
+        case .myMediaSmall:
+            return homeRowLocalized(["my_media_small", "lbl_my_media", "my_media"])
+        case .resumeAudio:
+            return homeRowLocalized(["continue_listening", "lbl_continue_listening"])
+        case .playlists:
+            return homeRowLocalized(["lbl_playlists", "playlists"])
+        case .liveTv:
+            return homeRowLocalized(["lbl_live_tv", "live_tv"])
+        case .none:
+            return homeRowLocalized(["lbl_none", "none"])
         }
     }
 
