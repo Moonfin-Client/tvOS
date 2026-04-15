@@ -72,13 +72,7 @@ struct MediaBarView: View {
 
                 VStack(spacing: 0) {
                     Spacer().frame(height: navbarClearance)
-                    Button(action: {}) {
-                        Color.white.opacity(0.001)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    .buttonStyle(MediaBarButtonStyle())
-                    .focused($isFocused)
-                    .padding(.leading, sidebarInset)
+                    mediaBarFocusSurface(maxHeight: .infinity, activateOnSelect: false)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -118,52 +112,57 @@ struct MediaBarView: View {
 
             VStack {
                 Spacer().frame(height: navbarClearance + 20)
-                Button {
-                    selectCurrentItem()
-                } label: {
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .frame(maxWidth: .infinity)
-                        .frame(height: screenHeight - navbarClearance - 120)
-                }
-                    .buttonStyle(MediaBarButtonStyle())
-                    .focused($isFocused)
-                    .padding(.leading, sidebarInset)
-                    .onMoveCommand { direction in
-                        switch direction {
-                        case .left:  viewModel.goToPrevious()
-                        case .right: viewModel.goToNext()
-                        case .up:    onNavigateUp()
-                        case .down:  onNavigateDown()
-                        default:     break
-                        }
-                    }
-                    .onPlayPauseCommand {
-                        if let item = viewModel.currentItem {
-                            onPlayTrailer(item)
-                        }
-                    }
-                    .onChange(of: isFocused) { focused in
-                        viewModel.setFocused(focused)
-                        onFocusedItemChanged(focused ? viewModel.currentItem : nil)
-                    }
-                    .onChange(of: viewModel.currentIndex) { _ in
-                        if isFocused {
-                            onFocusedItemChanged(viewModel.currentItem)
-                        }
-                    }
-                    .onChange(of: requestFocus) { shouldFocus in
-                        if shouldFocus {
-                            isFocused = true
-                            requestFocus = false
-                        }
-                    }
+                mediaBarFocusSurface(maxHeight: screenHeight - navbarClearance - 120, activateOnSelect: true)
                 Spacer()
             }
         }
         .frame(maxWidth: .infinity)
         .frame(height: screenHeight)
         .clipped()
+    }
+
+    private func mediaBarFocusSurface(maxHeight: CGFloat, activateOnSelect: Bool) -> some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity)
+            .frame(height: maxHeight)
+            .focusable()
+            .focused($isFocused)
+            .padding(.leading, sidebarInset)
+            .onTapGesture {
+                if activateOnSelect {
+                    selectCurrentItem()
+                }
+            }
+            .onMoveCommand { direction in
+                switch direction {
+                case .left:  viewModel.goToPrevious()
+                case .right: viewModel.goToNext()
+                case .up:    onNavigateUp()
+                case .down:  onNavigateDown()
+                default:     break
+                }
+            }
+            .onPlayPauseCommand {
+                if let item = viewModel.currentItem {
+                    onPlayTrailer(item)
+                }
+            }
+            .onChange(of: isFocused) { focused in
+                viewModel.setFocused(focused)
+                onFocusedItemChanged(focused ? viewModel.currentItem : nil)
+            }
+            .onChange(of: viewModel.currentIndex) { _ in
+                if isFocused {
+                    onFocusedItemChanged(viewModel.currentItem)
+                }
+            }
+            .onChange(of: requestFocus) { shouldFocus in
+                if shouldFocus {
+                    isFocused = true
+                    requestFocus = false
+                }
+            }
     }
 
     private func selectCurrentItem() {
@@ -369,14 +368,6 @@ struct MediaBarView: View {
             .fill(theme.colorScheme.surface.opacity(0.3))
             .frame(maxWidth: .infinity)
             .frame(height: screenHeight)
-    }
-}
-
-private struct MediaBarButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 

@@ -71,7 +71,7 @@ struct RatingChipView: View {
     let source: String
     let normalizedValue: Float
     let showLabel: Bool
-    let sharedHeight: CGFloat? = nil
+    var sharedHeight: CGFloat? = nil
 
     var body: some View {
         let scorePercent = Int(normalizedValue * 100)
@@ -93,7 +93,7 @@ struct RatingChipView: View {
 struct StarRatingChipView: View {
     let value: Float
     let showLabel: Bool
-    let sharedHeight: CGFloat? = nil
+    var sharedHeight: CGFloat? = nil
 
     var body: some View {
         BaseRatingChipView(valueText: String(format: "%.1f", value), labelText: showLabel ? Strings.communityRating : nil, sharedHeight: sharedHeight) {

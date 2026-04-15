@@ -47,6 +47,11 @@ if ! command -v xcodebuild >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v unzip >/dev/null 2>&1 || ! command -v zip >/dev/null 2>&1; then
+  echo "Error: required commands not found: unzip and zip" >&2
+  exit 1
+fi
+
 APP_VERSION=$(grep 'MARKETING_VERSION:' "$REPO_ROOT/project.yml" | sed 's/.*MARKETING_VERSION:[[:space:]]*//' | tr -d '"[:space:]')
 BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION:' "$REPO_ROOT/project.yml" | sed 's/.*CURRENT_PROJECT_VERSION:[[:space:]]*//' | tr -d '"[:space:]')
 
@@ -62,7 +67,8 @@ fi
 ARCHIVE_PATH="$REPO_ROOT/build/tvos/archive/${APP_NAME}.xcarchive"
 EXPORT_DIR="$REPO_ROOT/build/tvos/ipa"
 EXPORT_OPTIONS_PLIST_GEN="$REPO_ROOT/build/tvos/ExportOptions-${MODE}.plist"
-FINAL_IPA="$REPO_ROOT/${APP_NAME}_tvOS_v${APP_VERSION}-${MODE}.ipa"
+UNSIGNED_IPA="$REPO_ROOT/${APP_NAME}_tvOS_${APP_VERSION}.ipa"
+SIGNED_IPA="$REPO_ROOT/${APP_NAME}_tvOS_${APP_VERSION}_signed.ipa"
 
 echo "${APP_NAME} version: ${APP_VERSION} (${BUILD_NUMBER})"
 
@@ -70,6 +76,7 @@ cd "$REPO_ROOT"
 
 echo "Cleaning previous archive and IPA outputs..."
 rm -rf "$ARCHIVE_PATH" "$EXPORT_DIR"
+rm -f "$UNSIGNED_IPA" "$SIGNED_IPA"
 mkdir -p "$EXPORT_DIR"
 
 echo "Creating archive with xcodebuild archive..."
@@ -144,8 +151,24 @@ if [ -z "$IPA_PATH" ]; then
   exit 1
 fi
 
-cp -f "$IPA_PATH" "$FINAL_IPA"
+cp -f "$IPA_PATH" "$SIGNED_IPA"
+
+TMP_UNZIP_DIR="$(mktemp -d)"
+cleanup() {
+  rm -rf "$TMP_UNZIP_DIR"
+}
+trap cleanup EXIT
+
+unzip -q "$IPA_PATH" -d "$TMP_UNZIP_DIR"
+find "$TMP_UNZIP_DIR/Payload" -type d -name "_CodeSignature" -prune -exec rm -rf {} +
+find "$TMP_UNZIP_DIR/Payload" -type f -name "embedded.mobileprovision" -delete
+
+(
+  cd "$TMP_UNZIP_DIR"
+  zip -qry "$UNSIGNED_IPA" Payload
+)
 
 echo "Archive: $ARCHIVE_PATH"
 echo "Exported IPA: $IPA_PATH"
-echo "Versioned IPA copy: $FINAL_IPA"
+echo "Signed IPA copy: $SIGNED_IPA"
+echo "Unsigned IPA copy: $UNSIGNED_IPA"
