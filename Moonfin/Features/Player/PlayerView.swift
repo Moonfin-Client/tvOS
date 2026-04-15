@@ -7,6 +7,8 @@ struct VideoPlayerScreen: View {
     @EnvironmentObject var router: NavigationRouter
     @Environment(\.dismiss) private var dismiss
     @State private var remoteInputFocusToken = UUID()
+    @FocusState private var jumpToLiveFocused: Bool
+    @State private var awaitingFirstFrame = true
 
     init(
         playbackManager: PlaybackManager,
@@ -101,6 +103,10 @@ struct VideoPlayerScreen: View {
                 SkipSegmentOverlay(action: action)
             }
 
+            if viewModel.isLiveTV, viewModel.canJumpToLive {
+                jumpToLiveOverlay
+            }
+
             if !viewModel.isLiveTV {
                 switch nextUpManager.promptState {
                 case .nextUp(let remaining):
@@ -143,9 +149,30 @@ struct VideoPlayerScreen: View {
         .animation(.easeInOut(duration: 0.25), value: viewModel.playbackInfoVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.subtitleDownloadVisible)
         .animation(.easeInOut(duration: 0.3), value: segmentHandler.activeSkipPrompt != nil)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.canJumpToLive)
         .animation(.easeInOut(duration: 0.3), value: nextUpManager.promptState)
         .onAppear {
             viewModel.showOverlay()
+            awaitingFirstFrame = true
+        }
+        .onChange(of: viewModel.player.currentTime) { currentTime in
+            if currentTime > 0.1 {
+                awaitingFirstFrame = false
+            }
+        }
+        .onChange(of: viewModel.player.state) { state in
+            switch state {
+            case .idle, .opening, .buffering:
+                awaitingFirstFrame = true
+            case .playing:
+                break
+            case .paused:
+                if viewModel.player.currentTime > 0.1 {
+                    awaitingFirstFrame = false
+                }
+            case .stopped, .ended, .error:
+                awaitingFirstFrame = false
+            }
         }
         .onChange(of: viewModel.overlayVisible) { visible in
             if !visible { remoteInputFocusToken = UUID() }
@@ -168,6 +195,9 @@ struct VideoPlayerScreen: View {
         .onChange(of: viewModel.subtitleDownloadVisible) { visible in
             if !visible { remoteInputFocusToken = UUID() }
         }
+        .onChange(of: viewModel.canJumpToLive) { canShow in
+            jumpToLiveFocused = canShow
+        }
     }
 
     private var isNextUpOrStillWatchingVisible: Bool {
@@ -175,7 +205,16 @@ struct VideoPlayerScreen: View {
     }
 
     private var isBuffering: Bool {
+        if awaitingFirstFrame {
+            return true
+        }
         if case .buffering = viewModel.player.state {
+            return true
+        }
+        if case .opening = viewModel.player.state {
+            return true
+        }
+        if case .idle = viewModel.player.state {
             return true
         }
         return false
@@ -183,11 +222,49 @@ struct VideoPlayerScreen: View {
 
     private var bufferingOverlay: some View {
         ProgressView()
-            .tint(.white)
+            .tint(.blue)
             .scaleEffect(1.2)
             .padding(18)
             .background(.black.opacity(0.35), in: Circle())
             .allowsHitTesting(false)
+    }
+
+    private var jumpToLiveOverlay: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Button {
+                    Task { await viewModel.jumpToLive() }
+                } label: {
+                    HStack(spacing: SpaceTokens.spaceSm) {
+                        Image(systemName: "dot.radiowaves.left.and.right")
+                            .font(.bodyLg)
+                        Text("Jump to Live TV")
+                            .font(.bodyLg)
+                            .fontWeight(.semibold)
+                    }
+                    .padding(.horizontal, SpaceTokens.spaceLg)
+                    .padding(.vertical, SpaceTokens.spaceMd)
+                    .background(
+                        RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                            .fill(jumpToLiveFocused ? Color.red.opacity(1.0) : Color.red.opacity(0.88))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                            .strokeBorder(Color.white.opacity(0.3), lineWidth: 1.5)
+                    )
+                    .foregroundColor(.white)
+                    .scaleEffect(jumpToLiveFocused ? 1.04 : 1.0)
+                }
+                .buttonStyle(.plain)
+                .focusable(true)
+                .focused($jumpToLiveFocused)
+                .padding(.trailing, SpaceTokens.space3xl)
+                .padding(.bottom, 260)
+            }
+        }
+        .transition(.opacity.combined(with: .move(edge: .trailing)))
     }
 
     private var gestureLayer: some View {
@@ -195,6 +272,10 @@ struct VideoPlayerScreen: View {
             onSelect: {
                 if segmentHandler.activeSkipPrompt != nil {
                     segmentHandler.confirmSkip()
+                    return
+                }
+                if viewModel.canJumpToLive {
+                    Task { await viewModel.jumpToLive() }
                     return
                 }
                 if !viewModel.overlayVisible {
@@ -214,6 +295,10 @@ struct VideoPlayerScreen: View {
             onMenu: {
                 if segmentHandler.activeSkipPrompt != nil {
                     segmentHandler.dismissPrompt()
+                    return
+                }
+                if viewModel.canJumpToLive {
+                    viewModel.dismissJumpToLivePrompt()
                     return
                 }
                 if viewModel.overlayVisible || viewModel.trackSelectionVisible

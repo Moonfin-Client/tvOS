@@ -26,8 +26,8 @@ final class VideoPlayerViewModel: ObservableObject {
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
     private var castPrefetchTask: Task<Void, Never>?
-    private var livePauseThresholdTask: Task<Void, Never>?
     private var livePauseStartedAt: Date?
+    private var jumpToLivePromptDismissed = false
     private var lastExitCommandHandledAt: CFAbsoluteTime = 0
     private var cancellables = Set<AnyCancellable>()
     private let overlayTimeout: TimeInterval = 5
@@ -133,6 +133,14 @@ final class VideoPlayerViewModel: ObservableObject {
                 guard let self else { return }
                 self.objectWillChange.send()
                 self.handleLiveTvStateChange(state)
+            }
+            .store(in: &cancellables)
+
+        playbackManager.player.$currentTime
+            .combineLatest(playbackManager.player.$duration)
+            .throttle(for: .milliseconds(500), scheduler: DispatchQueue.main, latest: true)
+            .sink { [weak self] _, _ in
+                self?.evaluateJumpToLivePromptVisibility()
             }
             .store(in: &cancellables)
 
@@ -452,10 +460,18 @@ final class VideoPlayerViewModel: ObservableObject {
         await restartLiveTvStream(with: channel)
     }
 
+    func dismissJumpToLivePrompt() {
+        guard canJumpToLive else { return }
+        jumpToLivePromptDismissed = true
+        canJumpToLive = false
+    }
+
     private func restartLiveTvStream(with channel: ServerItem) async {
         overlayVisible = true
         resetHideTimer()
-        resetLivePauseTracking()
+        livePauseStartedAt = nil
+        jumpToLivePromptDismissed = false
+        canJumpToLive = false
         // Stop the current stream cleanly before loading the new channel.
         // Calling play() without stopping first causes mpv to call loadFile()
         // on a still-active engine, which triggers a Vulkan context teardown
@@ -468,35 +484,54 @@ final class VideoPlayerViewModel: ObservableObject {
         guard isLiveTV else { return }
 
         switch state {
-        case .paused:
-            if livePauseStartedAt == nil {
-                livePauseStartedAt = Date()
-            }
-
-            if canJumpToLive {
-                return
-            }
-
-            livePauseThresholdTask?.cancel()
-            livePauseThresholdTask = Task { [weak self] in
-                try? await Task.sleep(nanoseconds: 60_000_000_000)
-                guard !Task.isCancelled, let self else { return }
-                guard self.isLiveTV, case .paused = self.player.state else { return }
-                if let startedAt = self.livePauseStartedAt,
-                   Date().timeIntervalSince(startedAt) >= 60 {
-                    self.canJumpToLive = true
-                }
-            }
-        case .playing, .buffering, .opening, .idle, .stopped, .ended, .error:
-            resetLivePauseTracking()
+        case .paused, .playing, .buffering, .opening:
+            evaluateJumpToLivePromptVisibility()
+        case .idle, .stopped, .ended, .error:
+            jumpToLivePromptDismissed = false
+            canJumpToLive = false
         }
     }
 
-    private func resetLivePauseTracking() {
-        livePauseThresholdTask?.cancel()
-        livePauseThresholdTask = nil
-        livePauseStartedAt = nil
-        canJumpToLive = false
+    private func evaluateJumpToLivePromptVisibility() {
+        guard isLiveTV else {
+            jumpToLivePromptDismissed = false
+            canJumpToLive = false
+            return
+        }
+
+        let isPaused: Bool
+        let isPlaying: Bool
+
+        switch player.state {
+        case .paused:
+            isPaused = true
+            isPlaying = false
+        case .playing:
+            isPaused = false
+            isPlaying = true
+        default:
+            isPaused = false
+            isPlaying = false
+        }
+
+        if isPaused {
+            if livePauseStartedAt == nil {
+                livePauseStartedAt = Date()
+            }
+        } else {
+            livePauseStartedAt = nil
+        }
+
+        let liveLag = max(0, player.duration - player.currentTime)
+        let pausedDuration = livePauseStartedAt.map { Date().timeIntervalSince($0) } ?? 0
+        let shouldShowPrompt = (isPaused && (pausedDuration >= 60 || liveLag >= 60))
+            || (isPlaying && liveLag >= 60)
+
+        if !shouldShowPrompt {
+            jumpToLivePromptDismissed = false
+        }
+
+        canJumpToLive = shouldShowPrompt && !jumpToLivePromptDismissed
     }
 
     private func ensureCastForCurrentItem() async -> Bool {

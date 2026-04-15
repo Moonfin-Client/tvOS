@@ -403,6 +403,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
 
         if audioOnly {
             if ensureEngine(profile: .metal, outputIntent: intent, audioOnly: true) {
+                _ = engine?.setPause(false)
                 if engine?.loadFile(url) == true {
                     logger.info("mpv: audio-only engine started")
                     updatePlaybackBackend(identifier: "mpv", fallbackReason: nil)
@@ -426,6 +427,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         }
 
         if ensureEngine(profile: .metal, outputIntent: intent) {
+            _ = engine?.setPause(false)
             if engine?.loadFile(url) == true {
                 logger.info("mpv: metal engine started, intent=\(String(describing: intent))")
                 engine?.applySubtitleStyle(mpvSubtitleOptions)
@@ -443,6 +445,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         resetEngine()
 
         if ensureEngine(profile: .software, outputIntent: intent) {
+            _ = engine?.setPause(false)
             if engine?.loadFile(url) == true {
                 logger.warning("mpv: fell to software engine, metalError=\(metalError ?? "nil")")
                 engine?.applySubtitleStyle(mpvSubtitleOptions)

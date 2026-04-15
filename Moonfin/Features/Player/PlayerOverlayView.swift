@@ -23,7 +23,6 @@ struct PlayerOverlayView: View {
         case chapters
         case cast
         case channels
-        case jumpToLive
         case queueNext
         case speed
         case zoom
@@ -72,17 +71,25 @@ struct PlayerOverlayView: View {
     // MARK: - Header
 
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(viewModel.title)
-                .font(.title2xl)
-                .foregroundColor(.white)
-                .lineLimit(1)
-
-            if !viewModel.subtitle.isEmpty {
-                Text(viewModel.subtitle)
-                    .font(.bodyLg)
-                    .foregroundColor(.white.opacity(0.7))
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(viewModel.title)
+                    .font(.title2xl)
+                    .foregroundColor(.white)
                     .lineLimit(1)
+
+                if !viewModel.subtitle.isEmpty {
+                    Text(viewModel.subtitle)
+                        .font(.bodyLg)
+                        .foregroundColor(.white.opacity(0.7))
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            if viewModel.isLiveTV {
+                liveBadge
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -95,6 +102,23 @@ struct PlayerOverlayView: View {
             .padding(.horizontal, -80)
             .padding(.top, -60)
             .frame(height: 200)
+        )
+    }
+
+    private var liveBadge: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "bolt.fill")
+                .font(.bodySm)
+            Text("LIVE")
+                .font(.bodySm)
+                .fontWeight(.bold)
+        }
+        .foregroundColor(.white)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(Color.red.opacity(0.95))
         )
     }
 
@@ -128,12 +152,6 @@ struct PlayerOverlayView: View {
             overlayButton(icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill",
                           focus: .playPause) {
                 viewModel.togglePlayPause()
-            }
-
-            if viewModel.isLiveTV, viewModel.canJumpToLive {
-                overlayButton(icon: "dot.radiowaves.left.and.right", focus: .jumpToLive) {
-                    Task { await viewModel.jumpToLive() }
-                }
             }
 
             if !viewModel.isLiveTV {
