@@ -6,9 +6,9 @@
   <img width="1920" height="1080" alt="moonfin_1920x1080" src="https://github.com/user-attachments/assets/b1d9c7d8-f113-457d-ab5c-1600bbd0600a" />
 </p>
 
-[![License](https://img.shields.io/github/license/Moonfin-Client/Apple-TV.svg)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/Moonfin-Client/Apple-TV)](https://github.com/Moonfin-Client/Apple-TV/releases)
-[![Downloads](https://img.shields.io/github/downloads/Moonfin-Client/Apple-TV/total?label=Downloads)](https://github.com/Moonfin-Client/Apple-TV/releases)
+[![License](https://img.shields.io/github/license/Moonfin-Client/tvOS.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/Moonfin-Client/tvOS)](https://github.com/Moonfin-Client/tvOS/releases)
+[![Downloads](https://img.shields.io/github/downloads/Moonfin-Client/tvOS/total?label=Downloads)](https://github.com/Moonfin-Client/tvOS/releases)
 
 <a href="https://www.buymeacoffee.com/moonfin" target="_blank"><img src="https://github.com/user-attachments/assets/fe26eaec-147f-496f-8e95-4ebe19f57131" alt="Buy Me A Coffee" ></a>
 
@@ -135,7 +135,7 @@ Download subtitles directly from item details.
 Stay up to date with the latest releases [here](https://apps.apple.com/app/moonfin/id6761283970)
 
 ### Pre-built Releases
-Download tvOS artifacts from the [Releases page](https://github.com/Moonfin-Client/Apple-TV/releases).
+Download tvOS artifacts from the [Releases page](https://github.com/Moonfin-Client/tvOS/releases).
 
 ### tvOS Artifacts
 - Signed IPA output: `Moonfin_tvOS_<version>_signed.ipa`
@@ -156,8 +156,8 @@ Download tvOS artifacts from the [Releases page](https://github.com/Moonfin-Clie
 ### Quick Start
 
 ```bash
-git clone https://github.com/Moonfin-Client/Apple-TV.git
-cd Apple-TV
+git clone https://github.com/Moonfin-Client/tvOS.git
+cd tvOS
 pod install
 cp build-tvos.private.env.example build-tvos.private.env
 # edit TEAM_ID in build-tvos.private.env
@@ -195,8 +195,8 @@ We welcome contributions to Moonfin tvOS.
 
 ## Support & Community
 
-- **Issues**: [GitHub Issues](https://github.com/Moonfin-Client/Apple-TV/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Moonfin-Client/Apple-TV/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Moonfin-Client/tvOS/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Moonfin-Client/tvOS/discussions)
 
 ## Credits
 
