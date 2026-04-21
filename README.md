@@ -119,8 +119,16 @@ Download subtitles directly from item details.
 ---
 
 # Screenshots
+<img width="3840" height="2160" alt="1" src="https://github.com/user-attachments/assets/c85bcedf-58d5-4004-b7a6-7565c6dc7249" />
+<img width="3840" height="2160" alt="2" src="https://github.com/user-attachments/assets/2b1c30bf-8d08-409c-8dcb-6386a5eaf62c" />
+<img width="3840" height="2160" alt="3" src="https://github.com/user-attachments/assets/034a612d-d633-496c-b8f4-da8b1765e7d1" />
+<img width="3840" height="2160" alt="4" src="https://github.com/user-attachments/assets/3c4f2b75-ea62-46df-8e61-4417e5bbce28" />
+<img width="3840" height="2160" alt="5" src="https://github.com/user-attachments/assets/85fc924b-3682-4cc4-a4a8-c640863c3786" />
+<img width="3840" height="2160" alt="6" src="https://github.com/user-attachments/assets/9c706c2f-b51e-4728-b062-7abf0c2ce692" />
+<img width="3840" height="2160" alt="7" src="https://github.com/user-attachments/assets/5ce64e94-fc9d-484b-ba46-1b16c0958093" />
+<img width="3840" height="2160" alt="8" src="https://github.com/user-attachments/assets/b8710605-b436-4e77-9ebe-2f2ad0f44e99" />
 
-## tvOS UI
+---
 ## Installation
 
 ### Apple App Store
