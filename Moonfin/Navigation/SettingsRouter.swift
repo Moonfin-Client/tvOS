@@ -62,6 +62,7 @@ enum SettingsRoute: Hashable {
     case playbackVideoStartDelay
     case playbackMaxBitrate
     case playbackMaxResolution
+    case playbackQualityProfile
     case playbackRefreshRateSwitching
     case playbackZoomMode
     case playbackAudioBehavior

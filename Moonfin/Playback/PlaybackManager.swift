@@ -44,6 +44,7 @@ final class PlaybackManager: ObservableObject {
     private var hasSeenFirstPlayingState = false
     private var dynamicRangeTelemetryEmitted = false
     private var dynamicRangeTelemetryTask: Task<Void, Never>?
+    private var steadyStateTelemetryTask: Task<Void, Never>?
     private var stallCount = 0
     private var terminalOutcome = "stopped"
     private var lastBoundaryProgressReportAt: CFAbsoluteTime = 0
@@ -371,13 +372,23 @@ final class PlaybackManager: ObservableObject {
             currentStreamInfo = stream
             lastEvaluatedSecond = -1
 
-            player.configurePreferredBackendForNextPlayback(stream.preferredBackend, fallbackReason: stream.fallbackReason)
             let sinkCapabilities = await MainActor.run { VideoCapabilityDetector.current() }
+            player.configurePlaybackQualityProfile(
+                preferences[UserPreferences.playbackQualityProfile],
+                generation: sinkCapabilities.generation
+            )
+            player.configurePreferredBackendForNextPlayback(stream.preferredBackend, fallbackReason: stream.fallbackReason)
+            if isAudioItem {
+                player.configurePreferredRenderFramesPerSecond(nil)
+            } else {
+                let legacyRenderFpsHint = await MainActor.run { DisplayCriteriaManager.shared.apply(stream: stream) }
+                player.configurePreferredRenderFramesPerSecond(legacyRenderFpsHint)
+                await Task.yield()
+            }
             player.configureDynamicRangeIntent(
                 contentRange: stream.dynamicRange,
                 sinkIsHdrCapable: sinkCapabilities.sinkProfile.isHdrCapable
             )
-            await MainActor.run { DisplayCriteriaManager.shared.apply(stream: stream) }
 
             let startSeconds: TimeInterval
             if entry.startPositionTicks > 0 {
@@ -405,6 +416,8 @@ final class PlaybackManager: ObservableObject {
             dynamicRangeTelemetryEmitted = false
             dynamicRangeTelemetryTask?.cancel()
             dynamicRangeTelemetryTask = nil
+            steadyStateTelemetryTask?.cancel()
+            steadyStateTelemetryTask = nil
             stallCount = 0
             terminalOutcome = "stopped"
 
@@ -474,11 +487,25 @@ final class PlaybackManager: ObservableObject {
                         if let started = self.startupBeganAt {
                             self.startupLatencyMs = Int(Date().timeIntervalSince(started) * 1000)
                         }
-                        self.dynamicRangeTelemetryTask?.cancel()
-                        self.dynamicRangeTelemetryTask = Task { [weak self] in
-                            try? await Task.sleep(for: .seconds(2))
-                            await MainActor.run {
-                                self?.emitDynamicRangeTelemetryIfNeeded()
+                        if self.preferences[UserPreferences.telemetryEnabled] {
+                            self.dynamicRangeTelemetryTask?.cancel()
+                            self.dynamicRangeTelemetryTask = Task { [weak self] in
+                                try? await Task.sleep(for: .seconds(2))
+                                await MainActor.run {
+                                    self?.emitDynamicRangeTelemetryIfNeeded()
+                                }
+                            }
+
+                            self.steadyStateTelemetryTask?.cancel()
+                            self.steadyStateTelemetryTask = Task { [weak self] in
+                                try? await Task.sleep(for: .seconds(10))
+                                await MainActor.run {
+                                    guard let self else { return }
+                                    if self.playbackState == .playing {
+                                        self.emitDynamicRangeTelemetry(stage: "mid", steadyState: true)
+                                    }
+                                    self.steadyStateTelemetryTask = nil
+                                }
                             }
                         }
                     }
@@ -526,6 +553,8 @@ final class PlaybackManager: ObservableObject {
         prefetchTask = nil
         dynamicRangeTelemetryTask?.cancel()
         dynamicRangeTelemetryTask = nil
+        steadyStateTelemetryTask?.cancel()
+        steadyStateTelemetryTask = nil
         prefetchedStreamInfo = nil
         prefetchedItemId = nil
         segmentHandler.reset()
@@ -533,6 +562,7 @@ final class PlaybackManager: ObservableObject {
         lastEvaluatedSecond = -1
         await reportPlaybackStopped(failed: failed)
         emitPlaybackTelemetry(failed: failed)
+        emitDynamicRangeTelemetry(stage: "end")
         currentStreamInfo = nil
         player.stop()
         await MainActor.run { DisplayCriteriaManager.shared.reset() }
@@ -571,16 +601,25 @@ final class PlaybackManager: ObservableObject {
     private func emitDynamicRangeTelemetryIfNeeded() {
         guard !dynamicRangeTelemetryEmitted else { return }
         guard preferences[UserPreferences.telemetryEnabled] else { return }
+        guard currentStreamInfo != nil else { return }
+        dynamicRangeTelemetryEmitted = true
+        emitDynamicRangeTelemetry(stage: "start")
+    }
+
+    private func emitDynamicRangeTelemetry(stage: String, steadyState: Bool = false) {
+        guard preferences[UserPreferences.telemetryEnabled] else { return }
         guard let stream = currentStreamInfo else { return }
 
-        dynamicRangeTelemetryEmitted = true
-
-        let streamTelemetry = [
+        var streamTelemetry = [
             "stream_dynamic_range=\(stream.dynamicRange.rawValue)",
             "stream_play_method=\(stream.playMethod.rawValue)",
             "stream_backend=\(stream.preferredBackend.rawValue)",
-            "stream_fallback_reason=\(stream.fallbackReason ?? "none")"
+            "stream_fallback_reason=\(stream.fallbackReason ?? "none")",
+            "telemetry_stage=\(stage)"
         ]
+        if steadyState {
+            streamTelemetry.append("steady_state=true")
+        }
 
         let outputTelemetry = player.dynamicRangeTelemetrySnapshot()
             .map { "\($0.key)=\($0.value)" }

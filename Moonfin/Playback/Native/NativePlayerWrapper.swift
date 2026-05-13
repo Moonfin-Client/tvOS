@@ -35,11 +35,16 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private var nativeRequestedContentRange: VideoDynamicRange = .unknown
     private var nativeSinkIsHdrCapable = false
     private var videoFrameRate: Double = 24.0
+    nonisolated(unsafe) private var frameSemaphoreTimeoutSeconds: TimeInterval = 0.1
     private var lastVideoPtsSeconds: TimeInterval = 0
+    nonisolated(unsafe) private var nativeVideoDriftDropCount: UInt64 = 0
+    nonisolated(unsafe) private var nativeVideoHoldCount: UInt64 = 0
+    nonisolated(unsafe) private var frameSemaphoreTimeoutCount: UInt64 = 0
 
-    private let maxFrameQueueDepth = 12
+    private let maxFrameQueueDepth = 24
     private let frameSemaphore: DispatchSemaphore
     private let pauseCondition = NSCondition()
+    private let framePacingQueue = DispatchQueue(label: "nativePlayer.framePacing", qos: .userInitiated)
 
     nonisolated(unsafe) private var consecutiveReadErrors: Int = 0
     private let maxReadRetries = 5
@@ -311,6 +316,11 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             "native_backend": "active",
             "native_content_range": nativeRequestedContentRange.rawValue,
             "native_sink_hdr_capable": nativeSinkIsHdrCapable ? "true" : "false",
+            "native_frame_queue_depth": "\(maxFrameQueueDepth)",
+            "native_frame_semaphore_timeout_ms": "\(Int(frameSemaphoreTimeoutSeconds * 1000))",
+            "native_frame_semaphore_timeouts": "\(frameSemaphoreTimeoutCount)",
+            "native_video_drift_drops": "\(nativeVideoDriftDropCount)",
+            "native_video_frame_holds": "\(nativeVideoHoldCount)",
         ]
         if let dv = demuxer?.dvConfig {
             snapshot["native_dv_profile"] = "\(dv.profile)"
@@ -321,6 +331,12 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             snapshot["native_frames_decoded"] = "\(decoder.decodedCount)"
             snapshot["native_frames_dropped"] = "\(decoder.droppedCount)"
             snapshot["native_decoder_status"] = decoder.hasUnrecoverableError ? "error" : "hardware"
+        }
+        if let renderer = audioRenderer {
+            snapshot["native_audio_samples_rendered"] = "\(renderer.renderedSampleCount)"
+            snapshot["native_audio_samples_dropped"] = "\(renderer.droppedSampleCount)"
+            snapshot["native_audio_underrun_events"] = "\(renderer.underrunEventCount)"
+            snapshot["native_audio_overflow_samples"] = "\(renderer.overflowDroppedSampleCount)"
         }
         return snapshot
     }
@@ -357,6 +373,11 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         videoConfigured = true
         pendingDVReconfigure = (demux.dvConfig == nil)
         videoFrameRate = videoInfo.frameRate > 0 ? videoInfo.frameRate : 24.0
+        let frameDuration = 1.0 / max(videoFrameRate, 1.0)
+        frameSemaphoreTimeoutSeconds = max(0.05, min(frameDuration * 2.0, 0.25))
+        nativeVideoDriftDropCount = 0
+        nativeVideoHoldCount = 0
+        frameSemaphoreTimeoutCount = 0
 
         if let fmtDesc = decoder.formatDescription {
             let fps = Float(videoInfo.frameRate > 0 ? videoInfo.frameRate : 24)
@@ -440,6 +461,10 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         seekTarget = nil
         nativePlaybackRate = 1.0
         videoFrameRate = 24.0
+        frameSemaphoreTimeoutSeconds = 0.1
+        nativeVideoDriftDropCount = 0
+        nativeVideoHoldCount = 0
+        frameSemaphoreTimeoutCount = 0
         consecutiveReadErrors = 0
         nativeBackgroundPaused = false
         watchdogStallCount = 0
@@ -481,9 +506,14 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
                 continue
             }
 
-            let waitResult = frameSemaphore.wait(timeout: .now() + .milliseconds(100))
+            let waitSeconds = max(0.01, self.frameSemaphoreTimeoutSeconds)
+            let waitNanoseconds = max(1, Int(waitSeconds * 1_000_000_000))
+            let waitResult = frameSemaphore.wait(timeout: .now() + .nanoseconds(waitNanoseconds))
             guard readLoopRunning else { break }
-            if waitResult == .timedOut { continue }
+            if waitResult == .timedOut {
+                self.frameSemaphoreTimeoutCount += 1
+                continue
+            }
 
             let readResult: FFReadResult
             let demux = self.demuxer
@@ -604,14 +634,28 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         let action = evaluateFrameDrift(ptsSec)
         switch action {
         case .drop:
+            nativeVideoDriftDropCount += 1
             return
-        case .hold:
-            break
+        case .hold(let delay):
+            nativeVideoHoldCount += 1
+            framePacingQueue.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.enqueueDecodedFrame(pixelBuffer, pts: pts, duration: dur, ptsSec: ptsSec)
+            }
+            return
         case .display:
-            break
+            enqueueDecodedFrame(pixelBuffer, pts: pts, duration: dur, ptsSec: ptsSec)
+            return
         }
+    }
 
-        nativeVideoSurface.enqueue(pixelBuffer: pixelBuffer, pts: pts, duration: dur)
+    private func enqueueDecodedFrame(
+        _ pixelBuffer: CVPixelBuffer,
+        pts: CMTime,
+        duration: CMTime,
+        ptsSec: Double
+    ) {
+        guard useNativeBackend else { return }
+        nativeVideoSurface.enqueue(pixelBuffer: pixelBuffer, pts: pts, duration: duration)
 
         if !firstFrameDelivered {
             firstFrameDelivered = true
@@ -644,7 +688,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         }
     }
 
-    private enum FrameAction { case display, hold, drop }
+    private enum FrameAction { case display, hold(TimeInterval), drop }
 
     private func evaluateFrameDrift(_ ptsSec: Double) -> FrameAction {
         guard let renderer = audioRenderer, renderer.currentTime > 0, ptsSec.isFinite else {
@@ -652,11 +696,14 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         }
         let audioClock = renderer.currentTime
         let drift = ptsSec - audioClock
+        let frameDuration = 1.0 / max(videoFrameRate, 1.0)
+        let adaptiveThreshold = max(0.040, frameDuration * 1.5)
 
-        if drift > 0.040 {
-            Thread.sleep(forTimeInterval: min(drift - 0.010, 0.050))
-            return .hold
-        } else if drift < -0.040 {
+        if drift > adaptiveThreshold {
+            let slack = min(0.010, adaptiveThreshold * 0.25)
+            let delay = min(max(0, drift - slack), frameDuration * 2.0)
+            return .hold(delay)
+        } else if drift < -adaptiveThreshold {
             return .drop
         }
         return .display

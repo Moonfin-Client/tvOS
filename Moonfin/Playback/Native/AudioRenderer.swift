@@ -35,6 +35,9 @@ final class AudioRenderer {
     private var ringChannelCount: Int32 = 0
 
     private var samplesRendered: Int64 = 0
+    private var outputUnderrunSamples: Int64 = 0
+    private var outputUnderrunCount: Int64 = 0
+    private var ringOverflowDroppedSamples: Int64 = 0
     private var audioDelaySeconds: TimeInterval = 0
     private var playing = false
     private var inputChannels: Int32 = 0
@@ -65,6 +68,30 @@ final class AudioRenderer {
 #else
         return false
 #endif
+    }
+
+    var renderedSampleCount: Int64 {
+        ringLock.lock()
+        defer { ringLock.unlock() }
+        return samplesRendered
+    }
+
+    var droppedSampleCount: Int64 {
+        ringLock.lock()
+        defer { ringLock.unlock() }
+        return outputUnderrunSamples + ringOverflowDroppedSamples
+    }
+
+    var underrunEventCount: Int64 {
+        ringLock.lock()
+        defer { ringLock.unlock() }
+        return outputUnderrunCount
+    }
+
+    var overflowDroppedSampleCount: Int64 {
+        ringLock.lock()
+        defer { ringLock.unlock() }
+        return ringOverflowDroppedSamples
     }
 
     // MARK: - Configure
@@ -191,7 +218,12 @@ final class AudioRenderer {
         engine = nil
         teardownCodec()
         freeRingBuffer()
+        ringLock.lock()
         samplesRendered = 0
+        outputUnderrunSamples = 0
+        outputUnderrunCount = 0
+        ringOverflowDroppedSamples = 0
+        ringLock.unlock()
         audioDelaySeconds = 0
     }
 
@@ -262,6 +294,12 @@ final class AudioRenderer {
             ringReadPos = (ringReadPos + toRead) % cap
             ringAvailable -= toRead
         }
+
+        if toRead < count {
+            outputUnderrunSamples += Int64(count - toRead)
+            outputUnderrunCount += 1
+        }
+        samplesRendered += Int64(toRead)
         ringLock.unlock()
 
         if toRead < count {
@@ -276,8 +314,6 @@ final class AudioRenderer {
         for ch in 0..<abl.count {
             abl[ch].mDataByteSize = UInt32(count * MemoryLayout<Float>.size)
         }
-
-        samplesRendered += Int64(toRead)
         return noErr
     }
 
@@ -341,6 +377,9 @@ final class AudioRenderer {
         let cap = ringCapacity
         let space = cap - ringAvailable
         let toWrite = min(sampleCount, space)
+        if toWrite < sampleCount {
+            ringOverflowDroppedSamples += Int64(sampleCount - toWrite)
+        }
         if toWrite > 0 {
             for ch in 0..<Int(ringChannelCount) {
                 guard let dst = ring[ch], let src = outPtrs[ch] else { continue }

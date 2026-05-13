@@ -40,6 +40,16 @@ struct SettingsPlaybackAdvancedScreen: View {
         return val == 0 ? "None" : "\(val) ms"
     }
 
+    private var playbackQualityProfileLabel: String {
+        let selected = prefs[UserPreferences.playbackQualityProfile]
+        if selected != .auto {
+            return selected.displayName
+        }
+
+        let generation = VideoCapabilityDetector.current().generation
+        return PlaybackQualityProfile.autoSummaryDisplayName(for: generation)
+    }
+
     var body: some View {
         SettingsScreenLayout(title: "Advanced Playback") {
             sectionHeader("Customization")
@@ -98,6 +108,15 @@ struct SettingsPlaybackAdvancedScreen: View {
                 action: { settingsRouter.navigate(to: .playbackMaxResolution) }
             )
             .focused($focusedRoute, equals: .playbackMaxResolution)
+
+            SettingsListButton(
+                icon: "gauge.with.dots.needle.50percent",
+                heading: "Playback Quality",
+                caption: "Compatibility profile for your Apple TV",
+                trailingText: playbackQualityProfileLabel,
+                action: { settingsRouter.navigate(to: .playbackQualityProfile) }
+            )
+            .focused($focusedRoute, equals: .playbackQualityProfile)
 
             SettingsListButton(
                 icon: "arrow.up.left.and.arrow.down.right",

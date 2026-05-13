@@ -20,6 +20,7 @@ final class UserPreferences {
     static let unpauseRewindDuration = Preference(key: "playback_unpause_rewind", defaultValue: 0)
     static let showDescriptionOnPause = Preference(key: "playback_show_description_pause", defaultValue: false)
     static let maxVideoResolution = Preference(key: "playback_max_resolution_enum", defaultValue: MaxVideoResolution.auto)
+    static let playbackQualityProfile = Preference(key: "playback_quality_profile", defaultValue: PlaybackQualityProfile.auto)
     static let playerZoomMode = Preference(key: "playback_zoom_mode", defaultValue: ZoomMode.fit)
     static let audioNightMode = Preference(key: "playback_audio_night_mode", defaultValue: false)
     static let liveTvDirectPlay = Preference(key: "playback_livetv_direct_play", defaultValue: true)
@@ -435,6 +436,41 @@ enum MaxVideoResolution: String, StringRepresentableEnum, CaseIterable {
         case .res1080p: return "1080p"
         case .res2160p: return "4K"
         }
+    }
+}
+
+enum PlaybackQualityProfile: String, StringRepresentableEnum, CaseIterable {
+    case auto
+    case compatibility
+    case highQuality
+
+    var displayName: String {
+        switch self {
+        case .auto: return "Auto"
+        case .compatibility: return "Compatibility"
+        case .highQuality: return "High Quality"
+        }
+    }
+
+    static func recommended(for generation: VideoCapabilityDetector.AppleTVGeneration) -> PlaybackQualityProfile {
+        switch generation {
+        case .k4Gen3:
+            return .highQuality
+        case .hd, .k4Gen1, .k4Gen2, .unknown:
+            return .compatibility
+        }
+    }
+
+    static func autoSummaryDisplayName(for generation: VideoCapabilityDetector.AppleTVGeneration) -> String {
+        let recommendedProfile = recommended(for: generation)
+        return "Auto (\(recommendedProfile.displayName) recommended)"
+    }
+
+    func pickerDisplayName(for generation: VideoCapabilityDetector.AppleTVGeneration) -> String {
+        if self == PlaybackQualityProfile.recommended(for: generation) {
+            return "\(displayName) (Recommended)"
+        }
+        return displayName
     }
 }
 

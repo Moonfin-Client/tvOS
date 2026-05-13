@@ -379,6 +379,12 @@ struct SettingsOverlayView: View {
                 selection: container.userPreferences.binding(for: UserPreferences.maxVideoResolution),
                 displayName: \.displayName
             )
+        case .playbackQualityProfile:
+            SettingsPickerScreen(
+                title: "Playback Quality",
+                selection: container.userPreferences.binding(for: UserPreferences.playbackQualityProfile),
+                displayName: playbackQualityOptionLabel
+            )
         case .playbackZoomMode:
             SettingsPickerScreen(
                 title: Strings.defaultZoom,
@@ -475,6 +481,11 @@ struct SettingsOverlayView: View {
             get: { prefs[keyPath: keyPath] },
             set: { prefs[keyPath: keyPath] = $0 }
         )
+    }
+
+    private func playbackQualityOptionLabel(_ option: PlaybackQualityProfile) -> String {
+        let generation = VideoCapabilityDetector.current().generation
+        return option.pickerDisplayName(for: generation)
     }
 }
 
