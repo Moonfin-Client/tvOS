@@ -107,7 +107,10 @@ struct SeerrUserDto: Codable, Identifiable {
     static let permissionRequestMovie = 262144
     static let permissionRequestTv = 524288
 
+    var isOwner: Bool { id == 1 }
+
     func hasPermission(_ permission: Int) -> Bool {
+        if isOwner { return true }
         let perms = permissions ?? 0
         if perms & Self.permissionAdmin != 0 { return true }
         return perms & permission != 0
@@ -117,6 +120,14 @@ struct SeerrUserDto: Codable, Identifiable {
         hasPermission(Self.permissionRequest4k) ||
         hasPermission(Self.permissionRequest4kMovie) ||
         hasPermission(Self.permissionRequest4kTv)
+    }
+
+    func canRequestMovies() -> Bool {
+        hasPermission(Self.permissionRequest) || hasPermission(Self.permissionRequestMovie)
+    }
+
+    func canRequestTv() -> Bool {
+        hasPermission(Self.permissionRequest) || hasPermission(Self.permissionRequestTv)
     }
 
     func canRequest4kMovies() -> Bool {

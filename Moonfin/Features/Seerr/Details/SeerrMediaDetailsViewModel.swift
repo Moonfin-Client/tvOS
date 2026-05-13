@@ -226,8 +226,8 @@ final class SeerrMediaDetailsViewModel: ObservableObject {
         let status = mediaInfo?.status ?? SeerrMediaInfoDto.statusUnknown
         let hasDeclinedOnly = hasOnlyDeclinedRequests(is4k: false)
         let canRequest = status == SeerrMediaInfoDto.statusUnknown || hasDeclinedOnly
-        if isMovie { return canRequest && user.hasPermission(SeerrUserDto.permissionRequestMovie) }
-        return canRequest && user.hasPermission(SeerrUserDto.permissionRequestTv)
+        if isMovie { return canRequest && user.canRequestMovies() }
+        return canRequest && user.canRequestTv()
     }
 
     var canRequest4k: Bool {
