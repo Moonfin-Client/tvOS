@@ -39,6 +39,9 @@ struct StreamInfo {
     let defaultAudioStreamIndex: Int?
     let defaultSubtitleStreamIndex: Int?
     let dynamicRange: VideoDynamicRange
+    let dvProfile: Int?
+    let dvLevel: Int?
+    let dvBlSignalCompatibilityId: Int?
     let preferredBackend: PlaybackBackendDirective
     let fallbackReason: String?
     let diagnostics: [String]

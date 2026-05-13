@@ -138,6 +138,9 @@ struct ServerMediaStream: Codable {
     let realFrameRate: Float?
     let videoRange: String?
     let videoRangeType: String?
+    let dvProfile: Int?
+    let dvLevel: Int?
+    let dvBlSignalCompatibilityId: Int?
     let channelLayout: String?
 
     enum CodingKeys: String, CodingKey {
@@ -163,6 +166,9 @@ struct ServerMediaStream: Codable {
         case realFrameRate = "RealFrameRate"
         case videoRange = "VideoRange"
         case videoRangeType = "VideoRangeType"
+        case dvProfile = "DvProfile"
+        case dvLevel = "DvLevel"
+        case dvBlSignalCompatibilityId = "DvBlSignalCompatibilityId"
         case channelLayout = "ChannelLayout"
     }
 
@@ -190,6 +196,9 @@ struct ServerMediaStream: Codable {
         realFrameRate = try container.decodeIfPresent(Float.self, forKey: .realFrameRate)
         videoRange = try container.decodeIfPresent(String.self, forKey: .videoRange)
         videoRangeType = try container.decodeIfPresent(String.self, forKey: .videoRangeType)
+        dvProfile = try container.decodeIfPresent(Int.self, forKey: .dvProfile)
+        dvLevel = try container.decodeIfPresent(Int.self, forKey: .dvLevel)
+        dvBlSignalCompatibilityId = try container.decodeIfPresent(Int.self, forKey: .dvBlSignalCompatibilityId)
         channelLayout = try container.decodeIfPresent(String.self, forKey: .channelLayout)
     }
 }

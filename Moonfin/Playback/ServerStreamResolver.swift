@@ -197,6 +197,9 @@ final class ServerStreamResolver: StreamResolver {
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
                 dynamicRange: dynamicRange,
+                dvProfile: videoStream?.dvProfile,
+                dvLevel: videoStream?.dvLevel,
+                dvBlSignalCompatibilityId: videoStream?.dvBlSignalCompatibilityId,
                 preferredBackend: preferredBackend,
                 fallbackReason: fallbackReason,
                 diagnostics: combinedDiagnostics
@@ -220,6 +223,9 @@ final class ServerStreamResolver: StreamResolver {
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
                 dynamicRange: dynamicRange,
+                dvProfile: videoStream?.dvProfile,
+                dvLevel: videoStream?.dvLevel,
+                dvBlSignalCompatibilityId: videoStream?.dvBlSignalCompatibilityId,
                 preferredBackend: preferredBackend,
                 fallbackReason: fallbackReason,
                 diagnostics: combinedDiagnostics + [isLiveTv ? "resolved_via=livetv_transcode" : "resolved_via=transcode"]
@@ -253,6 +259,9 @@ final class ServerStreamResolver: StreamResolver {
                 defaultAudioStreamIndex: source.defaultAudioStreamIndex,
                 defaultSubtitleStreamIndex: source.defaultSubtitleStreamIndex,
                 dynamicRange: .unknown,
+                dvProfile: nil,
+                dvLevel: nil,
+                dvBlSignalCompatibilityId: nil,
                 preferredBackend: requestedBackend,
                 fallbackReason: nil,
                 diagnostics: ["resolved_via=livetv"]
@@ -304,6 +313,9 @@ final class ServerStreamResolver: StreamResolver {
             defaultAudioStreamIndex: nil,
             defaultSubtitleStreamIndex: nil,
             dynamicRange: .unknown,
+            dvProfile: nil,
+            dvLevel: nil,
+            dvBlSignalCompatibilityId: nil,
             preferredBackend: requestedBackend,
             fallbackReason: nil,
             diagnostics: ["resolved_via=livetv_fallback"]

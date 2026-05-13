@@ -26,6 +26,8 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     nonisolated(unsafe) private var activeSubtitleStreamIndex: Int32 = -1
     private var videoConfigured = false
     private var firstFrameDelivered = false
+    private var resumeAwaitingFirstFrame = false
+    private var resumeGateWorkItem: DispatchWorkItem?
     nonisolated(unsafe) private var pendingDVReconfigure = false
 
     nonisolated(unsafe) private var pendingStartPosition: TimeInterval?
@@ -34,6 +36,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
     private var nativeRequestedContentRange: VideoDynamicRange = .unknown
     private var nativeSinkIsHdrCapable = false
+    private var nativeServerDVProfile: Int?
+    private var nativeServerDVLevel: Int?
+    private var nativeServerDVBlSignalCompatibilityId: Int?
     private var videoFrameRate: Double = 24.0
     nonisolated(unsafe) private var frameSemaphoreTimeoutSeconds: TimeInterval = 0.1
     private var lastVideoPtsSeconds: TimeInterval = 0
@@ -60,6 +65,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private static let watchdogInterval: TimeInterval = 3
     private static let watchdogStallThreshold: TimeInterval = 5
     private static let watchdogMaxStalls = 3
+    private static let resumeFirstFrameTimeout: TimeInterval = 1.5
 
     override init() {
         frameSemaphore = DispatchSemaphore(value: maxFrameQueueDepth)
@@ -130,7 +136,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         pauseCondition.lock()
         pauseCondition.signal()
         pauseCondition.unlock()
-        audioRenderer?.resume()
+        if !resumeAwaitingFirstFrame {
+            audioRenderer?.resume()
+        }
         nativeVideoSurface.updateLayout()
         state = .playing
     }
@@ -307,7 +315,14 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     override func configureDynamicRangeIntent(contentRange: VideoDynamicRange, sinkIsHdrCapable: Bool) {
         nativeRequestedContentRange = contentRange
         self.nativeSinkIsHdrCapable = sinkIsHdrCapable
+        nativeVideoSurface.setDynamicRange(contentRange)
         super.configureDynamicRangeIntent(contentRange: contentRange, sinkIsHdrCapable: sinkIsHdrCapable)
+    }
+
+    override func configureDolbyVisionMetadata(profile: Int?, level: Int?, blSignalCompatibilityId: Int?) {
+        nativeServerDVProfile = profile
+        nativeServerDVLevel = level
+        nativeServerDVBlSignalCompatibilityId = blSignalCompatibilityId
     }
 
     override func dynamicRangeTelemetrySnapshot() -> [String: String] {
@@ -350,6 +365,11 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
         let demux = FFDemuxer()
         guard demux.isReady, demux.open(url: url) else { return false }
+        _ = demux.seedDVConfigFromServer(
+            profile: nativeServerDVProfile,
+            level: nativeServerDVLevel,
+            blSignalCompatibilityId: nativeServerDVBlSignalCompatibilityId
+        )
         demuxer = demux
 
         guard demux.videoStreamIndex >= 0 else {
@@ -408,6 +428,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         if let view = playerHostView {
             nativeVideoSurface.attach(to: view)
         }
+        nativeVideoSurface.setDynamicRange(nativeRequestedContentRange)
 
         useNativeBackend = true
         updatePlaybackBackend(identifier: "native", fallbackReason: nil)
@@ -443,6 +464,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         audioRenderer = nil
         videoDecoder?.invalidate()
         videoDecoder = nil
+        nativeVideoSurface.setDynamicRange(.unknown)
         nativeVideoSurface.teardown()
         subtitleOverlay.clear()
         subtitleOverlay.removeFromSuperview()
@@ -454,6 +476,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         videoConfigured = false
         firstFrameDelivered = false
         pendingDVReconfigure = false
+        resumeGateWorkItem?.cancel()
+        resumeGateWorkItem = nil
+        resumeAwaitingFirstFrame = false
         activeVideoStreamIndex = -1
         activeAudioStreamIndex = -1
         activeSubtitleStreamIndex = -1
@@ -462,6 +487,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         nativePlaybackRate = 1.0
         videoFrameRate = 24.0
         frameSemaphoreTimeoutSeconds = 0.1
+        nativeServerDVProfile = nil
+        nativeServerDVLevel = nil
+        nativeServerDVBlSignalCompatibilityId = nil
         nativeVideoDriftDropCount = 0
         nativeVideoHoldCount = 0
         frameSemaphoreTimeoutCount = 0
@@ -661,6 +689,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             firstFrameDelivered = true
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
+                self.completeResumeAfterWakeGate()
                 if let pending = self.pendingStartPosition {
                     self.pendingStartPosition = nil
                     self.performSeek(to: pending)
@@ -681,8 +710,10 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             }
             if let st = self.seekTarget, ptsSec >= st - 0.1 {
                 self.seekTarget = nil
+                self.completeResumeAfterWakeGate()
                 self.state = .playing
             } else if case .buffering = self.state, self.seekTarget == nil {
+                self.completeResumeAfterWakeGate()
                 self.state = .playing
             }
         }
@@ -737,6 +768,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         seekTarget = seconds
         consecutiveReadErrors = 0
         lastVideoPtsSeconds = 0
+        firstFrameDelivered = false
 
         videoDecoder?.flush()
         videoDecoder?.resetErrorState()
@@ -885,6 +917,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
                     guard let self, self.useNativeBackend else { return }
                     self.nativeBackgroundPaused = true
                     self.audioRenderer?.pause()
+                    self.resumeGateWorkItem?.cancel()
+                    self.resumeGateWorkItem = nil
+                    self.resumeAwaitingFirstFrame = false
                     self.nativeVideoSurface.flush()
                 }
             }
@@ -904,11 +939,36 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
                     self.pauseCondition.unlock()
                     self.nativeVideoSurface.updateLayout()
                     if case .playing = self.state {
-                        self.audioRenderer?.resume()
+                        self.beginResumeAfterWakeGate()
+                        let resumePoint = max(0, self.snapshotPlaybackPosition())
+                        self.performSeek(to: resumePoint)
                     }
                 }
             }
         )
+    }
+
+    private func beginResumeAfterWakeGate() {
+        resumeAwaitingFirstFrame = true
+        firstFrameDelivered = false
+        state = .buffering(0.25)
+
+        resumeGateWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self, self.resumeAwaitingFirstFrame else { return }
+            self.completeResumeAfterWakeGate()
+            self.state = .playing
+        }
+        resumeGateWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.resumeFirstFrameTimeout, execute: workItem)
+    }
+
+    private func completeResumeAfterWakeGate() {
+        guard resumeAwaitingFirstFrame else { return }
+        resumeAwaitingFirstFrame = false
+        resumeGateWorkItem?.cancel()
+        resumeGateWorkItem = nil
+        audioRenderer?.resume()
     }
 
     private func unregisterNativeLifecycleObservers() {

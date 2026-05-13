@@ -399,6 +399,11 @@ final class PlaybackManager: ObservableObject {
                 preferences[UserPreferences.playbackQualityProfile],
                 generation: sinkCapabilities.generation
             )
+            player.configureDolbyVisionMetadata(
+                profile: stream.dvProfile,
+                level: stream.dvLevel,
+                blSignalCompatibilityId: stream.dvBlSignalCompatibilityId
+            )
             player.configurePreferredBackendForNextPlayback(stream.preferredBackend, fallbackReason: stream.fallbackReason)
             if isAudioItem {
                 player.configurePreferredRenderFramesPerSecond(nil)

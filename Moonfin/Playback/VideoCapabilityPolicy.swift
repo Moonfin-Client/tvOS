@@ -200,7 +200,7 @@ struct VideoDynamicRangePolicy {
         let rangeType = stream.videoRangeType?.lowercased() ?? ""
         let sample = [codec, profile, range, rangeType].joined(separator: " ")
 
-        if sample.contains("dovi") || sample.contains("dvhe") || sample.contains("dvh1") || sample.contains("dolby") {
+        if isDolbyVision(videoStream: stream, sample: sample, rangeType: rangeType) {
             return .dolbyVision
         }
 
@@ -223,6 +223,51 @@ struct VideoDynamicRangePolicy {
         return .unknown
     }
 
+    private static func isDolbyVision(videoStream: ServerMediaStream, sample: String, rangeType: String) -> Bool {
+        if let dvProfile = videoStream.dvProfile, dvProfile > 0 {
+            return true
+        }
+
+        if videoStream.dvBlSignalCompatibilityId != nil {
+            return true
+        }
+
+        let compactRangeType = rangeType
+            .replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: "-", with: "")
+
+        if compactRangeType.contains("dovi") || compactRangeType.contains("dolbyvision") {
+            return true
+        }
+
+        return sample.contains("dovi")
+            || sample.contains("dvhe")
+            || sample.contains("dvh1")
+            || sample.contains("dolby")
+    }
+
+    private static func detectDolbyVisionSource(videoStream: ServerMediaStream?) -> String {
+        guard let stream = videoStream else { return "none" }
+
+        if let dvProfile = stream.dvProfile, dvProfile > 0 {
+            return "dv_profile"
+        }
+
+        if stream.dvBlSignalCompatibilityId != nil {
+            return "dv_bl_compatibility"
+        }
+
+        let rangeType = stream.videoRangeType?.lowercased() ?? ""
+        let compactRangeType = rangeType
+            .replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: "-", with: "")
+        if compactRangeType.contains("dovi") || compactRangeType.contains("dolbyvision") {
+            return "video_range_type"
+        }
+
+        return "token_match"
+    }
+
     static func decide(
         requestedBackend: PlaybackBackendDirective,
         dynamicRange: VideoDynamicRange,
@@ -235,8 +280,16 @@ struct VideoDynamicRangePolicy {
         diagnostics.append("dynamic_range=\(dynamicRange.rawValue)")
         diagnostics.append("requested_backend=\(requestedBackend.rawValue)")
         diagnostics.append("can_transcode=\(canTranscode)")
+        diagnostics.append("video_range_type=\(videoStream?.videoRangeType ?? "unknown")")
+        if let dvProfile = videoStream?.dvProfile {
+            diagnostics.append("dv_profile=\(dvProfile)")
+        }
+        if let dvCompat = videoStream?.dvBlSignalCompatibilityId {
+            diagnostics.append("dv_bl_compatibility_id=\(dvCompat)")
+        }
 
         if dynamicRange == .dolbyVision {
+            diagnostics.append("dv_route_source=\(detectDolbyVisionSource(videoStream: videoStream))")
             if nativeDvEnabled && FFmpegAvailability.isAvailable {
                 return (.native, "dolby_vision_native_decode", diagnostics)
             }

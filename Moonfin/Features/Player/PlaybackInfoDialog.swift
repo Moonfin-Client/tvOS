@@ -125,6 +125,9 @@ struct PlaybackInfoDialog: View {
                     InfoRow(label: Strings.playerToneMap, value: telemetry["mpv_intent_tone_mapping"] ?? Strings.playerNA)
                     InfoRow(label: Strings.playerSinkHdr, value: telemetry["mpv_intent_sink_hdr_capable"] ?? Strings.playerNA)
                     InfoRow(label: Strings.playerContent, value: telemetry["mpv_intent_content_range"] ?? Strings.playerNA)
+                    if let dvRouteSource = diagnosticValue(for: "dv_route_source") {
+                        InfoRow(label: "DV Route", value: dvRouteSource)
+                    }
                 }
                 Group {
                     if let inPrim = telemetry["mpv_input_primaries"] {
@@ -187,18 +190,24 @@ struct PlaybackInfoDialog: View {
     }
 
     private func hdrType(for stream: ServerMediaStream) -> String {
-        let rangeType = stream.videoRangeType ?? ""
+        let rangeType = (stream.videoRangeType ?? "").uppercased()
         let telemetry = viewModel.player.dynamicRangeTelemetrySnapshot()
-        let isDV = rangeType.contains("DOVI") || rangeType.contains("DoVi")
+        let isDV = rangeType.contains("DOVI")
+            || rangeType.contains("DOLBYVISION")
+            || stream.dvProfile != nil
+            || stream.dvBlSignalCompatibilityId != nil
 
-        if isDV, let profile = telemetry["native_dv_profile"], let level = telemetry["native_dv_level"] {
+        let dvProfile = stream.dvProfile.map(String.init) ?? telemetry["native_dv_profile"]
+        let dvLevel = stream.dvLevel.map(String.init) ?? telemetry["native_dv_level"]
+
+        if isDV, let profile = dvProfile, let level = dvLevel {
             return Strings.playerDolbyVisionProfile(profile, level)
         }
         if isDV { return Strings.playerDolbyVision }
-        if rangeType.contains("HDR10Plus") || rangeType.contains("HDR10+") { return Strings.playerHdr10Plus }
+        if rangeType.contains("HDR10PLUS") || rangeType.contains("HDR10+") { return Strings.playerHdr10Plus }
         if rangeType.contains("HDR10") { return Strings.playerHdr10 }
         if rangeType.contains("HLG") { return Strings.playerHlg }
-        let range = stream.videoRange ?? ""
+        let range = (stream.videoRange ?? "").uppercased()
         if rangeType.contains("HDR") || range == "HDR" { return Strings.playerHdrValue }
         return Strings.playerSdr
     }
@@ -241,6 +250,14 @@ struct PlaybackInfoDialog: View {
         case 8: return "7.1"
         default: return Strings.playerChannelsCount(channels)
         }
+    }
+
+    private func diagnosticValue(for key: String) -> String? {
+        guard let diagnostics = streamInfo?.diagnostics else { return nil }
+        let prefix = "\(key)="
+        guard let entry = diagnostics.first(where: { $0.hasPrefix(prefix) }) else { return nil }
+        let value = String(entry.dropFirst(prefix.count))
+        return value.isEmpty ? nil : value
     }
 }
 

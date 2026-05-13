@@ -343,6 +343,30 @@ final class FFDemuxer {
         }
     }
 
+    @discardableResult
+    func seedDVConfigFromServer(profile: Int?, level: Int?, blSignalCompatibilityId: Int?) -> Bool {
+        guard dvConfig == nil else { return false }
+        guard let profile, profile > 0 else { return false }
+
+        let clampedProfile = UInt8(clamping: profile)
+        let clampedLevel = UInt8(clamping: max(level ?? 1, 1))
+        let defaultCompatibility = profile == 8 ? 1 : 0
+        let compatibility = UInt8(clamping: max(blSignalCompatibilityId ?? defaultCompatibility, 0))
+
+        dvConfig = DVConfiguration(
+            versionMajor: 1,
+            versionMinor: 0,
+            profile: clampedProfile,
+            level: clampedLevel,
+            rpuPresent: true,
+            elPresent: false,
+            blPresent: true,
+            blSignalCompatibilityId: compatibility,
+            mdCompression: 0
+        )
+        return true
+    }
+
     func codecpar(forStreamIndex index: Int32) -> UnsafeMutableRawPointer? {
         guard let ctx = formatCtx, index >= 0 else { return nil }
         let ctxRaw = UnsafeMutableRawPointer(ctx)

@@ -170,9 +170,17 @@ final class VTDecoder {
             decoderSpec[kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder] = true
         }
 
+        let fullRange = sourceUsesFullRange(formatDescription)
+        let outputPixelFormat: OSType = fullRange
+            ? kCVPixelFormatType_420YpCbCr10BiPlanarFullRange
+            : kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
+
         let outputAttrs: [CFString: Any] = [
             kCVPixelBufferIOSurfacePropertiesKey: [:] as [String: Any],
-            kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
+            kCVPixelBufferPixelFormatTypeKey: outputPixelFormat,
+            kCVImageBufferColorPrimariesKey: preferredColorPrimaries(),
+            kCVImageBufferTransferFunctionKey: preferredTransferFunction(),
+            kCVImageBufferYCbCrMatrixKey: preferredYCbCrMatrix()
         ]
 
         var session: VTDecompressionSession?
@@ -210,11 +218,76 @@ final class VTDecoder {
                     decoder.framesDropped += 1
                     return
                 }
+                decoder.attachColorMetadata(to: pixelBuffer)
                 decoder.framesDecoded += 1
                 decoder.insertIntoReorderBuffer(pixelBuffer: pixelBuffer, pts: pts)
             },
             decompressionOutputRefCon: rawSelf
         )
+    }
+
+    private func sourceUsesFullRange(_ formatDescription: CMVideoFormatDescription) -> Bool {
+        guard let extensions = CMFormatDescriptionGetExtensions(formatDescription) as? [CFString: Any] else {
+            return false
+        }
+
+        if let number = extensions[kCMFormatDescriptionExtension_FullRangeVideo] as? NSNumber {
+            return number.boolValue
+        }
+
+        if let fullRange = extensions[kCMFormatDescriptionExtension_FullRangeVideo] as? Bool {
+            return fullRange
+        }
+
+        return false
+    }
+
+    private func preferredColorPrimaries() -> CFString {
+        guard let formatDescription,
+              let extensions = CMFormatDescriptionGetExtensions(formatDescription) as? [CFString: Any],
+              let value = extensions[kCMFormatDescriptionExtension_ColorPrimaries] as? String else {
+            return dvConfig == nil ? kCVImageBufferColorPrimaries_ITU_R_709_2 : kCVImageBufferColorPrimaries_ITU_R_2020
+        }
+
+        if value == (kCMFormatDescriptionColorPrimaries_ITU_R_2020 as String) {
+            return kCVImageBufferColorPrimaries_ITU_R_2020
+        }
+        return kCVImageBufferColorPrimaries_ITU_R_709_2
+    }
+
+    private func preferredTransferFunction() -> CFString {
+        guard let formatDescription,
+              let extensions = CMFormatDescriptionGetExtensions(formatDescription) as? [CFString: Any],
+              let value = extensions[kCMFormatDescriptionExtension_TransferFunction] as? String else {
+            return dvConfig == nil ? kCVImageBufferTransferFunction_ITU_R_709_2 : kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ
+        }
+
+        if value == (kCMFormatDescriptionTransferFunction_ITU_R_2100_HLG as String) {
+            return kCVImageBufferTransferFunction_ITU_R_2100_HLG
+        }
+        if value == (kCMFormatDescriptionTransferFunction_SMPTE_ST_2084_PQ as String) {
+            return kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ
+        }
+        return kCVImageBufferTransferFunction_ITU_R_709_2
+    }
+
+    private func preferredYCbCrMatrix() -> CFString {
+        guard let formatDescription,
+              let extensions = CMFormatDescriptionGetExtensions(formatDescription) as? [CFString: Any],
+              let value = extensions[kCMFormatDescriptionExtension_YCbCrMatrix] as? String else {
+            return dvConfig == nil ? kCVImageBufferYCbCrMatrix_ITU_R_709_2 : kCVImageBufferYCbCrMatrix_ITU_R_2020
+        }
+
+        if value == (kCMFormatDescriptionYCbCrMatrix_ITU_R_2020 as String) {
+            return kCVImageBufferYCbCrMatrix_ITU_R_2020
+        }
+        return kCVImageBufferYCbCrMatrix_ITU_R_709_2
+    }
+
+    private func attachColorMetadata(to pixelBuffer: CVPixelBuffer) {
+        CVBufferSetAttachment(pixelBuffer, kCVImageBufferColorPrimariesKey, preferredColorPrimaries(), .shouldPropagate)
+        CVBufferSetAttachment(pixelBuffer, kCVImageBufferTransferFunctionKey, preferredTransferFunction(), .shouldPropagate)
+        CVBufferSetAttachment(pixelBuffer, kCVImageBufferYCbCrMatrixKey, preferredYCbCrMatrix(), .shouldPropagate)
     }
 
     // MARK: - Frame reordering
