@@ -48,6 +48,9 @@ final class PlaybackManager: ObservableObject {
     private var stallCount = 0
     private var terminalOutcome = "stopped"
     private var lastBoundaryProgressReportAt: CFAbsoluteTime = 0
+    private var playbackSessionToken: Int = 0
+    private var userSubtitleOverrideSessionToken: Int?
+    private var startupSubtitleEnforcementTask: Task<Void, Never>?
 
     var currentEntry: QueueEntry? {
         guard currentIndex >= 0 && currentIndex < queue.count else { return nil }
@@ -285,7 +288,16 @@ final class PlaybackManager: ObservableObject {
     }
 
     func setSubtitleTrack(_ index: Int32) {
+        markUserSubtitleOverrideForCurrentSession()
         player.setSubtitleTrack(index)
+        Task { [weak self] in
+            await self?.reportPlaybackProgressBoundary()
+        }
+    }
+
+    func disableSubtitles() {
+        markUserSubtitleOverrideForCurrentSession()
+        player.disableSubtitles()
         Task { [weak self] in
             await self?.reportPlaybackProgressBoundary()
         }
@@ -334,6 +346,12 @@ final class PlaybackManager: ObservableObject {
     private func playCurrentEntry() async {
         guard let entry = currentEntry else { return }
 
+        startupSubtitleEnforcementTask?.cancel()
+        startupSubtitleEnforcementTask = nil
+        playbackSessionToken += 1
+        let currentSessionToken = playbackSessionToken
+        userSubtitleOverrideSessionToken = nil
+
         playbackState = .resolving
 
         let isAudioItem = entry.item.mediaType == .audio
@@ -346,6 +364,7 @@ final class PlaybackManager: ObservableObject {
             subtitleIndex = entry.subtitleStreamIndex
                 ?? (subtitleConfigurator.shouldDefaultToNone ? -1 : nil)
         }
+        let shouldEnforceSubtitlesOffAtStartup = !isAudioItem && entry.subtitleStreamIndex == nil && subtitleConfigurator.shouldDefaultToNone
 
         do {
             async let segmentsTask: () = loadSegmentsIfSupported(for: entry.item.id)
@@ -421,12 +440,15 @@ final class PlaybackManager: ObservableObject {
             stallCount = 0
             terminalOutcome = "stopped"
 
+            player.setForceSubtitlesDisabledOnStart(shouldEnforceSubtitlesOffAtStartup)
             await player.play(streamUrl: stream.url, startPosition: startSeconds, audioOnly: isAudioItem)
 
             let defaultZoom = preferences[UserPreferences.playerZoomMode]
             if defaultZoom != .fit {
                 player.setZoomMode(defaultZoom)
             }
+
+            enforceSubtitleOffAtStartupIfNeeded(sessionToken: currentSessionToken, enabled: shouldEnforceSubtitlesOffAtStartup)
 
             applyPreferredAudioTrack(stream: stream)
             await reportPlaybackStart()
@@ -549,6 +571,8 @@ final class PlaybackManager: ObservableObject {
     private func stopAndReport(failed: Bool) async {
         reportingTask?.cancel()
         reportingTask = nil
+        startupSubtitleEnforcementTask?.cancel()
+        startupSubtitleEnforcementTask = nil
         prefetchTask?.cancel()
         prefetchTask = nil
         dynamicRangeTelemetryTask?.cancel()
@@ -745,6 +769,38 @@ final class PlaybackManager: ObservableObject {
         }
 
         return (audio, subtitle)
+    }
+
+    private func markUserSubtitleOverrideForCurrentSession() {
+        userSubtitleOverrideSessionToken = playbackSessionToken
+    }
+
+    private func enforceSubtitleOffAtStartupIfNeeded(sessionToken: Int, enabled: Bool) {
+        guard enabled else { return }
+
+        player.disableSubtitles()
+
+        startupSubtitleEnforcementTask?.cancel()
+        startupSubtitleEnforcementTask = Task { [weak self] in
+            guard let self else { return }
+
+            for _ in 0..<8 {
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                guard !Task.isCancelled else { return }
+                guard self.playbackSessionToken == sessionToken else { return }
+                guard self.userSubtitleOverrideSessionToken != sessionToken else { return }
+
+                let subtitleIsOff = self.player.currentSubtitleTrackIndex == -1
+                let tracksReady = !self.player.subtitleTracks.isEmpty
+                let playerReady = self.player.state == .playing || self.player.state == .paused
+
+                if subtitleIsOff && (tracksReady || playerReady) {
+                    return
+                }
+
+                self.player.disableSubtitles()
+            }
+        }
     }
 
     private func mapPlayerTrackToServerStreamIndex(

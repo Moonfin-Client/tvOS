@@ -118,6 +118,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private var lastFallbackPropertyPollAt: CFAbsoluteTime = 0
     private var lastPositionPublishAt: CFAbsoluteTime = 0
     private var mpvSubtitleOptions: [String: Any] = [:]
+    private var forceSubtitlesDisabledOnStart = false
     private var pendingMpvStartPosition: TimeInterval?
     private var pendingMpvSeekAttempts = 0
     private var pendingMpvSeekLastAttemptAt: CFAbsoluteTime = 0
@@ -201,6 +202,10 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         subtitleOptions = options
         mpvSubtitleOptions = options
         engine?.applySubtitleStyle(options)
+    }
+
+    func setForceSubtitlesDisabledOnStart(_ force: Bool) {
+        forceSubtitlesDisabledOnStart = force
     }
 
     func play(streamUrl: String, startPosition: TimeInterval = 0, audioOnly: Bool = false) async {
@@ -544,6 +549,13 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         return false
     }
 
+    private func applyStartupSubtitlePolicyIfNeeded() {
+        guard forceSubtitlesDisabledOnStart else { return }
+        forceSubtitlesDisabledOnStart = false
+        _ = engine?.disableSubtitles()
+        currentSubtitleTrackIndex = -1
+    }
+
     private func applyPendingMpvStartPositionIfNeeded() {
         guard let startPosition = pendingMpvStartPosition, startPosition > 0, let engine else { return }
 
@@ -759,6 +771,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
             state = .buffering(0.25)
             applyPendingMpvStartPositionIfNeeded()
             refreshTracksFromMpv()
+            applyStartupSubtitlePolicyIfNeeded()
         case MPVEngine.EventID.playbackRestart.rawValue:
             applyPendingMpvStartPositionIfNeeded()
             state = .playing

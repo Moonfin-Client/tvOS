@@ -76,7 +76,7 @@ struct PlayerSubtitleTrackDialog: View {
                 label: Strings.none,
                 detail: nil,
                 isSelected: viewModel.player.currentSubtitleTrackIndex == -1,
-                action: { viewModel.player.disableSubtitles() }
+                action: { viewModel.playbackManager.disableSubtitles() }
             )
 
             ForEach(viewModel.player.subtitleTracks) { track in

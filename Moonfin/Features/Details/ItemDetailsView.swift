@@ -312,10 +312,12 @@ struct ItemDetailsView: View {
         guard let sources = viewModel.item?.mediaSources,
               selectedMediaSourceIndex < sources.count else { return }
         let source = sources[selectedMediaSourceIndex]
+        let defaultSubtitlesOff = container.userPreferences[UserPreferences.subtitlesDefaultToNone]
+        let isAudioItem = viewModel.item?.mediaType == .audio
         if selectedAudioIndex == nil {
             selectedAudioIndex = source.defaultAudioStreamIndex
         }
-        if selectedSubtitleIndex == nil {
+        if selectedSubtitleIndex == nil && !(defaultSubtitlesOff && !isAudioItem) {
             selectedSubtitleIndex = source.defaultSubtitleStreamIndex
         }
     }
