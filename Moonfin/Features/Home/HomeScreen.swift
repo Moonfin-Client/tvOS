@@ -3,6 +3,7 @@ import Nuke
 
 struct HomeScreen: View {
     @StateObject private var viewModel: HomeViewModel
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var previewManager: PreviewPlayerManager
     @EnvironmentObject var theme: MoonfinTheme
@@ -14,8 +15,6 @@ struct HomeScreen: View {
     let sidebarHandoffToken: Int
     let onRequestTopNavbarHomeFocus: (() -> Void)?
     @State private var isMediaBarMode = true
-    @State private var sentinelEnabled = false
-    @State private var sentinelEnablePending = false
     @State private var focusedRowId: String?
     @State private var scrollTrigger: Int = 0
     @State private var lastFocusedRowId: String?
@@ -39,6 +38,7 @@ struct HomeScreen: View {
     @State private var sidebarEntryItemId: String?
     @State private var sidebarEntryWasMediaBar = false
     @State private var hasInitiallyFocusedFirstRow = false
+    @State private var appWasBackgrounded = false
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -50,6 +50,15 @@ struct HomeScreen: View {
 
     private var rowsShouldPreferDefaultFocus: Bool {
         suppressTopNavbarInRows
+    }
+
+    private var shouldShowMediaBarReturnSentinel: Bool {
+        guard viewModel.mediaBarViewModel.isEnabled,
+              viewModel.isMediaBarActive,
+              !isMediaBarMode,
+              let firstRowId = viewModel.visibleRows.first?.id
+        else { return false }
+        return focusedRowId == firstRowId
     }
 
     private var seasonalSurprise: SeasonalSurprise {
@@ -88,7 +97,6 @@ struct HomeScreen: View {
             }
             if isRestoringPosition {
                 isRestoringPosition = false
-                sentinelEnabled = viewModel.isMediaBarActive
             }
             if isMediaBarMode && viewModel.isMediaBarActive {
                 mediaBarRequestFocus = true
@@ -99,6 +107,37 @@ struct HomeScreen: View {
             } else {
                 resetFocus(in: mainNamespace)
             }
+        }
+    }
+
+    private func handleAppDidBecomeActive() {
+        focusTask?.cancel()
+        restoreTask?.cancel()
+        mediaBarRequestFocus = false
+
+        if let restoreRowId = lastFocusedRowId {
+            isMediaBarMode = false
+            focusedRowId = restoreRowId
+            isRestoringPosition = true
+            hasInitiallyFocusedFirstRow = true
+            resolveFocus(delay: 100_000_000)
+            scheduleSidebarRowRestore(delay: 150_000_000)
+            return
+        }
+
+        isRestoringPosition = false
+
+        if viewModel.isMediaBarActive {
+            isMediaBarMode = true
+            viewModel.mediaBarViewModel.resume()
+            requestMediaBarFocus(after: 0)
+            return
+        }
+
+        if viewModel.hasFocusableContent {
+            isMediaBarMode = false
+            focusFirstRowTrigger += 1
+            scheduleSidebarRowRestore(delay: 100_000_000)
         }
     }
 
@@ -156,8 +195,6 @@ struct HomeScreen: View {
                         },
                         onNavigateDown: {
                             cancelMediaBarTrailerPreview()
-                            sentinelEnabled = false
-                            sentinelEnablePending = false
                             isMediaBarMode = false
                             let firstVisibleRowId = viewModel.visibleRows.first?.id
                             lastFocusedRowId = firstVisibleRowId
@@ -216,8 +253,6 @@ struct HomeScreen: View {
                 isMediaBarMode = false
                 isRestoringPosition = true
                 hasInitiallyFocusedFirstRow = true
-                sentinelEnabled = false
-                sentinelEnablePending = false
                 resolveFocus(delay: 100_000_000)
             } else if viewModel.isMediaBarActive {
                 isMediaBarMode = true
@@ -226,11 +261,27 @@ struct HomeScreen: View {
         }
         .onDisappear {
             focusTask?.cancel()
-            sentinelEnablePending = false
             cancelMediaBarTrailerPreview()
             viewModel.mediaBarViewModel.cleanup()
             suppressTopNavbarUntilMediaBarFocus = false
             suppressTopNavbarInRows = false
+        }
+        .onChange(of: scenePhase) { phase in
+            switch phase {
+            case .background:
+                appWasBackgrounded = true
+                focusTask?.cancel()
+                restoreTask?.cancel()
+                cancelMediaBarTrailerPreview()
+            case .active:
+                guard appWasBackgrounded else { return }
+                appWasBackgrounded = false
+                handleAppDidBecomeActive()
+            case .inactive:
+                break
+            @unknown default:
+                break
+            }
         }
         .onChange(of: viewModel.isMediaBarActive) { active in
             if active && lastFocusedRowId == nil {
@@ -386,7 +437,7 @@ struct HomeScreen: View {
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
-                        if viewModel.mediaBarViewModel.isEnabled && viewModel.isMediaBarActive && sentinelEnabled {
+                        if shouldShowMediaBarReturnSentinel {
                             MediaBarReturnSentinel(
                                 hasContent: !viewModel.visibleRows.isEmpty,
                                 onReturn: {
@@ -410,21 +461,9 @@ struct HomeScreen: View {
                                         let isNewRow = focusedRowId != row.id
                                         focusedRowId = row.id
 
-                                        if !sentinelEnabled && !sentinelEnablePending && !isMediaBarMode && viewModel.isMediaBarActive {
-                                            sentinelEnablePending = true
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                                sentinelEnablePending = false
-                                                if !isMediaBarMode {
-                                                    sentinelEnabled = true
-                                                }
-                                            }
-                                        }
-
                                         if isRestoringPosition {
                                             if row.id == lastFocusedRowId {
                                                 isRestoringPosition = false
-                                                sentinelEnablePending = false
-                                                sentinelEnabled = viewModel.isMediaBarActive
                                             }
                                         } else if isNewRow {
                                             scrollTrigger += 1
@@ -501,15 +540,6 @@ struct HomeScreen: View {
                     guard let rowId = lastFocusedRowId else { return }
                     withAnimation(.easeInOut(duration: 0.3)) {
                         proxy.scrollTo(rowId, anchor: UnitPoint(x: 0, y: 0.05))
-                    }
-                }
-                .onAppear {
-                    if let rowId = lastFocusedRowId {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                proxy.scrollTo(rowId, anchor: UnitPoint(x: 0, y: 0.05))
-                            }
-                        }
                     }
                 }
             }
@@ -752,25 +782,14 @@ private struct MediaBarReturnSentinel: UIViewRepresentable {
 private class SentinelFocusView: UIView {
     var onReturnToMediaBar: (() -> Void)?
     var hasContent = false
-    private var passingThrough = false
 
-    override var canBecomeFocused: Bool { hasContent && !passingThrough }
+    override var canBecomeFocused: Bool { hasContent }
 
     override func didUpdateFocus(in context: UIFocusUpdateContext, with coordinator: UIFocusAnimationCoordinator) {
         super.didUpdateFocus(in: context, with: coordinator)
-        guard isFocused else { return }
-
-        if context.focusHeading.contains(.up) {
-            DispatchQueue.main.async { [weak self] in
-                self?.onReturnToMediaBar?()
-            }
-        } else {
-            passingThrough = true
-            DispatchQueue.main.async { [weak self] in
-                self?.setNeedsFocusUpdate()
-                self?.updateFocusIfNeeded()
-                self?.passingThrough = false
-            }
+        guard isFocused, context.focusHeading.contains(.up) else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.onReturnToMediaBar?()
         }
     }
 }
