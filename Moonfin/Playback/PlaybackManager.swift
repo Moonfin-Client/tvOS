@@ -51,6 +51,7 @@ final class PlaybackManager: ObservableObject {
     private var playbackSessionToken: Int = 0
     private var userSubtitleOverrideSessionToken: Int?
     private var startupSubtitleEnforcementTask: Task<Void, Never>?
+    private var startupExternalSubtitleLoadingTask: Task<Void, Never>?
 
     var currentEntry: QueueEntry? {
         guard currentIndex >= 0 && currentIndex < queue.count else { return nil }
@@ -348,6 +349,8 @@ final class PlaybackManager: ObservableObject {
 
         startupSubtitleEnforcementTask?.cancel()
         startupSubtitleEnforcementTask = nil
+        startupExternalSubtitleLoadingTask?.cancel()
+        startupExternalSubtitleLoadingTask = nil
         playbackSessionToken += 1
         let currentSessionToken = playbackSessionToken
         userSubtitleOverrideSessionToken = nil
@@ -451,6 +454,21 @@ final class PlaybackManager: ObservableObject {
             enforceSubtitleOffAtStartupIfNeeded(sessionToken: currentSessionToken, enabled: shouldEnforceSubtitlesOffAtStartup)
 
             applyPreferredAudioTrack(stream: stream)
+            let externalSubtitleStreams = stream.subtitleStreams.filter { $0.isExternal && !($0.deliveryUrl?.isEmpty ?? true) }
+            let hasExternalSubtitles = !externalSubtitleStreams.isEmpty
+            let hasSubtitleSelection = (entry.subtitleStreamIndex ?? -1) >= 0
+            if hasExternalSubtitles || hasSubtitleSelection {
+                startupExternalSubtitleLoadingTask = Task { [weak self] in
+                    guard let self else { return }
+                    await self.loadExternalSubtitlesAndApplySelection(
+                        stream: stream,
+                        externalStreams: externalSubtitleStreams,
+                        entry: entry,
+                        sessionToken: currentSessionToken
+                    )
+                }
+            }
+
             await reportPlaybackStart()
             startProgressReporting()
             prefetchNextStream()
@@ -573,6 +591,8 @@ final class PlaybackManager: ObservableObject {
         reportingTask = nil
         startupSubtitleEnforcementTask?.cancel()
         startupSubtitleEnforcementTask = nil
+        startupExternalSubtitleLoadingTask?.cancel()
+        startupExternalSubtitleLoadingTask = nil
         prefetchTask?.cancel()
         prefetchTask = nil
         dynamicRangeTelemetryTask?.cancel()
@@ -801,6 +821,92 @@ final class PlaybackManager: ObservableObject {
                 self.player.disableSubtitles()
             }
         }
+    }
+
+    private func buildExternalSubtitleURL(_ deliveryUrl: String) -> URL? {
+        let trimmedUrl = deliveryUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedUrl.isEmpty else { return nil }
+
+        let sourceUrl: String
+        let lowercased = trimmedUrl.lowercased()
+        if lowercased.hasPrefix("http://") || lowercased.hasPrefix("https://") {
+            sourceUrl = trimmedUrl
+        } else {
+            guard let baseUrl = serverBaseUrl else { return nil }
+            sourceUrl = trimmedUrl.hasPrefix("/") ? "\(baseUrl)\(trimmedUrl)" : "\(baseUrl)/\(trimmedUrl)"
+        }
+
+        guard var components = URLComponents(string: sourceUrl) else { return nil }
+
+        if let token = serverAccessToken, !token.isEmpty {
+            var queryItems = components.queryItems ?? []
+            if !queryItems.contains(where: { $0.name == "api_key" }) {
+                queryItems.append(URLQueryItem(name: "api_key", value: token))
+            }
+            components.queryItems = queryItems
+        }
+
+        return components.url
+    }
+
+    private func loadExternalSubtitlesAndApplySelection(
+        stream: StreamInfo,
+        externalStreams: [ServerMediaStream],
+        entry: QueueEntry,
+        sessionToken: Int
+    ) async {
+        let embeddedSubtitleCount = stream.subtitleStreams.filter { !$0.isExternal }.count
+
+        for _ in 0..<20 {
+            guard playbackSessionToken == sessionToken else { return }
+
+            let tracksReady = player.subtitleTracks.count >= embeddedSubtitleCount
+            let playerReady: Bool
+            switch player.state {
+            case .buffering, .playing, .paused:
+                playerReady = true
+            default:
+                playerReady = false
+            }
+
+            if tracksReady && playerReady {
+                break
+            }
+
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+
+        guard playbackSessionToken == sessionToken else { return }
+
+        for subtitleStream in externalStreams {
+            guard playbackSessionToken == sessionToken else { return }
+            guard let deliveryUrl = subtitleStream.deliveryUrl,
+                  let subtitleUrl = buildExternalSubtitleURL(deliveryUrl)
+            else { continue }
+
+            addSubtitle(url: subtitleUrl)
+        }
+
+        if !externalStreams.isEmpty {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+        }
+
+        guard playbackSessionToken == sessionToken else { return }
+        guard userSubtitleOverrideSessionToken != sessionToken else { return }
+        applyPreferredSubtitleTrack(stream: stream, entry: entry)
+    }
+
+    private func applyPreferredSubtitleTrack(stream: StreamInfo, entry: QueueEntry) {
+        guard let selectedSubtitleStreamIndex = entry.subtitleStreamIndex,
+              selectedSubtitleStreamIndex >= 0
+        else { return }
+
+        guard let streamPosition = stream.subtitleStreams.firstIndex(where: { $0.index == selectedSubtitleStreamIndex }) else {
+            return
+        }
+        guard let trackId = player.subtitleTracks[safe: streamPosition]?.id else { return }
+
+        player.setSubtitleTrack(trackId)
     }
 
     private func mapPlayerTrackToServerStreamIndex(
