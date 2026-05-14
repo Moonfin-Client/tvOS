@@ -143,6 +143,9 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private var mpvResumeAwaitingFirstFrame = false
     private var mpvResumeGateWorkItem: DispatchWorkItem?
     private let mpvResumeGateTimeout: TimeInterval = 1.5
+    private var mpvColorPipelineRestoreCount = 0
+    private var lastWakeColorRestoreAt: CFAbsoluteTime = 0
+    private let wakeColorRestoreThrottleInterval: CFAbsoluteTime = 0.25
     private var surfaceAttachedContinuations: [CheckedContinuation<Void, Never>] = []
 
     override init() {
@@ -248,7 +251,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
                 "mpv_dynamic_range_telemetry": "no_engine",
                 "mpv_intent_content_range": requestedContentRange.rawValue,
                 "mpv_intent_sink_hdr_capable": sinkIsHdrCapable ? "true" : "false",
-                "mpv_intent_tone_mapping": activeToneMappingMode
+                "mpv_intent_tone_mapping": activeToneMappingMode,
+                "mpv_color_pipeline_restorations": "\(mpvColorPipelineRestoreCount)"
             ]
         }
 
@@ -301,7 +305,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
             "mpv_decoder_frame_drop_count": decoderFrameDropCount,
             "mpv_display_fps": displayFps,
             "mpv_estimated_vf_fps": estimatedVfFps,
-            "mpv_vsync_jitter": vsyncJitter
+            "mpv_vsync_jitter": vsyncJitter,
+            "mpv_color_pipeline_restorations": "\(mpvColorPipelineRestoreCount)"
         ]
         for entry in engine.initDiagnostics {
             result["mpv_init_\(entry.key)"] = entry.value
@@ -688,6 +693,24 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private func applyDolbyVisionFallbackHintsIfNeeded(_ engine: MPVEngine) {
         guard requestedContentRange == .dolbyVision else { return }
         _ = engine.setRuntimeOption("dovi-metadata", value: "auto")
+    }
+
+    private func restoreColorPipelineAfterWake(force: Bool = false) {
+        guard playbackBackendIdentifier == "mpv", engine != nil else { return }
+
+        let now = CFAbsoluteTimeGetCurrent()
+        if !force, now - lastWakeColorRestoreAt < wakeColorRestoreThrottleInterval {
+            return
+        }
+
+        lastWakeColorRestoreAt = now
+        let intent = resolveOutputIntent()
+        videoSurface.configureColorSpace(forSDR: intent != .hdr)
+        videoSurface.prepareForForegroundResume()
+        videoSurface.updateLayout()
+        applyDynamicRangeIntent()
+        renderUpdatePending = true
+        mpvColorPipelineRestoreCount += 1
     }
 
     private func startRenderScheduler() {
@@ -1154,17 +1177,32 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
             ) { [weak self] _ in
                 MainActor.assumeIsolated {
                     guard let self else { return }
-                    self.videoSurface.prepareForForegroundResume()
-                    self.videoSurface.updateLayout()
                     guard self.playbackBackendIdentifier == "mpv" else {
                         self.wasPlayingBeforeBackground = false
+                        self.videoSurface.prepareForForegroundResume()
+                        self.videoSurface.updateLayout()
                         return
                     }
+
+                    self.restoreColorPipelineAfterWake(force: true)
 
                     if self.wasPlayingBeforeBackground {
                         self.wasPlayingBeforeBackground = false
                         self.beginMpvResumeGateIfNeeded()
                     }
+                }
+            }
+        )
+
+        lifecycleObservers.append(
+            center.addObserver(
+                forName: UIScreen.didConnectNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    self.restoreColorPipelineAfterWake()
                 }
             }
         )

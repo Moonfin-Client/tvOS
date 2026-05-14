@@ -73,6 +73,14 @@ final class NativeVideoSurface {
         enqueueFallbackBlackFrameIfPossible()
     }
 
+    func primeAfterWake() {
+        displayLayer.backgroundColor = UIColor.black.cgColor
+        displayLayer.isOpaque = true
+        updateLayout()
+        beginRequestingMediaData()
+        enqueueFallbackBlackFrameIfPossible()
+    }
+
     func teardown() {
         stopRequestingMediaData()
         lock.lock()

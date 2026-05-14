@@ -39,7 +39,11 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
     private var nativeServerDVProfile: Int?
     private var nativeServerDVLevel: Int?
     private var nativeServerDVBlSignalCompatibilityId: Int?
+    private var activeVideoFormatDescription: CMVideoFormatDescription?
     private var videoFrameRate: Double = 24.0
+    private var nativeColorPipelineRestoreCount = 0
+    private var lastNativeWakeRestoreAt: CFAbsoluteTime = 0
+    private let nativeWakeRestoreThrottleInterval: CFAbsoluteTime = 0.25
     nonisolated(unsafe) private var frameSemaphoreTimeoutSeconds: TimeInterval = 0.1
     private var lastVideoPtsSeconds: TimeInterval = 0
     nonisolated(unsafe) private var nativeVideoDriftDropCount: UInt64 = 0
@@ -331,6 +335,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             "native_backend": "active",
             "native_content_range": nativeRequestedContentRange.rawValue,
             "native_sink_hdr_capable": nativeSinkIsHdrCapable ? "true" : "false",
+            "native_color_pipeline_restorations": "\(nativeColorPipelineRestoreCount)",
             "native_frame_queue_depth": "\(maxFrameQueueDepth)",
             "native_frame_semaphore_timeout_ms": "\(Int(frameSemaphoreTimeoutSeconds * 1000))",
             "native_frame_semaphore_timeouts": "\(frameSemaphoreTimeoutCount)",
@@ -393,6 +398,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         videoConfigured = true
         pendingDVReconfigure = (demux.dvConfig == nil)
         videoFrameRate = videoInfo.frameRate > 0 ? videoInfo.frameRate : 24.0
+        nativeColorPipelineRestoreCount = 0
         let frameDuration = 1.0 / max(videoFrameRate, 1.0)
         frameSemaphoreTimeoutSeconds = max(0.05, min(frameDuration * 2.0, 0.25))
         nativeVideoDriftDropCount = 0
@@ -400,9 +406,12 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         frameSemaphoreTimeoutCount = 0
 
         if let fmtDesc = decoder.formatDescription {
+            activeVideoFormatDescription = fmtDesc
             let fps = Float(videoInfo.frameRate > 0 ? videoInfo.frameRate : 24)
             DisplayCriteriaManager.shared.applyNative(formatDescription: fmtDesc, refreshRate: fps)
             nativeVideoSurface.setFormatDescription(fmtDesc)
+        } else {
+            activeVideoFormatDescription = nil
         }
 
         decoder.onFrameDecoded = { [weak self] pixelBuffer, pts in
@@ -490,6 +499,8 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
         nativeServerDVProfile = nil
         nativeServerDVLevel = nil
         nativeServerDVBlSignalCompatibilityId = nil
+        activeVideoFormatDescription = nil
+        nativeColorPipelineRestoreCount = 0
         nativeVideoDriftDropCount = 0
         nativeVideoHoldCount = 0
         frameSemaphoreTimeoutCount = 0
@@ -916,6 +927,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
                 MainActor.assumeIsolated {
                     guard let self, self.useNativeBackend else { return }
                     self.nativeBackgroundPaused = true
+                    if let formatDescription = self.videoDecoder?.formatDescription ?? self.activeVideoFormatDescription {
+                        self.activeVideoFormatDescription = formatDescription
+                    }
                     self.audioRenderer?.pause()
                     self.resumeGateWorkItem?.cancel()
                     self.resumeGateWorkItem = nil
@@ -937,7 +951,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
                     self.pauseCondition.lock()
                     self.pauseCondition.signal()
                     self.pauseCondition.unlock()
-                    self.nativeVideoSurface.updateLayout()
+                    self.restoreNativeDisplayPipelineAfterWake(force: true)
                     if case .playing = self.state {
                         self.beginResumeAfterWakeGate()
                         let resumePoint = max(0, self.snapshotPlaybackPosition())
@@ -946,6 +960,40 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
                 }
             }
         )
+
+        nativeLifecycleObservers.append(
+            center.addObserver(
+                forName: UIScreen.didConnectNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, self.useNativeBackend else { return }
+                    self.restoreNativeDisplayPipelineAfterWake()
+                }
+            }
+        )
+    }
+
+    private func restoreNativeDisplayPipelineAfterWake(force: Bool = false) {
+        guard useNativeBackend else { return }
+
+        let now = CFAbsoluteTimeGetCurrent()
+        if !force, now - lastNativeWakeRestoreAt < nativeWakeRestoreThrottleInterval {
+            return
+        }
+        lastNativeWakeRestoreAt = now
+
+        if let formatDescription = videoDecoder?.formatDescription ?? activeVideoFormatDescription {
+            activeVideoFormatDescription = formatDescription
+            let refreshRate = Float(videoFrameRate > 0 ? videoFrameRate : 24)
+            DisplayCriteriaManager.shared.applyNative(formatDescription: formatDescription, refreshRate: refreshRate)
+            nativeVideoSurface.setFormatDescription(formatDescription)
+        }
+
+        nativeVideoSurface.setDynamicRange(nativeRequestedContentRange)
+        nativeVideoSurface.primeAfterWake()
+        nativeColorPipelineRestoreCount += 1
     }
 
     private func beginResumeAfterWakeGate() {
