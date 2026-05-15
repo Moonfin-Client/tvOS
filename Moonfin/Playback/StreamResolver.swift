@@ -60,6 +60,7 @@ protocol StreamResolver {
         mediaSourceId: String?,
         maxBitrate: Int64?,
         maxAudioChannels: Int?,
+        atmosPassthroughEnabled: Bool,
         audioStreamIndex: Int?,
         subtitleStreamIndex: Int?,
         startTimeTicks: Int64?

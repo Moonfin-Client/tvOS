@@ -453,7 +453,7 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
 
         firstFrameDelivered = false
 
-        configureAudioSession()
+        configureAudioSession(installChannelLayoutFix: false)
         if let ar = audioRenderer {
             _ = ar.start()
         }
@@ -642,7 +642,9 @@ final class NativePlayerWrapper: MpvPlayerWrapper {
             )
         } else if pkt.streamIndex == audioIdx {
             let renderer = self.audioRenderer
-            renderer?.decodePacket(pkt)
+            let demuxRef = self.demuxer
+            let timeBase = demuxRef?.timeBase(forStreamIndex: audioIdx)
+            renderer?.decodePacket(pkt, timeBase: timeBase)
             frameSemaphore.signal()
         } else if subtitleIdx >= 0 && pkt.streamIndex == subtitleIdx {
             let decoder = self.subtitleDecoder

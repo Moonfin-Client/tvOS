@@ -95,6 +95,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private(set) var videoView: UIView?
     private var subtitleOptions: [String: Any] = [:]
     private var audioSessionActive = false
+    private var audioUnitChannelLayoutFixInstalled = false
 
     private(set) var playbackBackendIdentifier: String = "mpv"
     private(set) var playbackFallbackReason: String?
@@ -476,9 +477,13 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         updatePlaybackBackend(identifier: backend.rawValue, fallbackReason: fallbackReason)
     }
 
-    func configureAudioSession() {
+    func configureAudioSession(installChannelLayoutFix: Bool = true) {
+        if installChannelLayoutFix && !audioUnitChannelLayoutFixInstalled {
+            installAudioUnitChannelLayoutFix()
+            audioUnitChannelLayoutFixInstalled = true
+        }
+
         guard !audioSessionActive else { return }
-        installAudioUnitChannelLayoutFix()
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playback, mode: .moviePlayback, policy: .longFormAudio)
@@ -493,7 +498,7 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         pendingMpvSeekAttempts = 0
         pendingMpvSeekLastAttemptAt = 0
 
-        configureAudioSession()
+        configureAudioSession(installChannelLayoutFix: true)
 
         let intent = resolveOutputIntent()
         activeToneMappingMode = intent == .sdr ? "hable" : "auto"

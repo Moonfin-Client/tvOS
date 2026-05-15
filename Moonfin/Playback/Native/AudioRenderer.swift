@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreMedia
 import Darwin
 #if canImport(Libavcodec)
 import Libavcodec
@@ -11,7 +12,20 @@ import Libswresample
 #endif
 
 final class AudioRenderer {
+    private enum OutputMode {
+        case pcmDecoded
+        case compressedPassthrough
+    }
+
     var currentTime: TimeInterval {
+        if outputMode == .compressedPassthrough,
+           let synchronizer = compressedSynchronizer {
+            let seconds = CMTimeGetSeconds(synchronizer.currentTime())
+            if seconds.isFinite && seconds >= 0 {
+                return seconds + audioDelaySeconds
+            }
+        }
+
         let rendered = samplesRendered
         guard outputSampleRate > 0 else { return 0 }
         return Double(rendered) / Double(outputSampleRate) + audioDelaySeconds
@@ -22,6 +36,9 @@ final class AudioRenderer {
 
     private var engine: AVAudioEngine?
     private var sourceNode: AVAudioSourceNode?
+    private var compressedRenderer: AVSampleBufferAudioRenderer?
+    private var compressedSynchronizer: AVSampleBufferRenderSynchronizer?
+    private var compressedFormatDescription: CMAudioFormatDescription?
     private var codecCtx: UnsafeMutablePointer<AVCodecContext>?
     private var swrCtx: OpaquePointer?
     private var frame: UnsafeMutablePointer<AVFrame>?
@@ -33,13 +50,18 @@ final class AudioRenderer {
     private var ringReadPos = 0
     private var ringAvailable = 0
     private var ringChannelCount: Int32 = 0
+    private var outputMode: OutputMode = .pcmDecoded
 
     private var samplesRendered: Int64 = 0
     private var outputUnderrunSamples: Int64 = 0
     private var outputUnderrunCount: Int64 = 0
     private var ringOverflowDroppedSamples: Int64 = 0
+    private var compressedPacketCount: Int64 = 0
+    private var compressedDroppedPacketCount: Int64 = 0
+    private var compressedNextPresentationTime: CMTime = .zero
     private var audioDelaySeconds: TimeInterval = 0
     private var playing = false
+    private var playbackRate: Float = 1.0
     private var inputChannels: Int32 = 0
     private var inputLayout: UInt64 = 0
     private var inputSampleRate: Int32 = 0
@@ -73,12 +95,18 @@ final class AudioRenderer {
     var renderedSampleCount: Int64 {
         ringLock.lock()
         defer { ringLock.unlock() }
+        if outputMode == .compressedPassthrough {
+            return compressedPacketCount * 1536
+        }
         return samplesRendered
     }
 
     var droppedSampleCount: Int64 {
         ringLock.lock()
         defer { ringLock.unlock() }
+        if outputMode == .compressedPassthrough {
+            return compressedDroppedPacketCount * 1536
+        }
         return outputUnderrunSamples + ringOverflowDroppedSamples
     }
 
@@ -91,6 +119,9 @@ final class AudioRenderer {
     var overflowDroppedSampleCount: Int64 {
         ringLock.lock()
         defer { ringLock.unlock() }
+        if outputMode == .compressedPassthrough {
+            return compressedDroppedPacketCount * 1536
+        }
         return ringOverflowDroppedSamples
     }
 
@@ -98,7 +129,25 @@ final class AudioRenderer {
 
     func configure(streamInfo: FFStreamInfo, codecpar: UnsafeRawPointer) -> Bool {
 #if canImport(Libavcodec)
+        teardownCompressedPath()
         teardownCodec()
+        freeRingBuffer()
+
+        let codecId = streamInfo.codecId
+        if (codecId == 0x15002 || codecId == 0x15015),
+           let formatDescription = makeCompressedFormatDescription(streamInfo: streamInfo) {
+            outputMode = .compressedPassthrough
+            outputSampleRate = streamInfo.sampleRate > 0 ? streamInfo.sampleRate : 48_000
+            outputChannels = streamInfo.channels > 0 ? min(streamInfo.channels, 8) : 2
+            compressedFormatDescription = formatDescription
+
+            resetPlaybackCounters()
+
+            return true
+        }
+
+        outputMode = .pcmDecoded
+        compressedFormatDescription = nil
 
         guard let decoder = avcodec_find_decoder(AVCodecID(streamInfo.codecId)) else { return false }
         guard let ctx = avcodec_alloc_context3(decoder) else { return false }
@@ -134,6 +183,8 @@ final class AudioRenderer {
 
         allocateRingBuffer(channels: outputChannels, capacity: Int(outputSampleRate) * 2)
 
+        resetPlaybackCounters()
+
         return true
 #else
         return false
@@ -142,7 +193,12 @@ final class AudioRenderer {
 
     // MARK: - Decode
 
-    func decodePacket(_ packet: FFPacket) {
+    func decodePacket(_ packet: FFPacket, timeBase: (num: Int32, den: Int32)?) {
+        if outputMode == .compressedPassthrough {
+            enqueueCompressedPacket(packet, timeBase: timeBase)
+            return
+        }
+
 #if canImport(Libavcodec)
         guard let codecCtx, let frame else { return }
 
@@ -161,6 +217,24 @@ final class AudioRenderer {
     // MARK: - Engine control
 
     func start() -> Bool {
+        if outputMode == .compressedPassthrough {
+            guard compressedFormatDescription != nil else { return false }
+
+            if compressedRenderer == nil || compressedSynchronizer == nil {
+                let renderer = AVSampleBufferAudioRenderer()
+                let synchronizer = AVSampleBufferRenderSynchronizer()
+                synchronizer.addRenderer(renderer)
+                compressedRenderer = renderer
+                compressedSynchronizer = synchronizer
+            }
+
+            if let synchronizer = compressedSynchronizer {
+                synchronizer.setRate(playbackRate, time: synchronizer.currentTime())
+            }
+            playing = true
+            return true
+        }
+
         guard outputSampleRate > 0, outputChannels > 0 else { return false }
         guard engine == nil else { return true }
 
@@ -197,11 +271,27 @@ final class AudioRenderer {
     }
 
     func pause() {
+        if outputMode == .compressedPassthrough {
+            if let synchronizer = compressedSynchronizer {
+                synchronizer.setRate(0, time: synchronizer.currentTime())
+            }
+            playing = false
+            return
+        }
+
         engine?.pause()
         playing = false
     }
 
     func resume() {
+        if outputMode == .compressedPassthrough {
+            if let synchronizer = compressedSynchronizer {
+                synchronizer.setRate(playbackRate, time: synchronizer.currentTime())
+            }
+            playing = true
+            return
+        }
+
         do {
             try engine?.start()
             playing = true
@@ -210,6 +300,11 @@ final class AudioRenderer {
 
     func stop() {
         playing = false
+        if outputMode == .compressedPassthrough {
+            teardownCompressedPath()
+            outputMode = .pcmDecoded
+        }
+
         engine?.stop()
         if let node = sourceNode {
             engine?.detach(node)
@@ -218,16 +313,19 @@ final class AudioRenderer {
         engine = nil
         teardownCodec()
         freeRingBuffer()
-        ringLock.lock()
-        samplesRendered = 0
-        outputUnderrunSamples = 0
-        outputUnderrunCount = 0
-        ringOverflowDroppedSamples = 0
-        ringLock.unlock()
+        resetPlaybackCounters()
         audioDelaySeconds = 0
     }
 
     func flush() {
+        if outputMode == .compressedPassthrough {
+            compressedRenderer?.flush()
+            ringLock.lock()
+            compressedNextPresentationTime = .zero
+            ringLock.unlock()
+            return
+        }
+
 #if canImport(Libavcodec)
         if let codecCtx {
             avcodec_flush_buffers(codecCtx)
@@ -249,6 +347,14 @@ final class AudioRenderer {
     }
 
     func setRate(_ rate: Float) {
+        playbackRate = rate
+        if outputMode == .compressedPassthrough {
+            if playing, let synchronizer = compressedSynchronizer {
+                synchronizer.setRate(rate, time: synchronizer.currentTime())
+            }
+            return
+        }
+
         sourceNode?.rate = rate
     }
 
@@ -256,18 +362,16 @@ final class AudioRenderer {
 
     func setAudioTrack(streamInfo: FFStreamInfo, codecpar: UnsafeRawPointer) -> Bool {
         let wasPlaying = playing
-        if wasPlaying {
-            engine?.pause()
-        }
-        flush()
-        teardownCodec()
-        freeRingBuffer()
+        pause()
 
         let result = configure(streamInfo: streamInfo, codecpar: codecpar)
-        if wasPlaying && result {
+        guard result else { return false }
+
+        if wasPlaying {
+            _ = start()
             resume()
         }
-        return result
+        return true
     }
 
     // MARK: - Render callback
@@ -315,6 +419,111 @@ final class AudioRenderer {
             abl[ch].mDataByteSize = UInt32(count * MemoryLayout<Float>.size)
         }
         return noErr
+    }
+
+    private func enqueueCompressedPacket(_ packet: FFPacket, timeBase: (num: Int32, den: Int32)?) {
+        guard outputMode == .compressedPassthrough,
+              let renderer = compressedRenderer,
+              let formatDescription = compressedFormatDescription,
+              let packetData = packet.data,
+              packet.size > 0
+        else {
+            return
+        }
+
+        guard renderer.isReadyForMoreMediaData else {
+            incrementCompressedDroppedPacketCount()
+            return
+        }
+
+        var blockBuffer: CMBlockBuffer?
+        let packetSize = Int(packet.size)
+        let blockStatus = CMBlockBufferCreateWithMemoryBlock(
+            allocator: kCFAllocatorDefault,
+            memoryBlock: nil,
+            blockLength: packetSize,
+            blockAllocator: kCFAllocatorDefault,
+            customBlockSource: nil,
+            offsetToData: 0,
+            dataLength: packetSize,
+            flags: 0,
+            blockBufferOut: &blockBuffer
+        )
+        guard blockStatus == kCMBlockBufferNoErr, let blockBuffer else {
+            incrementCompressedDroppedPacketCount()
+            return
+        }
+
+        let copyStatus = CMBlockBufferReplaceDataBytes(
+            with: packetData,
+            blockBuffer: blockBuffer,
+            offsetIntoDestination: 0,
+            dataLength: packetSize
+        )
+        guard copyStatus == kCMBlockBufferNoErr else {
+            incrementCompressedDroppedPacketCount()
+            return
+        }
+
+        let defaultDuration = defaultCompressedPacketDuration()
+        let packetDuration = packetCMTime(packet.duration, timeBase: timeBase)
+        let duration = (packetDuration.isValid && packetDuration > .zero) ? packetDuration : defaultDuration
+
+        var presentationTime = packetCMTime(packet.pts, timeBase: timeBase)
+        ringLock.lock()
+        if !presentationTime.isValid {
+            presentationTime = compressedNextPresentationTime
+        }
+        if duration.isValid {
+            compressedNextPresentationTime = CMTimeAdd(presentationTime, duration)
+        }
+        ringLock.unlock()
+
+        var timing = CMSampleTimingInfo(
+            duration: duration,
+            presentationTimeStamp: presentationTime,
+            decodeTimeStamp: .invalid
+        )
+        var sampleSize = packetSize
+        var sampleBuffer: CMSampleBuffer?
+        let sampleStatus = CMSampleBufferCreateReady(
+            allocator: kCFAllocatorDefault,
+            dataBuffer: blockBuffer,
+            formatDescription: formatDescription,
+            sampleCount: 1,
+            sampleTimingEntryCount: 1,
+            sampleTimingArray: &timing,
+            sampleSizeEntryCount: 1,
+            sampleSizeArray: &sampleSize,
+            sampleBufferOut: &sampleBuffer
+        )
+
+        guard sampleStatus == noErr, let sampleBuffer else {
+            incrementCompressedDroppedPacketCount()
+            return
+        }
+
+        renderer.enqueue(sampleBuffer)
+
+        ringLock.lock()
+        compressedPacketCount += 1
+        ringLock.unlock()
+    }
+
+    private func packetCMTime(_ value: Int64, timeBase: (num: Int32, den: Int32)?) -> CMTime {
+        guard let timeBase, timeBase.den > 0, timeBase.num > 0 else { return .invalid }
+        let noPtsValue = Int64(bitPattern: 0x8000000000000000)
+        guard value != noPtsValue else { return .invalid }
+        let seconds = Double(value) * Double(timeBase.num) / Double(timeBase.den)
+        return CMTime(seconds: seconds, preferredTimescale: 90000)
+    }
+
+    private func defaultCompressedPacketDuration() -> CMTime {
+        guard outputSampleRate > 0 else {
+            return CMTime(seconds: 0.032, preferredTimescale: 90000)
+        }
+        let seconds = 1536.0 / Double(outputSampleRate)
+        return CMTime(seconds: seconds, preferredTimescale: 90000)
     }
 
     // MARK: - SWR conversion
@@ -399,6 +608,69 @@ final class AudioRenderer {
 
     // MARK: - SWR setup
 
+    private func makeCompressedFormatDescription(streamInfo: FFStreamInfo) -> CMAudioFormatDescription? {
+        let formatId: AudioFormatID
+        switch streamInfo.codecId {
+        case 0x15002:
+            formatId = kAudioFormatAC3
+        case 0x15015:
+            formatId = kAudioFormatEnhancedAC3
+        default:
+            return nil
+        }
+
+        let sampleRate = streamInfo.sampleRate > 0 ? streamInfo.sampleRate : 48_000
+        let channels = streamInfo.channels > 0 ? streamInfo.channels : 2
+
+        var asbd = AudioStreamBasicDescription(
+            mSampleRate: Double(sampleRate),
+            mFormatID: formatId,
+            mFormatFlags: 0,
+            mBytesPerPacket: 0,
+            mFramesPerPacket: 1536,
+            mBytesPerFrame: 0,
+            mChannelsPerFrame: UInt32(channels),
+            mBitsPerChannel: 0,
+            mReserved: 0
+        )
+
+        var channelLayout = AudioChannelLayout()
+        channelLayout.mChannelLayoutTag = channelLayoutTag(for: channels)
+
+        var formatDescription: CMAudioFormatDescription?
+        let cookie = streamInfo.extradata ?? Data()
+        let result: OSStatus = cookie.withUnsafeBytes { bytes in
+            CMAudioFormatDescriptionCreate(
+                allocator: kCFAllocatorDefault,
+                asbd: &asbd,
+                layoutSize: MemoryLayout<AudioChannelLayout>.size,
+                layout: &channelLayout,
+                magicCookieSize: bytes.baseAddress == nil ? 0 : cookie.count,
+                magicCookie: bytes.baseAddress,
+                extensions: nil,
+                formatDescriptionOut: &formatDescription
+            )
+        }
+
+        guard result == noErr else { return nil }
+        return formatDescription
+    }
+
+    private func channelLayoutTag(for channels: Int32) -> AudioChannelLayoutTag {
+        switch channels {
+        case 1:
+            return kAudioChannelLayoutTag_Mono
+        case 2:
+            return kAudioChannelLayoutTag_Stereo
+        case 6:
+            return kAudioChannelLayoutTag_MPEG_5_1_A
+        case 8:
+            return kAudioChannelLayoutTag_MPEG_7_1_A
+        default:
+            return kAudioChannelLayoutTag_DiscreteInOrder | AudioChannelLayoutTag(UInt32(max(1, channels)))
+        }
+    }
+
     private func setupSwr(
         inChannels: Int32, inLayout: UInt64, inSampleRate: Int32, inFormat: Int32,
         outChannels: Int32, outMask: UInt64, outSampleRate: Int32
@@ -468,6 +740,24 @@ final class AudioRenderer {
         ringAvailable = 0
     }
 
+    private func resetPlaybackCounters() {
+        ringLock.lock()
+        samplesRendered = 0
+        outputUnderrunSamples = 0
+        outputUnderrunCount = 0
+        ringOverflowDroppedSamples = 0
+        compressedPacketCount = 0
+        compressedDroppedPacketCount = 0
+        compressedNextPresentationTime = .zero
+        ringLock.unlock()
+    }
+
+    private func incrementCompressedDroppedPacketCount() {
+        ringLock.lock()
+        compressedDroppedPacketCount += 1
+        ringLock.unlock()
+    }
+
     // MARK: - Teardown
 
     private func teardownCodec() {
@@ -483,6 +773,21 @@ final class AudioRenderer {
         codecCtx = nil
 #endif
         teardownSwr()
+    }
+
+    private func teardownCompressedPath() {
+        if let synchronizer = compressedSynchronizer,
+           let renderer = compressedRenderer {
+            synchronizer.removeRenderer(renderer, at: synchronizer.currentTime())
+        }
+        compressedRenderer = nil
+        compressedSynchronizer = nil
+        compressedFormatDescription = nil
+        ringLock.lock()
+        compressedPacketCount = 0
+        compressedDroppedPacketCount = 0
+        compressedNextPresentationTime = .zero
+        ringLock.unlock()
     }
 
     private func teardownSwr() {

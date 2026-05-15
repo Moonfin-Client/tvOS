@@ -324,6 +324,10 @@ final class PlaybackManager: ObservableObject {
         preferences[UserPreferences.audioOutput] == .downmixToStereo ? 2 : nil
     }
 
+    private var resolvedAtmosPassthroughEnabled: Bool {
+        preferences[UserPreferences.audioOutput] == .passthroughAtmos
+    }
+
     var skipForwardSeconds: TimeInterval {
         TimeInterval(preferences[UserPreferences.skipForwardLength])
     }
@@ -383,6 +387,7 @@ final class PlaybackManager: ObservableObject {
                     mediaSourceId: entry.mediaSourceId,
                     maxBitrate: resolvedMaxBitrate,
                     maxAudioChannels: resolvedMaxAudioChannels,
+                    atmosPassthroughEnabled: resolvedAtmosPassthroughEnabled,
                     audioStreamIndex: audioIndex,
                     subtitleStreamIndex: subtitleIndex,
                     startTimeTicks: entry.startPositionTicks > 0 ? entry.startPositionTicks : nil
@@ -503,6 +508,7 @@ final class PlaybackManager: ObservableObject {
                     mediaSourceId: mediaSourceId,
                     maxBitrate: resolvedMaxBitrate,
                     maxAudioChannels: resolvedMaxAudioChannels,
+                    atmosPassthroughEnabled: resolvedAtmosPassthroughEnabled,
                     audioStreamIndex: nil,
                     subtitleStreamIndex: subtitleIndex,
                     startTimeTicks: nil

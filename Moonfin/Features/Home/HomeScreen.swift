@@ -637,6 +637,7 @@ struct HomeScreen: View {
                 mediaSourceId: mediaSourceId,
                 maxBitrate: nil,
                 maxAudioChannels: nil,
+                atmosPassthroughEnabled: false,
                 audioStreamIndex: nil,
                 subtitleStreamIndex: nil,
                 startTimeTicks: nil

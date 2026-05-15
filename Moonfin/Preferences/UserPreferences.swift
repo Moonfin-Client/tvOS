@@ -183,11 +183,18 @@ enum AudioBehavior: String, StringRepresentableEnum, CaseIterable {
 
 enum AudioOutput: String, StringRepresentableEnum, CaseIterable {
     case directStream
+    case passthroughAtmos
     case downmixToStereo
 
     var displayName: String {
         switch self {
         case .directStream: return userPreferencesLocalized("direct_stream")
+        case .passthroughAtmos:
+            return Bundle.main.localizedString(
+                forKey: "passthrough_atmos",
+                value: "Passthrough (Dolby Atmos)",
+                table: nil
+            )
         case .downmixToStereo: return userPreferencesLocalized("downmix_to_stereo")
         }
     }

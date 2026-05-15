@@ -23,6 +23,7 @@ final class ServerStreamResolver: StreamResolver {
         mediaSourceId: String?,
         maxBitrate: Int64?,
         maxAudioChannels: Int?,
+        atmosPassthroughEnabled: Bool,
         audioStreamIndex: Int?,
         subtitleStreamIndex: Int?,
         startTimeTicks: Int64?
@@ -121,7 +122,8 @@ final class ServerStreamResolver: StreamResolver {
             requestedBackend: requestedBackend,
             selectedAudioStream: selectedAudioStream,
             canTranscode: source.transcodingUrl != nil,
-            maxAudioChannels: maxAudioChannels
+            maxAudioChannels: maxAudioChannels,
+            atmosPassthroughEnabled: atmosPassthroughEnabled
         )
 
         let capabilities = await MainActor.run { VideoCapabilityDetector.current() }
@@ -135,15 +137,8 @@ final class ServerStreamResolver: StreamResolver {
             nativeDvEnabled: nativeDvEnabled
         )
 
-        let preferredBackend: PlaybackBackendDirective
-        let isDolbyVision = dynamicRange == .dolbyVision
-        if videoPolicy.backend == .native {
-            preferredBackend = .native
-        } else if isDolbyVision {
-            preferredBackend = videoPolicy.backend
-        } else {
-            preferredBackend = .mpv
-        }
+        let preferredBackend: PlaybackBackendDirective =
+            (videoPolicy.backend == .native || audioPolicy.backend == .native) ? .native : .mpv
         let fallbackReason = audioPolicy.reason ?? videoPolicy.reason
         let combinedDiagnostics = videoPolicy.diagnostics + audioPolicy.diagnostics
 
