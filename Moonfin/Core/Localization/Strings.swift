@@ -422,15 +422,7 @@ enum Strings {
     static var aboutVersion: String { l("settings_about_version") }
     static var aboutBuild: String { l("settings_about_build") }
     static var noLicensesFound: String { l("settings_licenses_none") }
-    static var toolbar: String { l("settings_toolbar") }
-    static var backgrounds: String { l("settings_backgrounds") }
-    static var previewsAndMusic: String { l("settings_plugin_previews_music") }
     static var integrations: String { l("settings_integrations") }
-    static var pluginToolbarSummary: String { l("settings_plugin_toolbar_summary") }
-    static var pluginMediaBarSummary: String { l("settings_plugin_media_bar_summary") }
-    static var pluginBackgroundsSummary: String { l("settings_plugin_backgrounds_summary") }
-    static var pluginPreviewsMusicSummary: String { l("settings_plugin_previews_music_summary") }
-    static var pluginIntegrationsSummary: String { l("settings_plugin_integrations_summary") }
     static var fetchLimit: String { l("settings_fetch_limit") }
     static var syncPlayMinDelaySpeed: String { l("settings_syncplay_min_delay_speed") }
     static var syncPlayMaxDelaySpeed: String { l("settings_syncplay_max_delay_speed") }

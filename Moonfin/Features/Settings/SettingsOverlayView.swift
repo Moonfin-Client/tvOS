@@ -8,6 +8,10 @@ struct SettingsOverlayView: View {
     let focusNamespace: Namespace.ID
     @State private var focusTask: Task<Void, Never>?
 
+    private var currentRoute: SettingsRoute {
+        settingsRouter.path.last ?? .main
+    }
+
     var body: some View {
         GeometryReader { geo in
             HStack(spacing: 0) {
@@ -39,8 +43,8 @@ struct SettingsOverlayView: View {
 
     private func settingsPanel(width: CGFloat) -> some View {
         ZStack {
-            screenView
-                .id(settingsRouter.path.last ?? .main)
+            SettingsRouteResolver(route: currentRoute)
+                .id(currentRoute)
                 .transition(screenTransition)
                 .prefersDefaultFocus(in: focusNamespace)
         }
@@ -72,12 +76,63 @@ struct SettingsOverlayView: View {
             )
         }
     }
+}
+
+private struct SettingsRouteResolver: View {
+    let route: SettingsRoute
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var container: AppContainer
+
+    var body: some View {
+        screenView
+    }
 
     @ViewBuilder
     private var screenView: some View {
-        switch settingsRouter.path.last ?? .main {
+        switch route {
         case .main:
             SettingsMainScreen()
+        case .accountAndSecurity:
+            SettingsAccountSecurityScreen()
+        case .personalization:
+            SettingsPersonalizationScreen()
+        case .personalizationGeneralStyle:
+            SettingsGeneralStyleScreen()
+        case .personalizationNavigation:
+            SettingsNavigationScreen()
+        case .dynamicContent:
+            SettingsDynamicContentScreen()
+        case .dynamicContentMediaBar:
+            SettingsPluginMediaBarScreen()
+        case .dynamicContentLocalPreviews:
+            SettingsDynamicLocalPreviewsScreen()
+        case .dynamicContentSeasonalEffects:
+            SettingsDynamicSeasonalEffectsScreen()
+        case .dynamicContentMediaBarSourceLibraries:
+            SettingsMediaBarLibrariesSelectionScreen()
+        case .dynamicContentMediaBarSourceCollections:
+            SettingsMediaBarCollectionsSelectionScreen()
+        case .dynamicContentMediaBarExcludedGenres:
+            SettingsMediaBarExcludedGenresSelectionScreen()
+        case .playbackAndSyncPlay:
+            SettingsPlaybackSyncPlayRootScreen()
+        case .playbackSubtitles:
+            SettingsSubtitlesScreen()
+        case .playbackVideoPreferences:
+            SettingsPlaybackScreen()
+        case .playbackAudioPreferences:
+            SettingsAudioPreferencesScreen()
+        case .playbackAutomationQueue:
+            SettingsAutomationQueueScreen()
+        case .integrations:
+            SettingsIntegrationsScreen()
+        case .integrationsMetadataRatings:
+            SettingsMetadataRatingsScreen()
+        case .integrationsRatingSources:
+            SettingsRatingSourcesScreen()
+        case .placeholder(let title):
+            SettingsPlaceholderScreen(title: title)
         case .authentication:
             SettingsAuthenticationScreen()
         case .authenticationSortBy:
@@ -121,7 +176,9 @@ struct SettingsOverlayView: View {
                 displayName: \.displayName
             )
         case .customizationSubtitles:
-            SettingsSubtitlesScreen()
+            SettingsSubtitleCustomizationScreen()
+        case .customizationDefaultSubtitleLanguage:
+            SettingsDefaultSubtitleLanguageScreen()
         case .customizationSubtitlesTextColor:
             SettingsSubtitleColorPickerScreen(
                 title: "Text Color",
@@ -157,10 +214,36 @@ struct SettingsOverlayView: View {
             SettingsScreensaverAgeRatingScreen()
         case .home:
             SettingsHomeScreen()
+        case .homeSections:
+            SettingsHomeSectionsScreen()
         case .homePosterSize:
             SettingsPickerScreen(
                 title: "Poster Size",
                 selection: container.userPreferences.binding(for: UserPreferences.homePosterSize),
+                displayName: \.displayName
+            )
+        case .homeFavoritesSortBy:
+            SettingsPickerScreen(
+                title: "Favorites Row Sorting",
+                selection: container.userPreferences.binding(for: UserPreferences.favoritesRowSortBy),
+                displayName: \.displayName
+            )
+        case .homeCollectionsSortBy:
+            SettingsPickerScreen(
+                title: "Collections Row Sorting",
+                selection: container.userPreferences.binding(for: UserPreferences.collectionsRowSortBy),
+                displayName: \.displayName
+            )
+        case .homeGenresSortBy:
+            SettingsPickerScreen(
+                title: "Genres Row Sorting",
+                selection: container.userPreferences.binding(for: UserPreferences.genresRowSortBy),
+                displayName: \.displayName
+            )
+        case .homeGenresItems:
+            SettingsPickerScreen(
+                title: "Genres Row Items",
+                selection: container.userPreferences.binding(for: UserPreferences.genresRowItems),
                 displayName: \.displayName
             )
         case .homeRowsImageType:
@@ -229,21 +312,30 @@ struct SettingsOverlayView: View {
             )
         case .plugin:
             SettingsMoonfinScreen()
-        case .pluginToolbar:
-            SettingsPluginToolbarScreen()
-        case .pluginMediaBar:
-            SettingsPluginMediaBarScreen()
-        case .pluginBackgrounds:
-            SettingsPluginBackgroundsScreen()
-        case .pluginPreviewsMusic:
-            SettingsPluginPreviewsMusicScreen()
-        case .pluginIntegrations:
-            SettingsPluginIntegrationsScreen()
+        case .pluginCustomizationProfile:
+            SettingsPickerScreen(
+                title: "Customization Profile",
+                selection: container.userPreferences.binding(for: UserPreferences.pluginCustomizationProfile),
+                displayName: \.displayName
+            )
         case .moonfinNavbarPosition:
             SettingsPickerScreen(
                 title: "Navbar Position",
                 selection: container.userPreferences.binding(for: UserPreferences.navbarPosition),
                 displayName: \.displayName
+            )
+        case .moonfinNavbarColor:
+            SettingsPickerScreen(
+                title: "Navbar Color",
+                selection: container.userPreferences.binding(for: UserPreferences.navbarColor),
+                displayName: \.displayName
+            )
+        case .moonfinNavbarOpacity:
+            SettingsSyncPlayValueScreen(
+                title: "Navbar Opacity",
+                preference: UserPreferences.navbarOpacity,
+                options: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                suffix: "%"
             )
         case .moonfinShuffleContentType:
             SettingsPickerScreen(
@@ -262,6 +354,19 @@ struct SettingsOverlayView: View {
                 title: "Media Bar Items",
                 selection: container.userPreferences.binding(for: UserPreferences.mediaBarItemCount),
                 displayName: \.displayName
+            )
+        case .moonfinMediaBarMode:
+            SettingsPickerScreen(
+                title: "Media Bar Mode",
+                selection: container.userPreferences.binding(for: UserPreferences.mediaBarMode),
+                displayName: \.displayName
+            )
+        case .moonfinMediaBarInterval:
+            SettingsSyncPlayValueScreen(
+                title: "Media Bar Auto Advance Interval",
+                preference: UserPreferences.mediaBarIntervalMs,
+                options: [5000, 10_000, 15_000, 30_000],
+                suffix: " ms"
             )
         case .moonfinMediaBarColor:
             SettingsPickerScreen(
@@ -306,7 +411,7 @@ struct SettingsOverlayView: View {
             if let type = MediaSegmentType(rawValue: segmentType) {
                 SettingsMediaSegmentScreen(segmentType: type)
             } else {
-                SettingsPlaceholderScreen()
+                SettingsPlaceholderScreen(title: "Playback Segment")
             }
         case .playbackNextUpBehavior:
             SettingsPickerScreen(
@@ -377,6 +482,25 @@ struct SettingsOverlayView: View {
             SettingsPickerScreen(
                 title: Strings.maxResolution,
                 selection: container.userPreferences.binding(for: UserPreferences.maxVideoResolution),
+                displayName: \.displayName
+            )
+        case .playbackRefreshRateSwitching:
+            SettingsPickerScreen(
+                title: "Refresh Rate Switching",
+                selection: container.userPreferences.binding(for: UserPreferences.refreshRateSwitchingBehavior),
+                displayName: \.displayName
+            )
+        case .playbackSkipBackLength:
+            SettingsSyncPlayValueScreen(
+                title: "Skip Back Length",
+                preference: UserPreferences.skipBackLength,
+                options: [1000, 3000, 5000, 10_000, 15_000, 30_000, 45_000, 60_000],
+                suffix: " ms"
+            )
+        case .playbackDefaultAudioLanguage:
+            SettingsPickerScreen(
+                title: "Default Audio Language",
+                selection: container.userPreferences.binding(for: UserPreferences.defaultAudioLanguage),
                 displayName: \.displayName
             )
         case .playbackQualityProfile:
@@ -491,10 +615,17 @@ struct SettingsOverlayView: View {
 
 struct SettingsPlaceholderScreen: View {
     @EnvironmentObject var theme: MoonfinTheme
+    var title: String? = nil
 
     var body: some View {
         VStack {
             Spacer()
+            if let title {
+                Text(title)
+                    .font(.bodyLg)
+                    .foregroundColor(theme.colorScheme.onBackground)
+                    .padding(.bottom, SpaceTokens.spaceXs)
+            }
             Text(Strings.comingSoon)
                 .font(.bodyMd)
                 .foregroundColor(theme.colorScheme.listCaption)

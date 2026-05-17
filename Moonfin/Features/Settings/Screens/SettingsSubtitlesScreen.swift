@@ -9,6 +9,51 @@ struct SettingsSubtitlesScreen: View {
 
     var body: some View {
         SettingsScreenLayout(title: "Subtitles") {
+            SettingsListButton(
+                icon: "globe",
+                heading: "Default Subtitle Language",
+                caption: "Preferred subtitle language",
+                trailingText: prefs[UserPreferences.defaultSubtitleLanguage].displayName,
+                action: { settingsRouter.navigate(to: .customizationDefaultSubtitleLanguage) }
+            )
+            SettingsToggleButton(
+                icon: "captions.bubble",
+                heading: "Default to No Subtitles",
+                caption: "Start playback with subtitles off",
+                isOn: prefs.binding(for: UserPreferences.subtitlesDefaultToNone)
+            )
+            SettingsListButton(
+                icon: "paintbrush",
+                heading: "Subtitle Customization",
+                caption: "Appearance and position",
+                action: { settingsRouter.navigate(to: .customizationSubtitles) }
+            )
+            SettingsToggleButton(
+                icon: "photo",
+                heading: "PGS Direct Play",
+                caption: "Enable direct-play for PGS subtitles",
+                isOn: prefs.binding(for: UserPreferences.pgsDirectPlay)
+            )
+            SettingsToggleButton(
+                icon: "doc.text",
+                heading: "ASS/SSA Direct Play",
+                caption: "Enable direct-play for ASS/SSA subtitles",
+                isOn: prefs.binding(for: UserPreferences.assDirectPlay)
+            )
+        }
+        .restoresFocus($focusedRoute)
+    }
+}
+
+struct SettingsSubtitleCustomizationScreen: View {
+    @EnvironmentObject var container: AppContainer
+    @EnvironmentObject var settingsRouter: SettingsRouter
+    @FocusState private var focusedRoute: SettingsRoute?
+
+    private var prefs: UserPreferences { container.userPreferences }
+
+    var body: some View {
+        SettingsScreenLayout(title: "Subtitle Customization") {
             SubtitlePreview(
                 textColor: prefs[UserPreferences.subtitlesTextColor],
                 backgroundColor: prefs[UserPreferences.subtitlesBackgroundColor],
@@ -57,20 +102,6 @@ struct SettingsSubtitlesScreen: View {
                 action: { settingsRouter.navigate(to: .customizationSubtitlesOffset) }
             )
             .focused($focusedRoute, equals: .customizationSubtitlesOffset)
-
-            SettingsToggleButton(
-                icon: "captions.bubble",
-                heading: "Default to None",
-                caption: "Start playback without subtitles",
-                isOn: prefs.binding(for: UserPreferences.subtitlesDefaultToNone)
-            )
-
-            SettingsToggleButton(
-                icon: "textformat.alt",
-                heading: "Override ASS Styles",
-                caption: "Apply your style settings to ASS/SSA subtitles",
-                isOn: prefs.binding(for: UserPreferences.subtitlesOverrideASSStyles)
-            )
         }
         .restoresFocus($focusedRoute)
     }

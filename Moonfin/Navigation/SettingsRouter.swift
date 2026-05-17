@@ -3,6 +3,32 @@ import SwiftUI
 enum SettingsRoute: Hashable {
     case main
 
+    case accountAndSecurity
+
+    case personalization
+    case personalizationGeneralStyle
+    case personalizationNavigation
+
+    case dynamicContent
+    case dynamicContentMediaBar
+    case dynamicContentLocalPreviews
+    case dynamicContentSeasonalEffects
+    case dynamicContentMediaBarSourceLibraries
+    case dynamicContentMediaBarSourceCollections
+    case dynamicContentMediaBarExcludedGenres
+
+    case playbackAndSyncPlay
+    case playbackSubtitles
+    case playbackVideoPreferences
+    case playbackAudioPreferences
+    case playbackAutomationQueue
+
+    case integrations
+    case integrationsMetadataRatings
+    case integrationsRatingSources
+
+    case placeholder(title: String)
+
     case authentication
     case authenticationServer(serverId: String)
     case authenticationServerUser(serverId: String, userId: String)
@@ -15,6 +41,7 @@ enum SettingsRoute: Hashable {
     case customizationClock
     case customizationWatchedIndicator
     case customizationSubtitles
+    case customizationDefaultSubtitleLanguage
     case customizationSubtitlesTextColor
     case customizationSubtitlesBackgroundColor
     case customizationSubtitlesEdgeColor
@@ -28,9 +55,13 @@ enum SettingsRoute: Hashable {
     case customizationScreensaverDimming
 
     case home
-    case homeSection(index: Int)
+    case homeSections
     case homePosterSize
     case homeRowsImageType
+    case homeFavoritesSortBy
+    case homeCollectionsSortBy
+    case homeGenresSortBy
+    case homeGenresItems
     case homeImageTypeContinueWatching
     case homeImageTypeNextUp
     case homeImageTypeMyMedia
@@ -64,6 +95,8 @@ enum SettingsRoute: Hashable {
     case playbackMaxResolution
     case playbackQualityProfile
     case playbackRefreshRateSwitching
+    case playbackSkipBackLength
+    case playbackDefaultAudioLanguage
     case playbackZoomMode
     case playbackAudioBehavior
     case playbackAudioOutput
@@ -74,10 +107,15 @@ enum SettingsRoute: Hashable {
     case seerrFetchLimit
 
     case plugin
+    case pluginCustomizationProfile
     case moonfinNavbarPosition
+    case moonfinNavbarColor
+    case moonfinNavbarOpacity
     case moonfinShuffleContentType
     case moonfinMediaBarContentType
     case moonfinMediaBarItemCount
+    case moonfinMediaBarMode
+    case moonfinMediaBarInterval
     case moonfinMediaBarOpacity
     case moonfinMediaBarColor
     case moonfinThemeMusicVolume
@@ -85,11 +123,6 @@ enum SettingsRoute: Hashable {
     case moonfinDetailsBlur
     case moonfinBrowsingBlur
     case moonfinParentalControls
-    case pluginToolbar
-    case pluginMediaBar
-    case pluginBackgrounds
-    case pluginPreviewsMusic
-    case pluginIntegrations
     case moonfinSyncPlay
     case moonfinSyncPlayMinDelay
     case moonfinSyncPlayMaxDelay

@@ -1,5 +1,30 @@
 import SwiftUI
 
+struct SettingsDefaultSubtitleLanguageScreen: View {
+    @EnvironmentObject var container: AppContainer
+    @EnvironmentObject var settingsRouter: SettingsRouter
+
+    private var current: DefaultSubtitleLanguage {
+        container.userPreferences[UserPreferences.defaultSubtitleLanguage]
+    }
+
+    private let options = DefaultSubtitleLanguage.allCases
+
+    var body: some View {
+        SettingsScreenLayout(title: "Default Subtitle Language") {
+            ForEach(options, id: \.self) { value in
+                Button {
+                    container.userPreferences[UserPreferences.defaultSubtitleLanguage] = value
+                    settingsRouter.goBack()
+                } label: {
+                    RadioOptionContent(label: value.displayName, isSelected: current == value)
+                }
+                .buttonStyle(CleanButtonStyle())
+            }
+        }
+    }
+}
+
 struct SettingsSubtitleTextSizeScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter

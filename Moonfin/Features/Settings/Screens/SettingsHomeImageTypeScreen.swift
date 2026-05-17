@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct SettingsHomeImageTypeScreen: View {
-    @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
     @FocusState private var focusedRoute: SettingsRoute?
@@ -54,17 +53,6 @@ struct SettingsHomeImageTypeScreen: View {
                 action: { settingsRouter.navigate(to: .homeImageTypeLiveTv) }
             )
             .focused($focusedRoute, equals: .homeImageTypeLiveTv)
-
-            Divider()
-                .background(theme.colorScheme.listCaption.opacity(0.3))
-                .padding(.vertical, SpaceTokens.spaceXs)
-
-            SettingsToggleButton(
-                icon: "tv.and.mediabox",
-                heading: "Use Series Image",
-                caption: "Show series poster instead of episode image",
-                isOn: prefs.binding(for: UserPreferences.homeImageUseSeriesImage)
-            )
         }
         .restoresFocus($focusedRoute)
     }

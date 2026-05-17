@@ -4,61 +4,66 @@ struct SettingsMoonfinScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var settingsRouter: SettingsRouter
     @State private var refreshTrigger = 0
-    @FocusState private var focusedRoute: SettingsRoute?
+    @State private var statusText: String?
 
     private var prefs: UserPreferences { container.userPreferences }
-    private var pluginEnabled: Bool { prefs[UserPreferences.pluginSyncEnabled] }
+    private var profileControlsVisible: Bool {
+        prefs[UserPreferences.pluginSyncEnabled] && container.pluginSyncService.isPluginAvailable
+    }
 
     var body: some View {
-        SettingsScreenLayout(title: Strings.plugin) {
+        SettingsScreenLayout(title: "Plugin") {
             let _ = refreshTrigger
 
             SettingsToggleButton(
                 icon: "arrow.triangle.2.circlepath",
-                heading: Strings.pluginSync,
-                caption: Strings.pluginSyncDescription,
+                heading: "Server Plugin Sync",
+                caption: "Enable push and pull settings sync with the server plugin",
                 isOn: pluginSyncBinding
             )
 
-            SettingsListButton(
-                icon: "rectangle.topthird.inset.filled",
-                heading: Strings.toolbar,
-                caption: Strings.pluginToolbarSummary,
-                action: { settingsRouter.navigate(to: .pluginToolbar) }
-            )
-            .focused($focusedRoute, equals: .pluginToolbar)
+            if profileControlsVisible {
+                SettingsListButton(
+                    icon: "person.crop.rectangle.stack",
+                    heading: "Customization Profile",
+                    caption: "Select profile target for sync actions",
+                    trailingText: prefs[UserPreferences.pluginCustomizationProfile].displayName,
+                    action: { settingsRouter.navigate(to: .pluginCustomizationProfile) }
+                )
 
-            SettingsListButton(
-                icon: "rectangle.inset.filled",
-                heading: Strings.mediaBarTitle,
-                caption: Strings.pluginMediaBarSummary,
-                action: { settingsRouter.navigate(to: .pluginMediaBar) }
-            )
-            .focused($focusedRoute, equals: .pluginMediaBar)
+                SettingsListButton(
+                    icon: "icloud.and.arrow.down",
+                    heading: "Load Profile",
+                    caption: "Pull remote profile settings into this device",
+                    action: {
+                        Task {
+                            await container.pluginSyncService.initialSync()
+                            statusText = "Profile loaded"
+                            refreshTrigger += 1
+                        }
+                    }
+                )
 
-            SettingsListButton(
-                icon: "photo.artframe",
-                heading: Strings.backgrounds,
-                caption: Strings.pluginBackgroundsSummary,
-                action: { settingsRouter.navigate(to: .pluginBackgrounds) }
-            )
-            .focused($focusedRoute, equals: .pluginBackgrounds)
+                SettingsListButton(
+                    icon: "icloud.and.arrow.up",
+                    heading: "Save Profile",
+                    caption: "Push local settings to the selected profile",
+                    action: {
+                        Task {
+                            await container.pluginSyncService.syncOnStartup()
+                            statusText = "Profile saved"
+                            refreshTrigger += 1
+                        }
+                    }
+                )
+            }
 
-            SettingsListButton(
-                icon: "play.rectangle",
-                heading: Strings.previewsAndMusic,
-                caption: Strings.pluginPreviewsMusicSummary,
-                action: { settingsRouter.navigate(to: .pluginPreviewsMusic) }
-            )
-            .focused($focusedRoute, equals: .pluginPreviewsMusic)
-
-            SettingsListButton(
-                icon: "puzzlepiece.extension",
-                heading: Strings.integrations,
-                caption: Strings.pluginIntegrationsSummary,
-                action: { settingsRouter.navigate(to: .pluginIntegrations) }
-            )
-            .focused($focusedRoute, equals: .pluginIntegrations)
+            if let statusText {
+                Text(statusText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, SpaceTokens.spaceMd)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification).debounce(for: .milliseconds(50), scheduler: DispatchQueue.main)) { _ in
             refreshTrigger += 1
@@ -66,7 +71,6 @@ struct SettingsMoonfinScreen: View {
         .onReceive(container.pluginSyncService.$syncCompletedCount) { _ in
             refreshTrigger += 1
         }
-        .restoresFocus($focusedRoute)
     }
 
     private var pluginSyncBinding: Binding<Bool> {

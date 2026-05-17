@@ -26,3 +26,41 @@ struct SettingsListButton: View {
         .buttonStyle(CleanButtonStyle())
     }
 }
+
+struct SettingsNavRow: View {
+    @EnvironmentObject var settingsRouter: SettingsRouter
+
+    private var focusedRoute: FocusState<SettingsRoute?>.Binding
+    let route: SettingsRoute
+    let icon: String
+    let heading: String
+    var caption: String? = nil
+    var trailingText: String? = nil
+
+    init(
+        focusedRoute: FocusState<SettingsRoute?>.Binding,
+        route: SettingsRoute,
+        icon: String,
+        heading: String,
+        caption: String? = nil,
+        trailingText: String? = nil
+    ) {
+        self.focusedRoute = focusedRoute
+        self.route = route
+        self.icon = icon
+        self.heading = heading
+        self.caption = caption
+        self.trailingText = trailingText
+    }
+
+    var body: some View {
+        SettingsListButton(
+            icon: icon,
+            heading: heading,
+            caption: caption,
+            trailingText: trailingText,
+            action: { settingsRouter.navigate(to: route) }
+        )
+        .focused(focusedRoute, equals: route)
+    }
+}

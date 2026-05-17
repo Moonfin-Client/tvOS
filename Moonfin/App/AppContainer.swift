@@ -34,6 +34,7 @@ final class AppContainer: ObservableObject {
     let itemMutationService: ItemMutationService
     let spotlightIndexer: SpotlightIndexer
     let inactivityTracker: InactivityTracker
+    private var preferencesCancellable: AnyCancellable?
     private var inactivityTrackerCancellable: AnyCancellable?
     private var appForegroundCancellable: AnyCancellable?
     private var appBackgroundCancellable: AnyCancellable?
@@ -178,6 +179,9 @@ final class AppContainer: ObservableObject {
 
         CrashReporter.shared.configure(preferences: self.telemetryPreferences)
         LocalizationManager.shared.configure(preferences: self.localizationPreferences)
+
+        self.preferencesCancellable = self.userPreferences.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
 
         self.inactivityTrackerCancellable = self.inactivityTracker.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }

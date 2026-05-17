@@ -70,7 +70,6 @@
 		3C4527038B786F96F2E8A735 /* NextUpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7436E1F1DC4C5F651963B721 /* NextUpManager.swift */; };
 		3CC48062335763C011114E68 /* SettingsMediaSegmentsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F6BEB9DAAC25AB5526B2DB7 /* SettingsMediaSegmentsScreen.swift */; };
 		3D0623B0E9B95CD7AE63E810 /* DetailCardComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2AF5E3DFDEC74514265F3FF /* DetailCardComponents.swift */; };
-		3D4640D6811B32C8C72DAC6A /* SettingsPluginBackgroundsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F0305BFD9DE8CFA6B83D7A /* SettingsPluginBackgroundsScreen.swift */; };
 		3DBBDE892094ED52203423E5 /* RatingIconProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA79A0A2AF7B5D30923217F1 /* RatingIconProvider.swift */; };
 		4265AA5721AF21B0670F6356 /* LoginControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B60F4A8B14EDBD78F225142 /* LoginControls.swift */; };
 		42F728E5D1AF7647BC6AA209 /* SettingsSeerrRowsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8291D25FD1C3C2E9276E9E71 /* SettingsSeerrRowsScreen.swift */; };
@@ -88,7 +87,6 @@
 		4EFD2067E471639216BC6F31 /* AppContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7FAD9331B478B54CAEE858 /* AppContainer.swift */; };
 		4FBC45A7F73DED36EFF7848C /* SeerrBrowseByView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148150D5166F7D59B34690E3 /* SeerrBrowseByView.swift */; };
 		50C05090550D4CBD7B058385 /* UserLoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F76608D3C42ED09ECF883A /* UserLoginScreen.swift */; };
-		514B6B83A52606042820020C /* SettingsPluginIntegrationsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E66AD9B6A360A875F0EE44 /* SettingsPluginIntegrationsScreen.swift */; };
 		51CCB39A102F0586CE80BD91 /* RuntimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9041F256EFB635B85F27ED /* RuntimeFormatter.swift */; };
 		52029E88748E5BCA350147B5 /* SeerrMediaDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3C6FE066501478E5203C7A /* SeerrMediaDetailsView.swift */; };
 		523C091BE2752ADC33800E25 /* AuthenticationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C8FF3EE89D79751C704B8B0 /* AuthenticationPreferences.swift */; };
@@ -109,7 +107,6 @@
 		5F600B80012DB9F80B542C07 /* Pods_Moonfin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7983D1B05246892B68938F0E /* Pods_Moonfin.framework */; };
 		5F9B8A04262585EA5327B3F5 /* InactivityTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 748E8112CB7B0F6B2342C800 /* InactivityTracker.swift */; };
 		60DAB99A8C867604E18614FD /* SettingsLanguageScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E50D6C7E8C457E62998FE7D /* SettingsLanguageScreen.swift */; };
-		60F805E19A5C41B05807B5ED /* SettingsPluginPreviewsMusicScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B864F1E3CB31F4464A9659E4 /* SettingsPluginPreviewsMusicScreen.swift */; };
 		614F9329E70865C427BB8F18 /* SettingsSeerrScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F69B7BCC81B52B3C08BC7E /* SettingsSeerrScreen.swift */; };
 		61C25359FCE5DE43AB03A366 /* MoonfinLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79E8963CD402B79BAE982A3A /* MoonfinLogo.swift */; };
 		627CDA9D73B185C8AAA0DF1E /* LibraryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABDCA99A0E17C8A882E8EA80 /* LibraryCard.swift */; };
@@ -176,6 +173,7 @@
 		9006CF4B49C0AB9122AA14BA /* SettingsPlaybackScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */; };
 		9153D41A45CB78CA49B13DEA /* NetworkErrorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11674095CFE09823AD765A33 /* NetworkErrorHandler.swift */; };
 		916B5A1C3A705DF81369700E /* SettingsAboutScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5A47538C7C003A0A0368BEF /* SettingsAboutScreen.swift */; };
+		BB001111BB001111BB001111 /* SettingsAccountSecurityScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001111 /* SettingsAccountSecurityScreen.swift */; };
 		920AE7435CFE9AB3EB9ACCB8 /* SeerrDiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B3037B871C504ECEF3004D /* SeerrDiscoverView.swift */; };
 		924383CEDED012A0162C4770 /* ServerFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94722BC7ADD0914A190024A /* ServerFeatures.swift */; };
 		92928E8EA23CBED3CFD11BFE /* PinEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15CF03F310991555CAFB32A3 /* PinEntryView.swift */; };
@@ -206,7 +204,6 @@
 		A2A78541C98491B19540AAFC /* FilterOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CA92E4943C66A700242A879 /* FilterOptions.swift */; };
 		A2E7F5BA16D0DB3C12022767 /* MediaPreviewOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 758363DDD2FFEF692F0A086A /* MediaPreviewOverlay.swift */; };
 		A38E580FEA09E92D9FADFA4F /* PreferenceBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34592157726E5A36E66EAAAB /* PreferenceBinding.swift */; };
-		A4C299CC25879A794DE072B8 /* SettingsPluginToolbarScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4B6A93822B8B56C57FC57D /* SettingsPluginToolbarScreen.swift */; };
 		A4D55D3B39C3294E141BD00C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 626314C2970BBEEDBAEB53AC /* Localizable.strings */; };
 		A6FB063DA506405DC2A04868 /* LiveTvGuideViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E0DFFF00D83F3DDCA590D2 /* LiveTvGuideViewModel.swift */; };
 		A7373C59083DD6A838B4E380 /* ErrorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A98F9CEE4984916823F2FA22 /* ErrorViews.swift */; };
@@ -216,6 +213,18 @@
 		AA1B8F711287B0DB9DE3CD5C /* ToolbarClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76D8A6CA4AAF12A0C017D609 /* ToolbarClock.swift */; };
 		AAA3F65CFF1D64102DA94894 /* GenreBrowseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EE2A95948B4950DD5D7D235 /* GenreBrowseViewModel.swift */; };
 		AB8CB6FC281281790EFC14D4 /* SettingsSubtitlesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E4CC8BFEB89092597875127 /* SettingsSubtitlesScreen.swift */; };
+		BB001111BB001111BB001112 /* SettingsAudioPreferencesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001112 /* SettingsAudioPreferencesScreen.swift */; };
+		BB001111BB001111BB001113 /* SettingsAutomationQueueScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001113 /* SettingsAutomationQueueScreen.swift */; };
+		BB001111BB001111BB001114 /* SettingsDynamicContentScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001114 /* SettingsDynamicContentScreen.swift */; };
+		BB001111BB001111BB001115 /* SettingsDynamicContentSubScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001115 /* SettingsDynamicContentSubScreens.swift */; };
+		BB001111BB001111BB001116 /* SettingsGeneralStyleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001116 /* SettingsGeneralStyleScreen.swift */; };
+		BB001111BB001111BB001117 /* SettingsIntegrationsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001117 /* SettingsIntegrationsScreen.swift */; };
+		BB001111BB001111BB001118 /* SettingsMediaBarSourceSelectionScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001118 /* SettingsMediaBarSourceSelectionScreens.swift */; };
+		BB001111BB001111BB001119 /* SettingsMetadataRatingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA001119 /* SettingsMetadataRatingsScreen.swift */; };
+		BB001111BB001111BB00111A /* SettingsNavigationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA00111A /* SettingsNavigationScreen.swift */; };
+		BB001111BB001111BB00111B /* SettingsPersonalizationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA00111B /* SettingsPersonalizationScreen.swift */; };
+		BB001111BB001111BB00111C /* SettingsPlaybackSyncPlayRootScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA00111C /* SettingsPlaybackSyncPlayRootScreen.swift */; };
+		BB001111BB001111BB00111D /* SettingsHomeSectionsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA001111AA001111AA00111D /* SettingsHomeSectionsScreen.swift */; };
 		AC9E2FB42939F047E6E6C77A /* SimpleInfoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D633491E2E3C22A82AE90F1A /* SimpleInfoRow.swift */; };
 		AE8A2051749A23E3726A5CA0 /* LoginCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 443241810250EC1AB21DA8F9 /* LoginCard.swift */; };
 		AEF10B94D7C04E71D90E08BA /* TmdbRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A554C71793F4265E794FAD /* TmdbRepository.swift */; };
@@ -441,7 +450,6 @@
 		4B503C4E96DDDCA8D9FA7391 /* lt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = lt; path = lt.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		4B6BF213289C258496451F29 /* PreferenceStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceStore.swift; sourceTree = "<group>"; };
 		4C3BFC5C75C97FE298467549 /* ShuffleOptionsDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShuffleOptionsDialog.swift; sourceTree = "<group>"; };
-		4D4B6A93822B8B56C57FC57D /* SettingsPluginToolbarScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginToolbarScreen.swift; sourceTree = "<group>"; };
 		4DC77917D544896807EE46B4 /* sr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sr; path = sr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4EBBA48A35E2C912D23A92D9 /* sq */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sq; path = sq.lproj/Localizable.strings; sourceTree = "<group>"; };
 		4F2F3E54369AC54B115D471F /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = id; path = id.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -518,6 +526,19 @@
 		7A471FCC6F27C455F463F8D1 /* ServerRequestModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerRequestModels.swift; sourceTree = "<group>"; };
 		7A61F4E72236D1D4D7833D6B /* ServerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerModels.swift; sourceTree = "<group>"; };
 		7A7E85C27B4CDBD48229FF2F /* SettingsAuthPinCodeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAuthPinCodeScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001111 /* SettingsAccountSecurityScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAccountSecurityScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001112 /* SettingsAudioPreferencesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAudioPreferencesScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001113 /* SettingsAutomationQueueScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAutomationQueueScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001114 /* SettingsDynamicContentScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDynamicContentScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001115 /* SettingsDynamicContentSubScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsDynamicContentSubScreens.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001116 /* SettingsGeneralStyleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsGeneralStyleScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001117 /* SettingsIntegrationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsIntegrationsScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001118 /* SettingsMediaBarSourceSelectionScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMediaBarSourceSelectionScreens.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA001119 /* SettingsMetadataRatingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMetadataRatingsScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA00111A /* SettingsNavigationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNavigationScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA00111B /* SettingsPersonalizationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPersonalizationScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA00111C /* SettingsPlaybackSyncPlayRootScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPlaybackSyncPlayRootScreen.swift; sourceTree = "<group>"; };
+		AA001111AA001111AA00111D /* SettingsHomeSectionsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHomeSectionsScreen.swift; sourceTree = "<group>"; };
 		7AA7D041A8EF59843C97A3BD /* SuggestedScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestedScreen.swift; sourceTree = "<group>"; };
 		7B9763F38E835095728E9931 /* LibraryPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPreferences.swift; sourceTree = "<group>"; };
 		7B98D074DF5C0022CA201536 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
@@ -542,7 +563,6 @@
 		86F55D92D362970F9B517268 /* TrickPlayInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrickPlayInfo.swift; sourceTree = "<group>"; };
 		87F337E1EA8A9A452F9A6E97 /* SettingsMaxBitrateScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsMaxBitrateScreen.swift; sourceTree = "<group>"; };
 		88B6C16743063B47C88FAEA3 /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
-		88E66AD9B6A360A875F0EE44 /* SettingsPluginIntegrationsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginIntegrationsScreen.swift; sourceTree = "<group>"; };
 		8A60F06FD18AE36838A1F00E /* ItemPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemPreview.swift; sourceTree = "<group>"; };
 		8AC153185AA86A0600FF5D61 /* SettingsScreensaverScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreensaverScreen.swift; sourceTree = "<group>"; };
 		8B0571DEA564D22C56A0E7C6 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
@@ -610,7 +630,6 @@
 		B5A47538C7C003A0A0368BEF /* SettingsAboutScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsAboutScreen.swift; sourceTree = "<group>"; };
 		B5F3FE4870832192F104F371 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
 		B73D54C6BC13701909A90C65 /* ca */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ca; path = ca.lproj/Localizable.strings; sourceTree = "<group>"; };
-		B864F1E3CB31F4464A9659E4 /* SettingsPluginPreviewsMusicScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginPreviewsMusicScreen.swift; sourceTree = "<group>"; };
 		B93335B0C9ABCC9E20064C65 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = nb; path = nb.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		B94722BC7ADD0914A190024A /* ServerFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerFeatures.swift; sourceTree = "<group>"; };
 		B9C58086D0A8D8554A32C0D8 /* pt */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pt; path = pt.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -653,7 +672,6 @@
 		C88EB3BB9FEABB574E468E4A /* ItemDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailsView.swift; sourceTree = "<group>"; };
 		C8C93AFA31BD221AFA4D0257 /* PlayerSeekBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSeekBar.swift; sourceTree = "<group>"; };
 		C8D9DC6E3197C8498F141404 /* StreamResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamResolver.swift; sourceTree = "<group>"; };
-		C9F0305BFD9DE8CFA6B83D7A /* SettingsPluginBackgroundsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPluginBackgroundsScreen.swift; sourceTree = "<group>"; };
 		CA4159CF66566044EE7426BC /* ColorScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorScheme.swift; sourceTree = "<group>"; };
 		CA6C3B9D21C70461867A2E19 /* MpvPlayerWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MpvPlayerWrapper.swift; sourceTree = "<group>"; };
 		CDB9E437270C796B41CB3B96 /* SubtitleConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleConfigurator.swift; sourceTree = "<group>"; };
@@ -1068,14 +1086,22 @@
 			isa = PBXGroup;
 			children = (
 				B5A47538C7C003A0A0368BEF /* SettingsAboutScreen.swift */,
+				AA001111AA001111AA001111 /* SettingsAccountSecurityScreen.swift */,
 				049B574F2EA34D822020A472 /* SettingsAuthenticationAutoSignInScreen.swift */,
 				BA6436C126ED88EEFEDCF93D /* SettingsAuthenticationScreen.swift */,
+				AA001111AA001111AA001112 /* SettingsAudioPreferencesScreen.swift */,
 				7A7E85C27B4CDBD48229FF2F /* SettingsAuthPinCodeScreen.swift */,
 				3931864E47A7032AFC95477F /* SettingsAuthServerScreen.swift */,
 				36F113B795D6EA29F5BC2B94 /* SettingsAuthServerUserScreen.swift */,
+				AA001111AA001111AA001113 /* SettingsAutomationQueueScreen.swift */,
 				9FBDE0DA7AABA47AF63658FE /* SettingsCustomizationScreen.swift */,
+				AA001111AA001111AA001114 /* SettingsDynamicContentScreen.swift */,
+				AA001111AA001111AA001115 /* SettingsDynamicContentSubScreens.swift */,
+				AA001111AA001111AA001116 /* SettingsGeneralStyleScreen.swift */,
 				56A44937BDAE28873DFD50B9 /* SettingsHomeImageTypeScreen.swift */,
+				AA001111AA001111AA00111D /* SettingsHomeSectionsScreen.swift */,
 				3DB8F093E6186AF21C6AA8A8 /* SettingsHomeScreen.swift */,
+				AA001111AA001111AA001117 /* SettingsIntegrationsScreen.swift */,
 				6E50D6C7E8C457E62998FE7D /* SettingsLanguageScreen.swift */,
 				F2883711D6E03997A9C81930 /* SettingsLibrariesScreen.swift */,
 				74A3D3823712128523C7DCF4 /* SettingsLibraryDisplayScreen.swift */,
@@ -1084,19 +1110,20 @@
 				49C17B0953FEF9A65CCACF64 /* SettingsLiveTvGuideFiltersScreen.swift */,
 				A0287A8BB7F449C14785A019 /* SettingsLiveTvGuideOptionsScreen.swift */,
 				6E52B4DEA949C89B86A017B2 /* SettingsMainScreen.swift */,
+				AA001111AA001111AA001118 /* SettingsMediaBarSourceSelectionScreens.swift */,
 				87F337E1EA8A9A452F9A6E97 /* SettingsMaxBitrateScreen.swift */,
 				2D7DAD20426F96F052F9D238 /* SettingsMediaBarOpacityScreen.swift */,
 				702A02D7EBA1FE7132ECE667 /* SettingsMediaSegmentScreen.swift */,
 				3F6BEB9DAAC25AB5526B2DB7 /* SettingsMediaSegmentsScreen.swift */,
+				AA001111AA001111AA001119 /* SettingsMetadataRatingsScreen.swift */,
 				F95BEDEB81DA59E7BD971A55 /* SettingsMoonfinScreen.swift */,
+				AA001111AA001111AA00111A /* SettingsNavigationScreen.swift */,
 				6E8996E58509F065C5A8D304 /* SettingsParentalControlsScreen.swift */,
+				AA001111AA001111AA00111B /* SettingsPersonalizationScreen.swift */,
 				BF8ED88662802FBD73A9A433 /* SettingsPlaybackAdvancedScreen.swift */,
 				FB757D9B6CAF472A07F92763 /* SettingsPlaybackScreen.swift */,
-				C9F0305BFD9DE8CFA6B83D7A /* SettingsPluginBackgroundsScreen.swift */,
-				88E66AD9B6A360A875F0EE44 /* SettingsPluginIntegrationsScreen.swift */,
+				AA001111AA001111AA00111C /* SettingsPlaybackSyncPlayRootScreen.swift */,
 				7C7E37FD38B1D65496825745 /* SettingsPluginMediaBarScreen.swift */,
-				B864F1E3CB31F4464A9659E4 /* SettingsPluginPreviewsMusicScreen.swift */,
-				4D4B6A93822B8B56C57FC57D /* SettingsPluginToolbarScreen.swift */,
 				8AC153185AA86A0600FF5D61 /* SettingsScreensaverScreen.swift */,
 				8291D25FD1C3C2E9276E9E71 /* SettingsSeerrRowsScreen.swift */,
 				18F69B7BCC81B52B3C08BC7E /* SettingsSeerrScreen.swift */,
@@ -1861,14 +1888,22 @@
 				08BE93EC9CA5C3E531D22D78 /* SessionInitializer.swift in Sources */,
 				2A2E339F6308A3511769B911 /* SessionRepository.swift in Sources */,
 				916B5A1C3A705DF81369700E /* SettingsAboutScreen.swift in Sources */,
+				BB001111BB001111BB001111 /* SettingsAccountSecurityScreen.swift in Sources */,
 				CB9916AC7A845E608C44A827 /* SettingsAuthPinCodeScreen.swift in Sources */,
 				79DB9454338AF0254503CB16 /* SettingsAuthServerScreen.swift in Sources */,
 				7AD67B0B5C0D50E13B833CFE /* SettingsAuthServerUserScreen.swift in Sources */,
 				2FCE681482B214E74D66F75E /* SettingsAuthenticationAutoSignInScreen.swift in Sources */,
 				D9A2C6B70B1A9A3FC998FE7C /* SettingsAuthenticationScreen.swift in Sources */,
+				BB001111BB001111BB001112 /* SettingsAudioPreferencesScreen.swift in Sources */,
+				BB001111BB001111BB001113 /* SettingsAutomationQueueScreen.swift in Sources */,
 				5EE8232949CE383F086241EC /* SettingsCustomizationScreen.swift in Sources */,
+				BB001111BB001111BB001114 /* SettingsDynamicContentScreen.swift in Sources */,
+				BB001111BB001111BB001115 /* SettingsDynamicContentSubScreens.swift in Sources */,
+				BB001111BB001111BB001116 /* SettingsGeneralStyleScreen.swift in Sources */,
 				0116D073F06403EF1DC56A63 /* SettingsHomeImageTypeScreen.swift in Sources */,
+				BB001111BB001111BB00111D /* SettingsHomeSectionsScreen.swift in Sources */,
 				DB5D2832CF26D35FE26CD3E3 /* SettingsHomeScreen.swift in Sources */,
+				BB001111BB001111BB001117 /* SettingsIntegrationsScreen.swift in Sources */,
 				A1F80FB37CD563848A6C9E27 /* SettingsItemContent.swift in Sources */,
 				60DAB99A8C867604E18614FD /* SettingsLanguageScreen.swift in Sources */,
 				20F09E2E35BE5CC7CEE79347 /* SettingsLibrariesScreen.swift in Sources */,
@@ -1879,21 +1914,22 @@
 				0E0067784829F7065FFCD9BA /* SettingsLiveTvGuideFiltersScreen.swift in Sources */,
 				1B850F08E97F8D74A103DCC4 /* SettingsLiveTvGuideOptionsScreen.swift in Sources */,
 				BF09C05738B1479D39355ABE /* SettingsMainScreen.swift in Sources */,
+				BB001111BB001111BB001118 /* SettingsMediaBarSourceSelectionScreens.swift in Sources */,
 				B2F75D0516E9396365E3D32E /* SettingsMaxBitrateScreen.swift in Sources */,
 				A200413036907DE04D1FF0CC /* SettingsMediaBarOpacityScreen.swift in Sources */,
 				0BA19E877FB50CCA918EDCDB /* SettingsMediaSegmentScreen.swift in Sources */,
 				3CC48062335763C011114E68 /* SettingsMediaSegmentsScreen.swift in Sources */,
+				BB001111BB001111BB001119 /* SettingsMetadataRatingsScreen.swift in Sources */,
 				D56E3F5FB626810283B26437 /* SettingsMoonfinScreen.swift in Sources */,
 				ECB007532A15853573FD30B7 /* SettingsOverlayView.swift in Sources */,
+				BB001111BB001111BB00111A /* SettingsNavigationScreen.swift in Sources */,
 				797870D17D8E6B4981FFE2E2 /* SettingsParentalControlsScreen.swift in Sources */,
+				BB001111BB001111BB00111B /* SettingsPersonalizationScreen.swift in Sources */,
 				180127D423D36F0B0B80EA63 /* SettingsPickerScreen.swift in Sources */,
 				8A2C73D367C81AF8AA452059 /* SettingsPlaybackAdvancedScreen.swift in Sources */,
 				9006CF4B49C0AB9122AA14BA /* SettingsPlaybackScreen.swift in Sources */,
-				3D4640D6811B32C8C72DAC6A /* SettingsPluginBackgroundsScreen.swift in Sources */,
-				514B6B83A52606042820020C /* SettingsPluginIntegrationsScreen.swift in Sources */,
+				BB001111BB001111BB00111C /* SettingsPlaybackSyncPlayRootScreen.swift in Sources */,
 				971C7F807E70300BB0845202 /* SettingsPluginMediaBarScreen.swift in Sources */,
-				60F805E19A5C41B05807B5ED /* SettingsPluginPreviewsMusicScreen.swift in Sources */,
-				A4C299CC25879A794DE072B8 /* SettingsPluginToolbarScreen.swift in Sources */,
 				96E8F0B35C5FD412D28F1A60 /* SettingsRouter.swift in Sources */,
 				80900C437ABC1187B6828BEE /* SettingsScreenLayout.swift in Sources */,
 				5E857B21118AF4F5728C00E6 /* SettingsScreensaverScreen.swift in Sources */,

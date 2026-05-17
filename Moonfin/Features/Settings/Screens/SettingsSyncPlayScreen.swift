@@ -10,11 +10,26 @@ struct SettingsSyncPlayScreen: View {
 
     var body: some View {
         SettingsScreenLayout(title: "SyncPlay") {
+            SettingsListButton(
+                icon: "person.3.sequence",
+                heading: "Open Groups",
+                caption: "Open SyncPlay group session management",
+                action: { settingsRouter.navigate(to: .syncPlay) }
+            )
+            .focused($focusedRoute, equals: .syncPlay)
+
             SettingsToggleButton(
                 icon: "person.3.fill",
                 heading: "Enabled",
                 caption: "Enable SyncPlay synchronized playback",
                 isOn: prefs.binding(for: UserPreferences.syncPlayEnabled)
+            )
+
+            SettingsToggleButton(
+                icon: "button.programmable",
+                heading: "SyncPlay Button",
+                caption: "Show SyncPlay button in player UI",
+                isOn: prefs.binding(for: UserPreferences.showSyncPlayButton)
             )
 
             SettingsToggleButton(
