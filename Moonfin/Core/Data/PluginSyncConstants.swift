@@ -33,15 +33,19 @@ struct SyncablePreference {
 enum PluginSyncConstants {
     static let snapshotKey = "moonfin_sync_snapshot"
     static let snapshotVersionKey = "_snapshot_version"
-    static let snapshotVersion = 5
+    static let snapshotVersion = 6
     static let clientId = "moonfin-appletv"
     static let pingPath = "/Moonfin/Ping"
     static let settingsPath = "/Moonfin/Settings"
+    static let themesPath = "/Moonfin/Themes"
     static let mediaBarPath = "/Moonfin/MediaBar"
     static let jellyseerrConfigPath = "/Moonfin/Jellyseerr/Config"
     static let debounceMs: UInt64 = 500
 
     static let syncablePreferences: [SyncablePreference] = [
+        SyncablePreference(key: "visual_theme", type: .enum, serverKey: "visualTheme", defaultValue: "moonfin"),
+        SyncablePreference(key: "pref_custom_theme_id", type: .string, serverKey: "customThemeId", defaultValue: ""),
+
         SyncablePreference(key: "navbar_position", type: .enum, serverKey: "navbarPosition", defaultValue: "top"),
         SyncablePreference(key: "shuffle_content_type", type: .enum, serverKey: "shuffleContentType", defaultValue: "both"),
 

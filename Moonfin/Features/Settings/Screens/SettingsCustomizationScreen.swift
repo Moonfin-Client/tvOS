@@ -11,13 +11,22 @@ struct SettingsCustomizationScreen: View {
     var body: some View {
         SettingsScreenLayout(title: "Customization") {
             SettingsListButton(
+                icon: "paintpalette",
+                heading: "Appearance Theme",
+                caption: "Select your app appearance theme",
+                trailingText: theme.activeSpec.displayName,
+                action: { settingsRouter.navigate(to: .customizationAppearanceTheme) }
+            )
+            .focused($focusedRoute, equals: .customizationAppearanceTheme)
+
+            SettingsListButton(
                 icon: "circle.lefthalf.filled",
                 heading: "Focus Border Color",
                 caption: "Color of the focus indicator",
                 trailingText: theme.focusBorder.displayName,
-                action: { settingsRouter.navigate(to: .customizationTheme) }
+                action: { settingsRouter.navigate(to: .customizationFocusBorder) }
             )
-            .focused($focusedRoute, equals: .customizationTheme)
+            .focused($focusedRoute, equals: .customizationFocusBorder)
 
             SettingsListButton(
                 icon: "clock",

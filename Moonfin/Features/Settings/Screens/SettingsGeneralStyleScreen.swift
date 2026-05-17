@@ -13,16 +13,17 @@ struct SettingsGeneralStyleScreen: View {
                 icon: "paintpalette",
                 heading: "Appearance Theme",
                 caption: "Select your app appearance theme",
-                action: { settingsRouter.navigate(to: .placeholder(title: "Appearance Theme")) }
+                action: { settingsRouter.navigate(to: .customizationAppearanceTheme) }
             )
+            .focused($focusedRoute, equals: .customizationAppearanceTheme)
 
             SettingsListButton(
                 icon: "circle.lefthalf.filled",
                 heading: "Focus Border Color",
                 caption: "Adjust the focus highlight color",
-                action: { settingsRouter.navigate(to: .customizationTheme) }
+                action: { settingsRouter.navigate(to: .customizationFocusBorder) }
             )
-            .focused($focusedRoute, equals: .customizationTheme)
+            .focused($focusedRoute, equals: .customizationFocusBorder)
 
             SettingsListButton(
                 icon: "clock",

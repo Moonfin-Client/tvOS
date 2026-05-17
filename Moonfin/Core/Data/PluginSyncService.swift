@@ -45,6 +45,8 @@ final class PluginSyncService: ObservableObject {
 
         guard available else { return }
 
+        await refreshCustomThemes(client: client)
+
         let serverSettings = await fetchServerSettings(client: client)
         let localSettings = collectLocalSettings()
         let snapshot = loadSnapshot()
@@ -244,9 +246,93 @@ final class PluginSyncService: ObservableObject {
                 store.set(i, forKey: sp.key)
             }
         case .string, .enum:
-            store.set("\(value)", forKey: sp.key)
+            if sp.key == UserPreferences.visualTheme.key {
+                store.set(normalizedVisualThemeString(value), forKey: sp.key)
+            } else {
+                store.set("\(value)", forKey: sp.key)
+            }
         case .list:
             writeListValue(sp, value: value, store: store)
+        }
+    }
+
+    // MARK: - Theme sync
+
+    private func fetchThemesPayload(client: HttpClient) async -> Any? {
+        guard let baseURL = client.baseURL else { return nil }
+
+        let components = URLComponents(url: baseURL.appendingPathComponent(PluginSyncConstants.themesPath), resolvingAgainstBaseURL: false)
+        guard let url = components?.url else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(client.authorizationHeader, forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return nil }
+            return try JSONSerialization.jsonObject(with: data)
+        } catch {
+            return nil
+        }
+    }
+
+    private func extractThemeObjects(_ payload: Any?) -> [Any] {
+        guard let payload else { return [] }
+
+        if let list = payload as? [Any] {
+            return list
+        }
+
+        if let map = payload as? [String: Any] {
+            if let themes = map["themes"] as? [Any] {
+                return themes
+            }
+            if let items = map["items"] as? [Any] {
+                return items
+            }
+            let mapValues = map.values.filter { $0 is [String: Any] }
+            if !mapValues.isEmpty {
+                return mapValues
+            }
+        }
+
+        return []
+    }
+
+    private func refreshCustomThemes(client: HttpClient) async {
+        let payload = await fetchThemesPayload(client: client)
+        let objects = extractThemeObjects(payload)
+
+        var specs: [ThemeSpec] = []
+        for entry in objects {
+            guard let map = entry as? [String: Any] else { continue }
+            do {
+                let spec = try ThemeSpec.parse(jsonObject: map)
+                if ThemeRegistry.builtInIds.contains(spec.id) {
+                    continue
+                }
+                specs.append(spec)
+            } catch {
+                // Ignore malformed theme entries from plugin response.
+            }
+        }
+
+        ThemeRegistry.shared.replaceCustomThemes(specs)
+
+        let customThemeId = defaults.string(forKey: UserPreferences.customThemeId.key) ?? ""
+        if !customThemeId.isEmpty && ThemeRegistry.shared.availableThemes[customThemeId] == nil {
+            defaults.set("", forKey: UserPreferences.customThemeId.key)
+        }
+    }
+
+    private func normalizedVisualThemeString(_ raw: Any) -> String {
+        let value = "\(raw)"
+        switch value {
+        case "neon_pulse", "neonPulse":
+            return VisualThemeId.neonPulse.rawValue
+        default:
+            return VisualThemeId.moonfin.rawValue
         }
     }
 

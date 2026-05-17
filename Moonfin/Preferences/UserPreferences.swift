@@ -116,6 +116,9 @@ final class UserPreferences: ObservableObject {
         defaultValue: PluginCustomizationProfile.tv
     )
 
+    static let visualTheme = Preference(key: "visual_theme", defaultValue: VisualThemeId.moonfin)
+    static let customThemeId = Preference(key: "pref_custom_theme_id", defaultValue: "")
+
     static let themeMusicEnabled = Preference(key: "theme_music_enabled", defaultValue: false)
     static let themeMusicVolume = Preference(key: "theme_music_volume", defaultValue: 30)
     static let themeMusicOnHomeRows = Preference(key: "theme_music_on_home_rows", defaultValue: false)
@@ -452,6 +455,18 @@ enum PluginCustomizationProfile: String, StringRepresentableEnum, CaseIterable {
         case .desktop: return "Desktop"
         case .mobile: return "Mobile"
         case .tv: return "TV"
+        }
+    }
+}
+
+enum VisualThemeId: String, StringRepresentableEnum, CaseIterable {
+    case moonfin
+    case neonPulse
+
+    var displayName: String {
+        switch self {
+        case .moonfin: return "Moonfin"
+        case .neonPulse: return "Neon Pulse"
         }
     }
 }

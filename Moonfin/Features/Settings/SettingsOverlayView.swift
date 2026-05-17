@@ -154,7 +154,9 @@ private struct SettingsRouteResolver: View {
             SettingsAuthServerUserScreen(serverId: serverId, userId: userId)
         case .customization:
             SettingsCustomizationScreen()
-        case .customizationTheme:
+        case .customizationAppearanceTheme:
+            SettingsAppearanceThemeScreen()
+        case .customizationFocusBorder:
             SettingsPickerScreen(
                 title: "Focus Border Color",
                 selection: Binding(

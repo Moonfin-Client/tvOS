@@ -39,6 +39,13 @@ struct MoonfinColorScheme {
     let listButtonFocused: Color
     let listHeadlineFocused: Color
     let listCaptionFocused: Color
+
+    let statusAvailable: Color
+    let statusRequested: Color
+    let statusPending: Color
+    let statusDownloading: Color
+    let mediaTypeBadgeMovie: Color
+    let mediaTypeBadgeShow: Color
 }
 
 extension MoonfinColorScheme {
@@ -80,6 +87,13 @@ extension MoonfinColorScheme {
         listButton: .clear,
         listButtonFocused: .colorBluegrey800,
         listHeadlineFocused: .colorGrey25,
-        listCaptionFocused: .colorGrey200
+        listCaptionFocused: .colorGrey200,
+
+        statusAvailable: Color(hex: 0x22C55E),
+        statusRequested: Color(hex: 0x9333EA),
+        statusPending: Color(hex: 0xEAB308),
+        statusDownloading: Color(hex: 0x6366F1),
+        mediaTypeBadgeMovie: Color(hex: 0x3B82F6),
+        mediaTypeBadgeShow: Color(hex: 0x8B5CF6)
     )
 }

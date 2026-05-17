@@ -24,6 +24,9 @@ struct MoonfinApp: App {
                 .environmentObject(previewManager)
                 .rtlAware()
                 .environmentObject(LocalizationManager.shared)
+                .onAppear {
+                    theme.refreshFromPreferences(container.userPreferences)
+                }
         }
     }
 }
