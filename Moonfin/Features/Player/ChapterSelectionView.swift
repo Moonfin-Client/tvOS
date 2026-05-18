@@ -15,8 +15,9 @@ struct ChapterSelectionView: View {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 Text(Strings.chapters)
                     .font(.title2xl)
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : .white)
                     .padding(.horizontal, 80)
+                    .neonTextGlow(theme, active: theme.isNeonPulseTheme)
 
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -91,16 +92,18 @@ struct ChapterSelectionView: View {
                     }
                 }
                 .cornerRadius(RadiusTokens.small)
+                .clipped()
 
                 Text(chapter.name ?? Strings.playerChapter(index + 1))
                     .font(.bodySm)
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : .white)
                     .lineLimit(1)
                     .frame(width: cardWidth, alignment: .leading)
+                    .neonTextGlow(theme, active: theme.isNeonPulseTheme)
 
                 Text(formatChapterTime(ticks: chapter.startPositionTicks))
                     .font(.caption2xs)
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.6))
             }
         }
         .buttonStyle(PopupCardButtonStyle())

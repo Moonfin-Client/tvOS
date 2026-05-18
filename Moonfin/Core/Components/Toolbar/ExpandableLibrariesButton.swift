@@ -7,6 +7,7 @@ struct ExpandableLibrariesButton: View {
     let pillNamespace: Namespace.ID
     let pillAnchorId: NavbarItem
     let pillHeight: CGFloat
+    var cycleIndex: Int? = nil
     let onIconFocusChanged: (Bool) -> Void
 
     enum FocusedItem: Hashable {
@@ -114,19 +115,30 @@ struct ExpandableLibrariesButton: View {
     }
 
     private var iconForeground: Color {
-        if focusedItem == .icon { return theme.focusBorder.color.contrastingContentColor }
+        if focusedItem == .icon {
+            if theme.isNeonPulseTheme {
+                if let idx = cycleIndex, !theme.activeSpec.navColorCycle.isEmpty {
+                    return theme.navCycleColor(for: idx)
+                }
+                return theme.neonPrimaryColor
+            }
+            return theme.effectiveFocusColor.contrastingContentColor
+        }
         if activeLibraryId != nil { return theme.colorScheme.onButtonActive }
+        if let idx = cycleIndex, !theme.activeSpec.navColorCycle.isEmpty {
+            return theme.navCycleColor(for: idx)
+        }
         return theme.colorScheme.onButton
     }
 
     private func pillBackground(for library: ServerItem) -> Color {
-        if focusedItem == .library(library.id) { return theme.focusBorder.color }
+        if focusedItem == .library(library.id) { return theme.effectiveFocusColor }
         if library.id == activeLibraryId { return theme.colorScheme.buttonActive }
         return .clear
     }
 
     private func pillForeground(for library: ServerItem) -> Color {
-        if focusedItem == .library(library.id) { return theme.focusBorder.color.contrastingContentColor }
+        if focusedItem == .library(library.id) { return theme.effectiveFocusColor.contrastingContentColor }
         if library.id == activeLibraryId { return theme.colorScheme.onButtonActive }
         return theme.colorScheme.onButton
     }

@@ -9,7 +9,17 @@ extension ThemeSpec {
         textGlow: [],
         navColorCycle: [],
         transparentNavbarSurface: false,
-        semantic: .defaults,
+        semantic: ThemeSemanticTokensSpec(
+            textHeadline: ThemeHexColor(argb: 0xFFFFFFFF),
+            textBody: ThemeHexColor(argb: 0xFFE6E6E6),
+            textCaption: ThemeHexColor(argb: 0xCCFFFFFF),
+            statusAvailable: ThemeHexColor(argb: 0xFF22C55E),
+            statusRequested: ThemeHexColor(argb: 0xFF9333EA),
+            statusPending: ThemeHexColor(argb: 0xFFEAB308),
+            statusDownloading: ThemeHexColor(argb: 0xFF6366F1),
+            mediaTypeBadgeMovie: ThemeHexColor(argb: 0xFF3B82F6),
+            mediaTypeBadgeShow: ThemeHexColor(argb: 0xFF8B5CF6)
+        ),
         book: .defaults,
         colors: ThemeColorTokensSpec(
             background: ThemeHexColor(argb: 0xFF101010),
@@ -73,7 +83,17 @@ extension ThemeSpec {
             ThemeHexColor(argb: 0xFF00E5FF)
         ],
         transparentNavbarSurface: true,
-        semantic: .defaults,
+        semantic: ThemeSemanticTokensSpec(
+            textHeadline: ThemeHexColor(argb: 0xFF00E5FF),
+            textBody: ThemeHexColor(argb: 0xFFB8F6FF),
+            textCaption: ThemeHexColor(argb: 0xCCB8F6FF),
+            statusAvailable: ThemeHexColor(argb: 0xFF22C55E),
+            statusRequested: ThemeHexColor(argb: 0xFF9333EA),
+            statusPending: ThemeHexColor(argb: 0xFFEAB308),
+            statusDownloading: ThemeHexColor(argb: 0xFF6366F1),
+            mediaTypeBadgeMovie: ThemeHexColor(argb: 0xFF3B82F6),
+            mediaTypeBadgeShow: ThemeHexColor(argb: 0xFF8B5CF6)
+        ),
         book: .defaults,
         colors: ThemeColorTokensSpec(
             background: ThemeHexColor(argb: 0xFF0B0420),

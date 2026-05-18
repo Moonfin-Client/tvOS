@@ -19,8 +19,25 @@ final class MoonfinTheme: ObservableObject {
     private var registryObserver: NSObjectProtocol?
     private weak var preferences: UserPreferences?
     private var isInitializing = true
+    private let hasStoredFocusBorderAtLaunch: Bool
 
     var accent: Color { activeSpec.colors.accent.color }
+    var effectiveFocusColor: Color { focusBorder.color }
+    var isNeonPulseTheme: Bool { activeSpec.id == ThemeRegistry.neonPulseId }
+
+    func navCycleColor(for index: Int) -> Color {
+        let cycle = activeSpec.navColorCycle
+        guard !cycle.isEmpty else { return colorScheme.onButton }
+        return cycle[index % cycle.count].color
+    }
+
+    var neonPrimaryColor: Color {
+        isNeonPulseTheme ? navCycleColor(for: 0) : colorScheme.onButton
+    }
+
+    var neonSecondaryColor: Color {
+        isNeonPulseTheme ? navCycleColor(for: 1) : colorScheme.onBackground
+    }
 
     init(colorScheme: MoonfinColorScheme = .default) {
         let stored = UserDefaults.standard.string(forKey: Self.focusBorderStorageKey)
@@ -29,6 +46,7 @@ final class MoonfinTheme: ObservableObject {
         self.activeCustomId = ""
         self.colorScheme = colorScheme
         self.focusBorder = stored.flatMap(FocusBorderColor.init(rawValue:)) ?? .white
+        self.hasStoredFocusBorderAtLaunch = stored != nil
 
         defaultsObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification,
@@ -143,6 +161,12 @@ final class MoonfinTheme: ObservableObject {
         activeThemeId = builtIn
         activeCustomId = hasCustom ? customId : ""
         activeSpec = resolved
+        TypographyTokens.fontFamily = resolved.fontFamily
+
+        if !hasStoredFocusBorderAtLaunch && resolved.id == ThemeRegistry.neonPulseId && focusBorder == .white {
+            focusBorder = .neonPink
+        }
+
         colorScheme = resolved.toMoonfinColorScheme()
     }
 }
@@ -153,7 +177,9 @@ extension Notification.Name {
 
 private extension ThemeSpec {
     func toMoonfinColorScheme() -> MoonfinColorScheme {
-        MoonfinColorScheme(
+        let isNeonPulse = id == ThemeRegistry.neonPulseId
+
+        return MoonfinColorScheme(
             background: colors.background.color,
             onBackground: colors.onBackground.color,
             surface: colors.surface.color,
@@ -184,14 +210,14 @@ private extension ThemeSpec {
             badge: colors.badgeBackground.color,
             onBadge: colors.onBadge.color,
 
-            listHeader: colors.onBackground.color,
-            listOverline: colors.onBackground.color.opacity(0.6),
-            listHeadline: colors.onSurface.color,
-            listCaption: colors.onSurface.color.opacity(0.75),
+            listHeader: semantic.textHeadline.color,
+            listOverline: semantic.textBody.color.opacity(0.85),
+            listHeadline: isNeonPulse ? colors.accent.color : semantic.textHeadline.color,
+            listCaption: isNeonPulse ? colors.onBackground.color : semantic.textCaption.color,
             listButton: .clear,
             listButtonFocused: colors.surfaceVariant.color,
-            listHeadlineFocused: colors.onSurface.color,
-            listCaptionFocused: colors.onSurface.color.opacity(0.85),
+            listHeadlineFocused: semantic.textHeadline.color,
+            listCaptionFocused: semantic.textCaption.color,
 
             statusAvailable: semantic.statusAvailable.color,
             statusRequested: semantic.statusRequested.color,

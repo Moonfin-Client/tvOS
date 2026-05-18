@@ -21,7 +21,7 @@ struct SimpleInfoRow: View {
     private var separator: some View {
         Text("•")
             .font(.bodyLg)
-            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
+            .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor.opacity(0.8) : theme.colorScheme.onBackground.opacity(0.5))
     }
 
     private func metadataParts(for item: ServerItem) -> [AnyView] {
@@ -128,7 +128,7 @@ struct SimpleInfoRow: View {
         AnyView(
             Text(text)
                 .font(.bodyLg)
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+                .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.7))
         )
     }
 
@@ -136,12 +136,12 @@ struct SimpleInfoRow: View {
         AnyView(
             Text(rating)
                 .font(.bodyLg)
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.8))
                 .padding(.horizontal, SpaceTokens.spaceSm)
                 .padding(.vertical, 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
-                        .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
+                        .stroke(theme.isNeonPulseTheme ? theme.neonPrimaryColor.opacity(0.85) : theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
                 )
         )
     }
@@ -151,12 +151,12 @@ struct SimpleInfoRow: View {
             Text(resolution)
                 .font(.bodyLg)
                 .fontWeight(.semibold)
-                .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.8))
                 .padding(.horizontal, SpaceTokens.spaceSm)
                 .padding(.vertical, 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
-                        .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
+                        .stroke(theme.isNeonPulseTheme ? theme.neonPrimaryColor.opacity(0.85) : theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
                 )
         )
     }

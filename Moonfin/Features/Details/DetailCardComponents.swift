@@ -52,7 +52,7 @@ struct FocusableItemCard: View {
                 .cornerRadius(RadiusTokens.small)
                 .overlay(
                     RoundedRectangle(cornerRadius: RadiusTokens.small)
-                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                        .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: isFocused ? 3 : 0)
                 )
             }
             .buttonStyle(CleanButtonStyle())
@@ -70,17 +70,18 @@ struct FocusableItemCard: View {
                     text: item.name,
                     font: .bodySm,
                     fontSize: TypographyTokens.fontSizeSm,
-                    color: theme.colorScheme.onBackground,
+                    color: theme.colorScheme.listHeadline,
                     maxWidth: cardWidth,
                     isFocused: isFocused
                 )
+                .neonTextGlow(theme, active: theme.isNeonPulseTheme)
 
                 if !item.cardSubtitle.isEmpty {
                     MarqueeText(
                         text: item.cardSubtitle,
                         font: .captionXs,
                         fontSize: TypographyTokens.fontSizeXs,
-                        color: theme.colorScheme.onBackground.opacity(0.6),
+                        color: theme.colorScheme.listCaption,
                         maxWidth: cardWidth,
                         isFocused: isFocused
                     )
@@ -113,18 +114,19 @@ struct FocusableCastCard: View {
                     )
                     .overlay(
                         Circle()
-                            .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                            .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: isFocused ? 3 : 0)
                     )
 
                 Text(person.name)
                     .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground)
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : theme.colorScheme.onBackground)
                     .lineLimit(1)
+                    .neonTextGlow(theme, active: theme.isNeonPulseTheme)
 
                 if let role = person.role, !role.isEmpty {
                     Text(role)
                         .font(.caption2xs)
-                        .foregroundColor(theme.colorScheme.listCaption)
+                        .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.listCaption)
                         .lineLimit(1)
                 }
             }
@@ -196,7 +198,7 @@ struct FocusableEpisodeCard: View {
         .cornerRadius(RadiusTokens.small)
         .overlay(
             RoundedRectangle(cornerRadius: RadiusTokens.small)
-                .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: isFocused ? 3 : 0)
         )
     }
 
@@ -211,8 +213,9 @@ struct FocusableEpisodeCard: View {
             Text(item.name)
                 .font(.bodyLg)
                 .fontWeight(.semibold)
-                .foregroundColor(theme.colorScheme.onBackground)
+                .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : theme.colorScheme.onBackground)
                 .lineLimit(1)
+                .neonTextGlow(theme, active: theme.isNeonPulseTheme)
 
             if let ticks = item.runTimeTicks, ticks > 0 {
                 Text(RuntimeFormatter.format(ticks: ticks))
@@ -223,7 +226,7 @@ struct FocusableEpisodeCard: View {
             if let overview = item.overview, !overview.isEmpty {
                 Text(overview)
                     .font(.bodySm)
-                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.6))
                     .lineLimit(3)
             }
         }

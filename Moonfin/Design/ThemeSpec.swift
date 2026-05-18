@@ -253,6 +253,9 @@ struct ThemeBorderTokensSpec: Equatable {
 }
 
 struct ThemeSemanticTokensSpec: Equatable {
+    let textHeadline: ThemeHexColor
+    let textBody: ThemeHexColor
+    let textCaption: ThemeHexColor
     let statusAvailable: ThemeHexColor
     let statusRequested: ThemeHexColor
     let statusPending: ThemeHexColor
@@ -261,6 +264,9 @@ struct ThemeSemanticTokensSpec: Equatable {
     let mediaTypeBadgeShow: ThemeHexColor
 
     static let defaults = ThemeSemanticTokensSpec(
+        textHeadline: ThemeHexColor(argb: 0xFFFFFFFF),
+        textBody: ThemeHexColor(argb: 0xFFEEEEEE),
+        textCaption: ThemeHexColor(argb: 0xCCEEEEEE),
         statusAvailable: ThemeHexColor(argb: 0xFF22C55E),
         statusRequested: ThemeHexColor(argb: 0xFF9333EA),
         statusPending: ThemeHexColor(argb: 0xFFEAB308),
@@ -275,6 +281,24 @@ struct ThemeSemanticTokensSpec: Equatable {
             throw ThemeSpecValidationError.invalidField("semantic")
         }
         return ThemeSemanticTokensSpec(
+            textHeadline: try ThemeParser.optionalColor(
+                map,
+                key: "textHeadline",
+                field: "semantic.textHeadline",
+                defaultValue: defaults.textHeadline
+            ),
+            textBody: try ThemeParser.optionalColor(
+                map,
+                key: "textBody",
+                field: "semantic.textBody",
+                defaultValue: defaults.textBody
+            ),
+            textCaption: try ThemeParser.optionalColor(
+                map,
+                key: "textCaption",
+                field: "semantic.textCaption",
+                defaultValue: defaults.textCaption
+            ),
             statusAvailable: try ThemeParser.requiredColor(map, key: "statusAvailable", field: "semantic.statusAvailable"),
             statusRequested: try ThemeParser.requiredColor(map, key: "statusRequested", field: "semantic.statusRequested"),
             statusPending: try ThemeParser.requiredColor(map, key: "statusPending", field: "semantic.statusPending"),
@@ -455,6 +479,19 @@ private enum ThemeParser {
             throw ThemeSpecValidationError.missingField(field)
         }
         return try ThemeHexColor(hexString: raw, field: field)
+    }
+
+    static func optionalColor(
+        _ map: [String: Any],
+        key: String,
+        field: String,
+        defaultValue: ThemeHexColor
+    ) throws -> ThemeHexColor {
+        guard let raw = map[key] else { return defaultValue }
+        guard let colorText = raw as? String else {
+            throw ThemeSpecValidationError.invalidField(field)
+        }
+        return try ThemeHexColor(hexString: colorText, field: field)
     }
 
     static func optionalDouble(

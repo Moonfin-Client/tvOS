@@ -13,8 +13,9 @@ struct CastListView: View {
             VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
                 Text(Strings.cast)
                     .font(.title2xl)
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : .white)
                     .padding(.horizontal, 80)
+                    .neonTextGlow(theme, active: theme.isNeonPulseTheme)
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: SpaceTokens.spaceMd) {
@@ -76,13 +77,14 @@ struct CastListView: View {
 
                 Text(person.name)
                     .font(.bodySm)
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : .white)
                     .lineLimit(1)
+                    .neonTextGlow(theme, active: theme.isNeonPulseTheme)
 
                 if let role = person.role, !role.isEmpty {
                     Text(role)
                         .font(.caption2xs)
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.6))
                         .lineLimit(1)
                 }
             }

@@ -4,10 +4,18 @@ struct ExpandableToolbarButton: View {
     let icon: String
     let label: String
     var isAssetIcon: Bool = false
+    var cycleIndex: Int? = nil
     let action: () -> Void
 
     @FocusState private var isFocused: Bool
     @EnvironmentObject var theme: MoonfinTheme
+
+    private var idleIconColor: Color {
+        if let idx = cycleIndex, !theme.activeSpec.navColorCycle.isEmpty {
+            return theme.navCycleColor(for: idx)
+        }
+        return theme.colorScheme.onButton
+    }
 
     var body: some View {
         Button(action: action) {
@@ -33,7 +41,7 @@ struct ExpandableToolbarButton: View {
             }
             .padding(.horizontal, isFocused ? 20 : 10)
             .padding(.vertical, 12)
-            .foregroundColor(isFocused ? theme.focusBorder.color.contrastingContentColor : theme.colorScheme.onButton)
+            .foregroundColor(theme.isNeonPulseTheme ? idleIconColor : (isFocused ? theme.effectiveFocusColor.contrastingContentColor : idleIconColor))
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)

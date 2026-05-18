@@ -40,7 +40,7 @@ struct ItemPreview: View {
                         text: item.name,
                         font: .captionXs,
                         fontSize: TypographyTokens.fontSizeXs,
-                        color: theme.colorScheme.onBackground,
+                        color: theme.colorScheme.listHeadline,
                         maxWidth: cardWidth,
                         isFocused: isCardFocused
                     )
@@ -50,7 +50,7 @@ struct ItemPreview: View {
                             text: item.cardSubtitle,
                             font: .captionXs,
                             fontSize: TypographyTokens.fontSizeXs,
-                            color: theme.colorScheme.onBackground.opacity(0.6),
+                            color: theme.colorScheme.listCaption,
                             maxWidth: cardWidth,
                             isFocused: isCardFocused
                         )

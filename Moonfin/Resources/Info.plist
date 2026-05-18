@@ -39,6 +39,10 @@
 	<array>
 		<string>org.moonfin.app.viewItem</string>
 	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>ScienceGothic-Regular.ttf</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

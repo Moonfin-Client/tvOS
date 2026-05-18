@@ -26,12 +26,13 @@ struct SeerrCastCard: View {
                 VStack(spacing: 2) {
                     Text(member.name)
                         .font(.captionXs)
-                        .foregroundColor(theme.colorScheme.onBackground)
+                        .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : theme.colorScheme.onBackground)
                         .lineLimit(1)
+                        .neonTextGlow(theme, active: theme.isNeonPulseTheme)
                     if let character = member.character, !character.isEmpty {
                         Text(character)
                             .font(.captionXs)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.5))
+                            .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.5))
                             .lineLimit(1)
                     }
                 }

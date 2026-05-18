@@ -7,6 +7,7 @@ private enum SidebarFocusItem: Hashable {
 
 struct LeftSidebar: View {
     @StateObject private var viewModel: NavbarViewModel
+    @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @EnvironmentObject var settingsRouter: SettingsRouter
     @EnvironmentObject var sessionInitializer: SessionInitializer
@@ -76,6 +77,22 @@ struct LeftSidebar: View {
         router.reset()
         returnFocusItem = .home
         onMoveToContent?()
+    }
+
+    private var visibleSidebarItems: [SidebarFocusItem] {
+        var items: [SidebarFocusItem] = [.user, .home, .search]
+        if viewModel.showShuffle { items.append(.shuffle) }
+        if viewModel.showFavorites { items.append(.favorites) }
+        if viewModel.showGenres { items.append(.genres) }
+        if viewModel.showSeerrInNavigation { items.append(.seerr) }
+        if hasVisibleLibraries { items.append(.libraries) }
+        if viewModel.showSyncPlay { items.append(.syncPlay) }
+        items.append(.settings)
+        return items
+    }
+
+    private func sidebarCycleIndex(for item: SidebarFocusItem) -> Int? {
+        visibleSidebarItems.firstIndex(of: item)
     }
 
     private func handoffFocusToContent() {
@@ -173,13 +190,19 @@ struct LeftSidebar: View {
                             viewModel.overlayColor.opacity(viewModel.overlayOpacity * 1.9),
                             viewModel.overlayColor.opacity(viewModel.overlayOpacity * 1.7),
                             viewModel.overlayColor.opacity(viewModel.overlayOpacity * 1.2),
-                            Color.clear
+                            viewModel.overlayColor.opacity(theme.isNeonPulseTheme ? viewModel.overlayOpacity * 0.18 : 0.0)
                         ],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .frame(width: isExpanded ? Self.expandedWidth : 0)
+                .overlay(alignment: .trailing) {
+                    if let navBorder = theme.activeSpec.borders.navBorder {
+                        Rectangle()
+                            .stroke(navBorder.color.color, lineWidth: navBorder.width)
+                    }
+                }
         }
         .clipped()
         .animation(.easeOut(duration: 0.18), value: isExpanded)
@@ -191,6 +214,7 @@ struct LeftSidebar: View {
             systemIcon: "person.fill",
             imageUrl: viewModel.userImageUrl,
             label: viewModel.userName.isEmpty ? "User" : viewModel.userName,
+            cycleIndex: sidebarCycleIndex(for: .user),
             isExpanded: isExpanded,
             isFocused: focusedItem == .user,
             action: {
@@ -208,6 +232,7 @@ struct LeftSidebar: View {
             SidebarIconItem(
                 systemIcon: "house",
                 label: Strings.home,
+                cycleIndex: sidebarCycleIndex(for: .home),
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .home,
                 action: { routeHomeAndHandoffFocus() }
@@ -217,6 +242,7 @@ struct LeftSidebar: View {
             SidebarIconItem(
                 systemIcon: "magnifyingglass",
                 label: Strings.search,
+                cycleIndex: sidebarCycleIndex(for: .search),
                 isExpanded: isExpanded,
                 isFocused: focusedItem == .search,
                 action: {
@@ -230,6 +256,7 @@ struct LeftSidebar: View {
                 SidebarIconItem(
                     assetIcon: "shuffle",
                     label: viewModel.isShuffling ? "..." : Strings.shuffle,
+                    cycleIndex: sidebarCycleIndex(for: .shuffle),
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .shuffle,
                     action: { showShuffleDialog = true }
@@ -241,6 +268,7 @@ struct LeftSidebar: View {
                 SidebarIconItem(
                     systemIcon: "heart.fill",
                     label: Strings.favorites,
+                    cycleIndex: sidebarCycleIndex(for: .favorites),
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .favorites,
                     action: {
@@ -255,6 +283,7 @@ struct LeftSidebar: View {
                 SidebarIconItem(
                     systemIcon: "theatermasks",
                     label: Strings.genres,
+                    cycleIndex: sidebarCycleIndex(for: .genres),
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .genres,
                     action: {
@@ -269,6 +298,7 @@ struct LeftSidebar: View {
                 SidebarIconItem(
                     systemIcon: "person.3.fill",
                     label: Strings.syncPlay,
+                    cycleIndex: sidebarCycleIndex(for: .syncPlay),
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .syncPlay,
                     action: {
@@ -283,6 +313,7 @@ struct LeftSidebar: View {
                 SidebarIconItem(
                     assetIcon: viewModel.seerrIconName,
                     label: viewModel.seerrDisplayName,
+                    cycleIndex: sidebarCycleIndex(for: .seerr),
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .seerr,
                     action: {
@@ -297,6 +328,7 @@ struct LeftSidebar: View {
                 SidebarIconItem(
                     systemIcon: "movieclapper.fill",
                     label: Strings.libraries,
+                    cycleIndex: sidebarCycleIndex(for: .libraries),
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .libraries,
                     action: { isLibraryExpanded.toggle() }
@@ -324,6 +356,7 @@ struct LeftSidebar: View {
                 SidebarIconItem(
                     systemIcon: "gearshape.fill",
                     label: Strings.settings,
+                    cycleIndex: sidebarCycleIndex(for: .settings),
                     isExpanded: isExpanded,
                     isFocused: focusedItem == .settings,
                     action: { settingsRouter.open() }
@@ -337,6 +370,7 @@ struct LeftSidebar: View {
         SidebarIconItem(
             systemIcon: "gearshape.fill",
             label: Strings.settings,
+            cycleIndex: sidebarCycleIndex(for: .settings),
             isExpanded: isExpanded,
             isFocused: focusedItem == .settings,
             action: { settingsRouter.open() }
@@ -362,31 +396,41 @@ private struct SidebarIconItem: View {
     let assetIcon: String?
     let imageUrl: String?
     let label: String
+    let cycleIndex: Int?
     let isExpanded: Bool
     let isFocused: Bool
     let action: () -> Void
 
-    init(systemIcon: String, imageUrl: String? = nil, label: String, isExpanded: Bool, isFocused: Bool, action: @escaping () -> Void) {
+    init(systemIcon: String, imageUrl: String? = nil, label: String, cycleIndex: Int? = nil, isExpanded: Bool, isFocused: Bool, action: @escaping () -> Void) {
         self.systemIcon = systemIcon
         self.assetIcon = nil
         self.imageUrl = imageUrl
         self.label = label
+        self.cycleIndex = cycleIndex
         self.isExpanded = isExpanded
         self.isFocused = isFocused
         self.action = action
     }
 
-    init(assetIcon: String, label: String, isExpanded: Bool, isFocused: Bool, action: @escaping () -> Void) {
+    init(assetIcon: String, label: String, cycleIndex: Int? = nil, isExpanded: Bool, isFocused: Bool, action: @escaping () -> Void) {
         self.systemIcon = nil
         self.assetIcon = assetIcon
         self.imageUrl = nil
         self.label = label
+        self.cycleIndex = cycleIndex
         self.isExpanded = isExpanded
         self.isFocused = isFocused
         self.action = action
     }
 
     @EnvironmentObject var theme: MoonfinTheme
+
+    private var tintColor: Color {
+        if let index = cycleIndex, theme.isNeonPulseTheme {
+            return theme.navCycleColor(for: index)
+        }
+        return .white
+    }
 
     var body: some View {
         Button(action: action) {
@@ -398,7 +442,7 @@ private struct SidebarIconItem: View {
                     if isExpanded {
                         Text(label)
                             .font(.bodyMd)
-                            .foregroundColor(.white)
+                            .foregroundColor(tintColor)
                             .lineLimit(1)
                     }
                 }
@@ -406,7 +450,7 @@ private struct SidebarIconItem: View {
                 .padding(.horizontal, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 24)
-                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 2)
+                        .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: 2)
                 )
 
                 Spacer(minLength: 0)
@@ -443,12 +487,12 @@ private struct SidebarIconItem: View {
     private var defaultPersonIconOrSystemIcon: some View {
         if systemIcon == "person.fill" {
             PersonAvatarShape()
-                .fill(.white)
+                .fill(tintColor)
                 .frame(width: 18, height: 18)
         } else {
             Image(systemName: systemIcon ?? "questionmark")
                 .font(.system(size: 24))
-                .foregroundColor(.white)
+                .foregroundColor(tintColor)
         }
     }
 }
@@ -473,7 +517,7 @@ private struct SidebarTextItem: View {
                     .padding(.horizontal, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 24)
-                            .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 2)
+                                .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: 2)
                     )
 
                 Spacer(minLength: 0)

@@ -310,13 +310,13 @@ private struct SeerrBrowsePosterCard: View {
 
                 Text(item.displayTitle)
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.colorScheme.listHeadline)
                     .lineLimit(1)
 
                 if !metadata.isEmpty {
                     Text(metadata)
                         .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(theme.colorScheme.listCaption)
                         .lineLimit(1)
                 }
             }
@@ -326,7 +326,8 @@ private struct SeerrBrowsePosterCard: View {
         .buttonStyle(ItemCardButtonStyle(
             isFocused: isFocused,
             cornerRadius: RadiusTokens.small + 6,
-            focusBorderColor: theme.focusBorder.color
+            focusBorderColor: theme.effectiveFocusColor,
+            focusGlow: theme.activeSpec.borders.focusGlow
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in

@@ -27,6 +27,22 @@ struct Navbar: View {
         onMoveToContent?()
     }
 
+    private var visibleCenterItems: [NavbarItem] {
+        var items: [NavbarItem] = [.home, .search]
+        if viewModel.showShuffle { items.append(.shuffle) }
+        if viewModel.showFavorites { items.append(.favorites) }
+        if viewModel.showGenres { items.append(.genres) }
+        if viewModel.showSeerrInToolbar { items.append(.seerr) }
+        if viewModel.showLibraries && !viewModel.userViews.isEmpty { items.append(.libraries) }
+        if viewModel.showSyncPlay { items.append(.syncPlay) }
+        items.append(.settings)
+        return items
+    }
+
+    private func navCycleIndex(for item: NavbarItem) -> Int? {
+        visibleCenterItems.firstIndex(of: item)
+    }
+
     var body: some View {
         ZStack {
             HStack {
@@ -122,6 +138,7 @@ struct Navbar: View {
             ExpandableToolbarButton(
                 icon: "house",
                 label: Strings.home,
+                cycleIndex: navCycleIndex(for: .home),
                 action: { routeHomeAndHandoffFocus() }
             )
             .focused($navFocusItem, equals: .home)
@@ -131,6 +148,7 @@ struct Navbar: View {
                 ExpandableToolbarButton(
                     icon: "magnifyingglass",
                     label: Strings.search,
+                    cycleIndex: navCycleIndex(for: .search),
                     action: { router.navigatePrimary(to: .search()) }
                 )
                 .focused($navFocusItem, equals: .search)
@@ -141,6 +159,7 @@ struct Navbar: View {
                         icon: "shuffle",
                         label: viewModel.isShuffling ? "..." : Strings.shuffle,
                         isAssetIcon: true,
+                        cycleIndex: navCycleIndex(for: .shuffle),
                         action: { showShuffleDialog = true }
                     )
                     .focused($navFocusItem, equals: .shuffle)
@@ -151,6 +170,7 @@ struct Navbar: View {
                     ExpandableToolbarButton(
                         icon: "heart.fill",
                         label: Strings.favorites,
+                        cycleIndex: navCycleIndex(for: .favorites),
                         action: { router.navigatePrimary(to: .allFavorites) }
                     )
                     .focused($navFocusItem, equals: .favorites)
@@ -161,6 +181,7 @@ struct Navbar: View {
                     ExpandableToolbarButton(
                         icon: "theatermasks",
                         label: Strings.genres,
+                        cycleIndex: navCycleIndex(for: .genres),
                         action: { router.navigatePrimary(to: .allGenres) }
                     )
                     .focused($navFocusItem, equals: .genres)
@@ -172,6 +193,7 @@ struct Navbar: View {
                         icon: viewModel.seerrIconName,
                         label: viewModel.seerrDisplayName,
                         isAssetIcon: true,
+                        cycleIndex: navCycleIndex(for: .seerr),
                         action: { router.navigatePrimary(to: .seerrDiscover) }
                     )
                     .focused($navFocusItem, equals: .seerr)
@@ -188,6 +210,7 @@ struct Navbar: View {
                         pillNamespace: navPillNamespace,
                         pillAnchorId: .libraries,
                         pillHeight: navbarPillHeight,
+                        cycleIndex: navCycleIndex(for: .libraries),
                         onIconFocusChanged: { isIconFocused in
                             isLibrariesIconFocused = isIconFocused
                         }
@@ -199,6 +222,7 @@ struct Navbar: View {
                     ExpandableToolbarButton(
                         icon: "person.3.fill",
                         label: Strings.syncPlay,
+                        cycleIndex: navCycleIndex(for: .syncPlay),
                         action: { settingsRouter.open(to: .syncPlay) }
                     )
                     .focused($navFocusItem, equals: .syncPlay)
@@ -208,6 +232,7 @@ struct Navbar: View {
                 ExpandableToolbarButton(
                     icon: "gearshape.fill",
                     label: Strings.settings,
+                    cycleIndex: navCycleIndex(for: .settings),
                     action: { settingsRouter.open() }
                 )
                 .focused($navFocusItem, equals: .settings)
@@ -220,13 +245,25 @@ struct Navbar: View {
                 Capsule()
                     .fill(viewModel.overlayColor.opacity(viewModel.overlayOpacity))
                     .frame(height: navbarPillHeight)
+                if let navBorder = theme.activeSpec.borders.navBorder {
+                    Capsule()
+                        .stroke(navBorder.color.color, lineWidth: navBorder.width)
+                        .frame(height: navbarPillHeight)
+                }
                 if let focused = navFocusItem, focused != .user {
                     if focused != .libraries || isLibrariesIconFocused {
-                        Capsule()
-                            .fill(theme.focusBorder.color)
-                            .frame(height: navbarPillHeight)
-                            .matchedGeometryEffect(id: focused, in: navPillNamespace, isSource: false)
-                            .transition(.opacity)
+                        Group {
+                            if theme.isNeonPulseTheme {
+                                Capsule()
+                                    .stroke(theme.effectiveFocusColor, lineWidth: 2.5)
+                            } else {
+                                Capsule()
+                                    .fill(theme.effectiveFocusColor)
+                            }
+                        }
+                        .frame(height: navbarPillHeight)
+                        .matchedGeometryEffect(id: focused, in: navPillNamespace, isSource: false)
+                        .transition(.opacity)
                     }
                 }
             }
@@ -280,7 +317,7 @@ private struct UserAvatarToolbarButton: View {
                 .clipShape(Circle())
                 .overlay(
                     Circle()
-                        .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: isFocused ? 3 : 0)
+                        .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: isFocused ? 3 : 0)
                 )
 
                 if isFocused {

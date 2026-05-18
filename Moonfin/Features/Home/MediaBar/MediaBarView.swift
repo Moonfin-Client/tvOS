@@ -279,7 +279,7 @@ struct MediaBarView: View {
 
                 Text(item.overview ?? " ")
                     .font(.bodyMd)
-                    .foregroundColor(.white.opacity(0.85))
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.85))
                     .lineLimit(3)
                     .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
             }
@@ -324,24 +324,24 @@ struct MediaBarView: View {
     private var metadataSeparator: some View {
         Text("\u{2022}")
             .font(.bodySm)
-            .foregroundColor(.white.opacity(0.4))
+            .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor.opacity(0.7) : .white.opacity(0.4))
     }
 
     private func metadataText(_ text: String) -> some View {
         Text(text)
             .font(.bodySm)
-            .foregroundColor(.white.opacity(0.7))
+            .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.7))
     }
 
     private func metadataBadge(_ text: String) -> some View {
         Text(text)
             .font(.bodySm)
-            .foregroundColor(.white.opacity(0.8))
+            .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.8))
             .padding(.horizontal, SpaceTokens.spaceXs)
             .padding(.vertical, 1)
             .overlay(
                 RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
-                    .stroke(.white.opacity(0.3), lineWidth: 1)
+                    .stroke(theme.isNeonPulseTheme ? theme.neonPrimaryColor.opacity(0.85) : .white.opacity(0.3), lineWidth: 1)
             )
     }
 

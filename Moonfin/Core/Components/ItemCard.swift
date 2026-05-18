@@ -51,7 +51,8 @@ struct ItemCard: View {
         .buttonStyle(ItemCardButtonStyle(
             isFocused: isFocused,
             cornerRadius: cornerRadius,
-            focusBorderColor: theme.focusBorder.color
+            focusBorderColor: theme.effectiveFocusColor,
+            focusGlow: theme.activeSpec.borders.focusGlow
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
@@ -226,12 +227,25 @@ struct ItemCardButtonStyle: ButtonStyle {
     let isFocused: Bool
     let cornerRadius: CGFloat
     let focusBorderColor: Color
+    let focusGlow: [ThemeShadowSpec]
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .stroke(isFocused ? focusBorderColor : .clear, lineWidth: isFocused ? 3 : 0)
+            )
+            .shadow(
+                color: isFocused && focusGlow.count > 0 ? focusGlow[0].color.color : .clear,
+                radius: focusGlow.count > 0 ? focusGlow[0].blurRadius : 0,
+                x: focusGlow.count > 0 ? focusGlow[0].offsetX : 0,
+                y: focusGlow.count > 0 ? focusGlow[0].offsetY : 0
+            )
+            .shadow(
+                color: isFocused && focusGlow.count > 1 ? focusGlow[1].color.color : .clear,
+                radius: focusGlow.count > 1 ? focusGlow[1].blurRadius : 0,
+                x: focusGlow.count > 1 ? focusGlow[1].offsetX : 0,
+                y: focusGlow.count > 1 ? focusGlow[1].offsetY : 0
             )
             .scaleEffect(isFocused ? 1.05 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isFocused)

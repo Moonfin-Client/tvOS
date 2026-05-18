@@ -176,7 +176,8 @@ struct SeerrItemCard: View {
             .buttonStyle(ItemCardButtonStyle(
                 isFocused: isFocused,
                 cornerRadius: RadiusTokens.small,
-                focusBorderColor: theme.focusBorder.color
+                focusBorderColor: theme.effectiveFocusColor,
+                focusGlow: theme.activeSpec.borders.focusGlow
             ))
             .focused($isFocused)
             .onChange(of: isFocused) { focused in
@@ -186,19 +187,19 @@ struct SeerrItemCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.displayTitle)
                     .font(.captionXs)
-                    .foregroundColor(theme.colorScheme.onBackground)
+                    .foregroundColor(theme.colorScheme.listHeadline)
                     .lineLimit(1)
                 HStack(spacing: 4) {
                     Text(item.mediaType == "tv" ? "Series" : "Movie")
                         .font(.captionXs)
-                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                        .foregroundColor(theme.colorScheme.listCaption)
                     if let year = extractYear(from: item) {
                         Text("•")
                             .font(.captionXs)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                            .foregroundColor(theme.colorScheme.listCaption)
                         Text(year)
                             .font(.captionXs)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                            .foregroundColor(theme.colorScheme.listCaption)
                     }
                 }
             }
@@ -343,7 +344,8 @@ struct SeerrGenreCard: View {
         .buttonStyle(ItemCardButtonStyle(
             isFocused: isFocused,
             cornerRadius: RadiusTokens.small,
-            focusBorderColor: theme.focusBorder.color
+            focusBorderColor: theme.effectiveFocusColor,
+            focusGlow: theme.activeSpec.borders.focusGlow
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
@@ -422,7 +424,8 @@ struct SeerrNetworkStudioCard: View {
         .buttonStyle(ItemCardButtonStyle(
             isFocused: isFocused,
             cornerRadius: RadiusTokens.small,
-            focusBorderColor: theme.focusBorder.color
+            focusBorderColor: theme.effectiveFocusColor,
+            focusGlow: theme.activeSpec.borders.focusGlow
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in

@@ -478,7 +478,7 @@ struct ItemDetailsView: View {
                             Text("\"\(tagline)\"")
                                 .font(.bodyMd)
                                 .italic()
-                                .foregroundColor(theme.colorScheme.onBackground.opacity(0.6))
+                                .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : theme.colorScheme.onBackground.opacity(0.6))
                         }
 
                         if let overview = item.overview, !overview.isEmpty {
@@ -694,7 +694,7 @@ struct ItemDetailsView: View {
             .padding(.vertical, 2)
             .overlay(
                 RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
-                    .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
+                    .stroke(theme.isNeonPulseTheme ? theme.neonPrimaryColor.opacity(0.85) : theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
             )
     }
 
@@ -989,24 +989,27 @@ struct ItemDetailsView: View {
     @ViewBuilder
     private func metadataSection(item: ServerItem) -> some View {
         let columns = metadataColumns(for: item)
+        let isNeonPulse = theme.isNeonPulseTheme
+        let neonPrimary = theme.neonPrimaryColor
+        let neonSecondary = theme.neonSecondaryColor
 
         if !columns.isEmpty {
             HStack(spacing: 0) {
                 ForEach(Array(columns.enumerated()), id: \.offset) { index, column in
                     if index > 0 {
                         Rectangle()
-                            .fill(Color.white.opacity(0.08))
+                            .fill(isNeonPulse ? neonPrimary.opacity(0.45) : Color.white.opacity(0.08))
                             .frame(width: 1, height: 36)
                     }
 
                     VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
                         Text(column.label.uppercased())
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
+                            .foregroundColor(isNeonPulse ? neonPrimary : theme.colorScheme.onBackground.opacity(0.4))
                             .tracking(0.5)
                         Text(column.value)
                             .font(.bodySm)
-                            .foregroundColor(theme.colorScheme.onBackground.opacity(0.85))
+                            .foregroundColor(isNeonPulse ? neonSecondary : theme.colorScheme.onBackground.opacity(0.85))
                             .lineLimit(2)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1019,7 +1022,7 @@ struct ItemDetailsView: View {
                     .fill(Color.white.opacity(0.03))
                     .overlay(
                         RoundedRectangle(cornerRadius: RadiusTokens.small)
-                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                            .stroke(isNeonPulse ? neonPrimary.opacity(0.75) : Color.white.opacity(0.06), lineWidth: 1)
                     )
             )
         }

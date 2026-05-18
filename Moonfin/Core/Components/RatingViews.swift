@@ -30,6 +30,8 @@ private struct BaseRatingChipView<Icon: View>: View {
     let sharedHeight: CGFloat?
     let icon: Icon
 
+    @EnvironmentObject var theme: MoonfinTheme
+
     init(valueText: String, labelText: String?, sharedHeight: CGFloat?, @ViewBuilder icon: () -> Icon) {
         self.valueText = valueText
         self.labelText = labelText
@@ -42,13 +44,13 @@ private struct BaseRatingChipView<Icon: View>: View {
             HStack(spacing: 8) {
                 icon
                 Text(valueText)
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
+                    .font(.token(24, weight: .bold))
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white)
             }
             if let labelText {
                 Text(labelText)
-                    .font(.system(size: 16))
-                    .foregroundColor(.white.opacity(0.5))
+                    .font(.token(16))
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.5))
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -62,7 +64,11 @@ private struct BaseRatingChipView<Icon: View>: View {
                     .preference(key: RatingChipHeightPreferenceKey.self, value: geometry.size.height)
             }
         )
-        .background(Color.white.opacity(0.1))
+        .background(theme.isNeonPulseTheme ? theme.neonSecondaryColor.opacity(0.12) : Color.white.opacity(0.1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(theme.isNeonPulseTheme ? theme.neonPrimaryColor.opacity(0.85) : .clear, lineWidth: 1)
+        )
         .cornerRadius(8)
     }
 }
@@ -108,6 +114,8 @@ struct CompactRatingChipView: View {
     let source: String
     let normalizedValue: Float
 
+    @EnvironmentObject var theme: MoonfinTheme
+
     var body: some View {
         let scorePercent = Int(normalizedValue * 100)
         if let iconName = RatingIconProvider.getIcon(source: source, scorePercent: scorePercent) {
@@ -117,8 +125,8 @@ struct CompactRatingChipView: View {
             HStack(spacing: 3) {
                 Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 14, height: 14)
                 Text(formatted)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.7))
+                    .font(.token(11, weight: .semibold))
+                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.7))
             }
         }
     }
@@ -128,32 +136,46 @@ struct MediaBarRatingRow: View {
     let source: String
     let value: Float
 
-    var body: some View {
-        if source == "stars" {
-            HStack(spacing: 4) {
-                Text("★")
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
-                Text(String(format: "%.1f", value))
-                    .font(.system(size: 20))
-                    .foregroundColor(.white)
-                    .fixedSize()
-            }
-        } else {
-            let scorePercent = Int(value * 100)
-            let iconName = RatingIconProvider.getIcon(source: source, scorePercent: scorePercent)
-            let formatted = RatingSource(rawValue: source)?.format(value) ?? "\(scorePercent)%"
+    @EnvironmentObject var theme: MoonfinTheme
 
-            HStack(spacing: 4) {
-                if let iconName {
-                    Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 24, height: 24)
+    private var borderColor: Color {
+        theme.isNeonPulseTheme ? theme.neonPrimaryColor.opacity(0.85) : .clear
+    }
+
+    var body: some View {
+        Group {
+            if source == "stars" {
+                HStack(spacing: 4) {
+                    Text("★")
+                        .font(.token(20))
+                        .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
+                    Text(String(format: "%.1f", value))
+                        .font(.token(20))
+                        .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white)
+                        .fixedSize()
                 }
-                Text(formatted)
-                    .font(.system(size: 20))
-                    .foregroundColor(.white)
-                    .fixedSize()
+            } else {
+                let scorePercent = Int(value * 100)
+                let iconName = RatingIconProvider.getIcon(source: source, scorePercent: scorePercent)
+                let formatted = RatingSource(rawValue: source)?.format(value) ?? "\(scorePercent)%"
+
+                HStack(spacing: 4) {
+                    if let iconName {
+                        Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 24, height: 24)
+                    }
+                    Text(formatted)
+                        .font(.token(20))
+                        .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white)
+                        .fixedSize()
+                }
             }
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .overlay(
+            RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
+                .stroke(borderColor, lineWidth: 1)
+        )
     }
 }
 

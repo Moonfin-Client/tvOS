@@ -50,7 +50,8 @@ struct LibraryCard: View {
         .buttonStyle(ItemCardButtonStyle(
             isFocused: isFocused,
             cornerRadius: RadiusTokens.small,
-            focusBorderColor: theme.focusBorder.color
+            focusBorderColor: theme.effectiveFocusColor,
+            focusGlow: theme.activeSpec.borders.focusGlow
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in

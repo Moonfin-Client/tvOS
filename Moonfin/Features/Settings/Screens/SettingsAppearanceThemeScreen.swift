@@ -37,16 +37,6 @@ struct SettingsAppearanceThemeScreen: View {
                 .buttonStyle(CleanButtonStyle())
                 .focused($focusedThemeId, equals: spec.id)
             }
-
-            SettingsListButton(
-                icon: "circle.lefthalf.filled",
-                heading: "Focus Border Color",
-                caption: "Adjust the focus highlight color",
-                trailingText: theme.focusBorder.displayName,
-                action: {
-                    settingsRouter.navigate(to: .customizationFocusBorder)
-                }
-            )
         }
     }
 

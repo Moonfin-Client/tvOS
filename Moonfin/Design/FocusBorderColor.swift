@@ -2,6 +2,7 @@ import SwiftUI
 
 enum FocusBorderColor: String, CaseIterable, Identifiable {
     case white
+    case neonPink
     case black
     case gray
     case darkBlue
@@ -20,6 +21,7 @@ enum FocusBorderColor: String, CaseIterable, Identifiable {
     var color: Color {
         switch self {
         case .white:     return Color(hex: 0xFFFFFF)
+        case .neonPink:  return Color(hex: 0xFF2E92)
         case .black:     return Color(hex: 0x000000)
         case .gray:      return Color(hex: 0x9E9E9E)
         case .darkBlue:  return Color(hex: 0x42A5F5)
@@ -38,6 +40,7 @@ enum FocusBorderColor: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .white:     return "White"
+        case .neonPink:  return "Neon Pink"
         case .black:     return "Black"
         case .gray:      return "Gray"
         case .darkBlue:  return "Dark Blue"
