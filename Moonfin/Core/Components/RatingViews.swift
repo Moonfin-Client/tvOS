@@ -40,8 +40,8 @@ private struct BaseRatingChipView<Icon: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 7) {
                 icon
                 Text(valueText)
                     .font(.token(24, weight: .bold))
@@ -55,8 +55,8 @@ private struct BaseRatingChipView<Icon: View>: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 7)
         .frame(height: sharedHeight)
         .background(
             GeometryReader { geometry in
@@ -90,7 +90,7 @@ struct RatingChipView: View {
                 Image(iconName)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 32, height: 32)
             }
         }
     }
@@ -123,9 +123,9 @@ struct CompactRatingChipView: View {
             let formatted = ratingSource?.format(normalizedValue) ?? "\(scorePercent)%"
 
             HStack(spacing: 3) {
-                Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 14, height: 14)
+                Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 16, height: 16)
                 Text(formatted)
-                    .font(.token(11, weight: .semibold))
+                    .font(.token(13, weight: .semibold))
                     .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.7))
             }
         }
@@ -147,10 +147,10 @@ struct MediaBarRatingRow: View {
             if source == "stars" {
                 HStack(spacing: 4) {
                     Text("★")
-                        .font(.token(20))
+                        .font(.token(24))
                         .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
                     Text(String(format: "%.1f", value))
-                        .font(.token(20))
+                        .font(.token(TypographyTokens.fontSizeXs))
                         .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white)
                         .fixedSize()
                 }
@@ -161,16 +161,16 @@ struct MediaBarRatingRow: View {
 
                 HStack(spacing: 4) {
                     if let iconName {
-                        Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 24, height: 24)
+                        Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 28, height: 28)
                     }
                     Text(formatted)
-                        .font(.token(20))
+                        .font(.token(TypographyTokens.fontSizeXs))
                         .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white)
                         .fixedSize()
                 }
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 10)
         .padding(.vertical, 3)
         .overlay(
             RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)

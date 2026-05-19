@@ -107,7 +107,7 @@ struct FocusableCastCard: View {
         Button(action: onSelect) {
             VStack(spacing: SpaceTokens.spaceXs) {
                 CachedImage(urlString: imageUrl)
-                    .frame(width: 150, height: 150)
+                    .frame(width: 180, height: 180)
                     .clipShape(Circle())
                     .background(
                         Circle().fill(theme.colorScheme.surface)
@@ -130,7 +130,7 @@ struct FocusableCastCard: View {
                         .lineLimit(1)
                 }
             }
-            .frame(width: 165)
+            .frame(width: 200)
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
@@ -155,8 +155,8 @@ struct FocusableEpisodeCard: View {
     @EnvironmentObject var theme: MoonfinTheme
     @FocusState private var isFocused: Bool
 
-    private let thumbWidth: CGFloat = 340
-    private let thumbHeight: CGFloat = 191
+    private let thumbWidth: CGFloat = 400
+    private let thumbHeight: CGFloat = 225
 
     var body: some View {
         Button(action: onSelect) {

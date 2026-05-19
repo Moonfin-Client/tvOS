@@ -23,8 +23,8 @@ struct LeftSidebar: View {
     let onMoveToContent: (() -> Void)?
     let onSidebarEntered: (() -> Void)?
 
-    static let sidebarInset: CGFloat = 90
-    private static let expandedWidth: CGFloat = 560
+    static let sidebarInset: CGFloat = 104
+    private static let expandedWidth: CGFloat = 640
 
     init(
         container: AppContainer,
@@ -228,7 +228,7 @@ struct LeftSidebar: View {
     }
 
     private var sidebarItems: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 32) {
             SidebarIconItem(
                 systemIcon: "house",
                 label: Strings.home,
@@ -437,7 +437,7 @@ private struct SidebarIconItem: View {
             HStack(spacing: 0) {
                 HStack(spacing: 12) {
                     iconContent
-                        .frame(width: 32, height: 32)
+                        .frame(width: 36, height: 36)
 
                     if isExpanded {
                         Text(label)
@@ -477,7 +477,7 @@ private struct SidebarIconItem: View {
                 .renderingMode(.template)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 28, height: 28)
+                .frame(width: 32, height: 32)
         } else {
             defaultPersonIconOrSystemIcon
         }
@@ -488,10 +488,10 @@ private struct SidebarIconItem: View {
         if systemIcon == "person.fill" {
             PersonAvatarShape()
                 .fill(tintColor)
-                .frame(width: 18, height: 18)
+                .frame(width: 22, height: 22)
         } else {
             Image(systemName: systemIcon ?? "questionmark")
-                .font(.system(size: 24))
+                .font(.system(size: 28))
                 .foregroundColor(tintColor)
         }
     }

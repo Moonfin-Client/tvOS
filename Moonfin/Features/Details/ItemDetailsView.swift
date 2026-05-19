@@ -443,7 +443,7 @@ struct ItemDetailsView: View {
                 if item.type == .person, let posterUrl = viewModel.posterUrl(for: item),
                    let url = URL(string: posterUrl) {
                     CachedImage(url: url, contentMode: .fit)
-                        .frame(maxWidth: 280, maxHeight: 420)
+                    .frame(maxWidth: 360, maxHeight: 540)
                         .cornerRadius(RadiusTokens.medium)
                         .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                 }
@@ -462,7 +462,7 @@ struct ItemDetailsView: View {
                             .frame(maxHeight: 100)
                     } else {
                         Text(item.name)
-                            .font(.system(size: 44, weight: .bold))
+                            .font(.title2xl)
                             .foregroundColor(theme.colorScheme.onBackground)
                             .lineLimit(2)
                     }
@@ -502,14 +502,14 @@ struct ItemDetailsView: View {
                     if let imageUrlString, let url = URL(string: imageUrlString) {
                         if isEpisode {
                             CachedImage(url: url, contentMode: .fill)
-                                .frame(maxWidth: 380, maxHeight: 214)
+                                .frame(maxWidth: 500, maxHeight: 281)
                                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
                                 .clipped()
                                 .cornerRadius(RadiusTokens.medium)
                                 .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                         } else {
                             CachedImage(url: url, contentMode: .fit)
-                                .frame(maxWidth: 340, maxHeight: isMusic ? 340 : 510)
+                                .frame(maxWidth: 440, maxHeight: isMusic ? 440 : 660)
                                 .cornerRadius(RadiusTokens.medium)
                                 .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
                         }
@@ -529,7 +529,7 @@ struct ItemDetailsView: View {
             if let imageUrlString = viewModel.posterUrl(for: item),
                let url = URL(string: imageUrlString) {
                 CachedImage(url: url, contentMode: .fit)
-                    .frame(width: 360, height: 360)
+                    .frame(width: 460, height: 460)
                     .cornerRadius(RadiusTokens.medium)
                     .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
             }
@@ -541,7 +541,7 @@ struct ItemDetailsView: View {
                         .frame(maxHeight: 90)
                 } else {
                     Text(item.name)
-                        .font(.system(size: 44, weight: .bold))
+                        .font(.title2xl)
                         .foregroundColor(theme.colorScheme.onBackground)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
@@ -587,7 +587,7 @@ struct ItemDetailsView: View {
             if let imageUrlString = viewModel.posterUrl(for: item),
                let url = URL(string: imageUrlString) {
                 CachedImage(url: url, contentMode: .fit)
-                    .frame(width: 340, height: 340)
+                    .frame(width: 440, height: 440)
                     .cornerRadius(RadiusTokens.medium)
                     .shadow(color: .black.opacity(0.5), radius: 12, x: 0, y: 6)
             }
@@ -599,7 +599,7 @@ struct ItemDetailsView: View {
                         .frame(maxHeight: 90)
                 } else {
                     Text(item.name)
-                        .font(.system(size: 44, weight: .bold))
+                        .font(.title2xl)
                         .foregroundColor(theme.colorScheme.onBackground)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
@@ -712,7 +712,7 @@ struct ItemDetailsView: View {
 
     private var ratingsRow: some View {
         let showLabels = viewModel.showRatingLabels
-        return EqualHeightRatingRow(spacing: SpaceTokens.spaceSm) { sharedHeight in
+        return EqualHeightRatingRow(spacing: 8) { sharedHeight in
             ForEach(viewModel.ratings, id: \.0) { source, value in
                 if source == "stars" {
                     StarRatingChipView(value: value, showLabel: showLabels, sharedHeight: sharedHeight)

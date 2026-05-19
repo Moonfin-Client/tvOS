@@ -1,9 +1,19 @@
 import SwiftUI
 
+enum SimpleInfoRowSizeVariant {
+    case regular
+    case compact
+}
+
 struct SimpleInfoRow: View {
     let item: ServerItem?
     var metadataSummary: String?
+    var sizeVariant: SimpleInfoRowSizeVariant = .regular
     @EnvironmentObject var theme: MoonfinTheme
+
+    private var rowFont: Font {
+        sizeVariant == .compact ? .bodyMd : .bodyLg
+    }
 
     var body: some View {
         if let item {
@@ -20,7 +30,7 @@ struct SimpleInfoRow: View {
 
     private var separator: some View {
         Text("•")
-            .font(.bodyLg)
+            .font(rowFont)
             .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor.opacity(0.8) : theme.colorScheme.onBackground.opacity(0.5))
     }
 
@@ -127,7 +137,7 @@ struct SimpleInfoRow: View {
     private func infoText(_ text: String) -> AnyView {
         AnyView(
             Text(text)
-                .font(.bodyLg)
+                .font(rowFont)
                 .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.7))
         )
     }
@@ -135,7 +145,7 @@ struct SimpleInfoRow: View {
     private func ratingBadge(_ rating: String) -> AnyView {
         AnyView(
             Text(rating)
-                .font(.bodyLg)
+                .font(rowFont)
                 .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.8))
                 .padding(.horizontal, SpaceTokens.spaceSm)
                 .padding(.vertical, 2)
@@ -149,7 +159,7 @@ struct SimpleInfoRow: View {
     private func resolutionBadge(_ resolution: String) -> AnyView {
         AnyView(
             Text(resolution)
-                .font(.bodyLg)
+                .font(rowFont)
                 .fontWeight(.semibold)
                 .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : theme.colorScheme.onBackground.opacity(0.8))
                 .padding(.horizontal, SpaceTokens.spaceSm)

@@ -428,7 +428,7 @@ struct HomeScreen: View {
     }
 
     private func rowsContent(screenHeight: CGFloat) -> some View {
-        let rowsTop = screenHeight * 0.38
+        let rowsTop = screenHeight * 0.50
 
         return VStack(spacing: 0) {
             Spacer()
@@ -511,6 +511,7 @@ struct HomeScreen: View {
                             }
                         }
                         .focusScope(rowsNamespace)
+                        .padding(.bottom, screenHeight * 0.48)
                     }
                     .padding(.leading, contentLeading)
                     .padding(.trailing, 50)
@@ -525,7 +526,7 @@ struct HomeScreen: View {
                             startPoint: .top,
                             endPoint: .bottom
                         )
-                        .frame(height: 30)
+                        .frame(height: 80)
 
                         Color.black
                     }
@@ -533,13 +534,13 @@ struct HomeScreen: View {
                 .onChange(of: scrollTrigger) { _ in
                     guard let id = focusedRowId else { return }
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo(id, anchor: UnitPoint(x: 0, y: 0.05))
+                        proxy.scrollTo(id, anchor: .top)
                     }
                 }
                 .onChange(of: restoreScrollTrigger) { _ in
                     guard let rowId = lastFocusedRowId else { return }
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo(rowId, anchor: UnitPoint(x: 0, y: 0.05))
+                        proxy.scrollTo(rowId, anchor: .top)
                     }
                 }
             }
@@ -696,8 +697,8 @@ private struct HomeBackdropView: View {
 private struct HomeInfoAreaView: View {
     private static let logoReservedHeight: CGFloat = 128
     private static let logoMaxWidth: CGFloat = 560
-    private static let metaReservedHeight: CGFloat = 28
-    private static let ratingsReservedHeight: CGFloat = 40
+    private static let metaReservedHeight: CGFloat = 54
+    private static let ratingsReservedHeight: CGFloat = 54
     private static let summaryReservedHeight: CGFloat = 120
     private static let totalHeight: CGFloat =
         logoReservedHeight + metaReservedHeight + ratingsReservedHeight + summaryReservedHeight + (3 * SpaceTokens.spaceSm)
@@ -732,7 +733,11 @@ private struct HomeInfoAreaView: View {
             }
             .frame(height: Self.logoReservedHeight, alignment: .leading)
 
-            SimpleInfoRow(item: infoState.selectedItemState.item, metadataSummary: infoState.selectedItemState.metadataSummary)
+            SimpleInfoRow(
+                item: infoState.selectedItemState.item,
+                metadataSummary: infoState.selectedItemState.metadataSummary,
+                sizeVariant: .compact
+            )
                 .frame(height: Self.metaReservedHeight, alignment: .leading)
 
             ZStack(alignment: .leading) {

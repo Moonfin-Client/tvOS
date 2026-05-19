@@ -4,7 +4,7 @@ struct ItemPreview: View {
     let item: ServerItem
     let imageUrl: String?
     var aspectRatio: CGFloat = 2.0 / 3.0
-    var cardWidth: CGFloat = 150
+    var cardWidth: CGFloat = 180
     var shape: CardShape = .rounded
     var watchedIndicator: WatchedIndicatorBehavior = .always
     var serverName: String?

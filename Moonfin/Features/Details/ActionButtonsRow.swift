@@ -248,15 +248,15 @@ private struct ActionButton: View {
                             .renderingMode(.template)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 22, height: 22)
+                            .frame(width: 30, height: 30)
                             .foregroundColor(iconColor)
                     } else {
                         Image(systemName: icon)
-                            .font(.system(size: 22, weight: .medium))
+                            .font(.system(size: 30, weight: .medium))
                             .foregroundColor(iconColor)
                     }
                 }
-                .frame(width: 72, height: 72)
+                .frame(width: 96, height: 96)
 
                 Text(label)
                     .font(.captionXs)
@@ -273,11 +273,11 @@ private struct ActionButton: View {
                         .fixedSize(horizontal: true, vertical: false)
                 }
             }
-            .frame(minWidth: 80)
+            .frame(minWidth: 112)
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
-        .scaleEffect(isFocused ? 1.08 : 1.0)
+        .scaleEffect(isFocused ? 1.10 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 

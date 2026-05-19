@@ -3,7 +3,7 @@ import SwiftUI
 struct LibraryCard: View {
     let item: ServerItem
     let imageUrl: String?
-    var cardWidth: CGFloat = 280
+    var cardWidth: CGFloat = 320
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
 

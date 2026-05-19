@@ -25,10 +25,10 @@ struct ExpandableToolbarButton: View {
                         .renderingMode(.template)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 34, height: 34)
                 } else {
                     Image(systemName: icon)
-                        .font(.system(size: 26))
+                        .font(.system(size: 30))
                 }
 
                 Text(label)
@@ -39,7 +39,7 @@ struct ExpandableToolbarButton: View {
                     .frame(width: isFocused ? nil : 0, alignment: .center)
                     .clipped()
             }
-            .padding(.horizontal, isFocused ? 20 : 10)
+            .padding(.horizontal, isFocused ? 24 : 12)
             .padding(.vertical, 12)
             .foregroundColor(theme.isNeonPulseTheme ? idleIconColor : (isFocused ? theme.effectiveFocusColor.contrastingContentColor : idleIconColor))
         }

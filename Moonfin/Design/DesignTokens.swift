@@ -3,12 +3,12 @@ import SwiftUI
 enum SpaceTokens {
     static let space2xs: CGFloat = 2
     static let spaceXs: CGFloat = 4
-    static let spaceSm: CGFloat = 8
-    static let spaceMd: CGFloat = 16
-    static let spaceLg: CGFloat = 24
-    static let spaceXl: CGFloat = 32
-    static let space2xl: CGFloat = 40
-    static let space3xl: CGFloat = 48
+    static let spaceSm: CGFloat = 10
+    static let spaceMd: CGFloat = 20
+    static let spaceLg: CGFloat = 28
+    static let spaceXl: CGFloat = 36
+    static let space2xl: CGFloat = 48
+    static let space3xl: CGFloat = 56
 }
 
 enum RadiusTokens {
@@ -25,14 +25,14 @@ enum RadiusTokens {
 enum TypographyTokens {
     static var fontFamily: String?
 
-    static let fontSize2xs: CGFloat = 18
-    static let fontSizeXs: CGFloat = 22
-    static let fontSizeSm: CGFloat = 26
-    static let fontSizeMd: CGFloat = 29
-    static let fontSizeLg: CGFloat = 32
-    static let fontSizeXl: CGFloat = 36
-    static let fontSize2xl: CGFloat = 42
-    static let fontSize3xl: CGFloat = 52
+    static let fontSize2xs: CGFloat = 21
+    static let fontSizeXs: CGFloat = 26
+    static let fontSizeSm: CGFloat = 30
+    static let fontSizeMd: CGFloat = 34
+    static let fontSizeLg: CGFloat = 38
+    static let fontSizeXl: CGFloat = 42
+    static let fontSize2xl: CGFloat = 48
+    static let fontSize3xl: CGFloat = 60
 }
 
 extension Font {

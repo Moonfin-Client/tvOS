@@ -124,17 +124,15 @@ struct LibraryBrowseScreen: View {
                     .lineLimit(1)
 
                 SimpleInfoRow(item: item)
-                    .scaleEffect(1.15, anchor: .leading)
                     .padding(.bottom, 4)
 
                 MediaBarRatingsRow(
                     ratings: ratingsViewModel.ratings,
                     enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
                 )
-                .scaleEffect(1.3, anchor: .leading)
             }
         }
-        .frame(height: 130, alignment: .leading)
+        .frame(height: 170, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: viewModel.focusedItem?.id) { _ in
             if let item = viewModel.focusedItem {

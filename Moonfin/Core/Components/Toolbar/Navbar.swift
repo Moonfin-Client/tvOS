@@ -12,7 +12,7 @@ struct Navbar: View {
     @State private var relockTask: Task<Void, Never>?
     @State private var isLibrariesIconFocused = true
     @State private var showShuffleDialog = false
-    private let navbarPillHeight: CGFloat = 56
+    private let navbarPillHeight: CGFloat = 64
     let requestHomeFocusToken: Int
     let onMoveToContent: (() -> Void)?
 
@@ -51,11 +51,11 @@ struct Navbar: View {
             }
             centerSection
         }
-        .padding(.leading, 32)
-        .padding(.trailing, 48)
+        .padding(.leading, 36)
+        .padding(.trailing, 56)
         .padding(.top, 12)
         .padding(.bottom, 16)
-        .frame(height: 110)
+        .frame(height: 128)
         .defaultFocus($navFocusItem, .home)
         .onAppear {
             relockTask?.cancel()
