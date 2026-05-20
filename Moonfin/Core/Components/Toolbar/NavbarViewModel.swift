@@ -140,7 +140,6 @@ final class NavbarViewModel: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
 
-        // In Moonfin mode, repository availability already reflects auth state.
         if prefs[SeerrPreferences.moonfinMode] || authMethod == "moonfin" {
             return true
         }
@@ -186,24 +185,264 @@ final class NavbarViewModel: ObservableObject {
     }
 
     func performShuffle(libraryId: String? = nil, genreName: String? = nil, router: NavigationRouter) {
-        let contentType = container.userPreferences[UserPreferences.shuffleContentType]
+        let contentType = shuffleContentType
+        let selectedLibraryId = normalizedShuffleLibraryId(libraryId, contentType: contentType)
         Task {
-            guard let item = await shuffle(contentType: contentType, libraryId: libraryId, genreName: genreName) else { return }
+            guard let item = await shuffle(contentType: contentType, libraryId: selectedLibraryId, genreName: genreName) else { return }
             router.navigatePrimaryToItem(item)
         }
     }
 
-    func fetchGenres() async -> [String] {
+    var shuffleLibraries: [ServerItem] {
+        let contentType = shuffleContentType
+        return userViews.filter { isEligibleShuffleLibrary($0, contentType: contentType) }
+    }
+
+    private var shuffleContentType: ShuffleContentType {
+        container.userPreferences[UserPreferences.shuffleContentType]
+    }
+
+    var enableAdditionalRatings: Bool {
+        container.userPreferences[UserPreferences.enableAdditionalRatings]
+    }
+
+    func fetchShuffleRatings(for item: ServerItem) async -> [(String, Float)] {
+        var result: [(String, Float)] = []
+
+        func appendUnique(_ source: String, _ value: Float) {
+            if !result.contains(where: { $0.0 == source }) {
+                result.append((source, value))
+            }
+        }
+
+        if let community = item.communityRating, community > 0 {
+            appendUnique("stars", Float(community))
+        }
+
+        if enableAdditionalRatings,
+           let apiRatings = await container.mdbListRepository.getRatings(item: item) {
+            for (source, value) in apiRatings {
+                if source == "tomatoes" && item.criticRating != nil { continue }
+                let normalized = RatingSource(rawValue: source)?.normalize(value) ?? (value / 100.0)
+                appendUnique(source, normalized)
+            }
+        }
+
+        if let critic = item.criticRating, critic > 0 {
+            appendUnique("tomatoes", RatingSource.tomatoes.normalize(Float(critic)))
+        }
+
+        return result
+    }
+
+    func fetchShufflePreviewItems(libraryId: String? = nil, genreName: String? = nil, limit: Int = 5) async -> [ServerItem] {
         guard let client else { return [] }
+
+        let requestedLimit = max(limit, 5)
+        let contentType = shuffleContentType
+        let selectedLibraryId = normalizedShuffleLibraryId(libraryId, contentType: contentType)
+        let includeTypes = contentType.itemTypes
+        let genreFilter = genreName.map { [$0] }
+        var collected: [ServerItem] = []
+        var seenItemIds = Set<String>()
+
+        func appendUniqueItems(_ items: [ServerItem]) {
+            for item in items where item.type != .boxSet {
+                if seenItemIds.insert(item.id).inserted {
+                    collected.append(item)
+                }
+                if collected.count >= requestedLimit {
+                    break
+                }
+            }
+        }
+
+        for _ in 0..<6 {
+            do {
+                let result = try await client.itemsApi.getItems(request: GetItemsRequest(
+                    parentId: selectedLibraryId,
+                    recursive: true,
+                    includeItemTypes: includeTypes,
+                    excludeItemTypes: [.boxSet],
+                    sortBy: [.random],
+                    fields: [.overview, .genres, .officialRating, .providerIds, .taglines],
+                    limit: requestedLimit,
+                    genres: genreFilter,
+                    enableImages: false,
+                    enableUserData: true,
+                    enableTotalRecordCount: false
+                ))
+                appendUniqueItems(result.items)
+                if collected.count >= requestedLimit {
+                    return Array(collected.prefix(requestedLimit))
+                }
+            } catch {
+                break
+            }
+        }
+
+        do {
+            let countResult = try await client.itemsApi.getItems(request: GetItemsRequest(
+                parentId: selectedLibraryId,
+                recursive: true,
+                includeItemTypes: includeTypes,
+                excludeItemTypes: [.boxSet],
+                limit: 0,
+                genres: genreFilter
+            ))
+            guard countResult.totalRecordCount > 0 else { return Array(collected.prefix(requestedLimit)) }
+
+            var attemptedIndexes = Set<Int>()
+            let maxAttempts = min(countResult.totalRecordCount * 2, requestedLimit * 12)
+
+            while collected.count < requestedLimit, attemptedIndexes.count < maxAttempts {
+                let randomIndex = Int.random(in: 0..<countResult.totalRecordCount)
+                guard attemptedIndexes.insert(randomIndex).inserted else { continue }
+
+                let itemResult = try await client.itemsApi.getItems(request: GetItemsRequest(
+                    parentId: selectedLibraryId,
+                    recursive: true,
+                    includeItemTypes: includeTypes,
+                    excludeItemTypes: [.boxSet],
+                    sortBy: [.sortName],
+                    fields: [.overview, .genres, .officialRating, .providerIds, .taglines],
+                    limit: 1,
+                    startIndex: randomIndex,
+                    genres: genreFilter,
+                    enableImages: false,
+                    enableUserData: true,
+                    enableTotalRecordCount: false
+                ))
+
+                guard let item = itemResult.items.first, item.type != .boxSet else { continue }
+                if seenItemIds.insert(item.id).inserted {
+                    collected.append(item)
+                }
+            }
+
+            return Array(collected.prefix(requestedLimit))
+        } catch {
+            return Array(collected.prefix(requestedLimit))
+        }
+    }
+
+    func shufflePosterUrl(for item: ServerItem, maxWidth: Int = 520) -> String? {
+        guard let client else { return nil }
+
+        if let primaryTag = item.imageTags?["Primary"] {
+            return client.imageApi.getItemImageUrl(
+                itemId: item.id,
+                imageType: .primary,
+                maxWidth: maxWidth,
+                maxHeight: nil,
+                tag: primaryTag
+            )
+        }
+
+        if let thumbTag = item.imageTags?["Thumb"] {
+            return client.imageApi.getItemImageUrl(
+                itemId: item.id,
+                imageType: .thumb,
+                maxWidth: maxWidth,
+                maxHeight: nil,
+                tag: thumbTag
+            )
+        }
+
+        if let seriesId = item.seriesId,
+           let seriesPrimaryTag = item.seriesPrimaryImageTag {
+            return client.imageApi.getItemImageUrl(
+                itemId: seriesId,
+                imageType: .primary,
+                maxWidth: maxWidth,
+                maxHeight: nil,
+                tag: seriesPrimaryTag
+            )
+        }
+
+        if let parentThumbItemId = item.parentThumbItemId,
+           let parentThumbImageTag = item.parentThumbImageTag {
+            return client.imageApi.getItemImageUrl(
+                itemId: parentThumbItemId,
+                imageType: .thumb,
+                maxWidth: maxWidth,
+                maxHeight: nil,
+                tag: parentThumbImageTag
+            )
+        }
+
+        if let backdropTag = item.backdropImageTags?.first {
+            return client.imageApi.getItemImageUrl(
+                itemId: item.id,
+                imageType: .backdrop,
+                maxWidth: maxWidth,
+                maxHeight: nil,
+                tag: backdropTag
+            )
+        }
+
+        return client.imageApi.getItemImageUrl(
+            itemId: item.id,
+            imageType: .primary,
+            maxWidth: maxWidth,
+            maxHeight: nil,
+            tag: nil
+        )
+    }
+
+    func fetchGenres(libraryId: String? = nil) async -> [String] {
+        guard let client else { return [] }
+
+        let contentType = shuffleContentType
+        let selectedLibraryId = normalizedShuffleLibraryId(libraryId, contentType: contentType)
+        let includeItemTypes = contentType.itemTypes.map(\.apiValue).joined(separator: ",")
+
         do {
             let query = buildQuery([
                 ("SortBy", "SortName"),
                 ("SortOrder", "Ascending"),
+                ("ParentId", selectedLibraryId),
+                ("Recursive", "true"),
+                ("IncludeItemTypes", includeItemTypes),
             ])
             let result: ItemsResult = try await client.httpClient.request("/Genres", queryItems: query)
-            return result.items.map(\.name)
+            let genres = result.items
+                .map(\.name)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            return Array(Set(genres)).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
         } catch {
             return []
+        }
+    }
+
+    private func normalizedShuffleLibraryId(_ libraryId: String?, contentType: ShuffleContentType) -> String? {
+        guard let libraryId else { return nil }
+        let allowedIds = Set(
+            userViews
+                .filter { isEligibleShuffleLibrary($0, contentType: contentType) }
+                .map(\.id)
+        )
+        return allowedIds.contains(libraryId) ? libraryId : nil
+    }
+
+    private func isEligibleShuffleLibrary(_ item: ServerItem, contentType: ShuffleContentType) -> Bool {
+        guard let collectionType = item.collectionType?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+              !collectionType.isEmpty else {
+            return false
+        }
+
+        return allowedShuffleCollectionTypes(for: contentType).contains(collectionType)
+    }
+
+    private func allowedShuffleCollectionTypes(for contentType: ShuffleContentType) -> Set<String> {
+        switch contentType {
+        case .movies:
+            return ["movies"]
+        case .tvShows:
+            return ["tvshows", "series"]
+        case .both:
+            return ["movies", "tvshows", "series"]
         }
     }
 

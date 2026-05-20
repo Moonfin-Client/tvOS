@@ -142,26 +142,26 @@ struct LeftSidebar: View {
                     isLibraryExpanded = false
                 }
             }
-            .sheet(isPresented: $showShuffleDialog) {
+            .fullScreenCover(isPresented: $showShuffleDialog) {
                 ShuffleOptionsDialog(
-                    libraries: viewModel.userViews,
-                    onQuickShuffle: {
+                    libraries: viewModel.shuffleLibraries,
+                    onSelectItem: { item in
                         showShuffleDialog = false
-                        viewModel.performShuffle(router: router)
-                        handoffFocusToContent()
-                    },
-                    onLibraryShuffle: { libraryId in
-                        showShuffleDialog = false
-                        viewModel.performShuffle(libraryId: libraryId, router: router)
-                        handoffFocusToContent()
-                    },
-                    onGenreShuffle: { genreName in
-                        showShuffleDialog = false
-                        viewModel.performShuffle(genreName: genreName, router: router)
+                        router.navigatePrimaryToItem(item)
                         handoffFocusToContent()
                     },
                     onDismiss: { showShuffleDialog = false },
-                    fetchGenres: { await viewModel.fetchGenres() }
+                    fetchGenres: { libraryId in await viewModel.fetchGenres(libraryId: libraryId) },
+                    fetchPreviewItems: { libraryId, genreName in
+                        await viewModel.fetchShufflePreviewItems(libraryId: libraryId, genreName: genreName)
+                    },
+                    fetchRatings: { item in
+                        await viewModel.fetchShuffleRatings(for: item)
+                    },
+                    posterUrlForItem: { item in
+                        viewModel.shufflePosterUrl(for: item)
+                    },
+                    enableAdditionalRatings: viewModel.enableAdditionalRatings
                 )
             }
     }
@@ -478,6 +478,7 @@ private struct SidebarIconItem: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 32, height: 32)
+                .foregroundColor(tintColor)
         } else {
             defaultPersonIconOrSystemIcon
         }
