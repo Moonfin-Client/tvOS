@@ -7,6 +7,10 @@ struct SettingsPluginMediaBarScreen: View {
 
     private var prefs: UserPreferences { container.userPreferences }
 
+    private var isMediaBarDisabled: Bool {
+        prefs[UserPreferences.mediaBarMode] == .off
+    }
+
     var body: some View {
         SettingsScreenLayout(title: "Media Bar") {
             SettingsListButton(
@@ -18,6 +22,7 @@ struct SettingsPluginMediaBarScreen: View {
             )
             .focused($focusedRoute, equals: .moonfinMediaBarMode)
 
+            if !isMediaBarDisabled {
             SettingsListButton(
                 icon: "film.stack",
                 heading: "Content Type",
@@ -81,6 +86,13 @@ struct SettingsPluginMediaBarScreen: View {
                 .focused($focusedRoute, equals: .moonfinMediaBarInterval)
             }
 
+            SettingsToggleButton(
+                icon: "speaker.wave.2.fill",
+                heading: "Trailer Audio",
+                caption: "Play audio during media bar trailer previews",
+                isOn: prefs.binding(for: UserPreferences.mediaBarTrailerAudio)
+            )
+
             SettingsListButton(
                 icon: "circle.lefthalf.filled.inverse",
                 heading: "Media Bar Overlay",
@@ -98,6 +110,7 @@ struct SettingsPluginMediaBarScreen: View {
                 action: { settingsRouter.navigate(to: .moonfinMediaBarColor) }
             )
             .focused($focusedRoute, equals: .moonfinMediaBarColor)
+            }
 
         }
         .restoresFocus($focusedRoute)

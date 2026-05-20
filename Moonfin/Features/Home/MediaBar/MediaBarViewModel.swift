@@ -10,15 +10,36 @@ final class MediaBarViewModel: ObservableObject {
 
     private let container: AppContainer
     private var autoAdvanceTimer: AnyCancellable?
+    private var preferencesObserver: NSObjectProtocol?
+    private var preferencesChangeCancellable: AnyCancellable?
+    private var preferenceChangeTask: Task<Void, Never>?
+    private var preferenceReloadTask: Task<Void, Never>?
     private var loadTime: Date?
+    private var lastUserViews: [ServerItem] = []
     private static let staleThreshold: TimeInterval = 300
+
+    private struct ReloadPreferenceSnapshot: Equatable {
+        let mode: MediaBarMode
+        let contentType: MediaBarContentType
+        let itemCount: MediaBarItemCount
+        let libraryIds: [String]
+        let collectionIds: [String]
+        let excludedGenres: [String]
+    }
+
+    private struct TimerPreferenceSnapshot: Equatable {
+        let autoAdvance: Bool
+        let intervalMs: Int
+    }
+
+    private var reloadPreferenceSnapshot: ReloadPreferenceSnapshot
+    private var timerPreferenceSnapshot: TimerPreferenceSnapshot
 
     var isStale: Bool {
         guard let loadTime else { return true }
         return Date().timeIntervalSince(loadTime) > Self.staleThreshold
     }
 
-    static let autoAdvanceInterval: TimeInterval = 7
     static let fetchFields: [ItemField] = [.overview, .genres, .providerIds]
 
     var currentItem: MediaBarSlideItem? {
@@ -26,12 +47,41 @@ final class MediaBarViewModel: ObservableObject {
         return items[currentIndex]
     }
 
+    var currentItemBackdropUrl: String? {
+        currentItem?.backdropUrl
+    }
+
     var isEnabled: Bool {
-        container.userPreferences[UserPreferences.mediaBarEnabled]
+        let enabled = container.userPreferences[UserPreferences.mediaBarEnabled]
+        let mode = container.userPreferences[UserPreferences.mediaBarMode]
+        return enabled && mode != .off
     }
 
     init(container: AppContainer) {
         self.container = container
+        let prefs = container.userPreferences
+        self.reloadPreferenceSnapshot = ReloadPreferenceSnapshot(
+            mode: prefs[UserPreferences.mediaBarMode],
+            contentType: prefs[UserPreferences.mediaBarContentType],
+            itemCount: prefs[UserPreferences.mediaBarItemCount],
+            libraryIds: Self.normalizedIds(prefs[UserPreferences.mediaBarLibraryIds]),
+            collectionIds: Self.normalizedIds(prefs[UserPreferences.mediaBarCollectionIds]),
+            excludedGenres: Self.normalizedGenres(prefs[UserPreferences.mediaBarExcludedGenres])
+        )
+        self.timerPreferenceSnapshot = TimerPreferenceSnapshot(
+            autoAdvance: prefs[UserPreferences.mediaBarAutoAdvance],
+            intervalMs: prefs[UserPreferences.mediaBarIntervalMs]
+        )
+        registerPreferenceObserver()
+    }
+
+    deinit {
+        if let preferencesObserver {
+            NotificationCenter.default.removeObserver(preferencesObserver)
+        }
+        preferencesChangeCancellable?.cancel()
+        preferenceChangeTask?.cancel()
+        preferenceReloadTask?.cancel()
     }
 
     private var client: MediaServerClient? {
@@ -40,14 +90,17 @@ final class MediaBarViewModel: ObservableObject {
     }
 
     func load(userViews: [ServerItem] = []) async {
+        lastUserViews = userViews
+
         guard isEnabled else {
+            stopAutoAdvance()
             state = .disabled
             return
         }
 
         state = .loading
         do {
-            let items = try await fetchItems(userViews: userViews)
+            let items = try await fetchItems()
             guard !Task.isCancelled else { return }
             if items.isEmpty {
                 state = .disabled
@@ -94,7 +147,7 @@ final class MediaBarViewModel: ObservableObject {
         startAutoAdvance()
     }
 
-    private func fetchItems(userViews: [ServerItem]) async throws -> [MediaBarSlideItem] {
+    private func fetchItems() async throws -> [MediaBarSlideItem] {
         guard let client else { return [] }
 
         if container.pluginSyncService.isPluginAvailable,
@@ -108,7 +161,7 @@ final class MediaBarViewModel: ObservableObject {
             }
         }
 
-        return try await fetchFromClient(client: client, userViews: userViews)
+        return try await fetchFromClient(client: client)
     }
 
     private func enrichWithProviderIds(items: [MediaBarSlideItem], client: MediaServerClient) async -> [MediaBarSlideItem] {
@@ -231,71 +284,181 @@ final class MediaBarViewModel: ObservableObject {
         }
     }
 
-    private func fetchFromClient(client: MediaServerClient, userViews: [ServerItem]) async throws -> [MediaBarSlideItem] {
+    private func fetchFromClient(client: MediaServerClient) async throws -> [MediaBarSlideItem] {
         let prefs = container.userPreferences
         let contentType = prefs[UserPreferences.mediaBarContentType]
         let maxItems = prefs[UserPreferences.mediaBarItemCount].count
-
-        let targetLibraries = userViews.filter { view in
-            guard let ct = view.collectionType?.lowercased() else { return false }
-            return contentType.collectionTypes.contains(ct)
+        let libraryIds = Self.normalizedIds(prefs[UserPreferences.mediaBarLibraryIds])
+        let collectionIds = Self.normalizedIds(prefs[UserPreferences.mediaBarCollectionIds])
+        let excludedGenres = Set(Self.normalizedGenres(prefs[UserPreferences.mediaBarExcludedGenres]))
+        let scopedSourceIds: [String]
+        if !libraryIds.isEmpty {
+            scopedSourceIds = libraryIds
+        } else if !collectionIds.isEmpty {
+            scopedSourceIds = collectionIds
+        } else {
+            scopedSourceIds = []
         }
+        let hasScopedSources = !scopedSourceIds.isEmpty
 
-        var allItems: [ServerItem] = []
+        var allItems: [ServerItem]
 
         let totalFetchBudget = max(maxItems * 2, 12)
-        let perLibraryFetchLimit = max(
+        let perSourceFetchLimit = max(
             6,
-            Int(ceil(Double(totalFetchBudget) / Double(max(targetLibraries.count, 1))))
+            Int(ceil(Double(totalFetchBudget) / Double(max(scopedSourceIds.count, 1))))
         )
 
-        if targetLibraries.isEmpty {
-            let result = try await client.itemsApi.getItems(request: GetItemsRequest(
-                recursive: true,
-                includeItemTypes: contentType.itemTypes,
-                excludeItemTypes: [.boxSet],
-                sortBy: [.random],
-                fields: Self.fetchFields,
-                limit: totalFetchBudget,
-                enableImages: true,
-                imageTypeLimit: 1
-            ))
-            allItems = result.items
-        } else {
+        if hasScopedSources {
             allItems = try await withThrowingTaskGroup(of: [ServerItem].self) { group in
-                for library in targetLibraries {
+                for sourceId in scopedSourceIds {
                     group.addTask {
-                        let result = try await client.itemsApi.getItems(request: GetItemsRequest(
-                            parentId: library.id,
-                            recursive: true,
-                            includeItemTypes: contentType.itemTypes,
-                            excludeItemTypes: [.boxSet],
-                            sortBy: [.random],
-                            fields: Self.fetchFields,
-                            limit: perLibraryFetchLimit,
-                            enableImages: true,
-                            imageTypeLimit: 1
-                        ))
-                        return result.items
+                        try await self.fetchClientItems(
+                            client: client,
+                            contentType: contentType,
+                            parentId: sourceId,
+                            limit: perSourceFetchLimit
+                        )
                     }
                 }
+
                 var collected: [ServerItem] = []
                 for try await items in group {
                     collected.append(contentsOf: items)
                 }
                 return collected
             }
+
+            if allItems.isEmpty {
+                allItems = try await fetchClientItems(
+                    client: client,
+                    contentType: contentType,
+                    parentId: nil,
+                    limit: totalFetchBudget
+                )
+            }
+        } else {
+            allItems = try await fetchClientItems(
+                client: client,
+                contentType: contentType,
+                parentId: nil,
+                limit: totalFetchBudget
+            )
         }
 
-        let filtered = container.parentalControlsRepository.filterItems(allItems).filter { item in
-            item.backdropImageTags?.isEmpty == false
-                || item.parentBackdropImageTags?.isEmpty == false
-        }
+        let deduped = Self.dedupeItems(allItems)
+
+        let filtered = container.parentalControlsRepository.filterItems(deduped)
+            .filter { item in
+                item.backdropImageTags?.isEmpty == false
+                    || item.parentBackdropImageTags?.isEmpty == false
+            }
+            .filter { !Self.hasExcludedGenre(item: $0, excludedGenres: excludedGenres) }
 
         let shuffled = filtered.shuffled()
         let capped = Array(shuffled.prefix(maxItems))
 
         return capped.map { mapToSlideItem($0, client: client) }
+    }
+
+    private func fetchClientItems(
+        client: MediaServerClient,
+        contentType: MediaBarContentType,
+        parentId: String?,
+        limit: Int
+    ) async throws -> [ServerItem] {
+        let result = try await client.itemsApi.getItems(request: GetItemsRequest(
+            parentId: parentId,
+            recursive: true,
+            includeItemTypes: contentType.itemTypes,
+            excludeItemTypes: [.boxSet],
+            sortBy: [.random],
+            fields: Self.fetchFields,
+            limit: limit,
+            enableImages: true,
+            imageTypeLimit: 1
+        ))
+        return result.items
+    }
+
+    private static func normalizedIds(_ values: [String]) -> [String] {
+        values
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    private static func normalizedGenres(_ values: [String]) -> [String] {
+        values
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+    }
+
+    private static func hasExcludedGenre(item: ServerItem, excludedGenres: Set<String>) -> Bool {
+        guard !excludedGenres.isEmpty, let itemGenres = item.genres else { return false }
+        return itemGenres.contains { excludedGenres.contains($0.lowercased()) }
+    }
+
+    private static func dedupeItems(_ items: [ServerItem]) -> [ServerItem] {
+        var seen = Set<String>()
+        return items.filter { seen.insert($0.id).inserted }
+    }
+
+    private func registerPreferenceObserver() {
+        preferencesObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handlePreferenceChange()
+            }
+        }
+
+        preferencesChangeCancellable = container.userPreferences.objectWillChange
+            .sink { [weak self] _ in
+                self?.preferenceChangeTask?.cancel()
+                self?.preferenceChangeTask = Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 60_000_000)
+                    guard !Task.isCancelled else { return }
+                    self?.handlePreferenceChange()
+                }
+            }
+    }
+
+    private func handlePreferenceChange() {
+        let prefs = container.userPreferences
+        let nextReloadSnapshot = ReloadPreferenceSnapshot(
+            mode: prefs[UserPreferences.mediaBarMode],
+            contentType: prefs[UserPreferences.mediaBarContentType],
+            itemCount: prefs[UserPreferences.mediaBarItemCount],
+            libraryIds: Self.normalizedIds(prefs[UserPreferences.mediaBarLibraryIds]),
+            collectionIds: Self.normalizedIds(prefs[UserPreferences.mediaBarCollectionIds]),
+            excludedGenres: Self.normalizedGenres(prefs[UserPreferences.mediaBarExcludedGenres])
+        )
+        let nextTimerSnapshot = TimerPreferenceSnapshot(
+            autoAdvance: prefs[UserPreferences.mediaBarAutoAdvance],
+            intervalMs: prefs[UserPreferences.mediaBarIntervalMs]
+        )
+
+        let reloadChanged = nextReloadSnapshot != reloadPreferenceSnapshot
+        let timerChanged = nextTimerSnapshot != timerPreferenceSnapshot
+
+        reloadPreferenceSnapshot = nextReloadSnapshot
+        timerPreferenceSnapshot = nextTimerSnapshot
+
+        if reloadChanged {
+            preferenceReloadTask?.cancel()
+            preferenceReloadTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 150_000_000)
+                guard let self, !Task.isCancelled else { return }
+                await self.load(userViews: self.lastUserViews)
+            }
+            return
+        }
+
+        if timerChanged {
+            restartAutoAdvance()
+        }
     }
 
     private func mapToSlideItem(_ item: ServerItem, client: MediaServerClient) -> MediaBarSlideItem {
@@ -348,10 +511,15 @@ final class MediaBarViewModel: ObservableObject {
     }
 
     private func startAutoAdvance() {
+        guard container.userPreferences[UserPreferences.mediaBarAutoAdvance] else {
+            stopAutoAdvance()
+            return
+        }
         guard !isPaused else { return }
         guard case .ready(let items) = state, items.count > 1 else { return }
         stopAutoAdvance()
-        autoAdvanceTimer = Timer.publish(every: Self.autoAdvanceInterval, on: .main, in: .common)
+        let intervalMs = max(1_000, container.userPreferences[UserPreferences.mediaBarIntervalMs])
+        autoAdvanceTimer = Timer.publish(every: TimeInterval(intervalMs) / 1000, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 self?.goToNext()

@@ -4,7 +4,7 @@ import Nuke
 struct MediaBarView: View {
     @ObservedObject var viewModel: MediaBarViewModel
     @ObservedObject var ratingsViewModel: MediaBarRatingsViewModel
-    let userPreferences: UserPreferences
+    @ObservedObject var userPreferences: UserPreferences
     let screenHeight: CGFloat
     let onItemSelected: (MediaBarSlideItem) -> Void
     let onPlayTrailer: (MediaBarSlideItem) -> Void
@@ -18,6 +18,7 @@ struct MediaBarView: View {
     @ObservedObject var inlineTrailerPlayer: InlineTrailerPlayerManager
     @State private var inlineVideoOpacity: Double = 0
     @State private var lastMoveCommandAt: TimeInterval = 0
+    @State private var makdBackdropScale: CGFloat = 1.0
 
     init(
         viewModel: MediaBarViewModel,
@@ -34,7 +35,7 @@ struct MediaBarView: View {
     ) {
         self.viewModel = viewModel
         self.ratingsViewModel = ratingsViewModel
-        self.userPreferences = userPreferences
+        self._userPreferences = ObservedObject(wrappedValue: userPreferences)
         self.screenHeight = screenHeight
         self.inlineTrailerPlayer = inlineTrailerPlayer
         self.onItemSelected = onItemSelected
@@ -61,6 +62,19 @@ struct MediaBarView: View {
 
     private var overlayOpacity: Double {
         Double(userPreferences[UserPreferences.mediaBarOverlayOpacity]) / 100.0
+    }
+
+    private var mediaBarMode: MediaBarMode {
+        userPreferences[UserPreferences.mediaBarMode]
+    }
+
+    private var isInlineTrailerActive: Bool {
+        switch inlineTrailerPlayer.state {
+        case .opening, .buffering, .playing, .paused:
+            return true
+        default:
+            return false
+        }
     }
 
     private func debugLog(_ event: String, details: String = "") {
@@ -98,8 +112,18 @@ struct MediaBarView: View {
         let safeScreenHeight = max(screenHeight, 1)
         switch viewModel.state {
         case .ready(let items) where !items.isEmpty:
-            mediaBarContent(items: items, safeScreenHeight: safeScreenHeight)
+            switch mediaBarMode {
+            case .off:
+                EmptyView()
+            case .moonfin:
+                mediaBarContent(items: items, safeScreenHeight: safeScreenHeight)
+            case .makd:
+                makdMediaBarContent(items: items, safeScreenHeight: safeScreenHeight)
+            }
         case .loading:
+            if mediaBarMode == .off {
+                EmptyView()
+            } else {
             ZStack {
                 loadingPlaceholder
 
@@ -118,13 +142,16 @@ struct MediaBarView: View {
                 if case .ready = newState { return }
                 onNavigateDown()
             }
+            }
         default:
             EmptyView()
         }
     }
 
     private func mediaBarContent(items: [MediaBarSlideItem], safeScreenHeight: CGFloat) -> some View {
-        ZStack(alignment: .top) {
+        let compactInfo = isInlineTrailerActive
+
+        return ZStack(alignment: .top) {
             backdropLayer(items: items)
             overlayGradient
             logoOverlay
@@ -132,19 +159,26 @@ struct MediaBarView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                infoCardContent
+                infoCardContent(compact: compactInfo)
                     .padding(.horizontal, 100)
-                    .padding(.bottom, 40)
+                    .padding(.bottom, compactInfo ? 16 : 40)
                     .background(
-                        RoundedRectangle(cornerRadius: RadiusTokens.medium)
-                            .fill(overlayColor.opacity(overlayOpacity))
-                            .padding(.horizontal, 100)
+                        Group {
+                            if !compactInfo {
+                                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                                    .fill(overlayColor.opacity(overlayOpacity))
+                                    .padding(.horizontal, 100)
+                            }
+                        }
                     )
+                    .animation(.easeInOut(duration: 0.25), value: compactInfo)
 
                 indicatorDots(items: items)
                     .padding(.bottom, 12)
             }
             .allowsHitTesting(false)
+
+            navigationArrows(items: items, rightInset: 0)
 
             VStack {
                 Spacer().frame(height: navbarClearance + 20)
@@ -154,6 +188,47 @@ struct MediaBarView: View {
                 )
                 Spacer()
             }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: safeScreenHeight)
+        .clipped()
+    }
+
+    private func makdMediaBarContent(items: [MediaBarSlideItem], safeScreenHeight: CGFloat) -> some View {
+        GeometryReader { geo in
+            let contentHeight = max(geo.size.height, 1)
+            let contentWidth = max(geo.size.width, 1)
+
+            ZStack(alignment: .topLeading) {
+                makdBackdropLayer(items: items)
+                makdGradientOverlay
+                makdLogoOverlay(contentHeight: contentHeight, contentWidth: contentWidth)
+                makdInfoContent(
+                    contentWidth: contentWidth,
+                    contentHeight: contentHeight,
+                    compact: isInlineTrailerActive
+                )
+
+                VStack {
+                    Spacer().frame(height: navbarClearance + 20)
+                    mediaBarFocusSurface(
+                        height: safeFocusSurfaceHeight(max(contentHeight - navbarClearance - 120, 1)),
+                        activateOnSelect: true
+                    )
+                    Spacer()
+                }
+
+                if items.count > 1 {
+                    makdDots(items: items)
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 24)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                        .allowsHitTesting(false)
+                }
+
+                navigationArrows(items: items, rightInset: 44)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity)
         .frame(height: safeScreenHeight)
@@ -264,6 +339,58 @@ struct MediaBarView: View {
         }
     }
 
+    private func makdBackdropLayer(items: [MediaBarSlideItem]) -> some View {
+        ZStack {
+            let visible = visibleIndices(current: viewModel.currentIndex, total: items.count)
+            ForEach(visible, id: \.self) { index in
+                let item = items[index]
+                let isCurrent = index == viewModel.currentIndex
+
+                CachedImage(
+                    urlString: item.backdropUrl,
+                    processors: [
+                        ImageProcessors.Resize(
+                            size: CGSize(width: 1920, height: 1080),
+                            contentMode: .aspectFill
+                        )
+                    ]
+                )
+                .scaleEffect(isCurrent ? makdBackdropScale : 1.0)
+                .opacity(isCurrent ? 1 : 0)
+                .animation(.easeInOut(duration: 0.8), value: viewModel.currentIndex)
+            }
+
+            InlineTrailerSurfaceHost(manager: inlineTrailerPlayer)
+                .opacity(inlineVideoOpacity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
+        .onAppear {
+            restartMakdKenBurns()
+        }
+        .onChange(of: inlineTrailerPlayer.state) { newState in
+            switch newState {
+            case .playing:
+                withAnimation(.easeInOut(duration: 1.5)) { inlineVideoOpacity = 1.0 }
+            case .stopped, .ended, .idle, .error:
+                withAnimation(.easeInOut(duration: 0.6)) { inlineVideoOpacity = 0 }
+            default:
+                break
+            }
+        }
+        .onChange(of: viewModel.currentIndex) { _ in
+            withAnimation(.easeInOut(duration: 0.4)) { inlineVideoOpacity = 0 }
+            restartMakdKenBurns()
+        }
+    }
+
+    private func restartMakdKenBurns() {
+        makdBackdropScale = 1.0
+        withAnimation(.easeOut(duration: 10)) {
+            makdBackdropScale = 1.08
+        }
+    }
+
     private func visibleIndices(current: Int, total: Int) -> [Int] {
         guard total > 0 else { return [] }
         if total <= 3 { return Array(0..<total) }
@@ -296,6 +423,31 @@ struct MediaBarView: View {
         }
     }
 
+    private var makdGradientOverlay: some View {
+        let scrim = theme.colorScheme.scrim
+        return ZStack {
+            LinearGradient(
+                stops: [
+                    .init(color: scrim.opacity(0.78), location: 0.0),
+                    .init(color: scrim.opacity(0.46), location: 0.46),
+                    .init(color: scrim.opacity(0.06), location: 1.0)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+
+            LinearGradient(
+                stops: [
+                    .init(color: scrim.opacity(0.12), location: 0.0),
+                    .init(color: scrim.opacity(0.28), location: 0.48),
+                    .init(color: scrim.opacity(0.78), location: 1.0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+
     @ViewBuilder
     private var logoOverlay: some View {
         if let item = viewModel.currentItem,
@@ -319,28 +471,57 @@ struct MediaBarView: View {
     }
 
     @ViewBuilder
-    private var infoCardContent: some View {
+    private func makdLogoOverlay(contentHeight: CGFloat, contentWidth: CGFloat) -> some View {
+        if let item = viewModel.currentItem,
+           let logoUrl = item.logoUrl {
+            let logoWidth = min(max(contentWidth * 0.45, 220), 640)
+            let logoHeight = min(max(contentHeight * 0.35, 90), 300)
+
+            CachedImage(
+                urlString: logoUrl,
+                contentMode: .fit,
+                processors: [
+                    ImageProcessors.Resize(
+                        size: CGSize(width: logoWidth, height: logoHeight),
+                        contentMode: .aspectFit
+                    )
+                ]
+            )
+            .frame(width: logoWidth, height: logoHeight, alignment: .leading)
+            .padding(.leading, 50 + sidebarInset)
+            .padding(.top, contentHeight * 0.22)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .animation(.easeInOut(duration: 0.3), value: viewModel.currentIndex)
+            .allowsHitTesting(false)
+        }
+    }
+
+    @ViewBuilder
+    private func infoCardContent(compact: Bool) -> some View {
         if let item = viewModel.currentItem {
-            VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+            VStack(alignment: .leading, spacing: compact ? SpaceTokens.spaceXs : SpaceTokens.spaceSm) {
                 mediaBarMetadata(item: item)
 
-                if !ratingsViewModel.ratings.isEmpty {
+                if !compact, !ratingsViewModel.ratings.isEmpty {
                     MediaBarRatingsRow(
                         ratings: ratingsViewModel.ratings,
                         enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
                     )
                 }
 
-                Text(item.overview ?? " ")
-                    .font(.bodySm)
-                    .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.85))
-                    .lineLimit(3)
-                    .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
+                if !compact {
+                    Text(item.overview ?? " ")
+                        .font(.bodySm)
+                        .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.85))
+                        .lineLimit(3)
+                        .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
+                }
             }
-            .padding(.vertical, SpaceTokens.spaceMd)
-            .padding(.horizontal, SpaceTokens.spaceXl)
+            .padding(.vertical, compact ? SpaceTokens.spaceSm : SpaceTokens.spaceMd)
+            .padding(.horizontal, compact ? SpaceTokens.spaceLg : SpaceTokens.spaceXl)
             .frame(maxWidth: .infinity, alignment: .leading)
             .animation(.easeInOut(duration: 0.3), value: viewModel.currentIndex)
+            .animation(.easeInOut(duration: 0.25), value: compact)
             .onChange(of: viewModel.currentIndex) { _ in
                 if let item = viewModel.currentItem {
                     ratingsViewModel.loadRatings(for: item)
@@ -349,6 +530,51 @@ struct MediaBarView: View {
             .onAppear {
                 ratingsViewModel.loadRatings(for: item)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func makdInfoContent(contentWidth: CGFloat, contentHeight: CGFloat, compact: Bool) -> some View {
+        if let item = viewModel.currentItem {
+            let blockWidth = min(max(contentWidth * 0.5, 320), 960)
+            let infoMinHeight = compact
+                ? min(max(contentHeight * 0.12, 62), 96)
+                : min(max(contentHeight * 0.34, 210), 320)
+
+            VStack(alignment: .leading, spacing: compact ? SpaceTokens.spaceXs : SpaceTokens.spaceSm) {
+                mediaBarMetadata(item: item)
+
+                if !compact, !ratingsViewModel.ratings.isEmpty {
+                    MediaBarRatingsRow(
+                        ratings: ratingsViewModel.ratings,
+                        enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
+                    )
+                }
+
+                if !compact, let overview = item.overview, !overview.isEmpty {
+                    Text(overview)
+                        .font(.bodySm)
+                        .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.88))
+                        .lineLimit(3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .frame(width: blockWidth, alignment: .leading)
+            .frame(minHeight: infoMinHeight, alignment: .topLeading)
+            .padding(.leading, 34 + sidebarInset)
+            .padding(.bottom, compact ? 12 : 20)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .animation(.easeInOut(duration: 0.3), value: viewModel.currentIndex)
+            .animation(.easeInOut(duration: 0.25), value: compact)
+            .onChange(of: viewModel.currentIndex) { _ in
+                if let item = viewModel.currentItem {
+                    ratingsViewModel.loadRatings(for: item)
+                }
+            }
+            .onAppear {
+                ratingsViewModel.loadRatings(for: item)
+            }
+            .allowsHitTesting(false)
         }
     }
 
@@ -415,6 +641,68 @@ struct MediaBarView: View {
             Capsule()
                 .fill(overlayColor.opacity(overlayOpacity * 0.6))
         )
+    }
+
+    private func makdDots(items: [MediaBarSlideItem]) -> some View {
+        HStack(spacing: 8) {
+            ForEach(0..<items.count, id: \.self) { index in
+                let isActive = index == viewModel.currentIndex
+                Circle()
+                    .fill(.white.opacity(isActive ? 1 : 0.5))
+                    .frame(width: isActive ? 10 : 8, height: isActive ? 10 : 8)
+                    .animation(.easeInOut(duration: 0.2), value: viewModel.currentIndex)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
+                .fill(theme.colorScheme.scrim.opacity(0.5))
+        )
+    }
+
+    @ViewBuilder
+    private func navigationArrows(items: [MediaBarSlideItem], rightInset: CGFloat) -> some View {
+        if items.count > 1 {
+            HStack {
+                if !navbarIsLeft {
+                    navArrowButton(symbol: "chevron.left")
+                }
+
+                Spacer(minLength: 0)
+
+                navArrowButton(symbol: "chevron.right")
+            }
+            .padding(.leading, sidebarInset + 10)
+            .padding(.trailing, rightInset + 10)
+            .padding(.vertical, 40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(false)
+        }
+    }
+
+    private func navArrowButton(symbol: String) -> some View {
+        let iconColor = theme.isNeonPulseTheme ? theme.neonPrimaryColor : theme.colorScheme.onBackground
+        let fillColor = theme.isNeonPulseTheme
+            ? theme.colorScheme.surface.opacity(0.52)
+            : theme.colorScheme.scrim.opacity(0.42)
+        let strokeColor = theme.isNeonPulseTheme
+            ? theme.neonSecondaryColor.opacity(0.65)
+            : theme.colorScheme.onBackground.opacity(0.3)
+
+        return Image(systemName: symbol)
+            .font(.title2.weight(.semibold))
+            .foregroundColor(iconColor)
+            .padding(12)
+            .background(
+                Circle()
+                    .fill(fillColor)
+            )
+            .overlay(
+                Circle()
+                    .stroke(strokeColor, lineWidth: 1)
+            )
+            .accessibilityHidden(true)
     }
 
     private var loadingPlaceholder: some View {

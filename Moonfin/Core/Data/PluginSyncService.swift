@@ -219,10 +219,31 @@ final class PluginSyncService: ObservableObject {
     // MARK: - Apply
 
     private func applySettings(_ settings: [String: Any]) {
+        var pendingMediaBarMode: Any?
+        var hasLegacyMediaBarEnabled = false
+
         for (serverKey, value) in settings {
             guard let sp = PluginSyncConstants.serverToLocal[serverKey] else { continue }
+
+            if sp.key == UserPreferences.mediaBarMode.key {
+                pendingMediaBarMode = value
+                continue
+            }
+
+            if sp.key == UserPreferences.mediaBarEnabled.key {
+                hasLegacyMediaBarEnabled = true
+            }
+
             writeLocalValue(sp, value: value)
         }
+
+        if let pendingMediaBarMode {
+            writeMediaBarMode(pendingMediaBarMode, store: defaults)
+        } else if hasLegacyMediaBarEnabled {
+            let enabled = defaults.bool(forKey: UserPreferences.mediaBarEnabled.key)
+            defaults.set(enabled ? MediaBarMode.moonfin.rawValue : MediaBarMode.off.rawValue, forKey: UserPreferences.mediaBarMode.key)
+        }
+
         resolveParentalRepository()?.reloadBlockedRatings()
     }
 
@@ -248,12 +269,41 @@ final class PluginSyncService: ObservableObject {
         case .string, .enum:
             if sp.key == UserPreferences.visualTheme.key {
                 store.set(normalizedVisualThemeString(value), forKey: sp.key)
+            } else if sp.key == UserPreferences.mediaBarMode.key {
+                writeMediaBarMode(value, store: store)
             } else {
                 store.set("\(value)", forKey: sp.key)
             }
         case .list:
             writeListValue(sp, value: value, store: store)
         }
+    }
+
+    private func normalizedMediaBarMode(_ value: Any) -> MediaBarMode? {
+        let normalized = "\(value)"
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        switch normalized {
+        case MediaBarMode.moonfin.rawValue:
+            return .moonfin
+        case MediaBarMode.makd.rawValue:
+            return .makd
+        case MediaBarMode.off.rawValue:
+            return .off
+        case "true", "1", "enabled", "on":
+            return .moonfin
+        case "false", "0", "disabled":
+            return .off
+        default:
+            return nil
+        }
+    }
+
+    private func writeMediaBarMode(_ value: Any, store: UserDefaults) {
+        guard let mode = normalizedMediaBarMode(value) else { return }
+        store.set(mode.rawValue, forKey: UserPreferences.mediaBarMode.key)
+        store.set(mode != .off, forKey: UserPreferences.mediaBarEnabled.key)
     }
 
     // MARK: - Theme sync
@@ -369,6 +419,11 @@ final class PluginSyncService: ObservableObject {
             list = arr
         } else if let arr = value as? [Any] {
             list = arr.map { "\($0)" }
+        } else if let csv = value as? String {
+            list = csv
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
         } else {
             return
         }

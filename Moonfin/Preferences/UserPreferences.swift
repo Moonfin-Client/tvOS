@@ -344,7 +344,7 @@ enum MediaBarMode: String, StringRepresentableEnum, CaseIterable {
     var displayName: String {
         switch self {
         case .moonfin: return "Moonfin"
-        case .makd: return "MAKD"
+        case .makd: return "MakD"
         case .off: return "Off"
         }
     }

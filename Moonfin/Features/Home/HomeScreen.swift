@@ -50,6 +50,7 @@ struct HomeScreen: View {
     @State private var mediaBarDownHandoffToken: Int = 0
     @State private var verticalTransitionToken: Int = 0
     @State private var lastFocusedItemIndexByRowId: [String: Int] = [:]
+    @State private var lastSyncedMakdBackdropUrl: String?
 
     private var navbarIsLeft: Bool {
         container.userPreferences[UserPreferences.navbarPosition] == .left
@@ -414,6 +415,7 @@ struct HomeScreen: View {
                         },
                         onFocusedItemChanged: { item in
                             lastContentAreaWasMediaBar = item != nil
+                            syncMakdBackdrop(for: item)
                             scheduleMediaBarTrailerPreview(for: item)
                         },
                         onNavigateDown: {
@@ -518,6 +520,17 @@ struct HomeScreen: View {
         .onChange(of: isMediaBarMode) { mode in
             syncTopNavbarSuppression()
             if mode { previewManager.stop() }
+            if !mode { clearMakdBackdropSync() }
+        }
+        .onChange(of: viewModel.mediaBarViewModel.currentItemBackdropUrl) { _ in
+            syncMakdBackdrop(for: viewModel.mediaBarViewModel.currentItem)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
+            if container.userPreferences[UserPreferences.mediaBarMode] == .makd {
+                syncMakdBackdrop(for: viewModel.mediaBarViewModel.currentItem)
+            } else {
+                clearMakdBackdropSync()
+            }
         }
         .onChange(of: container.inactivityTracker.isScreensaverVisible) { visible in
             if visible { previewManager.stop() }
@@ -1002,6 +1015,23 @@ struct HomeScreen: View {
         configureMediaBarPreview(isYouTube: true)
         await inlineTrailerPlayer.play(url: streamInfo.url)
         lastPreviewedMediaBarItemId = slideItem.id
+    }
+
+    private func syncMakdBackdrop(for item: MediaBarSlideItem?) {
+        guard isMediaBarMode else { return }
+        guard container.userPreferences[UserPreferences.mediaBarMode] == .makd else {
+            clearMakdBackdropSync()
+            return
+        }
+        guard let backdropUrl = item?.backdropUrl, !backdropUrl.isEmpty else { return }
+        guard backdropUrl != lastSyncedMakdBackdropUrl else { return }
+
+        viewModel.backgroundService.setBackground(url: backdropUrl, context: .browsing)
+        lastSyncedMakdBackdropUrl = backdropUrl
+    }
+
+    private func clearMakdBackdropSync() {
+        lastSyncedMakdBackdropUrl = nil
     }
 }
 

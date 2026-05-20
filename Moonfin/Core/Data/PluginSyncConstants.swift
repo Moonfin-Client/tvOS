@@ -33,7 +33,7 @@ struct SyncablePreference {
 enum PluginSyncConstants {
     static let snapshotKey = "moonfin_sync_snapshot"
     static let snapshotVersionKey = "_snapshot_version"
-    static let snapshotVersion = 6
+    static let snapshotVersion = 7
     static let clientId = "moonfin-appletv"
     static let pingPath = "/Moonfin/Ping"
     static let settingsPath = "/Moonfin/Settings"
@@ -60,10 +60,13 @@ enum PluginSyncConstants {
         SyncablePreference(key: "theme_music_on_home_rows", type: .boolean, serverKey: "themeMusicOnHomeRows", defaultValue: false),
 
         SyncablePreference(key: "media_bar_enabled", type: .boolean, serverKey: "mediaBarEnabled", defaultValue: true),
+        SyncablePreference(key: "media_bar_mode", type: .enum, serverKey: "mediaBarMode", defaultValue: "moonfin"),
         SyncablePreference(key: "media_bar_content_type", type: .enum, serverKey: "mediaBarContentType", defaultValue: "both"),
-        SyncablePreference(key: "media_bar_item_count", type: .enum, serverKey: "mediaBarItemCount", defaultValue: "ten"),
+        SyncablePreference(key: "media_bar_item_count", type: .enum, serverKey: "mediaBarItemCount", defaultValue: "10"),
         SyncablePreference(key: "media_bar_overlay_opacity", type: .int, serverKey: "mediaBarOpacity", defaultValue: 50),
         SyncablePreference(key: "media_bar_overlay_color", type: .enum, serverKey: "mediaBarOverlayColor", defaultValue: "gray"),
+        SyncablePreference(key: "media_bar_auto_advance", type: .boolean, serverKey: "mediaBarAutoAdvance", defaultValue: true),
+        SyncablePreference(key: "media_bar_interval_ms", type: .int, serverKey: "mediaBarIntervalMs", defaultValue: 10_000),
         SyncablePreference(key: "media_bar_trailer_preview", type: .boolean, serverKey: "mediaBarTrailerPreview", defaultValue: true),
         SyncablePreference(key: "media_bar_trailer_audio", type: .boolean, serverKey: "mediaBarTrailerAudio", defaultValue: true),
         SyncablePreference(key: "media_bar_source_type", type: .enum, serverKey: "mediaBarSourceType", defaultValue: "library"),
