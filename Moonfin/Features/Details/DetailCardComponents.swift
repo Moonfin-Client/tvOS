@@ -397,16 +397,20 @@ struct FocusableSeasonCard: View {
 struct FocusFirstRow<Content: View>: View {
     let firstItemId: String?
     let restoredItemId: String?
+    let preferredItemId: String?
     var focusTrigger: Int = 0
+    var transitionToken: Int = 0
     var applyFocusSection: Bool = true
     let content: (FocusState<String?>.Binding) -> Content
 
     @FocusState private var focusedId: String?
 
-    init(firstItemId: String?, restoredItemId: String? = nil, focusTrigger: Int = 0, applyFocusSection: Bool = true, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
+    init(firstItemId: String?, restoredItemId: String? = nil, preferredItemId: String? = nil, focusTrigger: Int = 0, transitionToken: Int = 0, applyFocusSection: Bool = true, @ViewBuilder content: @escaping (FocusState<String?>.Binding) -> Content) {
         self.firstItemId = firstItemId
         self.restoredItemId = restoredItemId
+        self.preferredItemId = preferredItemId
         self.focusTrigger = focusTrigger
+        self.transitionToken = transitionToken
         self.applyFocusSection = applyFocusSection
         self.content = content
     }
@@ -414,8 +418,18 @@ struct FocusFirstRow<Content: View>: View {
     var body: some View {
         scrollContent
             .defaultFocus($focusedId, restoredItemId ?? firstItemId)
+            .onAppear {
+                guard transitionToken > 0,
+                      let target = preferredItemId ?? restoredItemId ?? firstItemId
+                else { return }
+                focusedId = target
+            }
             .onChange(of: focusTrigger) { newValue in
                 guard newValue > 0, let target = restoredItemId ?? firstItemId else { return }
+                focusedId = target
+            }
+            .onChange(of: transitionToken) { newValue in
+                guard newValue > 0, let target = preferredItemId ?? restoredItemId ?? firstItemId else { return }
                 focusedId = target
             }
     }

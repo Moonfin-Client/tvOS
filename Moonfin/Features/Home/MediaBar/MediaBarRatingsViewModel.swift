@@ -156,6 +156,8 @@ final class MediaBarRatingsViewModel: ObservableObject {
     }
 
     func reset() {
+        loadTask?.cancel()
+        loadTask = nil
         currentItemId = nil
         ratings = []
         isLoading = false

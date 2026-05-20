@@ -224,6 +224,12 @@ private struct SettingsRouteResolver: View {
                 selection: container.userPreferences.binding(for: UserPreferences.homePosterSize),
                 displayName: \.displayName
             )
+        case .homeRowsStyle:
+            SettingsPickerScreen(
+                title: "Home Row Style",
+                selection: container.userPreferences.binding(for: UserPreferences.homeRowsStyle),
+                displayName: \.displayName
+            )
         case .homeFavoritesSortBy:
             SettingsPickerScreen(
                 title: "Favorites Row Sorting",

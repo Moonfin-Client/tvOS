@@ -58,6 +58,7 @@ enum SettingsRoute: Hashable {
     case home
     case homeSections
     case homePosterSize
+    case homeRowsStyle
     case homeRowsImageType
     case homeFavoritesSortBy
     case homeCollectionsSortBy

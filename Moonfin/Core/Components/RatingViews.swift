@@ -44,7 +44,7 @@ private struct BaseRatingChipView<Icon: View>: View {
             HStack(spacing: 7) {
                 icon
                 Text(valueText)
-                    .font(.token(24, weight: .bold))
+                    .font(.token(20, weight: .bold))
                     .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white)
             }
             if let labelText {

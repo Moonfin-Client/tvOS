@@ -476,14 +476,14 @@ struct ItemDetailsView: View {
 
                         if let tagline = item.taglines?.first, !tagline.isEmpty {
                             Text("\"\(tagline)\"")
-                                .font(.bodyMd)
+                                .font(.bodySm)
                                 .italic()
                                 .foregroundColor(theme.isNeonPulseTheme ? theme.neonPrimaryColor : theme.colorScheme.onBackground.opacity(0.6))
                         }
 
                         if let overview = item.overview, !overview.isEmpty {
                             Text(overview)
-                                .font(.bodyMd)
+                                .font(.bodySm)
                                 .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.top, SpaceTokens.spaceXs)
@@ -563,7 +563,7 @@ struct ItemDetailsView: View {
 
                 if let overview = item.overview, !overview.isEmpty {
                     Text(overview)
-                        .font(.bodyMd)
+                        .font(.bodySm)
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
                         .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.center)
@@ -676,13 +676,13 @@ struct ItemDetailsView: View {
 
     private func infoText(_ text: String) -> some View {
         Text(text)
-            .font(.bodyMd)
+            .font(.bodySm)
             .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
     }
 
     private var infoSeparator: some View {
         Text("·")
-            .font(.bodyMd)
+            .font(.bodySm)
             .foregroundColor(theme.colorScheme.onBackground.opacity(0.4))
     }
 
@@ -1004,7 +1004,7 @@ struct ItemDetailsView: View {
 
                     VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
                         Text(column.label.uppercased())
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(isNeonPulse ? neonPrimary : theme.colorScheme.onBackground.opacity(0.4))
                             .tracking(0.5)
                         Text(column.value)

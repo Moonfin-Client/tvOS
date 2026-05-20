@@ -915,10 +915,21 @@ final class HomeViewModel: ObservableObject {
             return
         }
 
+        let isHomeRowsV2Mode = container.userPreferences[UserPreferences.homeRowsStyle] == .v2
+
         selectionDebounceTask?.cancel()
         selectionDebounceTask = Task {
             try? await Task.sleep(nanoseconds: Self.selectionDebounceMs)
             guard !Task.isCancelled else { return }
+
+            if isHomeRowsV2Mode {
+                if infoState.selectedItemState != .empty {
+                    infoState.selectedItemState = .empty
+                }
+                mediaBarRatingsViewModel.loadRatings(for: item)
+                return
+            }
+
             scheduleMyMediaSummaryLoad(for: item)
             infoState.selectedItemState = buildSelectedState(for: item)
             mediaBarRatingsViewModel.loadRatings(for: item)

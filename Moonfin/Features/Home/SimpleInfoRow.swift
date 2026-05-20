@@ -3,6 +3,7 @@ import SwiftUI
 enum SimpleInfoRowSizeVariant {
     case regular
     case compact
+    case small
 }
 
 struct SimpleInfoRow: View {
@@ -12,7 +13,14 @@ struct SimpleInfoRow: View {
     @EnvironmentObject var theme: MoonfinTheme
 
     private var rowFont: Font {
-        sizeVariant == .compact ? .bodyMd : .bodyLg
+        switch sizeVariant {
+        case .regular:
+            return .bodyLg
+        case .compact:
+            return .bodyMd
+        case .small:
+            return .bodySm
+        }
     }
 
     var body: some View {

@@ -17,6 +17,7 @@ struct MediaBarView: View {
     @FocusState private var isFocused: Bool
     @ObservedObject var inlineTrailerPlayer: InlineTrailerPlayerManager
     @State private var inlineVideoOpacity: Double = 0
+    @State private var lastMoveCommandAt: TimeInterval = 0
 
     init(
         viewModel: MediaBarViewModel,
@@ -62,21 +63,56 @@ struct MediaBarView: View {
         Double(userPreferences[UserPreferences.mediaBarOverlayOpacity]) / 100.0
     }
 
+    private func debugLog(_ event: String, details: String = "") {
+#if DEBUG
+        guard ProcessInfo.processInfo.environment["MOONFIN_HOME_FOCUS_DEBUG"] == "1" else {
+            return
+        }
+        let timestamp = Date().timeIntervalSinceReferenceDate
+        if details.isEmpty {
+            print("[MediaBarNav] [\(timestamp)] \(event)")
+        } else {
+            print("[MediaBarNav] [\(timestamp)] \(event) | \(details)")
+        }
+#endif
+    }
+
+    private func directionLabel(_ direction: MoveCommandDirection) -> String {
+        switch direction {
+        case .up: return "up"
+        case .down: return "down"
+        case .left: return "left"
+        case .right: return "right"
+        default: return "unknown"
+        }
+    }
+
+    private func safeFocusSurfaceHeight(_ value: CGFloat, fallback: CGFloat = 1) -> CGFloat {
+        if value.isFinite, value > 1 {
+            return value
+        }
+        return fallback
+    }
+
     var body: some View {
+        let safeScreenHeight = max(screenHeight, 1)
         switch viewModel.state {
         case .ready(let items) where !items.isEmpty:
-            mediaBarContent(items: items)
+            mediaBarContent(items: items, safeScreenHeight: safeScreenHeight)
         case .loading:
             ZStack {
                 loadingPlaceholder
 
                 VStack(spacing: 0) {
                     Spacer().frame(height: navbarClearance)
-                    mediaBarFocusSurface(maxHeight: .infinity, activateOnSelect: false)
+                    mediaBarFocusSurface(
+                        height: safeFocusSurfaceHeight(max(safeScreenHeight - navbarClearance, 1)),
+                        activateOnSelect: false
+                    )
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: screenHeight)
+            .frame(height: safeScreenHeight)
             .onChange(of: viewModel.state) { newState in
                 if case .loading = newState { return }
                 if case .ready = newState { return }
@@ -87,7 +123,7 @@ struct MediaBarView: View {
         }
     }
 
-    private func mediaBarContent(items: [MediaBarSlideItem]) -> some View {
+    private func mediaBarContent(items: [MediaBarSlideItem], safeScreenHeight: CGFloat) -> some View {
         ZStack(alignment: .top) {
             backdropLayer(items: items)
             overlayGradient
@@ -112,29 +148,44 @@ struct MediaBarView: View {
 
             VStack {
                 Spacer().frame(height: navbarClearance + 20)
-                mediaBarFocusSurface(maxHeight: screenHeight - navbarClearance - 120, activateOnSelect: true)
+                mediaBarFocusSurface(
+                    height: safeFocusSurfaceHeight(max(safeScreenHeight - navbarClearance - 120, 1)),
+                    activateOnSelect: true
+                )
                 Spacer()
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: screenHeight)
+        .frame(height: safeScreenHeight)
         .clipped()
     }
 
-    private func mediaBarFocusSurface(maxHeight: CGFloat, activateOnSelect: Bool) -> some View {
+    private func mediaBarFocusSurface(height: CGFloat, activateOnSelect: Bool) -> some View {
         Color.clear
             .contentShape(Rectangle())
             .frame(maxWidth: .infinity)
-            .frame(height: maxHeight)
+            .frame(height: safeFocusSurfaceHeight(height))
             .focusable()
             .focused($isFocused)
             .padding(.leading, sidebarInset)
             .onTapGesture {
                 if activateOnSelect {
+                    debugLog("tap_select", details: "index=\(viewModel.currentIndex) item_id=\(viewModel.currentItem?.id ?? "nil")")
                     selectCurrentItem()
                 }
             }
             .onMoveCommand { direction in
+                guard isFocused else {
+                    debugLog("move_command_ignored", details: "reason=not_focused direction=\(directionLabel(direction))")
+                    return
+                }
+                let now = Date().timeIntervalSinceReferenceDate
+                let repeatDeltaMs = lastMoveCommandAt > 0 ? Int((now - lastMoveCommandAt) * 1000) : -1
+                lastMoveCommandAt = now
+                debugLog(
+                    "move_command",
+                    details: "direction=\(directionLabel(direction)) repeat_delta_ms=\(repeatDeltaMs) index=\(viewModel.currentIndex) item_id=\(viewModel.currentItem?.id ?? "nil") focused=\(isFocused)"
+                )
                 switch direction {
                 case .left:  viewModel.goToPrevious()
                 case .right: viewModel.goToNext()
@@ -144,21 +195,25 @@ struct MediaBarView: View {
                 }
             }
             .onPlayPauseCommand {
+                debugLog("play_pause_command", details: "index=\(viewModel.currentIndex) item_id=\(viewModel.currentItem?.id ?? "nil")")
                 if let item = viewModel.currentItem {
                     onPlayTrailer(item)
                 }
             }
             .onChange(of: isFocused) { focused in
+                debugLog("focus_surface_changed", details: "focused=\(focused) index=\(viewModel.currentIndex) item_id=\(viewModel.currentItem?.id ?? "nil")")
                 viewModel.setFocused(focused)
                 onFocusedItemChanged(focused ? viewModel.currentItem : nil)
             }
             .onChange(of: viewModel.currentIndex) { _ in
+                debugLog("current_index_changed", details: "index=\(viewModel.currentIndex) item_id=\(viewModel.currentItem?.id ?? "nil") focused=\(isFocused)")
                 if isFocused {
                     onFocusedItemChanged(viewModel.currentItem)
                 }
             }
             .onChange(of: requestFocus) { shouldFocus in
                 if shouldFocus {
+                    debugLog("request_focus_received", details: "index=\(viewModel.currentIndex) item_id=\(viewModel.currentItem?.id ?? "nil")")
                     isFocused = true
                     requestFocus = false
                 }
@@ -277,7 +332,7 @@ struct MediaBarView: View {
                 }
 
                 Text(item.overview ?? " ")
-                    .font(.bodyMd)
+                    .font(.bodySm)
                     .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.85))
                     .lineLimit(3)
                     .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
@@ -322,19 +377,19 @@ struct MediaBarView: View {
 
     private var metadataSeparator: some View {
         Text("\u{2022}")
-            .font(.bodySm)
+            .font(.captionXs)
             .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor.opacity(0.7) : .white.opacity(0.4))
     }
 
     private func metadataText(_ text: String) -> some View {
         Text(text)
-            .font(.bodySm)
+            .font(.captionXs)
             .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.7))
     }
 
     private func metadataBadge(_ text: String) -> some View {
         Text(text)
-            .font(.bodySm)
+            .font(.captionXs)
             .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.8))
             .padding(.horizontal, SpaceTokens.spaceXs)
             .padding(.vertical, 1)
@@ -366,7 +421,7 @@ struct MediaBarView: View {
         Rectangle()
             .fill(theme.colorScheme.surface.opacity(0.3))
             .frame(maxWidth: .infinity)
-            .frame(height: screenHeight)
+            .frame(height: max(screenHeight, 1))
     }
 }
 

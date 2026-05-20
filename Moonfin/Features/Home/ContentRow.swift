@@ -11,12 +11,45 @@ struct ContentRow: View {
     var onToggleWatched: ((ServerItem) -> Void)?
     var onToggleFavorite: ((ServerItem) -> Void)?
     var restoredItemId: String?
+    var preferredItemId: String?
     var focusTrigger: Int = 0
+    var transitionToken: Int = 0
+    var isRowFocused: Bool = false
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var container: AppContainer
+    @State private var v2FocusedItemId: String? = nil
+    @State private var v2BackdropItemId: String? = nil
+    @State private var v2BackdropSwitchTask: Task<Void, Never>? = nil
+
+    private let v2ExtendedSectionHeight: CGFloat = 320
+    private let v2BackdropSwitchDelayNs: UInt64 = 90_000_000
 
     private var posterSize: PosterSize {
         container.userPreferences[UserPreferences.homePosterSize]
+    }
+
+    private var isV2Mode: Bool {
+        container.userPreferences[UserPreferences.homeRowsStyle] == .v2
+    }
+
+    private var isV2EligibleRow: Bool {
+        isV2Mode && isCustomizableRow && row.rowType != .myMediaSmall && !isMusicRow
+    }
+
+    private var v2CardHeight: CGFloat {
+        300 * posterSize.scaleFactor
+    }
+
+    private var v2PortraitWidth: CGFloat {
+        v2CardHeight * (2.0 / 3.0)
+    }
+
+    private var v2FocusedWidth: CGFloat {
+        v2CardHeight * (16.0 / 9.0)
+    }
+
+    private var v2FocusAnimation: Animation {
+        .easeInOut(duration: 0.2)
     }
 
     private var imageDisplayType: ImageDisplayType {
@@ -61,11 +94,21 @@ struct ContentRow: View {
     }
 
     private var effectiveAspectRatio: CGFloat {
+        if isV2EligibleRow { return 2.0 / 3.0 }
         if isMusicRow { return 1.0 }
         return isCustomizableRow ? imageDisplayType.aspectRatio : row.rowType.aspectRatio
     }
 
     private var effectiveCardWidth: CGFloat {
+        if isV2EligibleRow {
+            return v2PortraitWidth
+        }
+
+        if effectiveAspectRatio >= 0.95 && effectiveAspectRatio <= 1.05 {
+            // Keep all square-like rows visually consistent and larger.
+            return 220 * posterSize.scaleFactor
+        }
+
         let base: CGFloat = isCustomizableRow
             ? resolvedImageDisplayType.aspectRatio >= 1.0 ? 280 : 150
             : row.rowType.cardWidth
@@ -78,10 +121,19 @@ struct ContentRow: View {
     }
 
     var body: some View {
-        if row.isLoading {
-            loadingRow
-        } else if !row.items.isEmpty {
-            itemRow
+        Group {
+            if row.isLoading {
+                loadingRow
+            } else if !row.items.isEmpty {
+                itemRow
+            }
+        }
+        .onChange(of: isRowFocused) { focused in
+            if !focused {
+                v2BackdropSwitchTask?.cancel()
+                v2BackdropSwitchTask = nil
+                v2BackdropItemId = nil
+            }
         }
     }
 
@@ -115,9 +167,16 @@ struct ContentRow: View {
         VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             rowTitle
 
-            ScrollViewReader { scrollProxy in
-                FocusFirstRow(firstItemId: row.items.first?.id, restoredItemId: validRestoredItemId, focusTrigger: focusTrigger, applyFocusSection: false) { focusBinding in
-                    LazyHStack(spacing: SpaceTokens.spaceMd) {
+            ScrollViewReader { _ in
+                FocusFirstRow(
+                    firstItemId: row.items.first?.id,
+                    restoredItemId: validRestoredItemId,
+                    preferredItemId: preferredItemId,
+                    focusTrigger: focusTrigger,
+                    transitionToken: transitionToken,
+                    applyFocusSection: false
+                ) { focusBinding in
+                    LazyHStack(alignment: .top, spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                             cardView(for: item)
                                 .id(item.id)
@@ -127,7 +186,7 @@ struct ContentRow: View {
                                 }
                         }
                     }
-                    .padding(.vertical, 12)
+                    .padding(.vertical, isV2EligibleRow ? 20 : 12)
                     .padding(.horizontal, 12)
                 }
                 .modifier(ScrollClipDisabledModifier())
@@ -141,7 +200,7 @@ struct ContentRow: View {
         if row.rowType == .myMediaSmall {
             LibraryActionCard(
                 item: item,
-                cardWidth: row.rowType.cardWidth * posterSize.scaleFactor,
+                cardWidth: effectiveCardWidth,
                 onFocused: {
                     viewModel.onItemFocused(item)
                     onItemFocused?(item)
@@ -160,6 +219,8 @@ struct ContentRow: View {
                 },
                 onSelect: { onItemSelected?(item) }
             )
+        } else if isV2EligibleRow {
+            v2CardView(for: item)
         } else {
             ItemPreview(
                 item: item,
@@ -179,6 +240,65 @@ struct ContentRow: View {
                 onToggleFavorite: onToggleFavorite.map { cb in { cb(item) } }
             )
         }
+    }
+
+    private func v2CardView(for item: ServerItem) -> some View {
+        let isFocused = isRowFocused && v2FocusedItemId == item.id
+        let targetCardWidth = isFocused ? v2FocusedWidth : v2PortraitWidth
+        let cardWidth = (targetCardWidth.isFinite && targetCardWidth > 1) ? targetCardWidth : max(1, v2PortraitWidth)
+        let aspectRatio: CGFloat = isFocused ? (16.0 / 9.0) : (2.0 / 3.0)
+
+        return VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
+            ItemPreview(
+                item: item,
+                imageUrl: v2ImageUrl(for: item, isFocused: isFocused),
+                aspectRatio: aspectRatio,
+                cardWidth: cardWidth,
+                watchedIndicator: watchedIndicator,
+                serverName: viewModel.serverName(for: item),
+                focusScale: 1.0,
+                showLabels: false,
+                onFocused: { focusedItem in
+                    viewModel.onItemFocused(focusedItem)
+                    onItemFocused?(focusedItem)
+                    onRowFocused?()
+                },
+                onFocusChange: { focused in
+                    if focused {
+                        v2FocusedItemId = item.id
+                        v2BackdropSwitchTask?.cancel()
+                        v2BackdropSwitchTask = Task {
+                            try? await Task.sleep(nanoseconds: v2BackdropSwitchDelayNs)
+                            guard !Task.isCancelled else { return }
+                            if v2FocusedItemId == item.id {
+                                v2BackdropItemId = item.id
+                            }
+                        }
+                    }
+                },
+                onSelect: { onItemSelected?(item) },
+                onToggleWatched: onToggleWatched.map { cb in { cb(item) } },
+                onToggleFavorite: onToggleFavorite.map { cb in { cb(item) } }
+            )
+
+            HomeRowV2ExtendedSection(
+                item: item,
+                isVisible: isFocused,
+                width: cardWidth,
+                height: v2ExtendedSectionHeight,
+                ratings: viewModel.mediaBarRatingsViewModel.ratings,
+                enableAdditionalRatings: viewModel.mediaBarRatingsViewModel.enableAdditionalRatings
+            )
+        }
+        .frame(width: cardWidth, alignment: .leading)
+        .animation(v2FocusAnimation, value: isFocused)
+    }
+
+    private func v2ImageUrl(for item: ServerItem, isFocused: Bool) -> String? {
+        if isFocused, v2BackdropItemId == item.id {
+            return viewModel.thumbImageUrl(for: item) ?? viewModel.posterImageUrl(for: item)
+        }
+        return viewModel.posterImageUrl(for: item)
     }
 
     private func imageUrl(for item: ServerItem) -> String? {
@@ -203,6 +323,128 @@ struct ContentRow: View {
         default:
             return false
         }
+    }
+}
+
+private struct HomeRowV2ExtendedSection: View {
+    let item: ServerItem
+    let isVisible: Bool
+    let width: CGFloat
+    let height: CGFloat
+    let ratings: [(String, Float)]
+    let enableAdditionalRatings: Bool
+
+    @EnvironmentObject var theme: MoonfinTheme
+
+    private var safeWidth: CGFloat {
+        if width.isFinite, width > 1 {
+            return width
+        }
+        return 1
+    }
+
+    private var safeHeight: CGFloat {
+        if height.isFinite, height > 1 {
+            return height
+        }
+        return 1
+    }
+
+    private var contentWidth: CGFloat {
+        safeWidth
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SpaceTokens.spaceXs) {
+            if let metadataText {
+                Text(metadataText)
+                    .font(.captionSm)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.75))
+                    .lineLimit(1)
+            }
+
+            if let officialRatingText {
+                HStack(spacing: SpaceTokens.spaceXs) {
+                    Text(officialRatingText)
+                        .font(.captionXs)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                        .padding(.horizontal, SpaceTokens.spaceSm)
+                        .padding(.vertical, 2)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: RadiusTokens.extraSmall)
+                                .stroke(theme.colorScheme.onBackground.opacity(0.3), lineWidth: 1)
+                        )
+                }
+            }
+
+            MediaBarRatingsRow(
+                ratings: ratings,
+                enableAdditionalRatings: enableAdditionalRatings
+            )
+
+            if let overviewText {
+                Text(overviewText)
+                    .font(.bodySm)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                    .lineLimit(4, reservesSpace: true)
+                    .multilineTextAlignment(.leading)
+                    .frame(width: contentWidth, alignment: .leading)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .frame(width: contentWidth, alignment: .topLeading)
+        .frame(width: safeWidth, height: safeHeight, alignment: .topLeading)
+        .opacity(isVisible ? 1 : 0)
+        .allowsHitTesting(false)
+    }
+
+    private var metadataText: String? {
+        var parts: [String] = []
+
+        if let yearText {
+            parts.append(yearText)
+        }
+
+        if let firstGenre = item.genres?.first, !firstGenre.isEmpty {
+            parts.append(firstGenre)
+        }
+
+        if let runtimeText {
+            parts.append(runtimeText)
+        }
+
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: " • ")
+    }
+
+    private var yearText: String? {
+        if let year = item.productionYear, year > 0 {
+            return String(year)
+        }
+        if let date = item.premiereDate {
+            return String(Calendar.current.component(.year, from: date))
+        }
+        return nil
+    }
+
+    private var runtimeText: String? {
+        guard let ticks = item.runTimeTicks, ticks > 0 else { return nil }
+        return RuntimeFormatter.format(ticks: ticks)
+    }
+
+    private var officialRatingText: String? {
+        guard let rating = item.officialRating?.trimmingCharacters(in: .whitespacesAndNewlines), !rating.isEmpty else {
+            return nil
+        }
+        return rating
+    }
+
+    private var overviewText: String? {
+        guard let overview = item.overview?.trimmingCharacters(in: .whitespacesAndNewlines), !overview.isEmpty else {
+            return nil
+        }
+        return overview
     }
 }
 

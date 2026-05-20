@@ -13,6 +13,7 @@ struct ItemCard: View {
     var shape: CardShape = .rounded
     var watchedIndicator: WatchedIndicatorBehavior = .always
     var serverName: String?
+    var focusScale: CGFloat = 1.05
     var onFocused: ((ServerItem) -> Void)?
     var onSelect: (() -> Void)?
     var onFocusChange: ((Bool) -> Void)? = nil
@@ -24,10 +25,24 @@ struct ItemCard: View {
     @EnvironmentObject var previewManager: PreviewPlayerManager
     @FocusState private var isFocused: Bool
 
-    private var cardHeight: CGFloat { cardWidth / aspectRatio }
+    private var safeCardWidth: CGFloat {
+        if cardWidth.isFinite, cardWidth > 1 {
+            return cardWidth
+        }
+        return 1
+    }
+
+    private var safeAspectRatio: CGFloat {
+        if aspectRatio.isFinite, aspectRatio > 0.01 {
+            return aspectRatio
+        }
+        return 2.0 / 3.0
+    }
+
+    private var cardHeight: CGFloat { safeCardWidth / safeAspectRatio }
 
     private var cornerRadius: CGFloat {
-        shape == .circle ? cardWidth / 2 : RadiusTokens.small
+        shape == .circle ? safeCardWidth / 2 : RadiusTokens.small
     }
 
     var body: some View {
@@ -45,12 +60,13 @@ struct ItemCard: View {
                 
                 cardOverlays
             }
-            .frame(width: cardWidth, height: cardHeight)
+            .frame(width: safeCardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
         .buttonStyle(ItemCardButtonStyle(
             isFocused: isFocused,
             cornerRadius: cornerRadius,
+            focusScale: focusScale,
             focusBorderColor: theme.effectiveFocusColor,
             focusGlow: theme.activeSpec.borders.focusGlow
         ))
@@ -112,9 +128,9 @@ struct ItemCard: View {
         if imageUrl != nil {
             CachedImage(
                 urlString: imageUrl,
-                thumbnailSize: CGSize(width: cardWidth, height: cardHeight)
+                thumbnailSize: CGSize(width: safeCardWidth, height: cardHeight)
             )
-            .frame(width: cardWidth, height: cardHeight)
+            .frame(width: safeCardWidth, height: cardHeight)
         } else {
             placeholder
         }
@@ -123,7 +139,7 @@ struct ItemCard: View {
     private var placeholder: some View {
         Rectangle()
             .fill(theme.colorScheme.surface.opacity(0.3))
-            .frame(width: cardWidth, height: cardHeight)
+            .frame(width: safeCardWidth, height: cardHeight)
     }
 
     private var cardOverlays: some View {
@@ -133,7 +149,7 @@ struct ItemCard: View {
             watchIndicatorOverlay
             serverBadgeOverlay
         }
-        .frame(width: cardWidth, height: cardHeight)
+        .frame(width: safeCardWidth, height: cardHeight)
     }
 
     @ViewBuilder
@@ -226,8 +242,23 @@ struct ItemCard: View {
 struct ItemCardButtonStyle: ButtonStyle {
     let isFocused: Bool
     let cornerRadius: CGFloat
+    let focusScale: CGFloat
     let focusBorderColor: Color
     let focusGlow: [ThemeShadowSpec]
+
+    init(
+        isFocused: Bool,
+        cornerRadius: CGFloat,
+        focusScale: CGFloat = 1.05,
+        focusBorderColor: Color,
+        focusGlow: [ThemeShadowSpec]
+    ) {
+        self.isFocused = isFocused
+        self.cornerRadius = cornerRadius
+        self.focusScale = focusScale
+        self.focusBorderColor = focusBorderColor
+        self.focusGlow = focusGlow
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -247,7 +278,7 @@ struct ItemCardButtonStyle: ButtonStyle {
                 x: focusGlow.count > 1 ? focusGlow[1].offsetX : 0,
                 y: focusGlow.count > 1 ? focusGlow[1].offsetY : 0
             )
-            .scaleEffect(isFocused ? 1.05 : 1.0)
+            .scaleEffect(isFocused ? focusScale : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isFocused)
     }
 }

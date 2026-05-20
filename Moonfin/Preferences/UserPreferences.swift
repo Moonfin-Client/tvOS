@@ -58,6 +58,7 @@ final class UserPreferences: ObservableObject {
     static let genresRowSortBy = Preference(key: "genres_row_sort_by", defaultValue: HomeRowSortBy.name)
     static let genresRowItems = Preference(key: "genres_row_items", defaultValue: GenresRowItems.both)
     static let homeRowInfoOverlay = Preference(key: "home_row_info_overlay", defaultValue: true)
+    static let homeRowsStyle = Preference(key: "home_rows_style", defaultValue: HomeRowsStyle.v2)
 
     static let screensaverEnabled = Preference(key: "screensaver_enabled", defaultValue: true)
     static let screensaverTimeout = Preference(key: "screensaver_timeout", defaultValue: 5)
@@ -319,6 +320,18 @@ enum GenresRowItems: String, StringRepresentableEnum, CaseIterable {
         case .movies: return userPreferencesLocalized("movies")
         case .series: return userPreferencesLocalized("tv_shows")
         case .both: return userPreferencesLocalized("both")
+        }
+    }
+}
+
+enum HomeRowsStyle: String, StringRepresentableEnum, CaseIterable {
+    case v1
+    case v2
+
+    var displayName: String {
+        switch self {
+        case .v1: return "Classic"
+        case .v2: return "Modern"
         }
     }
 }

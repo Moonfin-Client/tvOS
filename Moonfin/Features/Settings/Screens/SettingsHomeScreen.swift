@@ -10,6 +10,15 @@ struct SettingsHomeScreen: View {
     var body: some View {
         SettingsScreenLayout(title: "Home Screen") {
             SettingsListButton(
+                icon: "rectangle.3.group",
+                heading: "Home Row Style",
+                caption: "Choose layout style for home rows",
+                trailingText: prefs[UserPreferences.homeRowsStyle].displayName,
+                action: { settingsRouter.navigate(to: .homeRowsStyle) }
+            )
+            .focused($focusedRoute, equals: .homeRowsStyle)
+
+            SettingsListButton(
                 icon: "list.bullet",
                 heading: "Home Sections",
                 caption: "Open row enablement and ordering",
@@ -17,13 +26,15 @@ struct SettingsHomeScreen: View {
             )
             .focused($focusedRoute, equals: .homeSections)
 
-            SettingsListButton(
-                icon: "photo.on.rectangle",
-                heading: "Per-Row Image Type Selection",
-                caption: "Choose image style per enabled row",
-                action: { settingsRouter.navigate(to: .homeRowsImageType) }
-            )
-            .focused($focusedRoute, equals: .homeRowsImageType)
+            if prefs[UserPreferences.homeRowsStyle] == .v1 {
+                SettingsListButton(
+                    icon: "photo.on.rectangle",
+                    heading: "Per-Row Image Type Selection",
+                    caption: "Choose image style per enabled row",
+                    action: { settingsRouter.navigate(to: .homeRowsImageType) }
+                )
+                .focused($focusedRoute, equals: .homeRowsImageType)
+            }
 
             SettingsToggleButton(
                 icon: "arrow.left.arrow.right",
@@ -95,12 +106,14 @@ struct SettingsHomeScreen: View {
                 .focused($focusedRoute, equals: .homeGenresItems)
             }
 
-            SettingsToggleButton(
-                icon: "photo.on.rectangle.angled",
-                heading: "Series Thumbnails",
-                caption: "Use series image thumbnails on home rows",
-                isOn: prefs.binding(for: UserPreferences.homeImageUseSeriesImage)
-            )
+            if prefs[UserPreferences.homeRowsStyle] == .v1 {
+                SettingsToggleButton(
+                    icon: "photo.on.rectangle.angled",
+                    heading: "Series Thumbnails",
+                    caption: "Use series image thumbnails on home rows",
+                    isOn: prefs.binding(for: UserPreferences.homeImageUseSeriesImage)
+                )
+            }
 
             SettingsListButton(
                 icon: "rectangle.expand.vertical",
@@ -111,12 +124,14 @@ struct SettingsHomeScreen: View {
             )
             .focused($focusedRoute, equals: .homePosterSize)
 
-            SettingsToggleButton(
-                icon: "info.circle",
-                heading: "Home Row Info Overlay",
-                caption: "Show title and metadata overlays on row cards",
-                isOn: prefs.binding(for: UserPreferences.homeRowInfoOverlay)
-            )
+            if prefs[UserPreferences.homeRowsStyle] == .v1 {
+                SettingsToggleButton(
+                    icon: "info.circle",
+                    heading: "Home Row Info Overlay",
+                    caption: "Show title and metadata overlays on row cards",
+                    isOn: prefs.binding(for: UserPreferences.homeRowInfoOverlay)
+                )
+            }
 
             SettingsToggleButton(
                 icon: "music.note.house",
