@@ -7,6 +7,7 @@ final class VideoPlayerViewModel: ObservableObject {
     @Published var audioSelectionVisible = false
     @Published var subtitleSelectionVisible = false
     @Published var speedSelectionVisible = false
+    @Published var qualitySelectionVisible = false
     @Published var chapterSelectionVisible = false
     @Published var castListVisible = false
     @Published var channelListVisible = false
@@ -45,6 +46,7 @@ final class VideoPlayerViewModel: ObservableObject {
 
     private var _cachedTitle: String = ""
     private var _cachedSubtitle: String = ""
+    private var _cachedLogoUrl: String?
     private var _cachedChapters: [ServerChapter] = []
     private var _cachedCast: [ServerPerson] = []
     private var _cachedEntryId: String?
@@ -60,6 +62,7 @@ final class VideoPlayerViewModel: ObservableObject {
 
     var title: String { ensureItemCache(); return _cachedTitle }
     var subtitle: String { ensureItemCache(); return _cachedSubtitle }
+    var logoUrl: String? { ensureItemCache(); return _cachedLogoUrl }
     var chapters: [ServerChapter] { ensureItemCache(); return _cachedChapters }
     var castMembers: [ServerPerson] { ensureItemCache(); return _cachedCast }
     var hasChapters: Bool { chapters.count > 1 }
@@ -73,18 +76,31 @@ final class VideoPlayerViewModel: ObservableObject {
         syncPlayManager?.state.enabled == true
     }
 
+    var selectedMaxBitrate: Int {
+        playbackManager.maxBitratePreference
+    }
+
+    var maxBitrateOptions: [(Int, String)] {
+        Self.maxBitrateOptions
+    }
+
     var nextItemImageUrl: String? {
         guard let item = nextQueueItem else { return nil }
         return playbackManager.imageUrl(for: item, type: .backdrop)
     }
 
-    var positionText: String {
+    var currentTimeText: String {
         let current = isScrubbing ? TimeInterval(scrubPosition) * player.duration : player.currentTime
-        return "\(formatTime(current)) / \(formatTime(player.duration))"
+        return formatTime(current)
+    }
+
+    var durationText: String {
+        formatTime(player.duration)
     }
 
     var endTimeText: String {
-        let remaining = player.duration - player.currentTime
+        let current = isScrubbing ? TimeInterval(scrubPosition) * player.duration : player.currentTime
+        let remaining = player.duration - current
         guard remaining.isFinite && remaining > 0 else { return "" }
         let endDate = Date().addingTimeInterval(remaining)
         return "Ends at \(endTimeFormatter.string(from: endDate))"
@@ -163,21 +179,36 @@ final class VideoPlayerViewModel: ObservableObject {
         guard let item = playbackManager.currentEntry?.item else {
             _cachedTitle = ""
             _cachedSubtitle = ""
+            _cachedLogoUrl = nil
             _cachedChapters = []
             _cachedCast = []
             return
         }
 
+        _cachedLogoUrl = playbackManager.logoUrl(for: item)
+
         if let series = item.seriesName {
-            var episodeLabel = series
-            if let s = item.parentIndexNumber { episodeLabel += " — S\(s)" }
-            if let e = item.indexNumber { episodeLabel += "E\(e)" }
-            _cachedTitle = episodeLabel
+            _cachedTitle = series
+
+            var seasonEpisode = ""
+            if let season = item.parentIndexNumber {
+                seasonEpisode = "S\(season)"
+            }
+            if let episode = item.indexNumber {
+                seasonEpisode += seasonEpisode.isEmpty ? "E\(episode)" : ":E\(episode)"
+            }
+
+            if seasonEpisode.isEmpty {
+                _cachedSubtitle = item.name
+            } else if item.name.isEmpty {
+                _cachedSubtitle = seasonEpisode
+            } else {
+                _cachedSubtitle = "\(seasonEpisode) - \(item.name)"
+            }
         } else {
             _cachedTitle = item.name
+            _cachedSubtitle = ""
         }
-
-        _cachedSubtitle = item.seriesName != nil ? item.name : ""
         _cachedChapters = item.chapters ?? []
 
         _cachedCast = item.people ?? []
@@ -306,6 +337,8 @@ final class VideoPlayerViewModel: ObservableObject {
             subtitleSelectionVisible = true
         case .speed:
             speedSelectionVisible = true
+        case .quality:
+            qualitySelectionVisible = true
         }
     }
 
@@ -313,12 +346,13 @@ final class VideoPlayerViewModel: ObservableObject {
         audioSelectionVisible = false
         subtitleSelectionVisible = false
         speedSelectionVisible = false
+        qualitySelectionVisible = false
         overlayVisible = true
         resetHideTimer()
     }
 
     var trackSelectionVisible: Bool {
-        audioSelectionVisible || subtitleSelectionVisible || speedSelectionVisible
+        audioSelectionVisible || subtitleSelectionVisible || speedSelectionVisible || qualitySelectionVisible
     }
 
     func showChapterSelection() {
@@ -617,6 +651,11 @@ final class VideoPlayerViewModel: ObservableObject {
         playbackManager.setRate(speed)
     }
 
+    func setMaxBitrate(_ bitrate: Int) {
+        playbackManager.setMaxBitrate(bitrate)
+        objectWillChange.send()
+    }
+
     func adjustSubtitleDelay(by delta: TimeInterval) {
         subtitleDelay += delta
         player.setSubtitleDelay(subtitleDelay)
@@ -638,4 +677,24 @@ final class VideoPlayerViewModel: ObservableObject {
         }
         return String(format: "%d:%02d", m, s)
     }
+
+    private static let maxBitrateOptions: [(Int, String)] = [
+        (0, "Auto"),
+        (120_000_000, "120 Mbps"),
+        (80_000_000, "80 Mbps"),
+        (60_000_000, "60 Mbps"),
+        (40_000_000, "40 Mbps"),
+        (20_000_000, "20 Mbps"),
+        (15_000_000, "15 Mbps"),
+        (10_000_000, "10 Mbps"),
+        (8_000_000, "8 Mbps"),
+        (6_000_000, "6 Mbps"),
+        (4_000_000, "4 Mbps"),
+        (3_000_000, "3 Mbps"),
+        (2_000_000, "2 Mbps"),
+        (1_500_000, "1.5 Mbps"),
+        (1_000_000, "1 Mbps"),
+        (700_000, "0.7 Mbps"),
+        (420_000, "0.42 Mbps")
+    ]
 }

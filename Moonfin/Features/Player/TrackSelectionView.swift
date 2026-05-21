@@ -4,6 +4,7 @@ enum TrackSelectionTab: String {
     case audio = "Audio"
     case subtitles = "Subtitles"
     case speed = "Speed"
+    case quality = "Quality"
 }
 
 // MARK: - Dialog Shell
@@ -168,5 +169,24 @@ struct PlayerSpeedDialog: View {
         if speed == 1.0 { return Strings.playerSpeedNormal }
         if speed == floor(speed) { return "\(Int(speed))x" }
         return String(format: "%gx", speed)
+    }
+}
+
+// MARK: - Quality Dialog
+
+struct PlayerQualityDialog: View {
+    @ObservedObject var viewModel: VideoPlayerViewModel
+
+    var body: some View {
+        PlayerDialogShell(title: Strings.maxBitrate, onDismiss: { viewModel.hideTrackSelection() }) {
+            ForEach(viewModel.maxBitrateOptions, id: \.0) { value, label in
+                FocusableTrackSelectorRow(
+                    label: label,
+                    detail: nil,
+                    isSelected: viewModel.selectedMaxBitrate == value,
+                    action: { viewModel.setMaxBitrate(value) }
+                )
+            }
+        }
     }
 }

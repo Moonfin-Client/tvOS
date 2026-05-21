@@ -74,6 +74,28 @@ final class PlaybackManager: ObservableObject {
         return client.imageApi.getItemImageUrl(itemId: item.id, imageType: .primary, maxWidth: maxWidth, maxHeight: maxHeight, tag: tag)
     }
 
+    func logoUrl(for item: ServerItem, maxWidth: Int = 500) -> String? {
+        if let logoTag = item.imageTags?["Logo"] {
+            return client.imageApi.getItemImageUrl(
+                itemId: item.id,
+                imageType: .logo,
+                maxWidth: maxWidth,
+                maxHeight: nil,
+                tag: logoTag
+            )
+        }
+        if let seriesId = item.seriesId {
+            return client.imageApi.getItemImageUrl(
+                itemId: seriesId,
+                imageType: .logo,
+                maxWidth: maxWidth,
+                maxHeight: nil,
+                tag: nil
+            )
+        }
+        return nil
+    }
+
     func chapterImageUrl(for item: ServerItem, tag: String, ticks: Int64) -> String? {
         guard let chapters = item.chapters else { return nil }
         guard let index = chapters.firstIndex(where: { $0.startPositionTicks == ticks }) else { return nil }
@@ -108,6 +130,7 @@ final class PlaybackManager: ObservableObject {
     var serverType: ServerType { client.serverType }
     var serverBaseUrl: String? { client.baseURL?.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) }
     var serverAccessToken: String? { client.accessToken }
+    var maxBitratePreference: Int { preferences[UserPreferences.maxBitrate] }
 
     var trickPlayEnabled: Bool {
         preferences[UserPreferences.trickPlayEnabled] && serverType.supports(.trickplay)
@@ -278,6 +301,10 @@ final class PlaybackManager: ObservableObject {
 
     func setRate(_ rate: Float) {
         player.setRate(rate)
+    }
+
+    func setMaxBitrate(_ bitrate: Int) {
+        preferences[UserPreferences.maxBitrate] = bitrate
     }
 
     func setAudioTrack(_ index: Int32) {

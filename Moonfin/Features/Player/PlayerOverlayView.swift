@@ -2,14 +2,18 @@ import SwiftUI
 
 struct PlayerOverlayView: View {
     @ObservedObject var viewModel: VideoPlayerViewModel
-    @EnvironmentObject private var theme: MoonfinTheme
     @FocusState private var focusedControl: ControlFocus?
+    @Namespace private var controlsFocusNamespace
     @StateObject private var trickPlayLoader = TrickPlayImageLoader()
 
     private static let headerGradientColors: [Color] = [.black.opacity(0.8), .clear]
     private static let controlsGradientColors: [Color] = [.clear, .black.opacity(0.85)]
-    private static let rowButtonSpacing: CGFloat = 20
-    private static let buttonSize: CGFloat = 46
+    private static let transportButtonSpacing: CGFloat = 8
+    private static let secondaryButtonSpacing: CGFloat = 8
+    private static let clusterSpacing: CGFloat = 12
+    private static let buttonSize: CGFloat = 52
+    private static let iconSize: CGFloat = 24
+    private static let tooltipVerticalOffset: CGFloat = 22
 
     enum ControlFocus: Hashable {
         case seekbar
@@ -25,6 +29,7 @@ struct PlayerOverlayView: View {
         case channels
         case queueNext
         case speed
+        case quality
         case zoom
         case info
     }
@@ -72,11 +77,17 @@ struct PlayerOverlayView: View {
 
     private var headerSection: some View {
         HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(viewModel.title)
-                    .font(.title2xl)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
+            VStack(alignment: .leading, spacing: 8) {
+                if let logoUrl = viewModel.logoUrl {
+                    CachedImage(urlString: logoUrl, contentMode: .fit)
+                        .frame(height: 82)
+                        .frame(maxWidth: 460, alignment: .leading)
+                } else {
+                    Text(viewModel.title)
+                        .font(.title2xl)
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                }
 
                 if !viewModel.subtitle.isEmpty {
                     Text(viewModel.subtitle)
@@ -101,7 +112,7 @@ struct PlayerOverlayView: View {
             )
             .padding(.horizontal, -80)
             .padding(.top, -60)
-            .frame(height: 200)
+            .frame(height: 260)
         )
     }
 
@@ -126,12 +137,11 @@ struct PlayerOverlayView: View {
 
     private var controlsSection: some View {
         VStack(spacing: 12) {
-            primaryControlRow
             if !viewModel.isLiveTV {
                 trickPlayPreviewSection
-                seekbarRow
+                seekbarSection
             }
-            secondaryControlRow
+            bottomControlsRow
         }
         .background(
             LinearGradient(
@@ -147,43 +157,35 @@ struct PlayerOverlayView: View {
         )
     }
 
-    private var primaryControlRow: some View {
-        HStack(spacing: Self.rowButtonSpacing) {
-            overlayButton(icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill",
-                          focus: .playPause) {
-                viewModel.togglePlayPause()
+    private var seekbarSection: some View {
+        VStack(spacing: 4) {
+            if !viewModel.endTimeText.isEmpty {
+                HStack {
+                    Spacer()
+                    Text(viewModel.endTimeText)
+                        .font(.bodySm)
+                        .foregroundColor(.white.opacity(0.7))
+                        .monospacedDigit()
+                }
+                .padding(.trailing, 16)
             }
 
-            if !viewModel.isLiveTV {
-                overlayButton(icon: "backward.fill", focus: .rewind) {
-                    viewModel.seekBackward()
-                }
+            seekbarRow
 
-                overlayButton(icon: "forward.fill", focus: .fastForward) {
-                    viewModel.seekForward()
-                }
+            HStack {
+                Text(viewModel.currentTimeText)
+                    .font(.bodySm)
+                    .foregroundColor(.white.opacity(0.7))
+                    .monospacedDigit()
 
-                if !viewModel.player.subtitleTracks.isEmpty {
-                    overlayButton(icon: "captions.bubble", focus: .closedCaptions) {
-                        viewModel.showTrackSelection(tab: .subtitles)
-                    }
-                }
+                Spacer()
 
-                if viewModel.player.audioTracks.count > 1 {
-                    overlayButton(icon: "speaker.wave.2", focus: .audioTrack) {
-                        viewModel.showTrackSelection(tab: .audio)
-                    }
-                }
-            }
-
-            Spacer()
-
-            if !viewModel.isLiveTV && !viewModel.endTimeText.isEmpty {
-                Text(viewModel.endTimeText)
+                Text(viewModel.durationText)
                     .font(.bodySm)
                     .foregroundColor(.white.opacity(0.7))
                     .monospacedDigit()
             }
+            .padding(.horizontal, 16)
         }
     }
 
@@ -253,8 +255,15 @@ struct PlayerOverlayView: View {
                 if !viewModel.isScrubbing { viewModel.beginScrub() }
                 viewModel.updateScrub(bySeconds: viewModel.skipForwardSeconds)
                 viewModel.resetHideTimer()
-            case .up, .down:
+            case .up:
                 if viewModel.isScrubbing { viewModel.commitScrub() }
+            case .down:
+                if viewModel.isScrubbing { viewModel.commitScrub() }
+                focusedControl = .playPause
+                DispatchQueue.main.async {
+                    focusedControl = .playPause
+                }
+                viewModel.resetHideTimer()
             default:
                 break
             }
@@ -265,19 +274,87 @@ struct PlayerOverlayView: View {
         }
     }
 
-    private var secondaryControlRow: some View {
-        HStack(spacing: Self.rowButtonSpacing) {
+    private var bottomControlsRow: some View {
+        HStack(spacing: Self.clusterSpacing) {
+            transportCluster
+            secondaryCluster
+            Spacer(minLength: 0)
+        }
+        .focusScope(controlsFocusNamespace)
+        .overlayPreferenceValue(ControlButtonAnchorPreferenceKey.self) { anchors in
+            GeometryReader { proxy in
+                if let focused = focusedControl,
+                   let tooltip = tooltipText(for: focused),
+                   let anchor = anchors[focused] {
+                    let rect = proxy[anchor]
+                    Text(tooltip)
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.black.opacity(0.78))
+                        )
+                        .position(x: rect.midX, y: rect.minY - Self.tooltipVerticalOffset)
+                        .allowsHitTesting(false)
+                }
+            }
+        }
+    }
+
+    private var transportCluster: some View {
+        HStack(spacing: Self.transportButtonSpacing) {
+            if !viewModel.isLiveTV, viewModel.playbackManager.hasPrevious {
+                overlayButton(icon: "backward.end.fill", focus: .previous) {
+                    Task { await viewModel.playPrevious() }
+                }
+            }
+
             if !viewModel.isLiveTV {
-                if viewModel.playbackManager.hasPrevious {
-                    overlayButton(icon: "backward.end.fill", focus: .previous) {
-                        Task { await viewModel.playPrevious() }
+                overlayButton(icon: "backward.fill", focus: .rewind) {
+                    viewModel.seekBackward()
+                }
+            }
+
+            overlayButton(icon: viewModel.player.isPlaying ? "pause.fill" : "play.fill", focus: .playPause) {
+                viewModel.togglePlayPause()
+            }
+            .prefersDefaultFocus(in: controlsFocusNamespace)
+
+            if !viewModel.isLiveTV {
+                overlayButton(icon: "forward.fill", focus: .fastForward) {
+                    viewModel.seekForward()
+                }
+            }
+
+            if !viewModel.isLiveTV, viewModel.playbackManager.hasNext {
+                overlayButton(icon: "forward.end.fill", focus: .next) {
+                    Task { await viewModel.playNext() }
+                }
+            }
+        }
+    }
+
+    private var secondaryCluster: some View {
+        HStack(spacing: Self.secondaryButtonSpacing) {
+            if viewModel.isLiveTV {
+                overlayButton(icon: "list.bullet", focus: .channels) {
+                    viewModel.showChannelList()
+                }
+
+                overlayButton(icon: "gauge.with.dots.needle.67percent", focus: .speed) {
+                    viewModel.showTrackSelection(tab: .speed)
+                }
+            } else {
+                if viewModel.syncPlayActive, viewModel.nextQueueItem != nil {
+                    overlayButton(icon: "text.line.first.and.arrowtriangle.forward", focus: .queueNext) {
+                        viewModel.queueNextItemForSyncPlay()
                     }
                 }
 
-                if viewModel.playbackManager.hasNext {
-                    overlayButton(icon: "forward.end.fill", focus: .next) {
-                        Task { await viewModel.playNext() }
-                    }
+                overlayButton(icon: "gauge.with.dots.needle.67percent", focus: .speed) {
+                    viewModel.showTrackSelection(tab: .speed)
                 }
 
                 if viewModel.hasChapters {
@@ -286,25 +363,27 @@ struct PlayerOverlayView: View {
                     }
                 }
 
+                if !viewModel.player.subtitleTracks.isEmpty {
+                    overlayButton(icon: "captions.bubble", focus: .closedCaptions) {
+                        viewModel.showTrackSelection(tab: .subtitles)
+                    }
+                }
+
+                if viewModel.player.audioTracks.count > 1 {
+                    overlayButton(icon: "speaker.wave.2", focus: .audioTrack) {
+                        viewModel.showTrackSelection(tab: .audio)
+                    }
+                }
+
                 if viewModel.hasCast {
                     overlayButton(icon: "person.2", focus: .cast) {
                         viewModel.showCastList()
                     }
                 }
-
-                if viewModel.syncPlayActive, viewModel.nextQueueItem != nil {
-                    overlayButton(icon: "text.line.first.and.arrowtriangle.forward", focus: .queueNext) {
-                        viewModel.queueNextItemForSyncPlay()
-                    }
-                }
-            } else {
-                overlayButton(icon: "list.bullet", focus: .channels) {
-                    viewModel.showChannelList()
-                }
             }
 
-            overlayButton(icon: "gauge.with.dots.needle.67percent", focus: .speed) {
-                viewModel.showTrackSelection(tab: .speed)
+            overlayButton(icon: "line.3.horizontal.decrease", focus: .quality) {
+                viewModel.showTrackSelection(tab: .quality)
             }
 
             overlayButton(icon: viewModel.player.zoomMode.iconName, focus: .zoom) {
@@ -313,15 +392,6 @@ struct PlayerOverlayView: View {
 
             overlayButton(icon: "info.circle", focus: .info) {
                 viewModel.showPlaybackInfo()
-            }
-
-            Spacer()
-
-            if !viewModel.isLiveTV {
-                Text(viewModel.positionText)
-                    .font(.bodySm)
-                    .foregroundColor(.white.opacity(0.7))
-                    .monospacedDigit()
             }
         }
     }
@@ -336,12 +406,52 @@ struct PlayerOverlayView: View {
             viewModel.resetHideTimer()
         }) {
             Image(systemName: icon)
-                .font(.system(size: 20, weight: .medium))
+                .font(.system(size: Self.iconSize, weight: .medium))
                 .frame(width: Self.buttonSize, height: Self.buttonSize)
                 .contentShape(Circle())
         }
         .buttonStyle(PlayerButtonStyle())
         .focused($focusedControl, equals: focus)
+        .anchorPreference(key: ControlButtonAnchorPreferenceKey.self, value: .bounds) { anchor in
+            [focus: anchor]
+        }
+    }
+
+    private func tooltipText(for focus: ControlFocus) -> String? {
+        switch focus {
+        case .playPause:
+            return viewModel.player.isPlaying ? "Pause" : "Play"
+        case .rewind:
+            return "Seek Back"
+        case .fastForward:
+            return "Seek Forward"
+        case .closedCaptions:
+            return "Subtitles"
+        case .audioTrack:
+            return "Audio"
+        case .previous:
+            return "Previous"
+        case .next:
+            return "Next"
+        case .chapters:
+            return "Chapters"
+        case .cast:
+            return "Cast & Crew"
+        case .channels:
+            return "Channels"
+        case .queueNext:
+            return "Queue Next"
+        case .speed:
+            return "Playback Speed"
+        case .quality:
+            return "Playback Quality"
+        case .zoom:
+            return "Zoom Mode"
+        case .info:
+            return "Playback Information"
+        case .seekbar:
+            return nil
+        }
     }
 }
 
@@ -370,6 +480,14 @@ struct OverlayButtonStyle: ButtonStyle {
             .scaleEffect(isFocused ? 1.2 : 1.0)
             .opacity(configuration.isPressed ? 0.6 : 1.0)
             .animation(.easeInOut(duration: 0.15), value: isFocused)
+    }
+}
+
+private struct ControlButtonAnchorPreferenceKey: PreferenceKey {
+    static var defaultValue: [PlayerOverlayView.ControlFocus: Anchor<CGRect>] = [:]
+
+    static func reduce(value: inout [PlayerOverlayView.ControlFocus: Anchor<CGRect>], nextValue: () -> [PlayerOverlayView.ControlFocus: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
     }
 }
 

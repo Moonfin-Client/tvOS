@@ -62,6 +62,12 @@ struct VideoPlayerScreen: View {
                 }
             }
 
+            if viewModel.qualitySelectionVisible {
+                trackDialogOverlay {
+                    PlayerQualityDialog(viewModel: viewModel)
+                }
+            }
+
             if viewModel.chapterSelectionVisible {
                 chapterSelectionOverlay
                     .focusSection()
@@ -143,6 +149,7 @@ struct VideoPlayerScreen: View {
         .animation(.easeInOut(duration: 0.25), value: viewModel.audioSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.subtitleSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.speedSelectionVisible)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.qualitySelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.chapterSelectionVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.castListVisible)
         .animation(.easeInOut(duration: 0.25), value: viewModel.channelListVisible)
