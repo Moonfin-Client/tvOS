@@ -18,6 +18,7 @@ protocol MediaServerClient: AnyObject {
     var imageApi: ServerImageApi { get }
     var systemApi: ServerSystemApi { get }
     var userViewsApi: ServerUserViewsApi { get }
+    var adminPluginsApi: ServerAdminPluginsApi? { get }
     var liveTvApi: ServerLiveTvApi { get }
     var instantMixApi: ServerInstantMixApi { get }
     var playlistApi: ServerPlaylistApi { get }
@@ -25,10 +26,15 @@ protocol MediaServerClient: AnyObject {
     var lyricsApi: ServerLyricsApi { get }
     var syncPlayApi: ServerSyncPlayApi { get }
     var webSocketApi: ServerWebSocketApi { get }
+    var homeScreenSectionsApi: ServerHomeScreenSectionsApi? { get }
+    var kefinTweaksApi: ServerKefinTweaksApi? { get }
 }
 
 extension MediaServerClient {
     var isUsable: Bool { baseURL != nil && accessToken != nil }
+    var adminPluginsApi: ServerAdminPluginsApi? { nil }
+    var homeScreenSectionsApi: ServerHomeScreenSectionsApi? { nil }
+    var kefinTweaksApi: ServerKefinTweaksApi? { nil }
 }
 
 // MARK: - Auth
@@ -112,6 +118,224 @@ protocol ServerSessionApi {
 
 protocol ServerUserViewsApi {
     func getUserViews(userId: String) async throws -> [ServerItem]
+}
+
+struct ServerPluginInfo: Codable, Hashable {
+    let id: String
+    let name: String
+    let version: String
+
+    enum CodingKeys: String, CodingKey {
+        case id = "Id"
+        case name = "Name"
+        case version = "Version"
+    }
+
+    init(id: String, name: String, version: String) {
+        self.id = id
+        self.name = name
+        self.version = version
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = (try? container.decodeIfPresent(String.self, forKey: .id)) ?? ""
+        name = (try? container.decodeIfPresent(String.self, forKey: .name)) ?? ""
+        version = (try? container.decodeIfPresent(String.self, forKey: .version)) ?? ""
+    }
+}
+
+protocol ServerAdminPluginsApi {
+    func getInstalledPlugins() async throws -> [ServerPluginInfo]
+}
+
+struct HomeScreenSectionInfo: Codable, Hashable {
+    let section: String
+    let displayText: String
+    let additionalData: String?
+
+    enum CodingKeys: String, CodingKey {
+        case section = "Section"
+        case displayText = "DisplayText"
+        case additionalData = "AdditionalData"
+    }
+
+    init(section: String, displayText: String, additionalData: String?) {
+        self.section = section
+        self.displayText = displayText
+        self.additionalData = additionalData
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        section = (try? container.decodeIfPresent(String.self, forKey: .section)) ?? ""
+        displayText = (try? container.decodeIfPresent(String.self, forKey: .displayText)) ?? ""
+        additionalData = try container.decodeIfPresent(String.self, forKey: .additionalData)
+    }
+}
+
+struct HomeScreenMeta: Codable, Hashable {
+    let enabled: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case enabled = "Enabled"
+    }
+
+    init(enabled: Bool = false) {
+        self.enabled = enabled
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        enabled = (try? container.decodeIfPresent(Bool.self, forKey: .enabled)) ?? false
+    }
+}
+
+protocol ServerHomeScreenSectionsApi {
+    func getMeta() async throws -> HomeScreenMeta
+    func getUserSections() async throws -> [HomeScreenSectionInfo]
+    func getSectionItems(sectionType: String, additionalData: String?) async throws -> ItemsResult
+}
+
+struct KefinTweaksConfig {
+    let version: String?
+    let homeScreen: KefinHomeScreenConfig
+
+    init(version: String?, homeScreen: KefinHomeScreenConfig) {
+        self.version = version
+        self.homeScreen = homeScreen
+    }
+
+    init(json: [String: Any]) {
+        version = json["version"] as? String
+        if let homeScreenJson = json["homeScreen"] as? [String: Any] {
+            homeScreen = KefinHomeScreenConfig(json: homeScreenJson)
+        } else {
+            homeScreen = KefinHomeScreenConfig()
+        }
+    }
+}
+
+struct KefinHomeScreenConfig {
+    let enabled: Bool
+    let defaultItemLimit: Int
+    let recentlyReleased: KefinRecentlyReleasedConfig?
+    let watchAgain: KefinSectionConfig?
+    let seasonal: [String: Any]?
+    let customSections: [Any]?
+    let recentlyAddedInLibrary: [String: Any]?
+
+    init(
+        enabled: Bool = true,
+        defaultItemLimit: Int = 16,
+        recentlyReleased: KefinRecentlyReleasedConfig? = nil,
+        watchAgain: KefinSectionConfig? = nil,
+        seasonal: [String: Any]? = nil,
+        customSections: [Any]? = nil,
+        recentlyAddedInLibrary: [String: Any]? = nil
+    ) {
+        self.enabled = enabled
+        self.defaultItemLimit = defaultItemLimit
+        self.recentlyReleased = recentlyReleased
+        self.watchAgain = watchAgain
+        self.seasonal = seasonal
+        self.customSections = customSections
+        self.recentlyAddedInLibrary = recentlyAddedInLibrary
+    }
+
+    init(json: [String: Any]) {
+        enabled = (json["enabled"] as? Bool) ?? true
+        defaultItemLimit = (json["defaultItemLimit"] as? NSNumber)?.intValue ?? 16
+
+        if let recentlyReleasedJson = json["recentlyReleased"] as? [String: Any] {
+            recentlyReleased = KefinRecentlyReleasedConfig(json: recentlyReleasedJson)
+        } else {
+            recentlyReleased = nil
+        }
+
+        if let watchAgainJson = json["watchAgain"] as? [String: Any] {
+            watchAgain = KefinSectionConfig(json: watchAgainJson)
+        } else {
+            watchAgain = nil
+        }
+
+        seasonal = json["seasonal"] as? [String: Any]
+        customSections = json["customSections"] as? [Any]
+        recentlyAddedInLibrary = json["recentlyAddedInLibrary"] as? [String: Any]
+    }
+}
+
+struct KefinRecentlyReleasedConfig {
+    let enabled: Bool
+    let order: Int
+    let movies: KefinSectionConfig?
+    let episodes: KefinSectionConfig?
+
+    init(enabled: Bool = true, order: Int = 20, movies: KefinSectionConfig? = nil, episodes: KefinSectionConfig? = nil) {
+        self.enabled = enabled
+        self.order = order
+        self.movies = movies
+        self.episodes = episodes
+    }
+
+    init(json: [String: Any]) {
+        enabled = (json["enabled"] as? Bool) ?? true
+        order = (json["order"] as? NSNumber)?.intValue ?? 20
+
+        if let moviesJson = json["movies"] as? [String: Any] {
+            movies = KefinSectionConfig(json: moviesJson)
+        } else {
+            movies = nil
+        }
+
+        if let episodesJson = json["episodes"] as? [String: Any] {
+            episodes = KefinSectionConfig(json: episodesJson)
+        } else {
+            episodes = nil
+        }
+    }
+}
+
+struct KefinSectionConfig {
+    let name: String?
+    let enabled: Bool
+    let itemLimit: Int?
+    let sortOrder: String?
+    let sortOrderDirection: String?
+    let cardFormat: String?
+    let order: Int
+
+    init(
+        name: String? = nil,
+        enabled: Bool = true,
+        itemLimit: Int? = nil,
+        sortOrder: String? = nil,
+        sortOrderDirection: String? = nil,
+        cardFormat: String? = nil,
+        order: Int = 999
+    ) {
+        self.name = name
+        self.enabled = enabled
+        self.itemLimit = itemLimit
+        self.sortOrder = sortOrder
+        self.sortOrderDirection = sortOrderDirection
+        self.cardFormat = cardFormat
+        self.order = order
+    }
+
+    init(json: [String: Any]) {
+        name = json["name"] as? String
+        enabled = (json["enabled"] as? Bool) ?? true
+        itemLimit = (json["itemLimit"] as? NSNumber)?.intValue
+        sortOrder = json["sortOrder"] as? String
+        sortOrderDirection = json["sortOrderDirection"] as? String
+        cardFormat = json["cardFormat"] as? String
+        order = (json["order"] as? NSNumber)?.intValue ?? 999
+    }
+}
+
+protocol ServerKefinTweaksApi {
+    func fetchConfig() async throws -> KefinTweaksConfig?
 }
 
 // MARK: - Live TV

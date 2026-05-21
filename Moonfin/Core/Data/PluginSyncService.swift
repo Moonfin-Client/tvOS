@@ -105,9 +105,10 @@ final class PluginSyncService: ObservableObject {
             serverSchemaVersion = schemaVersion
 
             if schemaVersion >= 2 {
-                let globalProfile = (json["Global"] as? [String: Any]) ?? (json["global"] as? [String: Any])
-                let tvProfile = (json["Tv"] as? [String: Any]) ?? (json["tv"] as? [String: Any])
-                return resolveV2Profile(global: globalProfile, tv: tvProfile)
+                let selectedProfile = selectedCustomizationProfile()
+                let globalProfile = profileJson(for: .global, in: json)
+                let targetProfile = profileJson(for: selectedProfile, in: json)
+                return resolveV2Profile(global: globalProfile, profile: targetProfile)
             } else {
                 return json.reduce(into: [String: Any]()) { result, pair in
                     result[toCamelCase(pair.key)] = pair.value
@@ -118,7 +119,7 @@ final class PluginSyncService: ObservableObject {
         }
     }
 
-    private func resolveV2Profile(global: [String: Any]?, tv: [String: Any]?) -> [String: Any] {
+    private func resolveV2Profile(global: [String: Any]?, profile: [String: Any]?) -> [String: Any] {
         var resolved = [String: Any]()
 
         if let global {
@@ -130,8 +131,8 @@ final class PluginSyncService: ObservableObject {
             }
         }
 
-        if let tv {
-            for (key, value) in tv {
+        if let profile {
+            for (key, value) in profile {
                 if value is NSNull { continue }
                 let camelKey = toCamelCase(key)
                 if PluginSyncConstants.allServerKeys.contains(camelKey) {
@@ -145,10 +146,36 @@ final class PluginSyncService: ObservableObject {
             }
         }
 
-        pendingSeerrRowsConfig = (tv?["jellyseerrRows"] ?? tv?["JellyseerrRows"]
+        pendingSeerrRowsConfig = (profile?["jellyseerrRows"] ?? profile?["JellyseerrRows"]
             ?? global?["jellyseerrRows"] ?? global?["JellyseerrRows"]) as? [String: Any]
 
         return resolved
+    }
+
+    private func selectedCustomizationProfile() -> PluginCustomizationProfile {
+        let raw = defaults.string(forKey: UserPreferences.pluginCustomizationProfile.key) ?? PluginCustomizationProfile.tv.rawValue
+        return PluginCustomizationProfile(rawValue: raw) ?? .tv
+    }
+
+    private func profileJson(for profile: PluginCustomizationProfile, in json: [String: Any]) -> [String: Any]? {
+        let keys: [String]
+        switch profile {
+        case .global:
+            keys = ["Global", "global"]
+        case .desktop:
+            keys = ["Desktop", "desktop"]
+        case .mobile:
+            keys = ["Mobile", "mobile"]
+        case .tv:
+            keys = ["Tv", "TV", "tv"]
+        }
+
+        for key in keys {
+            if let map = json[key] as? [String: Any] {
+                return map
+            }
+        }
+        return nil
     }
 
     // MARK: - Push
@@ -160,7 +187,8 @@ final class PluginSyncService: ObservableObject {
         let bodyDict: [String: Any]
 
         if serverSchemaVersion >= 2 {
-            path = "\(PluginSyncConstants.settingsPath)/Profile/tv"
+            let profilePath = selectedCustomizationProfile().rawValue
+            path = "\(PluginSyncConstants.settingsPath)/Profile/\(profilePath)"
             bodyDict = [
                 "profile": settings,
                 "clientId": PluginSyncConstants.clientId
@@ -399,15 +427,13 @@ final class PluginSyncService: ObservableObject {
         default:
             if sp.key == UserPreferences.homeSections.key {
                 let raw = store.string(forKey: sp.key) ?? ""
-                if raw.isEmpty { return sp.defaultValue }
-                // Handle both rawValue format (new: "nextUp") and server-name format
-                // (old: "nextup") that may be stored from previous versions.
-                return raw.split(separator: ",")
-                    .compactMap { rawStr -> HomeSectionType? in
-                        let s = String(rawStr).trimmingCharacters(in: .whitespaces)
-                        return HomeSectionType(rawValue: s) ?? HomeSectionType.from(serverName: s)
-                    }
-                    .map { $0.serverName }
+                if raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return sp.defaultValue }
+
+                let configs = HomeSectionConfig.fromStorageString(raw)
+                return configs
+                    .filter { $0.isBuiltin && $0.enabled && $0.type != .none && $0.type != .mediaBar }
+                    .sorted { $0.order < $1.order }
+                    .map { $0.type.serverName }
             }
             return store.stringArray(forKey: sp.key) ?? sp.defaultValue
         }
@@ -436,8 +462,60 @@ final class PluginSyncService: ObservableObject {
             }
         default:
             if sp.key == UserPreferences.homeSections.key {
-                let rawValues = list.compactMap { HomeSectionType.from(serverName: $0)?.rawValue }
-                store.set(rawValues.joined(separator: ","), forKey: sp.key)
+                let existingConfigs = HomeSectionConfig.fromStorageString(store.string(forKey: sp.key) ?? "")
+                let existingBuiltinByType = Dictionary(
+                    uniqueKeysWithValues: existingConfigs
+                        .filter(\.isBuiltin)
+                        .map { ($0.type, $0) }
+                )
+                let existingPluginConfigs = existingConfigs
+                    .filter(\.isPluginDynamic)
+                    .sorted { $0.order < $1.order }
+
+                var seen = Set<HomeSectionType>()
+                let orderedEnabledTypes = list
+                    .compactMap { HomeSectionType.from(serverName: $0) }
+                    .filter { $0 != .none && $0 != .mediaBar }
+                    .filter { seen.insert($0).inserted }
+
+                var merged: [HomeSectionConfig] = []
+
+                for type in orderedEnabledTypes {
+                    var config = existingBuiltinByType[type] ?? HomeSectionConfig.builtin(type: type, enabled: true, order: 0)
+                    config.kind = .builtin
+                    config.enabled = true
+                    config.order = merged.count
+                    config.serverId = nil
+                    config.pluginSection = nil
+                    config.pluginAdditionalData = nil
+                    config.pluginDisplayText = nil
+                    config.pluginSource = .hss
+                    merged.append(config)
+                }
+
+                for type in HomeSectionType.allCases where type != .none && type != .mediaBar {
+                    guard !seen.contains(type) else { continue }
+                    var config = existingBuiltinByType[type] ?? HomeSectionConfig.builtin(type: type, enabled: false, order: 0)
+                    config.kind = .builtin
+                    config.enabled = false
+                    config.order = merged.count
+                    config.serverId = nil
+                    config.pluginSection = nil
+                    config.pluginAdditionalData = nil
+                    config.pluginDisplayText = nil
+                    config.pluginSource = .hss
+                    merged.append(config)
+                }
+
+                var nextOrder = merged.count
+                for plugin in existingPluginConfigs {
+                    var config = plugin
+                    config.order = nextOrder
+                    nextOrder += 1
+                    merged.append(config)
+                }
+
+                store.set(HomeSectionConfig.toStorageString(merged), forKey: sp.key)
             } else {
                 store.set(list, forKey: sp.key)
             }

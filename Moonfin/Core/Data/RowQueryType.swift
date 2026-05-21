@@ -1,5 +1,18 @@
 import Foundation
 
+enum DynamicHomeSectionSource {
+    case hss
+    case collections
+    case genres
+    case kefinTweaks
+}
+
+struct DynamicHomeSectionQuery {
+    let source: DynamicHomeSectionSource
+    let sectionType: String
+    let additionalData: String?
+}
+
 enum RowQueryType {
     case items(GetItemsRequest)
     case resume(GetResumeItemsRequest)
@@ -14,5 +27,6 @@ enum RowQueryType {
     case liveTvOnNow
     case liveTvComingUp
     case liveTvRecordings
+    case pluginDynamic(DynamicHomeSectionQuery)
     case staticItems([ServerItem])
 }

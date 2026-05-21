@@ -33,7 +33,7 @@ struct SyncablePreference {
 enum PluginSyncConstants {
     static let snapshotKey = "moonfin_sync_snapshot"
     static let snapshotVersionKey = "_snapshot_version"
-    static let snapshotVersion = 7
+    static let snapshotVersion = 8
     static let clientId = "moonfin-appletv"
     static let pingPath = "/Moonfin/Ping"
     static let settingsPath = "/Moonfin/Settings"

@@ -31,6 +31,8 @@ final class AppContainer: ObservableObject {
 
     let dataRefreshService: DataRefreshService
     let pluginSyncService: PluginSyncService
+    let homeScreenSectionsService: HomeScreenSectionsService
+    let homePluginSectionsService: HomePluginSectionsService
     let itemMutationService: ItemMutationService
     let spotlightIndexer: SpotlightIndexer
     let inactivityTracker: InactivityTracker
@@ -38,6 +40,7 @@ final class AppContainer: ObservableObject {
     private var inactivityTrackerCancellable: AnyCancellable?
     private var appForegroundCancellable: AnyCancellable?
     private var appBackgroundCancellable: AnyCancellable?
+    private var homeSectionsSyncCancellable: AnyCancellable?
     let serverConnectionMonitor: ServerConnectionMonitor
     let featureDegradationManager: FeatureDegradationManager
     let userViewsService: UserViewsService
@@ -176,6 +179,16 @@ final class AppContainer: ObservableObject {
             resolveSeerrRepository: { [weak seerrRepo] in seerrRepo },
             resolveParentalRepository: { [weak parentalRepo] in parentalRepo }
         )
+        self.homeScreenSectionsService = HomeScreenSectionsService(
+            serverRepository: serverRepo,
+            serverClientFactory: factory,
+            userPreferences: self.userPreferences
+        )
+        self.homePluginSectionsService = HomePluginSectionsService(
+            serverRepository: serverRepo,
+            serverClientFactory: factory,
+            userPreferences: self.userPreferences
+        )
 
         CrashReporter.shared.configure(preferences: self.telemetryPreferences)
         LocalizationManager.shared.configure(preferences: self.localizationPreferences)
@@ -198,6 +211,14 @@ final class AppContainer: ObservableObject {
             .sink { [weak self] _ in
                 self?.syncPlayManager.appDidEnterBackground()
                 self?.syncPlayRuntimeCoordinator.appDidEnterBackground()
+            }
+
+        self.homeSectionsSyncCancellable = self.pluginSyncService.$syncCompletedCount
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.homeScreenSectionsService.requestRefresh()
+                self?.homePluginSectionsService.requestRefresh()
             }
 
         coordinator.start()
@@ -1413,8 +1434,7 @@ enum YouTubeStreamResolver {
 
         // Brace-balance to extract the complete function body {…}
         var depth = 0
-        var current = braceIdx
-        var idx = js.startIndex
+        var idx = braceIdx
         for (i, ch) in js[braceIdx...].enumerated() {
             idx = js.index(braceIdx, offsetBy: i)
             if ch == "{" { depth += 1 }

@@ -175,6 +175,7 @@ struct GetItemsRequest {
     let personIds: [String]?
     let studioIds: [String]?
     let genres: [String]?
+    let genreIds: [String]?
     let tags: [String]?
     let years: [Int]?
     let ids: [String]?
@@ -205,6 +206,7 @@ struct GetItemsRequest {
         personIds: [String]? = nil,
         studioIds: [String]? = nil,
         genres: [String]? = nil,
+        genreIds: [String]? = nil,
         tags: [String]? = nil,
         years: [Int]? = nil,
         ids: [String]? = nil,
@@ -234,6 +236,7 @@ struct GetItemsRequest {
         self.personIds = personIds
         self.studioIds = studioIds
         self.genres = genres
+        self.genreIds = genreIds
         self.tags = tags
         self.years = years
         self.ids = ids

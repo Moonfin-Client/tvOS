@@ -54,7 +54,7 @@ struct ContentRow: View {
 
     private var imageDisplayType: ImageDisplayType {
         switch row.rowType {
-        case .continueWatching:
+        case .continueWatching, .resumeBook:
             return container.userPreferences[UserPreferences.homeImageTypeContinueWatching]
         case .nextUp:
             return container.userPreferences[UserPreferences.homeImageTypeNextUp]

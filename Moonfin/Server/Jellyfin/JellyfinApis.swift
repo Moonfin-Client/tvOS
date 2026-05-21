@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 
 // MARK: - Auth
 
@@ -96,6 +97,7 @@ struct JellyfinItemsApi: ServerItemsApi {
             ("PersonIds", request.personIds?.joined(separator: ",")),
             ("StudioIds", request.studioIds?.joined(separator: ",")),
             ("Genres", request.genres?.joined(separator: ",")),
+            ("GenreIds", request.genreIds?.joined(separator: ",")),
             ("Tags", request.tags?.joined(separator: ",")),
             ("Years", request.years?.map(String.init).joined(separator: ",")),
             ("Ids", request.ids?.joined(separator: ",")),
@@ -375,6 +377,224 @@ struct JellyfinUserViewsApi: ServerUserViewsApi {
         }
         let response: ViewsResponse = try await client.request("/Users/\(userId)/Views")
         return response.Items
+    }
+}
+
+struct JellyfinAdminPluginsApi: ServerAdminPluginsApi {
+    let client: HttpClient
+
+    func getInstalledPlugins() async throws -> [ServerPluginInfo] {
+        try await client.request("/Plugins")
+    }
+}
+
+struct JellyfinHomeScreenSectionsApi: ServerHomeScreenSectionsApi {
+    let client: HttpClient
+
+    private struct SectionsResponse: Decodable {
+        let items: [HomeScreenSectionInfo]
+
+        enum CodingKeys: String, CodingKey {
+            case items = "Items"
+        }
+
+        init(from decoder: Decoder) throws {
+            if var list = try? decoder.unkeyedContainer() {
+                var decoded: [HomeScreenSectionInfo] = []
+                while !list.isAtEnd {
+                    decoded.append(try list.decode(HomeScreenSectionInfo.self))
+                }
+                items = decoded
+                return
+            }
+
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            items = (try? container.decodeIfPresent([HomeScreenSectionInfo].self, forKey: .items)) ?? []
+        }
+    }
+
+    func getMeta() async throws -> HomeScreenMeta {
+        try await client.request("/HomeScreen/Meta")
+    }
+
+    func getUserSections() async throws -> [HomeScreenSectionInfo] {
+        let query = buildQuery([("userId", client.userId)])
+        let response: SectionsResponse = try await client.request("/HomeScreen/Sections", queryItems: query)
+        return response.items
+    }
+
+    func getSectionItems(sectionType: String, additionalData: String?) async throws -> ItemsResult {
+        let allowed = CharacterSet.urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))
+        let encodedSection = sectionType.addingPercentEncoding(withAllowedCharacters: allowed) ?? sectionType
+        let query = buildQuery([
+            ("userId", client.userId),
+            ("additionalData", additionalData),
+        ])
+        return try await client.request("/HomeScreen/Section/\(encodedSection)", queryItems: query)
+    }
+}
+
+struct JellyfinKefinTweaksApi: ServerKefinTweaksApi {
+    let client: HttpClient
+
+    private static let endpoints = [
+        "/JavaScriptInjector/private.js",
+        "/JavaScriptInjector/public.js",
+    ]
+
+    func fetchConfig() async throws -> KefinTweaksConfig? {
+        var jsContent: String?
+
+        for endpoint in Self.endpoints {
+            guard let data = try? await client.requestData(endpoint) else {
+                continue
+            }
+            guard let body = String(data: data, encoding: .utf8), !body.isEmpty else {
+                continue
+            }
+            jsContent = body
+            break
+        }
+
+        guard let jsContent else {
+            return nil
+        }
+
+        if let strictObject = extractStrictConfigAssignment(from: jsContent),
+           let config = decodeConfig(from: strictObject) {
+            return config
+        }
+
+        guard let objectLiteral = extractConfigObject(from: jsContent) else {
+            return nil
+        }
+
+        if let config = decodeConfig(from: objectLiteral) {
+            return config
+        }
+
+        guard let normalized = normalizeJsObjectLiteral(objectLiteral),
+              let config = decodeConfig(from: normalized) else {
+            return nil
+        }
+
+        return config
+    }
+
+    private func decodeConfig(from jsonObjectText: String) -> KefinTweaksConfig? {
+        guard let data = jsonObjectText.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return KefinTweaksConfig(json: object)
+    }
+
+    private func extractStrictConfigAssignment(from source: String) -> String? {
+        let pattern = #"window\.KefinTweaksConfig\s*=\s*({[\s\S]*?});"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return nil
+        }
+
+        let nsSource = source as NSString
+        let fullRange = NSRange(location: 0, length: nsSource.length)
+        guard let match = regex.firstMatch(in: source, range: fullRange),
+              match.numberOfRanges >= 2 else {
+            return nil
+        }
+
+        let objectRange = match.range(at: 1)
+        guard objectRange.location != NSNotFound else {
+            return nil
+        }
+        return nsSource.substring(with: objectRange)
+    }
+
+    private func extractConfigObject(from source: String) -> String? {
+        let marker = "window.KefinTweaksConfig"
+        var searchStart = source.startIndex
+
+        while let markerRange = source.range(of: marker, range: searchStart..<source.endIndex) {
+            guard let equalsIndex = source[markerRange.upperBound...].firstIndex(of: "=") else {
+                return nil
+            }
+
+            guard let braceIndex = source[equalsIndex...].firstIndex(of: "{") else {
+                return nil
+            }
+
+            if let closingBraceIndex = matchBrace(in: source, openIndex: braceIndex) {
+                return String(source[braceIndex...closingBraceIndex])
+            }
+
+            searchStart = markerRange.upperBound
+        }
+
+        return nil
+    }
+
+    private func matchBrace(in source: String, openIndex: String.Index) -> String.Index? {
+        var depth = 0
+        var cursor = openIndex
+        var inString = false
+        var quote: Character?
+        var isEscaping = false
+
+        while cursor < source.endIndex {
+            let character = source[cursor]
+
+            if isEscaping {
+                isEscaping = false
+                cursor = source.index(after: cursor)
+                continue
+            }
+
+            if inString {
+                if character == "\\" {
+                    isEscaping = true
+                } else if character == quote {
+                    inString = false
+                    quote = nil
+                }
+                cursor = source.index(after: cursor)
+                continue
+            }
+
+            if character == "\"" || character == "'" || character == "`" {
+                inString = true
+                quote = character
+                cursor = source.index(after: cursor)
+                continue
+            }
+
+            if character == "{" {
+                depth += 1
+            } else if character == "}" {
+                depth -= 1
+                if depth == 0 {
+                    return cursor
+                }
+            }
+
+            cursor = source.index(after: cursor)
+        }
+
+        return nil
+    }
+
+    private func normalizeJsObjectLiteral(_ objectLiteral: String) -> String? {
+        let context = JSContext()
+        let script = """
+        (function() {
+          try {
+            const __cfg = \(objectLiteral);
+            return JSON.stringify(__cfg);
+          } catch (e) {
+            return null;
+          }
+        })();
+        """
+
+        return context?.evaluateScript(script)?.toString()
     }
 }
 

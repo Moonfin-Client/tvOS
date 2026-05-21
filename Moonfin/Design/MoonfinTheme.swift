@@ -215,7 +215,7 @@ private extension ThemeSpec {
             listHeadline: isNeonPulse ? colors.accent.color : semantic.textHeadline.color,
             listCaption: isNeonPulse ? colors.onBackground.color : semantic.textCaption.color,
             listButton: .clear,
-            listButtonFocused: colors.surfaceVariant.color,
+            listButtonFocused: isNeonPulse ? colors.accent.color.opacity(0.38) : colors.surfaceVariant.color,
             listHeadlineFocused: semantic.textHeadline.color,
             listCaptionFocused: semantic.textCaption.color,
 

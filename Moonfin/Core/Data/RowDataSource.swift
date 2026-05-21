@@ -15,12 +15,21 @@ final class RowDataSource {
     private var isRetrieving = false
     private var lastRetrieve: Date?
     private var cachedItems: [ServerItem]?
+    private let userPreferences = UserPreferences(store: UserDefaultsPreferenceStore())
 
     var sortBy: ItemSortBy?
     var sortOrder: SortOrder?
     var filters = FilterOptions()
 
     static let maxItems = 100
+    private static let pluginDynamicFields: [ItemField] = [
+        .overview,
+        .genres,
+        .providerIds,
+        .mediaSources,
+        .mediaStreams,
+        .childCount,
+    ]
 
     init(
         queryType: RowQueryType,
@@ -145,6 +154,12 @@ final class RowDataSource {
                 items = result.items
                 totalItemCount = result.totalRecordCount
 
+            case .pluginDynamic(let query):
+                let allItems = try await loadPluginDynamicItems(query, client: client)
+                cachedItems = allItems
+                items = Array(allItems.prefix(chunkSize))
+                totalItemCount = allItems.count
+
             case .similar(let itemId, let limit):
                 let result = try await client.itemsApi.getSimilarItems(
                     itemId: itemId, limit: limit ?? chunkSize
@@ -232,7 +247,7 @@ final class RowDataSource {
 
         do {
             switch queryType {
-            case .latestMedia:
+            case .latestMedia, .pluginDynamic:
                 guard let cached = cachedItems else { return }
                 let end = min(startIndex + chunkSize, cached.count)
                 guard end > startIndex else {
@@ -355,6 +370,7 @@ final class RowDataSource {
             personIds: base.personIds,
             studioIds: base.studioIds,
             genres: base.genres,
+            genreIds: base.genreIds,
             tags: base.tags,
             years: base.years,
             ids: base.ids,
@@ -392,5 +408,398 @@ final class RowDataSource {
             enableImages: base.enableImages,
             imageTypeLimit: base.imageTypeLimit
         )
+    }
+
+    private func loadPluginDynamicItems(_ query: DynamicHomeSectionQuery, client: MediaServerClient) async throws -> [ServerItem] {
+        switch query.source {
+        case .hss:
+            return try await loadHssSectionItems(
+                sectionType: query.sectionType,
+                additionalData: query.additionalData,
+                client: client
+            )
+
+        case .collections:
+            return try await loadCollectionsItems(query: query, client: client)
+
+        case .genres:
+            return try await loadGenresItems(query: query, client: client)
+
+        case .kefinTweaks:
+            return try await loadKefinSectionItems(query: query, client: client)
+        }
+    }
+
+    private func loadKefinSectionItems(query: DynamicHomeSectionQuery, client: MediaServerClient) async throws -> [ServerItem] {
+        guard let spec = parseKefinSpec(query.additionalData),
+              let result = try await runKefinSpec(spec, client: client) else {
+            return []
+        }
+        return result.items
+    }
+
+    private func parseKefinSpec(_ rawSpec: String?) -> [String: Any]? {
+        guard let rawSpec,
+              let data = rawSpec.data(using: .utf8),
+              let decoded = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return decoded
+    }
+
+    private func runKefinSpec(_ spec: [String: Any], client: MediaServerClient) async throws -> ItemsResult? {
+        let kind = (spec["kind"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        let limit = max(1, min((spec["limit"] as? NSNumber)?.intValue ?? 16, Self.maxItems))
+
+        switch kind {
+        case "recentlyreleasedmovies":
+            return try await client.itemsApi.getItems(request: GetItemsRequest(
+                recursive: true,
+                includeItemTypes: [.movie],
+                sortBy: [.premiereDate],
+                sortOrder: .descending,
+                fields: Self.pluginDynamicFields,
+                limit: limit,
+                enableImages: true,
+                imageTypeLimit: 1,
+                enableTotalRecordCount: true
+            ))
+
+        case "recentlyreleasedepisodes":
+            return try await client.itemsApi.getItems(request: GetItemsRequest(
+                recursive: true,
+                includeItemTypes: [.episode],
+                sortBy: [.premiereDate],
+                sortOrder: .descending,
+                fields: Self.pluginDynamicFields,
+                limit: limit,
+                enableImages: true,
+                imageTypeLimit: 1,
+                enableTotalRecordCount: true
+            ))
+
+        case "watchagain":
+            return try await client.itemsApi.getItems(request: GetItemsRequest(
+                recursive: true,
+                includeItemTypes: [.movie, .series],
+                sortBy: [.datePlayed],
+                sortOrder: .descending,
+                filters: [.isPlayed],
+                fields: Self.pluginDynamicFields,
+                limit: limit,
+                enableImages: true,
+                imageTypeLimit: 1,
+                enableTotalRecordCount: true
+            ))
+
+        case "recentlyaddedinlibrary":
+            return try await runKefinRecentlyAddedInLibrary(spec: spec, limit: limit, client: client)
+
+        case "custom":
+            return try await runKefinCustom(spec: spec, limit: limit, client: client)
+
+        default:
+            return nil
+        }
+    }
+
+    private func runKefinRecentlyAddedInLibrary(
+        spec: [String: Any],
+        limit: Int,
+        client: MediaServerClient
+    ) async throws -> ItemsResult? {
+        let libraryIds = ((spec["libraryIds"] as? [Any])?.compactMap {
+            ($0 as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        }.filter { !$0.isEmpty }) ?? []
+
+        guard !libraryIds.isEmpty else {
+            return nil
+        }
+
+        var mergedItems: [ServerItem] = []
+        var seenItemIds = Set<String>()
+
+        for libraryId in libraryIds {
+            let latest = try await client.itemsApi.getLatestMedia(request: GetLatestMediaRequest(
+                parentId: libraryId,
+                fields: Self.pluginDynamicFields,
+                limit: limit,
+                groupItems: false,
+                imageTypeLimit: 1
+            ))
+
+            for item in latest where seenItemIds.insert(item.id).inserted {
+                mergedItems.append(item)
+            }
+
+            if mergedItems.count >= limit {
+                break
+            }
+        }
+
+        let trimmed = Array(mergedItems.prefix(limit))
+        return ItemsResult(items: trimmed, totalRecordCount: trimmed.count, startIndex: 0)
+    }
+
+    private func runKefinCustom(
+        spec: [String: Any],
+        limit: Int,
+        client: MediaServerClient
+    ) async throws -> ItemsResult? {
+        let type = (spec["type"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        let source = (spec["source"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !source.isEmpty else {
+            return nil
+        }
+
+        let includeItemTypes = kefinIncludeItemTypes(
+            spec["includeItemTypes"],
+            fallback: [.movie, .series]
+        )
+        let sortBy = [kefinSortBy(spec["sortBy"] as? String)]
+        let sortOrder = kefinSortOrder(spec["sortOrderDirection"] as? String)
+
+        switch type {
+        case "tag":
+            return try await client.itemsApi.getItems(request: GetItemsRequest(
+                recursive: true,
+                includeItemTypes: includeItemTypes,
+                sortBy: sortBy,
+                sortOrder: sortOrder,
+                fields: Self.pluginDynamicFields,
+                limit: limit,
+                tags: [source],
+                enableImages: true,
+                imageTypeLimit: 1,
+                enableTotalRecordCount: true
+            ))
+
+        case "genre":
+            return try await client.itemsApi.getItems(request: GetItemsRequest(
+                recursive: true,
+                includeItemTypes: includeItemTypes,
+                sortBy: sortBy,
+                sortOrder: sortOrder,
+                fields: Self.pluginDynamicFields,
+                limit: limit,
+                genres: [source],
+                genreIds: [source],
+                enableImages: true,
+                imageTypeLimit: 1,
+                enableTotalRecordCount: true
+            ))
+
+        case "parent", "collection", "playlist":
+            return try await client.itemsApi.getItems(request: GetItemsRequest(
+                parentId: source,
+                recursive: true,
+                includeItemTypes: includeItemTypes,
+                sortBy: sortBy,
+                sortOrder: sortOrder,
+                fields: Self.pluginDynamicFields,
+                limit: limit,
+                enableImages: true,
+                imageTypeLimit: 1,
+                enableTotalRecordCount: true
+            ))
+
+        default:
+            return nil
+        }
+    }
+
+    private func kefinIncludeItemTypes(_ rawValue: Any?, fallback: [ItemType]) -> [ItemType] {
+        guard let values = rawValue as? [Any] else { return fallback }
+        let mapped = values.compactMap { value -> ItemType? in
+            guard let raw = (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+                return nil
+            }
+
+            switch raw.lowercased() {
+            case "movie":
+                return .movie
+            case "series", "tvshow", "tvshows":
+                return .series
+            case "episode":
+                return .episode
+            case "season":
+                return .season
+            case "audio":
+                return .audio
+            case "musicalbum", "album":
+                return .musicAlbum
+            case "musicartist", "artist":
+                return .musicArtist
+            case "musicvideo":
+                return .musicVideo
+            case "playlist":
+                return .playlist
+            case "boxset", "collection":
+                return .boxSet
+            case "book":
+                return .book
+            case "photo":
+                return .photo
+            case "video":
+                return .video
+            default:
+                return nil
+            }
+        }
+
+        return mapped.isEmpty ? fallback : mapped
+    }
+
+    private func kefinSortBy(_ rawValue: String?) -> ItemSortBy {
+        switch rawValue?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "releasedate", "premieredate":
+            return .premiereDate
+        case "dateadded", "datecreated":
+            return .dateCreated
+        case "name", "sortname":
+            return .sortName
+        case "communityrating":
+            return .communityRating
+        case "criticrating":
+            return .criticRating
+        case "runtime":
+            return .runtime
+        case "datelastcontentadded":
+            return .dateCreated
+        case "random", nil, "":
+            return .random
+        default:
+            return .random
+        }
+    }
+
+    private func kefinSortOrder(_ rawValue: String?) -> SortOrder {
+        switch rawValue?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "descending":
+            return .descending
+        default:
+            return .ascending
+        }
+    }
+
+    private func loadHssSectionItems(
+        sectionType: String,
+        additionalData: String?,
+        client: MediaServerClient
+    ) async throws -> [ServerItem] {
+        guard let api = client.homeScreenSectionsApi else { return [] }
+        let result = try await api.getSectionItems(
+            sectionType: sectionType,
+            additionalData: additionalData
+        )
+        return await enrichHomeSectionItems(result.items, client: client)
+    }
+
+    private func enrichHomeSectionItems(_ sourceItems: [ServerItem], client: MediaServerClient) async -> [ServerItem] {
+        guard !sourceItems.isEmpty else { return [] }
+
+        let ids = Array(sourceItems.map(\.id).prefix(Self.maxItems))
+        let request = GetItemsRequest(
+            fields: Self.pluginDynamicFields,
+            limit: ids.count,
+            ids: ids,
+            enableImages: true,
+            imageTypeLimit: 1,
+            enableTotalRecordCount: false
+        )
+
+        guard let result = try? await client.itemsApi.getItems(request: request) else {
+            return sourceItems
+        }
+
+        var itemsById: [String: ServerItem] = [:]
+        for item in result.items where itemsById[item.id] == nil {
+            itemsById[item.id] = item
+        }
+        return sourceItems.map { itemsById[$0.id] ?? $0 }
+    }
+
+    private func loadCollectionsItems(query: DynamicHomeSectionQuery, client: MediaServerClient) async throws -> [ServerItem] {
+        let collectionId = (query.additionalData ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !collectionId.isEmpty else { return [] }
+
+        let request = GetItemsRequest(
+            parentId: collectionId,
+            recursive: true,
+            sortBy: [currentHomeSortBy(for: .collections), .sortName],
+            sortOrder: .ascending,
+            fields: Self.pluginDynamicFields,
+            limit: Self.maxItems,
+            enableImages: true,
+            imageTypeLimit: 1,
+            enableTotalRecordCount: true
+        )
+        let result = try await client.itemsApi.getItems(request: request)
+        return result.items
+    }
+
+    private func loadGenresItems(query: DynamicHomeSectionQuery, client: MediaServerClient) async throws -> [ServerItem] {
+        let genreToken = (query.additionalData ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !genreToken.isEmpty else { return [] }
+
+        let request = GetItemsRequest(
+            recursive: true,
+            includeItemTypes: genresIncludeItemTypes(),
+            excludeItemTypes: [.episode],
+            sortBy: [currentHomeSortBy(for: .genres), .sortName],
+            sortOrder: .ascending,
+            fields: Self.pluginDynamicFields,
+            limit: Self.maxItems,
+            genres: [genreToken],
+            genreIds: [genreToken],
+            enableImages: true,
+            imageTypeLimit: 1,
+            enableTotalRecordCount: true
+        )
+        let result = try await client.itemsApi.getItems(request: request)
+        return result.items
+    }
+
+    private func currentHomeSortBy(for source: DynamicHomeSectionSource) -> ItemSortBy {
+        let homeSort: HomeRowSortBy
+
+        switch source {
+        case .collections:
+            homeSort = userPreferences[UserPreferences.collectionsRowSortBy]
+        case .genres:
+            homeSort = userPreferences[UserPreferences.genresRowSortBy]
+        case .hss, .kefinTweaks:
+            homeSort = .name
+        }
+
+        switch homeSort {
+        case .name:
+            return .sortName
+        case .dateAdded:
+            return .dateCreated
+        case .premiereDate:
+            return .premiereDate
+        case .rating:
+            return .officialRating
+        case .runtime:
+            return .runtime
+        case .random:
+            return .random
+        case .criticRating:
+            return .criticRating
+        case .communityRating:
+            return .communityRating
+        }
+    }
+
+    private func genresIncludeItemTypes() -> [ItemType]? {
+        switch userPreferences[UserPreferences.genresRowItems] {
+        case .movies:
+            return [.movie]
+        case .series:
+            return [.series]
+        case .both:
+            return [.movie, .series]
+        }
     }
 }

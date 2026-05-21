@@ -24,6 +24,7 @@ enum SettingsRoute: Hashable {
     case playbackAutomationQueue
 
     case integrations
+    case integrationsHomeScreenSections
     case integrationsMetadataRatings
     case integrationsRatingSources
 

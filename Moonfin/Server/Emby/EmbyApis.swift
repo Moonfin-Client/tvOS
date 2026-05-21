@@ -107,6 +107,7 @@ struct EmbyItemsApi: ServerItemsApi {
             ("PersonIds", request.personIds?.joined(separator: ",")),
             ("StudioIds", request.studioIds?.joined(separator: ",")),
             ("Genres", request.genres?.joined(separator: ",")),
+            ("GenreIds", request.genreIds?.joined(separator: ",")),
             ("Tags", request.tags?.joined(separator: ",")),
             ("Years", request.years?.map(String.init).joined(separator: ",")),
             ("Ids", request.ids?.joined(separator: ",")),

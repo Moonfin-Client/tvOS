@@ -205,6 +205,37 @@ final class UserPreferences: ObservableObject {
             store[preference] = newValue
         }
     }
+
+    var homeSectionsConfig: [HomeSectionConfig] {
+        let raw = store[Self.homeSections]
+
+        if let decoded = HomeSectionConfig.decodeJsonString(raw) {
+            return decoded
+        }
+
+        let migrated = HomeSectionConfig.fromLegacyCsv(raw)
+        objectWillChange.send()
+        store[Self.homeSections] = HomeSectionConfig.toStorageString(migrated)
+        return migrated
+    }
+
+    func setHomeSectionsConfig(_ configs: [HomeSectionConfig]) {
+        objectWillChange.send()
+        store[Self.homeSections] = HomeSectionConfig.toStorageString(configs)
+    }
+
+    var activeHomeSections: [HomeSectionType] {
+        homeSectionsConfig
+            .filter { $0.isBuiltin && $0.enabled && $0.type != .none }
+            .sorted { $0.order < $1.order }
+            .map(\.type)
+    }
+
+    var activeHomeSectionConfigs: [HomeSectionConfig] {
+        homeSectionsConfig
+            .filter { $0.enabled && ($0.isPluginDynamic || $0.type != .none) }
+            .sorted { $0.order < $1.order }
+    }
 }
 
 enum NextUpBehavior: String, StringRepresentableEnum, CaseIterable {

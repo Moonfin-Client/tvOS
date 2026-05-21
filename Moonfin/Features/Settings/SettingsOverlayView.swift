@@ -17,7 +17,7 @@ struct SettingsOverlayView: View {
             HStack(spacing: 0) {
                 Color.clear
 
-                settingsPanel(width: min(max(geo.size.width * 0.30, 420), 680))
+                settingsPanel(width: min(max(geo.size.width * 0.40, 600), 980))
             }
         }
         .onAppear {
@@ -127,6 +127,8 @@ private struct SettingsRouteResolver: View {
             SettingsAutomationQueueScreen()
         case .integrations:
             SettingsIntegrationsScreen()
+        case .integrationsHomeScreenSections:
+            SettingsHomeScreenSectionsIntegrationScreen()
         case .integrationsMetadataRatings:
             SettingsMetadataRatingsScreen()
         case .integrationsRatingSources:

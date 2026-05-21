@@ -64,7 +64,7 @@ final class HomeViewModel: ObservableObject {
             .filter { $0 > 0 }
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.loadContent(forceReload: true)
+                self?.loadContent(forceReload: true, preserveExisting: true)
             }
             .store(in: &cancellables)
     }
@@ -128,18 +128,27 @@ final class HomeViewModel: ObservableObject {
         return client
     }
 
-    private var queuedForceReload = false
+    private var reloadQueuedWhileLoading = false
+    private var queuedReloadForce = false
+    private var queuedReloadPreserveExisting = true
 
-    func loadContent(forceReload: Bool = false) {
-        if forceReload && loadTask != nil {
-            queuedForceReload = true
+    func loadContent(forceReload: Bool = false, preserveExisting: Bool = false) {
+        if loadTask != nil {
+            reloadQueuedWhileLoading = true
+            queuedReloadForce = queuedReloadForce || forceReload
+            queuedReloadPreserveExisting = queuedReloadPreserveExisting && preserveExisting
             return
         }
+
         guard forceReload || isInitialLoad else {
             refreshContent()
             return
         }
-        queuedForceReload = false
+
+        reloadQueuedWhileLoading = false
+        queuedReloadForce = false
+        queuedReloadPreserveExisting = true
+
         loadTask?.cancel()
         loadTask = Task {
             defer { finishLoad() }
@@ -150,24 +159,29 @@ final class HomeViewModel: ObservableObject {
                 return
             }
 
-            let sections = activeHomeSections()
+            let configs = activeHomeSectionConfigs()
+            let builtinSections = builtinSections(from: configs)
 
             if multiServerActive {
-                await loadMultiServerContent(sections: sections, client: client)
+                await loadMultiServerContent(sections: builtinSections, client: client)
                 return
             }
 
             let viewDependent: Set<HomeSectionType> = [.latestMedia, .myMedia, .myMediaSmall]
             let needsViews = mediaBarViewModel.isEnabled
-                || sections.contains(where: { viewDependent.contains($0) })
+                || configs.contains(where: { $0.isBuiltin && viewDependent.contains($0.type) })
+
+            let existingRows = rows
 
             dataSources = [:]
             rowClients = [:]
             var earlyRows: [HomeRow] = []
-            for section in sections where !viewDependent.contains(section) {
-                earlyRows.append(contentsOf: buildRowDefinitions(for: section))
+            for config in configs where !(config.isBuiltin && viewDependent.contains(config.type)) {
+                earlyRows.append(contentsOf: buildRowDefinitions(for: config))
             }
-            rows = earlyRows
+            rows = preserveExisting
+                ? reconciledRows(placeholders: earlyRows, existing: existingRows)
+                : earlyRows
             isInitialLoad = false
 
             let earlyRowIds = Set(dataSources.keys)
@@ -186,14 +200,19 @@ final class HomeViewModel: ObservableObject {
 
             guard !Task.isCancelled else { return }
 
-            let lateRows = sections
-                .filter { viewDependent.contains($0) }
+            let lateRows = configs
+                .filter { $0.isBuiltin && viewDependent.contains($0.type) }
                 .flatMap { buildRowDefinitions(for: $0) }
             if !lateRows.isEmpty {
-                rows.append(contentsOf: lateRows)
-                reorderRowsBySection(sections)
+                let rowsToAppend = preserveExisting
+                    ? reconciledRows(placeholders: lateRows, existing: existingRows)
+                    : lateRows
+                rows.append(contentsOf: rowsToAppend)
+                reorderRowsByConfigOrder(configs)
                 let lateRowIds = Set(dataSources.keys).subtracting(earlyRowIds)
                 await loadRows(lateRowIds, client: client)
+            } else {
+                reorderRowsByConfigOrder(configs)
             }
 
             ensureFallbackLibraryRowIfNeeded()
@@ -206,9 +225,34 @@ final class HomeViewModel: ObservableObject {
 
     private func finishLoad() {
         loadTask = nil
-        if queuedForceReload {
-            queuedForceReload = false
-            loadContent(forceReload: true)
+        if reloadQueuedWhileLoading {
+            let forceReload = queuedReloadForce
+            let preserveExisting = queuedReloadPreserveExisting
+
+            reloadQueuedWhileLoading = false
+            queuedReloadForce = false
+            queuedReloadPreserveExisting = true
+
+            loadContent(forceReload: forceReload, preserveExisting: preserveExisting)
+        }
+    }
+
+    private func reconciledRows(placeholders: [HomeRow], existing: [HomeRow]) -> [HomeRow] {
+        let existingById = Dictionary(uniqueKeysWithValues: existing.map { ($0.id, $0) })
+        return placeholders.map { placeholder in
+            guard let current = existingById[placeholder.id] else {
+                return placeholder
+            }
+
+            return HomeRow(
+                id: placeholder.id,
+                title: placeholder.title,
+                items: current.items,
+                rowType: placeholder.rowType,
+                isMusicLibraryRow: placeholder.isMusicLibraryRow,
+                isLoading: current.isLoading,
+                totalItemCount: current.totalItemCount
+            )
         }
     }
 
@@ -500,33 +544,329 @@ final class HomeViewModel: ObservableObject {
     private func makeStaticRow(
         id: String, title: String, rowType: HomeRowType, items: [ServerItem], isMusicLibraryRow: Bool = false
     ) -> HomeRow {
-        let filtered = filterHomeRowItems(items, for: rowType)
+        let filtered = filterHomeRowItems(items, for: rowType, rowId: id)
         let source = RowDataSource(queryType: .staticItems(filtered), changeTriggers: [], chunkSize: Self.chunkSize)
         source.preload(filtered)
         dataSources[id] = source
         return HomeRow(id: id, title: title, items: filtered, rowType: rowType, isMusicLibraryRow: isMusicLibraryRow, isLoading: false, totalItemCount: filtered.count)
     }
 
-    private func activeHomeSections() -> [HomeSectionType] {
-        let raw = container.userPreferences[UserPreferences.homeSections]
-        guard !raw.isEmpty else {
-            return HomeSectionType.defaults.filter(\.enabled).map(\.type)
+    private func activeHomeSectionConfigs() -> [HomeSectionConfig] {
+        let scoped = container.userPreferences.activeHomeSectionConfigs.filter {
+            isConfigVisibleForCurrentServer($0) && isConfigEnabledByPreferences($0)
         }
-        let parsed = raw.split(separator: ",")
-            .compactMap { rawValue -> HomeSectionType? in
-                let value = String(rawValue).trimmingCharacters(in: .whitespaces)
-                return HomeSectionType(rawValue: value) ?? HomeSectionType.from(serverName: value)
+        return deduplicatedHomeSectionConfigs(scoped)
+    }
+
+    private func builtinSections(from configs: [HomeSectionConfig]) -> [HomeSectionType] {
+        var seen = Set<HomeSectionType>()
+        var result: [HomeSectionType] = []
+        for config in configs where config.isBuiltin && config.type != .none && config.type != .mediaBar {
+            guard seen.insert(config.type).inserted else { continue }
+            result.append(config.type)
+        }
+        return result
+    }
+
+    private func isConfigVisibleForCurrentServer(_ config: HomeSectionConfig) -> Bool {
+        guard config.isPluginDynamic else { return true }
+        guard let serverId = normalizedOptionalKey(config.serverId) else { return true }
+        return currentServerIdentifiers().contains(serverId)
+    }
+
+    private func currentServerIdentifiers() -> Set<String> {
+        var ids = Set<String>()
+
+        if let server = container.serverRepository.currentServer.value {
+            ids.insert(normalizedServerIdentifier(server.id.uuidString))
+            ids.insert(normalizedServerIdentifier(server.address))
+        }
+
+        if let baseURL = client?.baseURL?.absoluteString {
+            ids.insert(normalizedServerIdentifier(baseURL))
+        }
+
+        return ids
+    }
+
+    private func normalizedServerIdentifier(_ value: String) -> String {
+        var normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        while normalized.hasSuffix("/") {
+            normalized.removeLast()
+        }
+        return normalized
+    }
+
+    private func normalizedOptionalKey(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let normalized = normalizedServerIdentifier(value)
+        return normalized.isEmpty ? nil : normalized
+    }
+
+    private func isConfigEnabledByPreferences(_ config: HomeSectionConfig) -> Bool {
+        guard config.isPluginDynamic else {
+            switch config.type {
+            case .none, .mediaBar:
+                return false
+            case .favorites,
+                .favoriteMovies,
+                .favoriteSeries,
+                .favoriteEpisodes,
+                .favoritePeople,
+                .favoriteArtists,
+                .favoriteMusicVideos,
+                .favoriteAlbums,
+                .favoriteSongs:
+                return container.userPreferences[UserPreferences.displayFavoritesRows]
+            case .collections:
+                return false
+            case .genres:
+                return false
+            default:
+                return true
             }
-            .filter { $0 != .none }
-
-        var seenSections = Set<HomeSectionType>()
-        let uniqueParsed = parsed.filter { seenSections.insert($0).inserted }
-
-        if uniqueParsed.isEmpty {
-            return HomeSectionType.defaults.filter(\.enabled).map(\.type)
         }
 
-        return uniqueParsed
+        switch config.pluginSource {
+        case .collections:
+            return container.userPreferences[UserPreferences.displayCollectionsRows]
+        case .genres:
+            return container.userPreferences[UserPreferences.displayGenresRows]
+        case .hss, .kefinTweaks:
+            return true
+        }
+    }
+
+    private func deduplicatedHomeSectionConfigs(_ configs: [HomeSectionConfig]) -> [HomeSectionConfig] {
+        var seenBuiltin = Set<HomeSectionType>()
+        var builtinConfigs: [HomeSectionConfig] = []
+        for config in configs where config.isBuiltin && config.type != .none && config.type != .mediaBar {
+            guard seenBuiltin.insert(config.type).inserted else { continue }
+            builtinConfigs.append(config)
+        }
+
+        var builtinDuplicateKeys = Set<String>()
+        for config in builtinConfigs {
+            builtinDuplicateKeys.formUnion(duplicateKeysForBuiltin(config.type))
+        }
+
+        var seenPluginStableIds = Set<String>()
+        var seenPluginDuplicateKeys = Set<String>()
+        var pluginConfigs: [HomeSectionConfig] = []
+
+        for config in configs where config.isPluginDynamic {
+            guard seenPluginStableIds.insert(config.stableId).inserted else { continue }
+            let keys = duplicateKeysForPluginConfig(config)
+            if !keys.isDisjoint(with: builtinDuplicateKeys) { continue }
+            if !keys.isDisjoint(with: seenPluginDuplicateKeys) { continue }
+            seenPluginDuplicateKeys.formUnion(keys)
+            pluginConfigs.append(config)
+        }
+
+        return (builtinConfigs + pluginConfigs).sorted { $0.order < $1.order }
+    }
+
+    private func duplicateKeysForBuiltin(_ section: HomeSectionType) -> Set<String> {
+        switch section {
+        case .resume:
+            return ["resume"]
+        case .resumeBook:
+            return ["resumeBook"]
+        case .nextUp:
+            return ["nextUp"]
+        case .latestMedia:
+            return ["latestMedia"]
+        case .activeRecordings:
+            return ["activeRecordings"]
+        case .recentlyReleased:
+            return ["recentlyReleased"]
+        case .favorites:
+            return ["favorites"]
+        case .favoriteMovies:
+            return ["favoriteMovies"]
+        case .favoriteSeries:
+            return ["favoriteSeries"]
+        case .favoriteEpisodes:
+            return ["favoriteEpisodes"]
+        case .favoritePeople:
+            return ["favoritePeople"]
+        case .favoriteArtists:
+            return ["favoriteArtists"]
+        case .favoriteMusicVideos:
+            return ["favoriteMusicVideos"]
+        case .favoriteAlbums:
+            return ["favoriteAlbums"]
+        case .favoriteSongs:
+            return ["favoriteSongs"]
+        case .collections:
+            return ["collections"]
+        case .genres:
+            return ["genres"]
+        case .myMedia:
+            return ["libraryTiles"]
+        case .myMediaSmall:
+            return ["libraryButtons"]
+        case .resumeAudio:
+            return ["resumeAudio"]
+        case .playlists:
+            return ["playlists"]
+        case .liveTv:
+            return ["liveTv"]
+        case .mediaBar:
+            return []
+        case .none:
+            return []
+        }
+    }
+
+    private func duplicateKeysForPluginConfig(_ config: HomeSectionConfig) -> Set<String> {
+        switch config.pluginSource {
+        case .hss:
+            return duplicateKeysForHssSection(config.pluginSection)
+        case .kefinTweaks:
+            return duplicateKeysForKefinSection(config.pluginSection, additionalData: config.pluginAdditionalData)
+        case .collections:
+            guard let key = normalizedOptionalKey(config.pluginAdditionalData) else { return [] }
+            return ["collections:\(key)"]
+        case .genres:
+            guard let key = normalizedOptionalKey(config.pluginAdditionalData) else { return [] }
+            return ["genres:\(key)"]
+        }
+    }
+
+    private func duplicateKeysForHssSection(_ section: String?) -> Set<String> {
+        switch normalizedSectionToken(section) {
+        case "resume", "continuewatching":
+            return duplicateKeysForBuiltin(.resume)
+        case "resumebook", "continuereading":
+            return duplicateKeysForBuiltin(.resumeBook)
+        case "nextup":
+            return duplicateKeysForBuiltin(.nextUp)
+        case "activerecordings", "recordings":
+            return duplicateKeysForBuiltin(.activeRecordings)
+        case "recentlyreleased", "recentlyreleasedmovies", "recentlyreleasedepisodes":
+            return duplicateKeysForBuiltin(.recentlyReleased)
+        case "latest", "latestmedia", "recentlyadded", "recentlyaddedinlibrary":
+            return duplicateKeysForBuiltin(.latestMedia)
+        case "favorites", "favoriteitems":
+            return duplicateKeysForBuiltin(.favorites)
+        case "favoritemovies", "favoritemovie":
+            return duplicateKeysForBuiltin(.favoriteMovies)
+        case "favoriteseries", "favoriteshows", "favoritetvshows":
+            return duplicateKeysForBuiltin(.favoriteSeries)
+        case "favoriteepisodes", "favoriteepisode":
+            return duplicateKeysForBuiltin(.favoriteEpisodes)
+        case "favoritepeople", "favoriteperson":
+            return duplicateKeysForBuiltin(.favoritePeople)
+        case "favoriteartists", "favoriteartist":
+            return duplicateKeysForBuiltin(.favoriteArtists)
+        case "favoritemusicvideos", "favoritemusicvideo":
+            return duplicateKeysForBuiltin(.favoriteMusicVideos)
+        case "favoritealbums", "favoritealbum":
+            return duplicateKeysForBuiltin(.favoriteAlbums)
+        case "favoritesongs", "favoritesong":
+            return duplicateKeysForBuiltin(.favoriteSongs)
+        case "resumeaudio", "continuelistening":
+            return duplicateKeysForBuiltin(.resumeAudio)
+        case "playlists", "watchlist":
+            return duplicateKeysForBuiltin(.playlists)
+        case "livetv":
+            return duplicateKeysForBuiltin(.liveTv)
+        case "collections", "collection":
+            return duplicateKeysForBuiltin(.collections)
+        case "genres", "genre":
+            return duplicateKeysForBuiltin(.genres)
+        case "mymedia", "librarytiles":
+            return duplicateKeysForBuiltin(.myMedia)
+        case "mymediasmall", "librarybuttons":
+            return duplicateKeysForBuiltin(.myMediaSmall)
+        default:
+            return []
+        }
+    }
+
+    private func duplicateKeysForKefinSection(_ section: String?, additionalData: String?) -> Set<String> {
+        let token = normalizedSectionToken(kefinKind(section: section, additionalData: additionalData))
+        if token.contains("recentlyreleased") {
+            return duplicateKeysForBuiltin(.recentlyReleased)
+        }
+        if token.contains("recentlyadded") {
+            return duplicateKeysForBuiltin(.latestMedia)
+        }
+        if token.contains("watchagain") || token.contains("continuewatching") {
+            return duplicateKeysForBuiltin(.resume)
+        }
+        if token.contains("nextup") {
+            return duplicateKeysForBuiltin(.nextUp)
+        }
+        return []
+    }
+
+    private func kefinKind(section: String?, additionalData: String?) -> String? {
+        if let additionalData,
+           let data = additionalData.data(using: .utf8),
+           let raw = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let kind = raw["kind"] as? String,
+           !kind.isEmpty {
+            return kind
+        }
+
+        guard let section, !section.isEmpty else { return nil }
+        if let idx = section.firstIndex(of: ":") {
+            let next = section.index(after: idx)
+            if next < section.endIndex {
+                return String(section[next...])
+            }
+        }
+        return section
+    }
+
+    private func normalizedSectionToken(_ value: String?) -> String {
+        let raw = (value ?? "").lowercased()
+        let parts = raw.split { !$0.isLetter && !$0.isNumber }
+        return parts.joined()
+    }
+
+    private func buildRowDefinitions(for config: HomeSectionConfig) -> [HomeRow] {
+        if config.isPluginDynamic {
+            return buildPluginDynamicRows(for: config)
+        }
+        return buildRowDefinitions(for: config.type)
+    }
+
+    private func buildPluginDynamicRows(for config: HomeSectionConfig) -> [HomeRow] {
+        let sectionType = (config.pluginSection ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sectionType.isEmpty else { return [] }
+
+        let title = (config.pluginDisplayText ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let rowTitle = title.isEmpty ? sectionType : title
+
+        let query = DynamicHomeSectionQuery(
+            source: dynamicSource(for: config.pluginSource),
+            sectionType: sectionType,
+            additionalData: config.pluginAdditionalData
+        )
+
+        return [makeRow(
+            id: config.stableId,
+            title: rowTitle,
+            rowType: .latestMedia(libraryId: config.stableId),
+            queryType: .pluginDynamic(query),
+            triggers: [.libraryUpdated]
+        )]
+    }
+
+    private func dynamicSource(for pluginSource: HomeSectionPluginSource) -> DynamicHomeSectionSource {
+        switch pluginSource {
+        case .hss:
+            return .hss
+        case .kefinTweaks:
+            return .kefinTweaks
+        case .collections:
+            return .collections
+        case .genres:
+            return .genres
+        }
     }
 
     private func buildRowDefinitions(for section: HomeSectionType) -> [HomeRow] {
@@ -567,6 +907,20 @@ final class HomeViewModel: ObservableObject {
                 triggers: [.moviePlayback, .tvPlayback]
             )]
 
+        case .resumeBook:
+            return [makeRow(
+                id: "resume_books",
+                title: "Continue Reading",
+                rowType: .resumeBook,
+                queryType: .resume(GetResumeItemsRequest(
+                    mediaTypes: [.book],
+                    fields: Self.defaultFields,
+                    enableImages: true,
+                    imageTypeLimit: 1
+                )),
+                triggers: [.libraryUpdated]
+            )]
+
         case .nextUp:
             if container.userPreferences[UserPreferences.mergeContinueWatchingNextUp] {
                 return []
@@ -601,6 +955,104 @@ final class HomeViewModel: ObservableObject {
                     triggers: [.libraryUpdated]
                 )
             }
+
+        case .activeRecordings:
+            return [makeRow(
+                id: "active_recordings",
+                title: "Active Recordings",
+                rowType: .activeRecordings,
+                queryType: .liveTvRecordings,
+                triggers: []
+            )]
+
+        case .recentlyReleased:
+            return [makeRow(
+                id: "recently_released",
+                title: "Recently Released",
+                rowType: .recentlyReleased,
+                queryType: .items(GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: [.movie, .episode],
+                    sortBy: [.premiereDate],
+                    sortOrder: .descending,
+                    fields: Self.defaultFields,
+                    limit: RowDataSource.maxItems,
+                    enableImages: true,
+                    imageTypeLimit: 1,
+                    enableTotalRecordCount: true
+                )),
+                triggers: [.libraryUpdated]
+            )]
+
+        case .favorites,
+            .favoriteMovies,
+            .favoriteSeries,
+            .favoriteEpisodes,
+            .favoritePeople,
+            .favoriteArtists,
+            .favoriteMusicVideos,
+            .favoriteAlbums,
+            .favoriteSongs:
+            guard let favoriteConfig = favoriteRowConfig(for: section) else {
+                return []
+            }
+
+            return [makeRow(
+                id: favoriteConfig.id,
+                title: favoriteConfig.title,
+                rowType: favoriteConfig.rowType,
+                queryType: .items(GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: favoriteConfig.includeItemTypes,
+                    sortBy: [sortByForHomeRow(container.userPreferences[UserPreferences.favoritesRowSortBy]), .sortName],
+                    sortOrder: .ascending,
+                    filters: [.isFavorite],
+                    fields: Self.defaultFields,
+                    limit: RowDataSource.maxItems,
+                    enableImages: true,
+                    imageTypeLimit: 1,
+                    enableTotalRecordCount: true
+                )),
+                triggers: [.libraryUpdated]
+            )]
+
+        case .collections:
+            return [makeRow(
+                id: "collections_builtin",
+                title: "Collections",
+                rowType: .collections,
+                queryType: .items(GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: [.boxSet],
+                    sortBy: [sortByForHomeRow(container.userPreferences[UserPreferences.collectionsRowSortBy]), .sortName],
+                    sortOrder: .ascending,
+                    fields: Self.defaultFields,
+                    limit: RowDataSource.maxItems,
+                    enableImages: true,
+                    imageTypeLimit: 1,
+                    enableTotalRecordCount: true
+                )),
+                triggers: [.libraryUpdated]
+            )]
+
+        case .genres:
+            return [makeRow(
+                id: "genres_builtin",
+                title: "Genres",
+                rowType: .genres,
+                queryType: .items(GetItemsRequest(
+                    recursive: true,
+                    includeItemTypes: [.genre],
+                    sortBy: [.sortName],
+                    sortOrder: .ascending,
+                    fields: Self.defaultFields,
+                    limit: RowDataSource.maxItems,
+                    enableImages: true,
+                    imageTypeLimit: 1,
+                    enableTotalRecordCount: true
+                )),
+                triggers: [.libraryUpdated]
+            )]
 
         case .myMedia:
             return [makeStaticRow(id: "my_media", title: "My Media", rowType: .myMedia, items: userViews)]
@@ -670,6 +1122,9 @@ final class HomeViewModel: ObservableObject {
                 ),
             ]
 
+        case .mediaBar:
+            return []
+
         case .none:
             return []
         }
@@ -686,6 +1141,57 @@ final class HomeViewModel: ObservableObject {
             limit: RowDataSource.maxItems,
             imageTypeLimit: 1
         ))
+    }
+
+    private func sortByForHomeRow(_ sortBy: HomeRowSortBy) -> ItemSortBy {
+        switch sortBy {
+        case .name:
+            return .sortName
+        case .dateAdded:
+            return .dateCreated
+        case .premiereDate:
+            return .premiereDate
+        case .rating:
+            return .officialRating
+        case .runtime:
+            return .runtime
+        case .random:
+            return .random
+        case .criticRating:
+            return .criticRating
+        case .communityRating:
+            return .communityRating
+        }
+    }
+
+    private func favoriteRowConfig(for section: HomeSectionType) -> (
+        id: String,
+        title: String,
+        rowType: HomeRowType,
+        includeItemTypes: [ItemType]?
+    )? {
+        switch section {
+        case .favorites:
+            return ("favorites", "Favorites", .favorites, nil)
+        case .favoriteMovies:
+            return ("favorite_movies", "Favorite Movies", .favoriteMovies, [.movie])
+        case .favoriteSeries:
+            return ("favorite_series", "Favorite Series", .favoriteSeries, [.series])
+        case .favoriteEpisodes:
+            return ("favorite_episodes", "Favorite Episodes", .favoriteEpisodes, [.episode])
+        case .favoritePeople:
+            return ("favorite_people", "Favorite People", .favoritePeople, [.person])
+        case .favoriteArtists:
+            return ("favorite_artists", "Favorite Artists", .favoriteArtists, [.musicArtist])
+        case .favoriteMusicVideos:
+            return ("favorite_music_videos", "Favorite Music Videos", .favoriteMusicVideos, [.musicVideo])
+        case .favoriteAlbums:
+            return ("favorite_albums", "Favorite Albums", .favoriteAlbums, [.musicAlbum])
+        case .favoriteSongs:
+            return ("favorite_songs", "Favorite Songs", .favoriteSongs, [.audio])
+        default:
+            return nil
+        }
     }
 
     private func makeRow(
@@ -791,7 +1297,7 @@ final class HomeViewModel: ObservableObject {
               let source = dataSources[rowId]
         else { return }
         let rowType = rows[index].rowType
-        let filtered = filterHomeRowItems(source.items, for: rowType)
+        let filtered = filterHomeRowItems(source.items, for: rowType, rowId: rowId)
         rows[index].items = filtered
         rows[index].isLoading = source.isLoading
         rows[index].totalItemCount = source.totalItemCount
@@ -801,9 +1307,22 @@ final class HomeViewModel: ObservableObject {
 
         let shouldRefreshTopShelf: Bool
         switch rowType {
-        case .continueWatching:
+        case .continueWatching, .resumeBook:
             shouldRefreshTopShelf = true
-        case .latestMedia:
+        case .latestMedia,
+            .activeRecordings,
+            .recentlyReleased,
+            .favorites,
+            .favoriteMovies,
+            .favoriteSeries,
+            .favoriteEpisodes,
+            .favoritePeople,
+            .favoriteArtists,
+            .favoriteMusicVideos,
+            .favoriteAlbums,
+            .favoriteSongs,
+            .collections,
+            .genres:
             shouldRefreshTopShelf = true
         default:
             shouldRefreshTopShelf = false
@@ -821,7 +1340,7 @@ final class HomeViewModel: ObservableObject {
 
         let displayType: (HomeRowType) -> ImageDisplayType = { rowType in
             switch rowType {
-            case .continueWatching: return cwType
+            case .continueWatching, .resumeBook: return cwType
             default: return libType
             }
         }
@@ -843,16 +1362,33 @@ final class HomeViewModel: ObservableObject {
         )
     }
 
-    private func reorderRowsBySection(_ sections: [HomeSectionType]) {
-        var sectionOrder: [HomeSectionType: Int] = [:]
-        for (index, section) in sections.enumerated() where sectionOrder[section] == nil {
-            sectionOrder[section] = index
+    private func reorderRowsByConfigOrder(_ configs: [HomeSectionConfig]) {
+        var builtinOrder: [HomeSectionType: Int] = [:]
+        var pluginOrder: [String: Int] = [:]
+
+        for (index, config) in configs.enumerated() {
+            if config.isBuiltin {
+                if builtinOrder[config.type] == nil {
+                    builtinOrder[config.type] = index
+                }
+            } else {
+                pluginOrder[config.stableId] = index
+            }
         }
 
         rows = rows.enumerated()
             .sorted { lhs, rhs in
-                let lhsOrder = sectionOrder[homeSection(for: lhs.element.rowType)] ?? Int.max
-                let rhsOrder = sectionOrder[homeSection(for: rhs.element.rowType)] ?? Int.max
+                let lhsOrder = orderForRow(
+                    lhs.element,
+                    builtinOrder: builtinOrder,
+                    pluginOrder: pluginOrder
+                )
+                let rhsOrder = orderForRow(
+                    rhs.element,
+                    builtinOrder: builtinOrder,
+                    pluginOrder: pluginOrder
+                )
+
                 if lhsOrder == rhsOrder {
                     return lhs.offset < rhs.offset
                 }
@@ -861,14 +1397,129 @@ final class HomeViewModel: ObservableObject {
             .map(\.element)
     }
 
+    private func orderForRow(
+        _ row: HomeRow,
+        builtinOrder: [HomeSectionType: Int],
+        pluginOrder: [String: Int]
+    ) -> Int {
+        if let order = pluginOrder[row.id] {
+            return order
+        }
+
+        if let mappedSection = builtinSectionForRowId(row.id),
+           let mappedOrder = builtinOrder[mappedSection] {
+            return mappedOrder
+        }
+
+        return builtinOrder[homeSection(for: row.rowType)] ?? Int.max
+    }
+
+    private func builtinSectionForRowId(_ rowId: String) -> HomeSectionType? {
+        if rowId == "resume_video" || rowId == "merged_continue_watching" || rowId == "ms_resume_video" {
+            return .resume
+        }
+        if rowId == "resume_books" {
+            return .resumeBook
+        }
+        if rowId == "next_up" || rowId == "ms_next_up" {
+            return .nextUp
+        }
+        if rowId == "active_recordings" {
+            return .activeRecordings
+        }
+        if rowId == "recently_released" {
+            return .recentlyReleased
+        }
+        if rowId == "favorites" {
+            return .favorites
+        }
+        if rowId == "favorite_movies" {
+            return .favoriteMovies
+        }
+        if rowId == "favorite_series" {
+            return .favoriteSeries
+        }
+        if rowId == "favorite_episodes" {
+            return .favoriteEpisodes
+        }
+        if rowId == "favorite_people" {
+            return .favoritePeople
+        }
+        if rowId == "favorite_artists" {
+            return .favoriteArtists
+        }
+        if rowId == "favorite_music_videos" {
+            return .favoriteMusicVideos
+        }
+        if rowId == "favorite_albums" {
+            return .favoriteAlbums
+        }
+        if rowId == "favorite_songs" {
+            return .favoriteSongs
+        }
+        if rowId == "collections_builtin" {
+            return .collections
+        }
+        if rowId == "genres_builtin" {
+            return .genres
+        }
+        if rowId == "my_media" || rowId == "ms_my_media" {
+            return .myMedia
+        }
+        if rowId == "my_media_small" || rowId == "ms_my_media_small" {
+            return .myMediaSmall
+        }
+        if rowId == "resume_audio" {
+            return .resumeAudio
+        }
+        if rowId == "playlists" {
+            return .playlists
+        }
+        if rowId == "live_tv_buttons" || rowId == "live_tv_on_now" || rowId == "live_tv_coming_up" {
+            return .liveTv
+        }
+        if rowId.hasPrefix("latest_") || rowId.hasPrefix("ms_latest_") {
+            return .latestMedia
+        }
+        return nil
+    }
+
     private func homeSection(for rowType: HomeRowType) -> HomeSectionType {
         switch rowType {
         case .continueWatching:
             return .resume
+        case .resumeBook:
+            return .resumeBook
         case .nextUp:
             return .nextUp
         case .latestMedia:
             return .latestMedia
+        case .activeRecordings:
+            return .activeRecordings
+        case .recentlyReleased:
+            return .recentlyReleased
+        case .favorites:
+            return .favorites
+        case .favoriteMovies:
+            return .favoriteMovies
+        case .favoriteSeries:
+            return .favoriteSeries
+        case .favoriteEpisodes:
+            return .favoriteEpisodes
+        case .favoritePeople:
+            return .favoritePeople
+        case .favoriteArtists:
+            return .favoriteArtists
+        case .favoriteMusicVideos:
+            return .favoriteMusicVideos
+        case .favoriteAlbums:
+            return .favoriteAlbums
+        case .favoriteSongs:
+            return .favoriteSongs
+        case .collections:
+            return .collections
+        case .genres:
+            return .genres
         case .myMedia:
             return .myMedia
         case .myMediaSmall:
@@ -879,15 +1530,40 @@ final class HomeViewModel: ObservableObject {
             return .playlists
         case .liveTvButtons, .liveTvOnNow, .liveTvComingUp:
             return .liveTv
+        case .mediaBar:
+            return .mediaBar
+        case .none:
+            return .none
         }
     }
 
-    private func filterHomeRowItems(_ items: [ServerItem], for rowType: HomeRowType) -> [ServerItem] {
+    private func filterHomeRowItems(_ items: [ServerItem], for rowType: HomeRowType, rowId: String? = nil) -> [ServerItem] {
         let parentalFiltered = container.parentalControlsRepository.filterItems(items)
 
         switch rowType {
-        case .continueWatching, .nextUp, .latestMedia, .resumeAudio:
+        case .continueWatching, .resumeBook, .nextUp, .resumeAudio:
             return parentalFiltered.filter { $0.type != .boxSet }
+        case .latestMedia:
+            if let rowId,
+               (rowId == "collections_builtin" || rowId.hasPrefix("pluginDynamic:collections:")) {
+                return parentalFiltered
+            }
+            return parentalFiltered.filter { $0.type != .boxSet }
+        case .activeRecordings,
+            .recentlyReleased,
+            .favorites,
+            .favoriteMovies,
+            .favoriteSeries,
+            .favoriteEpisodes,
+            .favoritePeople,
+            .favoriteArtists,
+            .favoriteMusicVideos,
+            .favoriteAlbums,
+            .favoriteSongs,
+            .genres:
+            return parentalFiltered.filter { $0.type != .boxSet }
+        case .collections:
+            return parentalFiltered
         default:
             return parentalFiltered
         }

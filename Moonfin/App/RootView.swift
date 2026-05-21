@@ -194,11 +194,13 @@ struct MainNavigationView: View {
                 theme.colorScheme.scrim
                     .ignoresSafeArea()
                     .transition(.opacity)
+                    .zIndex(10)
 
                 SettingsOverlayView(focusNamespace: settingsNamespace)
                     .ignoresSafeArea()
                     .transition(.move(edge: .trailing))
                     .prefersDefaultFocus(in: mainNamespace)
+                    .zIndex(11)
             }
 
             if container.inactivityTracker.isScreensaverVisible {

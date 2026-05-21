@@ -43,7 +43,11 @@ struct SettingsHomeSectionsScreen: View {
             .buttonStyle(CleanButtonStyle())
             .padding(.top, SpaceTokens.spaceMd)
         }
-        .onAppear { loadSections() }
+        .onAppear {
+            loadSections()
+            container.homeScreenSectionsService.requestRefresh()
+            container.homePluginSectionsService.requestRefresh()
+        }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
             .debounce(for: .milliseconds(50), scheduler: DispatchQueue.main)) { _ in
             loadSections()
@@ -51,35 +55,70 @@ struct SettingsHomeSectionsScreen: View {
         .onReceive(container.pluginSyncService.$syncCompletedCount) { _ in
             loadSections()
         }
-    }
-
-    private func loadSections() {
-        let raw = prefs[UserPreferences.homeSections]
-        if raw.isEmpty {
-            sections = HomeSectionType.defaults.map { entry in
-                HomeSectionEntry(type: entry.type, enabled: entry.enabled)
-            }
-        } else {
-            let active = raw.split(separator: ",")
-                .compactMap { rawValue -> HomeSectionType? in
-                    let value = String(rawValue).trimmingCharacters(in: .whitespaces)
-                    return HomeSectionType(rawValue: value) ?? HomeSectionType.from(serverName: value)
-                }
-            var seenSections = Set<HomeSectionType>()
-            let uniqueActive = active.filter { seenSections.insert($0).inserted }
-            var result: [HomeSectionEntry] = uniqueActive.map { HomeSectionEntry(type: $0, enabled: true) }
-            for def in HomeSectionType.defaults {
-                if !uniqueActive.contains(def.type) {
-                    result.append(HomeSectionEntry(type: def.type, enabled: false))
-                }
-            }
-            sections = result
+        .onReceive(container.homeScreenSectionsService.$refreshCompletedCount.dropFirst()) { _ in
+            loadSections()
+        }
+        .onReceive(container.homePluginSectionsService.$refreshCompletedCount.dropFirst()) { _ in
+            loadSections()
         }
     }
 
+    private func loadSections() {
+        let sortedConfigs = prefs.homeSectionsConfig.sorted { $0.order < $1.order }
+        var seen = Set<HomeSectionType>()
+        var seenPluginStableIds = Set<String>()
+        var result: [HomeSectionEntry] = []
+
+        for config in sortedConfigs {
+            if config.isBuiltin {
+                guard config.type != .none, config.type != .mediaBar else { continue }
+                guard isVisibleBuiltinTypeInHomeSectionsList(config.type) else { continue }
+                guard seen.insert(config.type).inserted else { continue }
+                result.append(.builtin(type: config.type, enabled: config.enabled))
+                continue
+            }
+
+            guard config.isPluginDynamic else { continue }
+            guard isVisibleInHomeSectionsList(config) else { continue }
+            guard seenPluginStableIds.insert(config.stableId).inserted else { continue }
+
+            let section = (config.pluginSection ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let displayText = (config.pluginDisplayText ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let title = !displayText.isEmpty ? displayText : (!section.isEmpty ? section : "Dynamic Row")
+
+            result.append(.plugin(
+                config: config,
+                title: title,
+                subtitle: pluginSubtitle(for: config)
+            ))
+        }
+
+        for type in HomeSectionType.allCases where type != .none && type != .mediaBar {
+            guard isVisibleBuiltinTypeInHomeSectionsList(type) else { continue }
+            guard !seen.contains(type) else { continue }
+            let fallbackEnabled = HomeSectionType.defaults.first(where: { $0.type == type })?.enabled ?? false
+            result.append(.builtin(type: type, enabled: fallbackEnabled))
+        }
+
+        sections = result
+    }
+
     private func saveSections() {
-        let enabled = sections.filter(\.enabled).map(\.type.rawValue)
-        prefs[UserPreferences.homeSections] = enabled.joined(separator: ",")
+        let visibleUpdated: [HomeSectionConfig] = sections.enumerated().map { idx, entry in
+            entry.asConfig(order: idx)
+        }
+
+        let hiddenExisting: [HomeSectionConfig] = prefs.homeSectionsConfig
+            .sorted { $0.order < $1.order }
+            .filter { !isVisibleInHomeSectionsList($0) }
+            .enumerated()
+            .map { idx, config in
+                var updated = config
+                updated.order = visibleUpdated.count + idx
+                return updated
+            }
+
+        prefs.setHomeSectionsConfig(HomeSectionConfig.normalized(visibleUpdated + hiddenExisting))
     }
 
     private func toggleSection(at index: Int) {
@@ -95,17 +134,185 @@ struct SettingsHomeSectionsScreen: View {
     }
 
     private func resetToDefaults() {
-        sections = HomeSectionType.defaults.map { entry in
-            HomeSectionEntry(type: entry.type, enabled: entry.enabled)
+        let pluginEntries = sections
+            .filter { $0.kind == .pluginDynamic }
+            .map { entry in
+                var updated = entry
+                updated.enabled = false
+                return updated
+            }
+
+        let defaultBuiltinEntries = HomeSectionType.defaults
+            .filter { $0.type != .none && $0.type != .mediaBar }
+            .filter { isVisibleBuiltinTypeInHomeSectionsList($0.type) }
+            .map { HomeSectionEntry.builtin(type: $0.type, enabled: $0.enabled) }
+
+        sections = defaultBuiltinEntries + pluginEntries
+        saveSections()
+    }
+
+    private func isVisibleInHomeSectionsList(_ config: HomeSectionConfig) -> Bool {
+        if config.isBuiltin {
+            return isVisibleBuiltinTypeInHomeSectionsList(config.type)
         }
-        prefs[UserPreferences.homeSections] = ""
+
+        guard config.isPluginDynamic else { return false }
+        switch config.pluginSource {
+        case .collections:
+            return prefs[UserPreferences.displayCollectionsRows]
+        case .genres:
+            return prefs[UserPreferences.displayGenresRows]
+        case .hss, .kefinTweaks:
+            return true
+        }
+    }
+
+    private func isVisibleBuiltinTypeInHomeSectionsList(_ type: HomeSectionType) -> Bool {
+        switch type {
+        case .favorites,
+            .favoriteMovies,
+            .favoriteSeries,
+            .favoriteEpisodes,
+            .favoritePeople,
+            .favoriteArtists,
+            .favoriteMusicVideos,
+            .favoriteAlbums,
+            .favoriteSongs:
+            return prefs[UserPreferences.displayFavoritesRows]
+        case .collections:
+            return false
+        case .genres:
+            return false
+        default:
+            return type != .none && type != .mediaBar
+        }
+    }
+
+    private func pluginSubtitle(for config: HomeSectionConfig) -> String? {
+        var parts: [String] = [pluginSourceDisplayName(config.pluginSource)]
+
+        if let serverName = serverDisplayName(for: config.serverId), !serverName.isEmpty {
+            parts.append(serverName)
+        }
+
+        return parts.isEmpty ? nil : parts.joined(separator: " • ")
+    }
+
+    private func pluginSourceDisplayName(_ source: HomeSectionPluginSource) -> String {
+        switch source {
+        case .hss:
+            return "Home Screen Sections"
+        case .kefinTweaks:
+            return "Kefin Tweaks"
+        case .collections:
+            return "Collections"
+        case .genres:
+            return "Genres"
+        }
+    }
+
+    private func serverDisplayName(for serverId: String?) -> String? {
+        guard let serverId, !serverId.isEmpty else { return nil }
+
+        if let uuid = UUID(uuidString: serverId),
+           let server = container.serverRepository.storedServers.value.first(where: { $0.id == uuid }) {
+            return server.name
+        }
+
+        if let server = container.serverRepository.storedServers.value.first(where: {
+            normalizedServerIdentifier($0.address) == normalizedServerIdentifier(serverId)
+        }) {
+            return server.name
+        }
+
+        return nil
+    }
+
+    private func normalizedServerIdentifier(_ value: String) -> String {
+        var normalized = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        while normalized.hasSuffix("/") {
+            normalized.removeLast()
+        }
+        return normalized
     }
 }
 
 struct HomeSectionEntry: Identifiable {
-    var id: String { type.rawValue }
+    let id: String
+    let kind: HomeSectionKind
     let type: HomeSectionType
+    let title: String
+    let subtitle: String?
+    let icon: String
     var enabled: Bool
+    let serverId: String?
+    let pluginSection: String?
+    let pluginAdditionalData: String?
+    let pluginDisplayText: String?
+    let pluginSource: HomeSectionPluginSource
+
+    static func builtin(type: HomeSectionType, enabled: Bool) -> HomeSectionEntry {
+        HomeSectionEntry(
+            id: type.rawValue,
+            kind: .builtin,
+            type: type,
+            title: type.displayName,
+            subtitle: nil,
+            icon: type.icon,
+            enabled: enabled,
+            serverId: nil,
+            pluginSection: nil,
+            pluginAdditionalData: nil,
+            pluginDisplayText: nil,
+            pluginSource: .hss
+        )
+    }
+
+    static func plugin(config: HomeSectionConfig, title: String, subtitle: String?) -> HomeSectionEntry {
+        HomeSectionEntry(
+            id: config.stableId,
+            kind: .pluginDynamic,
+            type: .none,
+            title: title,
+            subtitle: subtitle,
+            icon: pluginIcon(for: config.pluginSource),
+            enabled: config.enabled,
+            serverId: config.serverId,
+            pluginSection: config.pluginSection,
+            pluginAdditionalData: config.pluginAdditionalData,
+            pluginDisplayText: config.pluginDisplayText ?? title,
+            pluginSource: config.pluginSource
+        )
+    }
+
+    func asConfig(order: Int) -> HomeSectionConfig {
+        if kind == .builtin {
+            return HomeSectionConfig.builtin(type: type, enabled: enabled, order: order)
+        }
+
+        return HomeSectionConfig.pluginDynamic(
+            enabled: enabled,
+            order: order,
+            serverId: serverId,
+            pluginSection: pluginSection,
+            pluginAdditionalData: pluginAdditionalData,
+            pluginDisplayText: pluginDisplayText ?? title,
+            pluginSource: pluginSource
+        )
+    }
+
+    private static func pluginIcon(for source: HomeSectionPluginSource) -> String {
+        switch source {
+        case .hss:
+            return "puzzlepiece.extension"
+        case .kefinTweaks:
+            return "slider.horizontal.3"
+        case .collections:
+            return "square.stack.3d.up"
+        case .genres:
+            return "theatermasks"
+        }
+    }
 }
 
 private struct HomeSectionRow: View {
@@ -120,9 +327,9 @@ private struct HomeSectionRow: View {
     var body: some View {
         Button(action: onToggle) {
             SettingsItemContent(
-                icon: entry.type.icon,
-                heading: entry.type.displayName,
-                caption: nil
+                icon: entry.icon,
+                heading: entry.title,
+                caption: entry.subtitle
             ) { isFocused in
                 HStack(spacing: SpaceTokens.spaceSm) {
                     if !isFirst {

@@ -84,6 +84,12 @@ struct HomeScreen: View {
         container.userPreferences[UserPreferences.seasonalSurprise]
     }
 
+    private var currentMediaBarMode: MediaBarMode {
+        let raw = UserDefaults.standard.string(forKey: UserPreferences.mediaBarMode.key)
+            ?? MediaBarMode.moonfin.rawValue
+        return MediaBarMode(rawValue: raw) ?? .moonfin
+    }
+
     init(
         container: AppContainer,
         mainNamespace: Namespace.ID,
@@ -140,8 +146,22 @@ struct HomeScreen: View {
     private func rowTypeLabel(_ rowType: HomeRowType) -> String {
         switch rowType {
         case .continueWatching: return "continueWatching"
+        case .resumeBook: return "resumeBook"
         case .nextUp: return "nextUp"
         case .latestMedia(let libraryId): return "latestMedia(\(libraryId))"
+        case .activeRecordings: return "activeRecordings"
+        case .recentlyReleased: return "recentlyReleased"
+        case .favorites: return "favorites"
+        case .favoriteMovies: return "favoriteMovies"
+        case .favoriteSeries: return "favoriteSeries"
+        case .favoriteEpisodes: return "favoriteEpisodes"
+        case .favoritePeople: return "favoritePeople"
+        case .favoriteArtists: return "favoriteArtists"
+        case .favoriteMusicVideos: return "favoriteMusicVideos"
+        case .favoriteAlbums: return "favoriteAlbums"
+        case .favoriteSongs: return "favoriteSongs"
+        case .collections: return "collections"
+        case .genres: return "genres"
         case .myMedia: return "myMedia"
         case .myMediaSmall: return "myMediaSmall"
         case .resumeAudio: return "resumeAudio"
@@ -149,6 +169,8 @@ struct HomeScreen: View {
         case .liveTvButtons: return "liveTvButtons"
         case .liveTvOnNow: return "liveTvOnNow"
         case .liveTvComingUp: return "liveTvComingUp"
+        case .mediaBar: return "mediaBar"
+        case .none: return "none"
         }
     }
 
@@ -180,7 +202,7 @@ struct HomeScreen: View {
         }
 
         switch row.rowType {
-        case .continueWatching:
+        case .continueWatching, .resumeBook:
             return container.userPreferences[UserPreferences.homeImageTypeContinueWatching].rawValue
         case .nextUp:
             return container.userPreferences[UserPreferences.homeImageTypeNextUp].rawValue
@@ -526,7 +548,7 @@ struct HomeScreen: View {
             syncMakdBackdrop(for: viewModel.mediaBarViewModel.currentItem)
         }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
-            if container.userPreferences[UserPreferences.mediaBarMode] == .makd {
+            if currentMediaBarMode == .makd {
                 syncMakdBackdrop(for: viewModel.mediaBarViewModel.currentItem)
             } else {
                 clearMakdBackdropSync()
@@ -1019,7 +1041,7 @@ struct HomeScreen: View {
 
     private func syncMakdBackdrop(for item: MediaBarSlideItem?) {
         guard isMediaBarMode else { return }
-        guard container.userPreferences[UserPreferences.mediaBarMode] == .makd else {
+        guard currentMediaBarMode == .makd else {
             clearMakdBackdropSync()
             return
         }
