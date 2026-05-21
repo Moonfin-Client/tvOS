@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Combine
 
@@ -75,7 +76,7 @@ final class ServerRepository: ServerRepositoryProtocol {
                             }
                         }
 
-                        guard let idString = info.id, let id = UUID.from(rawId: idString) else {
+                        guard let idString = info.id, let id = Self.serverStorageId(from: idString) else {
                             let msg = "Invalid or missing server id (raw: \(info.id ?? "nil"))"
                             candidateErrors[candidate] = msg
                             continue
@@ -218,6 +219,30 @@ final class ServerRepository: ServerRepositoryProtocol {
         }
 
         return candidates
+    }
+
+    private static func serverStorageId(from rawId: String) -> UUID? {
+        guard !rawId.isEmpty else { return nil }
+        if let parsed = UUID.from(rawId: rawId) {
+            return parsed
+        }
+
+        let digest = SHA256.hash(data: Data(rawId.utf8))
+        var bytes = Array(digest.prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+
+        let hex = bytes.map { String(format: "%02x", $0) }.joined()
+        return UUID(uuidString: Self.formatAsUUID(hex))
+    }
+
+    private static func formatAsUUID(_ hex32: String) -> String {
+        let s = hex32
+        let i = s.index(s.startIndex, offsetBy: 8)
+        let j = s.index(i, offsetBy: 4)
+        let k = s.index(j, offsetBy: 4)
+        let l = s.index(k, offsetBy: 4)
+        return "\(s[s.startIndex..<i])-\(s[i..<j])-\(s[j..<k])-\(s[k..<l])-\(s[l..<s.endIndex])"
     }
 
 }

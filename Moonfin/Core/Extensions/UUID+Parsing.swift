@@ -11,7 +11,7 @@ extension UUID {
             return UUID(uuidString: formatAsUUID(stripped))
         }
 
-        if raw.allSatisfy({ $0.isNumber }) {
+        if raw.count <= 32, raw.allSatisfy({ $0.isNumber }) {
             let padded = String(repeating: "0", count: max(0, 32 - raw.count)) + raw
             return UUID(uuidString: formatAsUUID(padded))
         }
