@@ -37,6 +37,14 @@ struct SettingsPersonalizationScreen: View {
                 action: { settingsRouter.navigate(to: .libraries) }
             )
             .focused($focusedRoute, equals: .libraries)
+
+            SettingsListButton(
+                icon: "sparkles",
+                heading: "Screensaver",
+                caption: "Idle mode, timeout, dimming, and clock options",
+                action: { settingsRouter.navigate(to: .customizationScreensaver) }
+            )
+            .focused($focusedRoute, equals: .customizationScreensaver)
         }
         .restoresFocus($focusedRoute)
     }

@@ -52,6 +52,14 @@ struct SettingsPlaybackSyncPlayRootScreen: View {
                 heading: "Advanced Options",
                 caption: "Advanced playback and Live TV direct-play behavior"
             )
+
+            SettingsNavRow(
+                focusedRoute: $focusedRoute,
+                route: .liveTvGuideOptions,
+                icon: "tv",
+                heading: "Live TV Guide",
+                caption: "Guide layout, channel order, badges, and filters"
+            )
         }
         .restoresFocus($focusedRoute)
     }
