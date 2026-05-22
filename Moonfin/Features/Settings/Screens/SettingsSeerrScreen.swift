@@ -9,10 +9,12 @@ struct SettingsSeerrScreen: View {
     @State private var fetchLimit: SeerrFetchLimit = .medium
     @State private var seerrEnabled = false
     @State private var isAuthenticated = false
+    @State private var seerrStatus: MoonfinStatusResponse?
     @State private var authType: SeerrAuthType = .jellyfin
     @State private var usernameOrEmail = ""
     @State private var password = ""
     @State private var authMessage: String?
+    @State private var isSubmittingAuth = false
     @State private var blockNsfw = true
     @State private var showInNavigation = true
     @State private var showInToolbar = true
@@ -21,6 +23,21 @@ struct SettingsSeerrScreen: View {
     private var repo: SeerrRepositoryProtocol { container.seerrRepository }
     private var seerrCapabilityAvailable: Bool {
         container.pluginSyncService.isPluginAvailable || seerrEnabled
+    }
+
+    private var canSignIn: Bool {
+        !isSubmittingAuth
+            && !usernameOrEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !password.isEmpty
+    }
+
+    private var signedInDisplayName: String? {
+        if let name = seerrStatus?.displayName, !name.isEmpty {
+            return name
+        }
+
+        let fallback = repo.getPreferences()?[SeerrPreferences.moonfinDisplayName] ?? ""
+        return fallback.isEmpty ? nil : fallback
     }
 
     var body: some View {
@@ -32,6 +49,18 @@ struct SettingsSeerrScreen: View {
                     caption: "Enable Seerr integration in app navigation",
                     isOn: seerrEnabledBinding
                 )
+            } else {
+                SettingsListButton(
+                    icon: "chevron.left",
+                    heading: "Back",
+                    caption: "Return to Integrations",
+                    action: { settingsRouter.goBack() }
+                )
+
+                Text("Seerr unavailable. Enable the server plugin and plugin sync first.")
+                    .font(.caption)
+                    .foregroundColor(theme.colorScheme.listCaption)
+                    .padding(.horizontal, SpaceTokens.spaceMd)
             }
 
             if seerrEnabled {
@@ -56,19 +85,45 @@ struct SettingsSeerrScreen: View {
                         icon: "key"
                     )
 
-                    SettingsListButton(
-                        icon: "arrow.right.circle",
-                        heading: "Sign In",
-                        caption: "Authenticate with your Seerr account",
-                        action: { Task { await signIn() } }
-                    )
+                    if isSubmittingAuth {
+                        SettingsItemContent(
+                            icon: "arrow.triangle.2.circlepath",
+                            heading: "Signing In",
+                            caption: "Authenticating with Seerr"
+                        ) { _ in
+                            ProgressView()
+                        }
+                    } else {
+                        SettingsListButton(
+                            icon: "arrow.right.circle",
+                            heading: "Sign In",
+                            caption: "Authenticate with your Seerr account",
+                            action: { Task { await signIn() } }
+                        )
+                        .disabled(!canSignIn)
+                        .opacity(canSignIn ? 1 : 0.6)
+                    }
                 } else {
+                    if let signedInDisplayName {
+                        SettingsItemContent(
+                            icon: "person.crop.circle.badge.checkmark",
+                            heading: "Signed In As",
+                            caption: nil
+                        ) { isFocused in
+                            Text(signedInDisplayName)
+                                .font(.captionXs)
+                                .foregroundColor(isFocused ? theme.colorScheme.listCaptionFocused : theme.colorScheme.listCaption)
+                        }
+                    }
+
                     SettingsListButton(
                         icon: "rectangle.portrait.and.arrow.right",
                         heading: "Sign Out",
                         caption: "Sign out of your Seerr account",
                         action: { Task { await signOut() } }
                     )
+                    .disabled(isSubmittingAuth)
+                    .opacity(isSubmittingAuth ? 0.6 : 1)
 
                     SettingsToggleButton(
                         icon: "eye.slash",
@@ -127,6 +182,12 @@ struct SettingsSeerrScreen: View {
             }
         }
         .task { await loadState() }
+        .onReceive(container.pluginSyncService.$isPluginAvailable.dropFirst()) { _ in
+            Task { await loadState() }
+        }
+        .onReceive(container.pluginSyncService.$syncCompletedCount.dropFirst()) { _ in
+            Task { await loadState() }
+        }
         .restoresFocus($focusedRoute)
     }
 
@@ -142,6 +203,119 @@ struct SettingsSeerrScreen: View {
                 .fontWeight(.semibold)
                 .foregroundColor(theme.colorScheme.onBackground)
         }
+    }
+
+    private func ensureMoonfinProxyConfigured(showError: Bool) async -> Bool {
+        if repo.isMoonfinMode.value {
+            return true
+        }
+
+        guard let session = container.sessionRepository.currentSession.value,
+              let server = container.serverRepository.currentServer.value else {
+            if showError {
+                authMessage = "No active Jellyfin session found"
+            }
+            return false
+        }
+
+        let jellyfinBaseUrl = server.address.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard !jellyfinBaseUrl.isEmpty, !session.accessToken.isEmpty else {
+            if showError {
+                authMessage = "No active Jellyfin session found"
+            }
+            return false
+        }
+
+        do {
+            seerrStatus = try await repo.configureWithMoonfin(
+                jellyfinBaseUrl: jellyfinBaseUrl,
+                jellyfinToken: session.accessToken
+            )
+            return true
+        } catch {
+            if showError {
+                authMessage = extractSeerrAuthError(error)
+            }
+            return false
+        }
+    }
+
+    private func extractSeerrAuthError(_ error: Error) -> String {
+        if let seerrError = error as? SeerrError {
+            switch seerrError {
+            case .moonfinLoginFailed(let message):
+                let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    return trimmed
+                }
+            }
+            return seerrError.localizedDescription
+        }
+
+        if let networkError = error as? NetworkError {
+            switch networkError {
+            case .httpError(_, let data):
+                return parseSeerrErrorPayload(data) ?? networkError.localizedDescription
+            default:
+                return networkError.localizedDescription
+            }
+        }
+
+        return error.localizedDescription
+    }
+
+    private func parseSeerrErrorPayload(_ data: Data?) -> String? {
+        guard let data, !data.isEmpty else { return nil }
+
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            if let nested = json["error"] as? [String: Any],
+               let message = (nested["message"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !message.isEmpty {
+                return message
+            }
+
+            let candidateKeys = ["error", "message", "detail", "reason", "title"]
+            for key in candidateKeys {
+                if let message = (json[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                   !message.isEmpty {
+                    return message
+                }
+            }
+
+            if let errors = json["errors"] as? [String],
+               let first = errors.first?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !first.isEmpty {
+                return first
+            }
+        }
+
+        if let raw = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !raw.isEmpty {
+            return raw
+        }
+
+        return nil
+    }
+
+    private func refreshMoonfinStatus() async {
+        do {
+            seerrStatus = try await repo.checkMoonfinStatus()
+            isAuthenticated = seerrStatus?.authenticated == true
+            seerrEnabled = repo.getPreferences()?[SeerrPreferences.enabled] ?? seerrEnabled
+        } catch {
+            seerrStatus = nil
+            isAuthenticated = false
+        }
+    }
+
+    private func performMoonfinSignOut(showMessage: Bool) async {
+        await repo.logoutMoonfin()
+        password = ""
+        seerrStatus = nil
+        isAuthenticated = false
+        seerrEnabled = repo.getPreferences()?[SeerrPreferences.enabled] ?? false
+        authMessage = showMessage ? "Signed out" : nil
+        await container.pluginSyncService.syncOnStartup()
     }
 
     // MARK: - Bindings
@@ -190,24 +364,6 @@ struct SettingsSeerrScreen: View {
         )
     }
 
-    // MARK: - Actions
-
-    private func loadState() async {
-        await repo.ensureInitialized()
-        let prefs = repo.getPreferences()
-        seerrEnabled = prefs?[SeerrPreferences.enabled] ?? false
-        fetchLimit = prefs?[SeerrPreferences.fetchLimit] ?? .medium
-        blockNsfw = prefs?[SeerrPreferences.blockNsfw] ?? true
-        showInNavigation = prefs?[SeerrPreferences.showInNavigation] ?? true
-        showInToolbar = prefs?[SeerrPreferences.showInToolbar] ?? true
-        showRequestStatus = prefs?[SeerrPreferences.showRequestStatus] ?? true
-        let method = prefs?[SeerrPreferences.authMethod] ?? ""
-        authType = method.contains("local") ? .local : .jellyfin
-        usernameOrEmail = prefs?[SeerrPreferences.localEmail] ?? ""
-        password = prefs?[SeerrPreferences.localPassword] ?? ""
-        isAuthenticated = await repo.isSessionValidCached()
-    }
-
     private var seerrEnabledBinding: Binding<Bool> {
         Binding(
             get: { seerrEnabled },
@@ -215,57 +371,95 @@ struct SettingsSeerrScreen: View {
                 seerrEnabled = newValue
                 let prefs = repo.getPreferences()
                 prefs?[SeerrPreferences.enabled] = newValue
+
                 if !newValue {
                     Task {
-                        await repo.logout()
-                        isAuthenticated = false
+                        await performMoonfinSignOut(showMessage: false)
                     }
                 }
             }
         )
     }
 
+    // MARK: - Actions
+
+    private func loadState() async {
+        await repo.ensureInitialized()
+
+        let prefs = repo.getPreferences()
+        seerrEnabled = prefs?[SeerrPreferences.enabled] ?? false
+        fetchLimit = prefs?[SeerrPreferences.fetchLimit] ?? .medium
+        blockNsfw = prefs?[SeerrPreferences.blockNsfw] ?? true
+        showInNavigation = prefs?[SeerrPreferences.showInNavigation] ?? true
+        showInToolbar = prefs?[SeerrPreferences.showInToolbar] ?? true
+        showRequestStatus = prefs?[SeerrPreferences.showRequestStatus] ?? true
+
+        let method = prefs?[SeerrPreferences.authMethod] ?? ""
+        authType = method.contains("local") ? .local : .jellyfin
+        usernameOrEmail = prefs?[SeerrPreferences.localEmail] ?? ""
+        password = ""
+
+        if seerrEnabled {
+            _ = await ensureMoonfinProxyConfigured(showError: false)
+            await refreshMoonfinStatus()
+        } else {
+            seerrStatus = nil
+            isAuthenticated = false
+        }
+    }
+
     private func signIn() async {
-        guard let prefs = repo.getPreferences() else { return }
-        let seerrUrl = prefs[SeerrPreferences.serverUrl]
-        guard !seerrUrl.isEmpty else {
-            authMessage = "Set Seerr server URL first in integration config"
+        guard canSignIn else { return }
+
+        isSubmittingAuth = true
+        authMessage = nil
+        defer { isSubmittingAuth = false }
+
+        guard await ensureMoonfinProxyConfigured(showError: true) else {
+            isAuthenticated = false
             return
         }
 
+        let username = usernameOrEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+
         do {
-            switch authType {
-            case .jellyfin:
-                guard let session = repo.getJellyfinSessionInfo() else {
-                    authMessage = "No active Jellyfin session found"
-                    return
-                }
-                _ = try await repo.loginWithJellyfin(
-                    username: usernameOrEmail,
-                    password: password,
-                    jellyfinUrl: session.serverUrl,
-                    seerrUrl: seerrUrl
-                )
-            case .local:
-                _ = try await repo.loginLocal(
-                    email: usernameOrEmail,
-                    password: password,
-                    seerrUrl: seerrUrl
-                )
+            let response = try await repo.loginWithMoonfin(
+                username: username,
+                password: password,
+                authType: authType.apiValue
+            )
+
+            guard response.success else {
+                authMessage = response.error ?? "Sign in failed"
+                isAuthenticated = false
+                return
             }
 
+            let prefs = repo.getPreferences()
+            prefs?[SeerrPreferences.authMethod] = authType.apiValue
+            prefs?[SeerrPreferences.localEmail] = username
+            if let displayName = response.displayName, !displayName.isEmpty {
+                prefs?[SeerrPreferences.moonfinDisplayName] = displayName
+            }
+
+            password = ""
+            await refreshMoonfinStatus()
+            await container.pluginSyncService.syncOnStartup()
             authMessage = "Signed in"
-            isAuthenticated = true
         } catch {
-            authMessage = "Sign in failed"
+            authMessage = extractSeerrAuthError(error)
             isAuthenticated = false
         }
     }
 
     private func signOut() async {
-        await repo.logout()
-        isAuthenticated = false
-        authMessage = "Signed out"
+        guard !isSubmittingAuth else { return }
+
+        isSubmittingAuth = true
+        authMessage = nil
+        defer { isSubmittingAuth = false }
+
+        await performMoonfinSignOut(showMessage: true)
     }
 }
 
@@ -277,6 +471,13 @@ private enum SeerrAuthType {
         switch self {
         case .jellyfin: return "Jellyfin"
         case .local: return "Local"
+        }
+    }
+
+    var apiValue: String {
+        switch self {
+        case .jellyfin: return "jellyfin"
+        case .local: return "local"
         }
     }
 }
