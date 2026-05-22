@@ -31,13 +31,23 @@ final class InactivityTracker: ObservableObject {
         TimeInterval(userPreferences[UserPreferences.screensaverTimeout]) * 60.0
     }
 
+    private func isStateActiveForScreensaver(_ state: PlaybackState) -> Bool {
+        switch state {
+        case .resolving, .playing, .buffering:
+            return true
+        case .idle, .paused, .error:
+            return false
+        }
+    }
+
     private var isPlaybackActive: Bool {
         guard let coordinator = playbackCoordinator else { return false }
-        if let video = coordinator.videoPlayerManager, video.playbackState == .playing || video.playbackState == .paused {
+        if let video = coordinator.videoPlayerManager,
+           isStateActiveForScreensaver(video.playbackState) {
             return true
         }
         if let audio = coordinator.audioManager,
-           audio.playbackManager.playbackState == .playing || audio.playbackManager.playbackState == .paused {
+           isStateActiveForScreensaver(audio.playbackManager.playbackState) {
             return true
         }
         return false

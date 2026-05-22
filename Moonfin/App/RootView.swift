@@ -97,7 +97,6 @@ struct MainNavigationView: View {
     @State private var isCurrentDestinationDetails = false
     @State private var contentHandoffResetTask: Task<Void, Never>?
     @State private var showExitConfirmation = false
-    @State private var hasPlaybackScreensaverLock = false
 
     private var navbarPosition: NavbarPosition {
         container.userPreferences[UserPreferences.navbarPosition]
@@ -254,16 +253,13 @@ struct MainNavigationView: View {
         }
         .onDisappear {
             contentHandoffResetTask?.cancel()
-            if hasPlaybackScreensaverLock {
-                hasPlaybackScreensaverLock = false
-                container.inactivityTracker.removeLock()
-            }
         }
         .onAppear {
-            syncPlaybackScreensaverLock(router.isPlaybackActive)
+            if router.isPlaybackActive {
+                container.inactivityTracker.notifyInteraction()
+            }
         }
         .onChange(of: router.isPlaybackActive) { isActive in
-            syncPlaybackScreensaverLock(isActive)
             if isActive {
                 container.inactivityTracker.notifyInteraction()
             }
@@ -300,19 +296,6 @@ struct MainNavigationView: View {
 
     private func closeApp() {
         exit(0)
-    }
-
-    private func syncPlaybackScreensaverLock(_ isPlaybackActive: Bool) {
-        if isPlaybackActive {
-            guard !hasPlaybackScreensaverLock else { return }
-            hasPlaybackScreensaverLock = true
-            container.inactivityTracker.addLock()
-            return
-        }
-
-        guard hasPlaybackScreensaverLock else { return }
-        hasPlaybackScreensaverLock = false
-        container.inactivityTracker.removeLock()
     }
 
     private var mainContent: some View {
