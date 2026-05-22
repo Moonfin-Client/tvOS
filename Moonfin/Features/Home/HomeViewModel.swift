@@ -6,7 +6,7 @@ import OSLog
 final class HomeViewModel: ObservableObject {
     let infoState = HomeInfoState()
     @Published private(set) var rows: [HomeRow] = []
-    private(set) var visibleRows: [HomeRow] = []
+    @Published private(set) var visibleRows: [HomeRow] = []
     @Published private(set) var isInitialLoad = true
     @Published private(set) var isMediaBarActive: Bool = false
     @Published private(set) var isMediaBarLoading: Bool = true
