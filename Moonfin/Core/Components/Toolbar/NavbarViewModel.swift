@@ -1,6 +1,17 @@
 import SwiftUI
 import Combine
 
+struct AccountSwitcherAccount: Identifiable, Equatable {
+    let server: Server
+    let user: PrivateUser
+    let imageUrl: String?
+    let isActive: Bool
+
+    var id: String {
+        "\(server.id.uuidString)-\(user.id.uuidString)"
+    }
+}
+
 @MainActor
 final class NavbarViewModel: ObservableObject {
     @Published var userImageUrl: String?
@@ -171,10 +182,50 @@ final class NavbarViewModel: ObservableObject {
         )
     }
 
-    func switchUser() -> UUID? {
-        let serverId = container.serverRepository.currentServer.value?.id
+    var currentServerId: UUID? {
+        container.serverRepository.currentServer.value?.id
+    }
+
+    func accountSwitcherAccounts() -> [AccountSwitcherAccount] {
+        container.serverRepository.loadStoredServers()
+        let currentSession = container.sessionRepository.currentSession.value
+
+        return container.serverRepository.storedServers.value.flatMap { server in
+            container.serverUserRepository
+                .getStoredServerUsers(server: server)
+                .filter { user in
+                    guard let token = user.accessToken else { return false }
+                    return !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }
+                .map { user in
+                    AccountSwitcherAccount(
+                        server: server,
+                        user: user,
+                        imageUrl: container.authenticationRepository.getUserImageUrl(server: server, user: user),
+                        isActive: currentSession?.serverId == server.id && currentSession?.userId == user.id
+                    )
+                }
+        }
+    }
+
+    func addScreensaverLock() {
+        container.inactivityTracker.addLock()
+    }
+
+    func removeScreensaverLock() {
+        container.inactivityTracker.removeLock()
+    }
+
+    func signOutCurrentSession() {
         container.sessionRepository.destroyCurrentSession()
-        return serverId
+    }
+
+    func signOutAllStoredAccounts() {
+        container.sessionRepository.destroyCurrentSession()
+        container.serverRepository.loadStoredServers()
+        for server in container.serverRepository.storedServers.value {
+            _ = container.serverRepository.deleteServer(id: server.id)
+        }
     }
 
     @Published var isShuffling = false

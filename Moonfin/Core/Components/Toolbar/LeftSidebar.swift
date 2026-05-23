@@ -17,6 +17,9 @@ struct LeftSidebar: View {
     @State private var sidebarHadFocus = false
     @State private var allowAutoExpansion = false
     @State private var showShuffleDialog = false
+    @State private var showAccountSwitcherDialog = false
+    @State private var accountSwitcherBusy = false
+    @State private var accountSwitcherAccounts: [AccountSwitcherAccount] = []
     @State private var returnFocusItem: SidebarFocusItem = .home
     @FocusState private var focusedItem: SidebarFocusItem?
 
@@ -102,6 +105,63 @@ struct LeftSidebar: View {
         onMoveToContent?()
     }
 
+    private func presentAccountSwitcher() {
+        accountSwitcherAccounts = viewModel.accountSwitcherAccounts()
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = true
+    }
+
+    private func navigateToStartup(restoredServerId: UUID?, restoredUserId: UUID? = nil, suppressAutoLogin: Bool) {
+        sessionInitializer.endSwitchUserTransition()
+        sessionInitializer.suppressAutoLogin = suppressAutoLogin
+        sessionInitializer.restoredServerId = restoredServerId
+        sessionInitializer.restoredUserId = restoredUserId
+        router.switchFlow(to: .startup)
+    }
+
+    private func handleAccountSelection(_ account: AccountSwitcherAccount) {
+        if account.isActive {
+            showAccountSwitcherDialog = false
+            return
+        }
+
+        accountSwitcherBusy = true
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = false
+        sessionInitializer.beginSwitchUserTransition()
+        sessionInitializer.suppressAutoLogin = false
+        sessionInitializer.restoredUserId = account.user.id
+        sessionInitializer.restoredServerId = nil
+        router.switchFlow(to: .startup)
+        router.navigate(to: .serverUsers(serverId: account.server.id))
+    }
+
+    private func handleSignOutCurrent() {
+        accountSwitcherBusy = true
+        viewModel.signOutCurrentSession()
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: nil, suppressAutoLogin: true)
+    }
+
+    private func handleSignOutAllUsers() {
+        accountSwitcherBusy = true
+        viewModel.signOutAllStoredAccounts()
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: nil, suppressAutoLogin: true)
+    }
+
+    private func handleSelectServer() {
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: nil, suppressAutoLogin: true)
+    }
+
+    private func handleAddUser() {
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: viewModel.currentServerId, suppressAutoLogin: true)
+    }
+
     var body: some View {
         sidebarColumn
             .ignoresSafeArea()
@@ -164,6 +224,25 @@ struct LeftSidebar: View {
                     enableAdditionalRatings: viewModel.enableAdditionalRatings
                 )
             }
+            .fullScreenCover(isPresented: $showAccountSwitcherDialog) {
+                AccountSwitcherDialog(
+                    accounts: accountSwitcherAccounts,
+                    isBusy: accountSwitcherBusy,
+                    onSelectAccount: handleAccountSelection,
+                    onAddUser: handleAddUser,
+                    onSelectServer: handleSelectServer,
+                    onSignOutCurrent: handleSignOutCurrent,
+                    onSignOutAllUsers: handleSignOutAllUsers,
+                    onDismiss: { showAccountSwitcherDialog = false }
+                )
+            }
+            .onChange(of: showAccountSwitcherDialog) { showing in
+                if showing {
+                    viewModel.addScreensaverLock()
+                } else {
+                    viewModel.removeScreensaverLock()
+                }
+            }
     }
 
     private var sidebarColumn: some View {
@@ -217,12 +296,7 @@ struct LeftSidebar: View {
             cycleIndex: sidebarCycleIndex(for: .user),
             isExpanded: isExpanded,
             isFocused: focusedItem == .user,
-            action: {
-                let serverId = viewModel.switchUser()
-                sessionInitializer.suppressAutoLogin = true
-                sessionInitializer.restoredServerId = serverId
-                router.switchFlow(to: .startup)
-            }
+            action: { presentAccountSwitcher() }
         )
         .focused($focusedItem, equals: .user)
     }

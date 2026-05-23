@@ -19,7 +19,7 @@ final class BackgroundService: ObservableObject {
     private var currentIndex: Int = 0
     private var slideshowTimer: AnyCancellable?
     private var lastUpdateTime: Date = .distantPast
-    private weak var preferences: UserPreferences?
+    private var preferences: UserPreferences?
 
     static let slideshowInterval: TimeInterval = 30
     static let transitionDuration: TimeInterval = 0.4
@@ -29,7 +29,8 @@ final class BackgroundService: ObservableObject {
     }
 
     func setBackground(urls: [String], context: BlurContext = .browsing) {
-        if let prefs = preferences, !prefs[UserPreferences.backdropEnabled] {
+        let isBackdropEnabled = preferences?[UserPreferences.backdropEnabled] ?? true
+        if !isBackdropEnabled {
             clearBackground()
             return
         }
@@ -64,9 +65,11 @@ final class BackgroundService: ObservableObject {
             return
         }
 
+        let nextBlurAmount = resolvedBlurAmount(for: context)
+
         enabled = true
         blurContext = context
-        blurAmount = blurAmount(for: context)
+        blurAmount = nextBlurAmount
         backgrounds = urls
         currentIndex = 0
         currentBackdropUrl = urls.first
@@ -80,7 +83,7 @@ final class BackgroundService: ObservableObject {
         }
     }
 
-    private func blurAmount(for context: BlurContext) -> CGFloat {
+    private func resolvedBlurAmount(for context: BlurContext) -> CGFloat {
         guard let prefs = preferences else {
             switch context {
             case .details: return 20
@@ -124,9 +127,11 @@ final class BackgroundService: ObservableObject {
             .autoconnect()
             .first()
             .sink { [weak self] _ in
-                guard let self else { return }
-                if advanceIndex { self.currentIndex += 1 }
-                self.update()
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    if advanceIndex { self.currentIndex += 1 }
+                    self.update()
+                }
             }
     }
 }

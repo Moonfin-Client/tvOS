@@ -303,6 +303,9 @@ enum Strings {
     static var startupWelcomeContent: String { l("startup_welcome_content") }
     static var welcomeContent: String { l("welcome_content") }
     static var selectServer: String { l("lbl_select_server") }
+    static var signOutAllUsers: String { l("sign_out_all_users") }
+    static var accountActiveBadge: String { l("account_active_badge") }
+    static var noStoredAccounts: String { l("account_switcher_no_accounts") }
     static var removeServer: String { l("lbl_remove_server") }
     static var manageServers: String { l("lbl_manage_servers") }
     static var gotIt: String { l("btn_got_it") }

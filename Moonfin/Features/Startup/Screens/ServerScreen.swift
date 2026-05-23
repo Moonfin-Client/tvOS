@@ -3,12 +3,13 @@ import SwiftUI
 struct ServerScreen: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
+    @EnvironmentObject var sessionInitializer: SessionInitializer
     @StateObject private var viewModel: ServerViewModel
     @State private var mainFlowTransitionTask: Task<Void, Never>?
 
     let serverId: UUID
 
-    init(serverId: UUID, container: AppContainer, suppressAutoLogin: Bool = false) {
+    init(serverId: UUID, container: AppContainer, suppressAutoLogin: Bool = false, preferredUserId: UUID? = nil) {
         self.serverId = serverId
         _viewModel = StateObject(wrappedValue: {
             let vm = ServerViewModel(
@@ -20,6 +21,7 @@ struct ServerScreen: View {
                 serverClientFactory: container.serverClientFactory
             )
             vm.suppressAutoLogin = suppressAutoLogin
+            vm.preferredAutoLoginUserId = preferredUserId
             return vm
         }())
     }
@@ -39,10 +41,17 @@ struct ServerScreen: View {
                 pinEntryOverlay
             }
         }
-        .task { await viewModel.load() }
+        .task {
+            await viewModel.load()
+            if sessionInitializer.isSwitchUserTransitionActive,
+               viewModel.loginState == .idle {
+                sessionInitializer.endSwitchUserTransition()
+            }
+        }
         .onChange(of: viewModel.loginState) { state in
             switch state {
             case .authenticated:
+                sessionInitializer.endSwitchUserTransition()
                 guard mainFlowTransitionTask == nil else { return }
                 mainFlowTransitionTask = Task {
                     router.switchFlow(to: .main)
@@ -50,6 +59,7 @@ struct ServerScreen: View {
                     Task { await container.pluginSyncService.syncOnStartup() }
                 }
             case .requireSignIn:
+                sessionInitializer.endSwitchUserTransition()
                 if let server = viewModel.server {
                     let username = viewModel.authenticatingUser?.name ?? viewModel.pinUser?.name
                     router.navigate(to: .userLogin(
@@ -57,6 +67,8 @@ struct ServerScreen: View {
                         username: username
                     ))
                 }
+            case .serverUnavailable, .versionNotSupported, .apiClientError:
+                sessionInitializer.endSwitchUserTransition()
             default:
                 break
             }

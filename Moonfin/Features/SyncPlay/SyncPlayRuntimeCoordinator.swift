@@ -8,6 +8,7 @@ final class SyncPlayRuntimeCoordinator {
     private let serverRepository: ServerRepositoryProtocol
     private let serverClientFactory: MediaServerClientFactory
     private var serverCancellable: AnyCancellable?
+    private var syncPlayStateCancellable: AnyCancellable?
     private var currentWebSocket: ServerWebSocketApi?
     private var currentServer: Server?
     private let logger = Logger(subsystem: "org.moonfin.appletv", category: "SyncPlay")
@@ -31,40 +32,75 @@ final class SyncPlayRuntimeCoordinator {
                     await self.handleServerChange(server)
                 }
             }
+
+        if let syncPlayManager {
+            syncPlayStateCancellable = syncPlayManager.$state
+                .map(\.enabled)
+                .removeDuplicates()
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    guard let self else { return }
+                    Task { @MainActor in
+                        await self.refreshConnectionIfNeeded()
+                    }
+                }
+        }
     }
 
     func stop() {
         serverCancellable?.cancel()
         serverCancellable = nil
-        let ws = currentWebSocket
-        currentWebSocket = nil
+        syncPlayStateCancellable?.cancel()
+        syncPlayStateCancellable = nil
         currentServer = nil
-        Task { await ws?.disconnect() }
+        Task { @MainActor in
+            await disconnectCurrentWebSocket()
+        }
     }
 
     func appDidEnterBackground() {
-        let ws = currentWebSocket
-        currentWebSocket = nil
-        Task { await ws?.disconnect() }
+        Task { @MainActor in
+            await disconnectCurrentWebSocket()
+        }
     }
 
     func appDidBecomeActive() {
-        guard let server = currentServer, server.serverType == .jellyfin else { return }
         Task { @MainActor in
-            await connectWebSocket(for: server)
+            await refreshConnectionIfNeeded()
         }
     }
 
     private func handleServerChange(_ server: Server?) async {
+        let serverChanged = currentServer?.id != server?.id
+        if serverChanged {
+            await disconnectCurrentWebSocket()
+        }
+
+        currentServer = server
+        await refreshConnectionIfNeeded()
+    }
+
+    private var shouldMaintainRealtimeConnection: Bool {
+        guard let syncPlayManager else { return false }
+        return syncPlayManager.syncPlayEnabled && syncPlayManager.state.enabled
+    }
+
+    private func refreshConnectionIfNeeded() async {
+        guard let server = currentServer,
+              server.serverType == .jellyfin,
+              shouldMaintainRealtimeConnection else {
+            await disconnectCurrentWebSocket()
+            return
+        }
+
+        guard currentWebSocket == nil else { return }
+        await connectWebSocket(for: server)
+    }
+
+    private func disconnectCurrentWebSocket() async {
         let ws = currentWebSocket
         currentWebSocket = nil
         await ws?.disconnect()
-
-        currentServer = server
-
-        guard let server, server.serverType == .jellyfin else { return }
-
-        await connectWebSocket(for: server)
     }
 
     private func connectWebSocket(for server: Server) async {
@@ -79,6 +115,7 @@ final class SyncPlayRuntimeCoordinator {
             try await currentWebSocket?.connect()
             syncPlayManager?.handleRealtimeConnected()
         } catch {
+            currentWebSocket = nil
             logger.error("WebSocket connect failed: \(error.localizedDescription, privacy: .public)")
         }
     }

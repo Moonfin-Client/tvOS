@@ -99,12 +99,13 @@ final class SessionRepository: SessionRepositoryProtocol {
     @discardableResult
     private func setCurrentSession(_ session: Session?) async -> Bool {
         if let session {
-            if currentSession.value?.userId == session.userId {
+            if currentSession.value?.userId == session.userId,
+               currentSession.value?.serverId == session.serverId {
                 return true
             }
 
-            authPreferences.lastServerId = session.serverId.uuidString
-            authPreferences.lastUserId = session.userId.uuidString
+            let previousUser = userRepository.currentUser.value
+            let previousServer = serverRepository.currentServer.value
 
             guard let server = await serverRepository.getServer(id: session.serverId, eagerUpdate: true),
                   server.versionSupported else {
@@ -119,9 +120,11 @@ final class SessionRepository: SessionRepositoryProtocol {
                 let user = try await client.authApi.getCurrentUser()
                 userRepository.setCurrentUser(user)
                 serverRepository.currentServer.send(server)
+                authPreferences.lastServerId = session.serverId.uuidString
+                authPreferences.lastUserId = session.userId.uuidString
             } catch {
-                userRepository.setCurrentUser(nil)
-                serverRepository.currentServer.send(nil)
+                userRepository.setCurrentUser(previousUser)
+                serverRepository.currentServer.send(previousServer)
                 return false
             }
         } else {

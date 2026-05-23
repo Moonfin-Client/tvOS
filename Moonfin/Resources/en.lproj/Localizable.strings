@@ -363,6 +363,9 @@
 "lbl_server" = "Server";
 "lbl_remove" = "Remove";
 "lbl_sign_out" = "Sign out";
+"sign_out_all_users" = "Sign out all users";
+"account_active_badge" = "ACTIVE";
+"account_switcher_no_accounts" = "No stored accounts yet.";
 "image_type_poster" = "Poster";
 "image_type_thumbnail" = "Thumbnail";
 "image_type_banner" = "Banner";

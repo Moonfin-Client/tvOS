@@ -27,10 +27,34 @@ struct RootView: View {
                         removal: .identity
                     ))
             }
+
+            if sessionInitializer.isSwitchUserTransitionActive {
+                SwitchUserTransitionOverlay()
+                    .zIndex(10)
+            }
         }
         .animation(.easeInOut(duration: 0.5), value: router.flow)
         .onAppear {
             sessionInitializer.initialize(router: router)
+        }
+    }
+}
+
+private struct SwitchUserTransitionOverlay: View {
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.78)
+                .ignoresSafeArea()
+
+            VStack(spacing: SpaceTokens.spaceMd) {
+                ProgressView()
+                    .tint(.white)
+                    .scaleEffect(1.2)
+
+                Text(Strings.switchUser)
+                    .font(.titleMd)
+                    .foregroundColor(.white.opacity(0.9))
+            }
         }
     }
 }
@@ -69,7 +93,17 @@ struct StartupNavigationView: View {
         case .embyConnect:
             EmbyConnectScreen(container: container)
         case .serverUsers(let serverId):
-            ServerScreen(serverId: serverId, container: container, suppressAutoLogin: sessionInitializer.consumeSuppressAutoLogin())
+            let suppressAutoLogin = sessionInitializer.suppressAutoLogin
+            let preferredUserId = sessionInitializer.restoredUserId
+            ServerScreen(
+                serverId: serverId,
+                container: container,
+                suppressAutoLogin: suppressAutoLogin,
+                preferredUserId: preferredUserId
+            )
+            .onAppear {
+                sessionInitializer.clearStartupSelectionContext()
+            }
         case .userLogin(let serverId, let username):
             UserLoginScreen(serverId: serverId, username: username, container: container)
         case .connectHelp:

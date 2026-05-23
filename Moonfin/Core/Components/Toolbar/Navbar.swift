@@ -12,6 +12,9 @@ struct Navbar: View {
     @State private var relockTask: Task<Void, Never>?
     @State private var isLibrariesIconFocused = true
     @State private var showShuffleDialog = false
+    @State private var showAccountSwitcherDialog = false
+    @State private var accountSwitcherBusy = false
+    @State private var accountSwitcherAccounts: [AccountSwitcherAccount] = []
     private let navbarPillHeight: CGFloat = 64
     let requestHomeFocusToken: Int
     let onMoveToContent: (() -> Void)?
@@ -25,6 +28,63 @@ struct Navbar: View {
     private func routeHomeAndHandoffFocus() {
         router.reset()
         onMoveToContent?()
+    }
+
+    private func presentAccountSwitcher() {
+        accountSwitcherAccounts = viewModel.accountSwitcherAccounts()
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = true
+    }
+
+    private func navigateToStartup(restoredServerId: UUID?, restoredUserId: UUID? = nil, suppressAutoLogin: Bool) {
+        sessionInitializer.endSwitchUserTransition()
+        sessionInitializer.suppressAutoLogin = suppressAutoLogin
+        sessionInitializer.restoredServerId = restoredServerId
+        sessionInitializer.restoredUserId = restoredUserId
+        router.switchFlow(to: .startup)
+    }
+
+    private func handleAccountSelection(_ account: AccountSwitcherAccount) {
+        if account.isActive {
+            showAccountSwitcherDialog = false
+            return
+        }
+
+        accountSwitcherBusy = true
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = false
+        sessionInitializer.beginSwitchUserTransition()
+        sessionInitializer.suppressAutoLogin = false
+        sessionInitializer.restoredUserId = account.user.id
+        sessionInitializer.restoredServerId = nil
+        router.switchFlow(to: .startup)
+        router.navigate(to: .serverUsers(serverId: account.server.id))
+    }
+
+    private func handleSignOutCurrent() {
+        accountSwitcherBusy = true
+        viewModel.signOutCurrentSession()
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: nil, suppressAutoLogin: true)
+    }
+
+    private func handleSignOutAllUsers() {
+        accountSwitcherBusy = true
+        viewModel.signOutAllStoredAccounts()
+        accountSwitcherBusy = false
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: nil, suppressAutoLogin: true)
+    }
+
+    private func handleSelectServer() {
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: nil, suppressAutoLogin: true)
+    }
+
+    private func handleAddUser() {
+        showAccountSwitcherDialog = false
+        navigateToStartup(restoredServerId: viewModel.currentServerId, suppressAutoLogin: true)
     }
 
     private var visibleCenterItems: [NavbarItem] {
@@ -118,6 +178,25 @@ struct Navbar: View {
                 enableAdditionalRatings: viewModel.enableAdditionalRatings
             )
         }
+        .fullScreenCover(isPresented: $showAccountSwitcherDialog) {
+            AccountSwitcherDialog(
+                accounts: accountSwitcherAccounts,
+                isBusy: accountSwitcherBusy,
+                onSelectAccount: handleAccountSelection,
+                onAddUser: handleAddUser,
+                onSelectServer: handleSelectServer,
+                onSignOutCurrent: handleSignOutCurrent,
+                onSignOutAllUsers: handleSignOutAllUsers,
+                onDismiss: { showAccountSwitcherDialog = false }
+            )
+        }
+        .onChange(of: showAccountSwitcherDialog) { showing in
+            if showing {
+                viewModel.addScreensaverLock()
+            } else {
+                viewModel.removeScreensaverLock()
+            }
+        }
     }
 
     private var startSection: some View {
@@ -125,12 +204,7 @@ struct Navbar: View {
             imageUrl: viewModel.userImageUrl,
             userName: viewModel.userName,
             isFocused: navFocusItem == .user,
-            onTap: {
-                let serverId = viewModel.switchUser()
-                sessionInitializer.suppressAutoLogin = true
-                sessionInitializer.restoredServerId = serverId
-                router.switchFlow(to: .startup)
-            }
+            onTap: { presentAccountSwitcher() }
         )
         .disabled(lockToHomeOnEntry)
         .focused($navFocusItem, equals: .user)
@@ -345,5 +419,389 @@ private struct UserAvatarToolbarButton: View {
                 .fill(theme.colorScheme.onButton)
                 .frame(width: 26, height: 26)
         }
+    }
+}
+
+private enum AccountSwitcherFocusTarget: Hashable {
+    case account(String)
+    case addUser
+    case selectServer
+    case signOut
+    case signOutAll
+}
+
+struct AccountSwitcherDialog: View {
+    let accounts: [AccountSwitcherAccount]
+    let isBusy: Bool
+    let onSelectAccount: (AccountSwitcherAccount) -> Void
+    let onAddUser: () -> Void
+    let onSelectServer: () -> Void
+    let onSignOutCurrent: () -> Void
+    let onSignOutAllUsers: () -> Void
+    let onDismiss: () -> Void
+
+    @EnvironmentObject private var theme: MoonfinTheme
+    @FocusState private var focusedTarget: AccountSwitcherFocusTarget?
+
+    private let cardWidth: CGFloat = 176
+    private let cardHeight: CGFloat = 296
+    private let avatarSize: CGFloat = 150
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.78)
+                .ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: SpaceTokens.spaceMd) {
+                Text(Strings.switchUser)
+                    .font(.titleLg)
+                    .foregroundColor(theme.colorScheme.onBackground)
+
+                Divider()
+                    .background(theme.colorScheme.onBackground.opacity(0.08))
+
+                accountRow
+                    .padding(.bottom, SpaceTokens.spaceXl)
+
+                if accounts.isEmpty {
+                    Text(Strings.noStoredAccounts)
+                        .font(.bodySm)
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                } else {
+                    HStack(spacing: SpaceTokens.spaceSm) {
+                        AccountSwitcherActionButton(
+                            title: Strings.selectServer,
+                            isFocused: focusedTarget == .selectServer,
+                            isDestructive: false,
+                            action: onSelectServer
+                        )
+                        .focused($focusedTarget, equals: .selectServer)
+                        .disabled(isBusy)
+
+                        AccountSwitcherActionButton(
+                            title: Strings.signOut,
+                            isFocused: focusedTarget == .signOut,
+                            isDestructive: false,
+                            action: onSignOutCurrent
+                        )
+                        .focused($focusedTarget, equals: .signOut)
+                        .disabled(isBusy)
+                    }
+                    .focusSection()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+
+                if accounts.count > 1 {
+                    HStack {
+                        Spacer(minLength: 0)
+                        AccountSwitcherActionButton(
+                            title: Strings.signOutAllUsers,
+                            isFocused: focusedTarget == .signOutAll,
+                            isDestructive: true,
+                            action: onSignOutAllUsers
+                        )
+                        .focused($focusedTarget, equals: .signOutAll)
+                        .disabled(isBusy)
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
+            .padding(.horizontal, 38)
+            .padding(.vertical, 30)
+            .frame(maxWidth: 1120, minHeight: 720)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.extraLarge)
+                    .fill(theme.colorScheme.surface.opacity(0.95))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RadiusTokens.extraLarge)
+                            .stroke(theme.colorScheme.onBackground.opacity(0.18), lineWidth: 1.5)
+                    )
+            )
+            .padding(.horizontal, 52)
+            .padding(.vertical, 34)
+
+            if isBusy {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+
+                ProgressView()
+                    .tint(theme.colorScheme.onBackground)
+                    .scaleEffect(1.3)
+            }
+        }
+        .focusSection()
+        .onAppear {
+            if focusedTarget == nil {
+                focusedTarget = initialFocusTarget
+            }
+        }
+        .onChange(of: accounts.map(\.id)) { _ in
+            if focusedTarget == nil || !isFocusedTargetStillValid {
+                focusedTarget = initialFocusTarget
+            }
+        }
+        .onExitCommand {
+            guard !isBusy else { return }
+            onDismiss()
+        }
+    }
+
+    private var accountRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: SpaceTokens.spaceLg) {
+                ForEach(accounts) { account in
+                    AccountSwitcherCardView(
+                        account: account,
+                        isFocused: focusedTarget == .account(account.id),
+                        cardWidth: cardWidth,
+                        cardHeight: cardHeight,
+                        avatarSize: avatarSize,
+                        action: { onSelectAccount(account) }
+                    )
+                    .focused($focusedTarget, equals: .account(account.id))
+                    .disabled(isBusy)
+                }
+
+                AccountSwitcherAddUserCard(
+                    isFocused: focusedTarget == .addUser,
+                    cardWidth: cardWidth,
+                    cardHeight: cardHeight,
+                    avatarSize: avatarSize,
+                    action: onAddUser
+                )
+                .focused($focusedTarget, equals: .addUser)
+                .disabled(isBusy)
+            }
+            .padding(.horizontal, SpaceTokens.spaceXs)
+            .padding(.vertical, SpaceTokens.spaceSm)
+            .frame(maxWidth: .infinity, alignment: accounts.isEmpty ? .center : .leading)
+        }
+        .frame(height: cardHeight + 22)
+        .focusSection()
+    }
+
+    private var initialFocusTarget: AccountSwitcherFocusTarget {
+        if let active = accounts.first(where: { $0.isActive }) {
+            return .account(active.id)
+        }
+        if let first = accounts.first {
+            return .account(first.id)
+        }
+        return .addUser
+    }
+
+    private var isFocusedTargetStillValid: Bool {
+        guard let focusedTarget else { return false }
+        switch focusedTarget {
+        case .account(let id):
+            return accounts.contains(where: { $0.id == id })
+        case .addUser:
+            return true
+        case .selectServer, .signOut:
+            return !accounts.isEmpty
+        case .signOutAll:
+            return accounts.count > 1
+        }
+    }
+}
+
+private struct AccountSwitcherCardView: View {
+    let account: AccountSwitcherAccount
+    let isFocused: Bool
+    let cardWidth: CGFloat
+    let cardHeight: CGFloat
+    let avatarSize: CGFloat
+    let action: () -> Void
+
+    @EnvironmentObject private var theme: MoonfinTheme
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: SpaceTokens.spaceSm) {
+                avatar
+
+                Text(account.user.name)
+                    .font(.bodyMd)
+                    .foregroundColor(theme.colorScheme.onBackground)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+
+                Text(account.server.name)
+                    .font(.captionXs)
+                    .foregroundColor(theme.colorScheme.onBackground.opacity(0.55))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+
+                ZStack {
+                    if account.isActive {
+                        Text(Strings.accountActiveBadge)
+                            .font(.captionXs)
+                            .fontWeight(.bold)
+                            .foregroundColor(.black)
+                            .padding(.horizontal, SpaceTokens.spaceSm)
+                            .padding(.vertical, SpaceTokens.space2xs)
+                            .background(
+                                Capsule()
+                                    .fill(theme.effectiveFocusColor)
+                            )
+                    }
+                }
+                .frame(height: 24)
+            }
+            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, SpaceTokens.spaceSm)
+            .frame(width: cardWidth, height: cardHeight)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .fill(theme.colorScheme.surface.opacity(0.45))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                            .stroke(
+                                isFocused ? theme.effectiveFocusColor : theme.colorScheme.onBackground.opacity(0.12),
+                                lineWidth: isFocused ? 2.5 : 1
+                            )
+                    )
+            )
+        }
+        .buttonStyle(CleanButtonStyle())
+    }
+
+    private var avatar: some View {
+        ZStack {
+            Circle()
+                .fill(theme.colorScheme.surface.opacity(0.5))
+
+            if let imageUrl = account.imageUrl,
+               let url = URL(string: imageUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    default:
+                        fallbackAvatar
+                    }
+                }
+            } else {
+                fallbackAvatar
+            }
+        }
+        .frame(width: avatarSize, height: avatarSize)
+        .clipShape(Circle())
+        .overlay(
+            Circle()
+                .stroke(
+                    isFocused ? theme.effectiveFocusColor : theme.colorScheme.onBackground.opacity(0.18),
+                    lineWidth: isFocused ? 3 : 1
+                )
+        )
+    }
+
+    private var fallbackAvatar: some View {
+        PersonAvatarShape()
+            .fill(theme.colorScheme.onBackground.opacity(0.7))
+            .frame(width: 68, height: 68)
+    }
+}
+
+private struct AccountSwitcherAddUserCard: View {
+    let isFocused: Bool
+    let cardWidth: CGFloat
+    let cardHeight: CGFloat
+    let avatarSize: CGFloat
+    let action: () -> Void
+
+    @EnvironmentObject private var theme: MoonfinTheme
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: SpaceTokens.spaceMd) {
+                ZStack {
+                    Circle()
+                        .fill(theme.colorScheme.surface.opacity(0.5))
+                    Image(systemName: "person.badge.plus")
+                        .font(.system(size: 58, weight: .medium))
+                        .foregroundColor(theme.colorScheme.onBackground.opacity(0.9))
+                }
+                .frame(width: avatarSize, height: avatarSize)
+                .overlay(
+                    Circle()
+                        .stroke(
+                            isFocused ? theme.effectiveFocusColor : theme.colorScheme.onBackground.opacity(0.18),
+                            lineWidth: isFocused ? 3 : 1
+                        )
+                )
+
+                Text(Strings.addUser)
+                    .font(.bodyMd)
+                    .foregroundColor(theme.colorScheme.onBackground)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
+            .padding(.horizontal, SpaceTokens.spaceSm)
+            .padding(.vertical, SpaceTokens.spaceSm)
+            .frame(width: cardWidth, height: cardHeight)
+            .background(
+                RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                    .fill(theme.colorScheme.surface.opacity(0.45))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RadiusTokens.medium)
+                            .stroke(
+                                isFocused ? theme.effectiveFocusColor : theme.colorScheme.onBackground.opacity(0.12),
+                                lineWidth: isFocused ? 2.5 : 1
+                            )
+                    )
+            )
+        }
+        .buttonStyle(CleanButtonStyle())
+    }
+}
+
+private struct AccountSwitcherActionButton: View {
+    let title: String
+    let isFocused: Bool
+    let isDestructive: Bool
+    let action: () -> Void
+
+    @EnvironmentObject private var theme: MoonfinTheme
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.bodyMd)
+                .fontWeight(.medium)
+                .foregroundColor(titleColor)
+                .padding(.horizontal, SpaceTokens.spaceLg)
+                .padding(.vertical, SpaceTokens.spaceSm)
+                .background(
+                    RoundedRectangle(cornerRadius: RadiusTokens.small)
+                        .fill(backgroundColor)
+                )
+        }
+        .buttonStyle(CleanButtonStyle())
+        .scaleEffect(isFocused ? 1.04 : 1.0)
+        .animation(.easeInOut(duration: 0.12), value: isFocused)
+    }
+
+    private var titleColor: Color {
+        if isFocused {
+            return .black
+        }
+        return theme.colorScheme.onBackground
+    }
+
+    private var backgroundColor: Color {
+        if isFocused {
+            return isDestructive ? Color(red: 0.85, green: 0.2, blue: 0.2) : Color.white
+        }
+        if isDestructive {
+            return Color(red: 0.78, green: 0.16, blue: 0.16).opacity(0.85)
+        }
+        return Color.white.opacity(0.1)
     }
 }

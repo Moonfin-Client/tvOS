@@ -3,12 +3,21 @@ import Foundation
 @MainActor
 final class SessionInitializer: ObservableObject {
     @Published var restoredServerId: UUID?
+    @Published private(set) var isSwitchUserTransitionActive = false
+    var restoredUserId: UUID?
     var suppressAutoLogin = false
 
-    func consumeSuppressAutoLogin() -> Bool {
-        let value = suppressAutoLogin
+    func clearStartupSelectionContext() {
         suppressAutoLogin = false
-        return value
+        restoredUserId = nil
+    }
+
+    func beginSwitchUserTransition() {
+        isSwitchUserTransitionActive = true
+    }
+
+    func endSwitchUserTransition() {
+        isSwitchUserTransitionActive = false
     }
 
     private let container: AppContainer
