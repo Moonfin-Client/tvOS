@@ -233,6 +233,27 @@ enum TrailerPlaybackHelper {
             .first
     }
 
+    static func firstRemoteTrailerPlaybackTarget(from trailers: [MediaUrl]?) -> (videoId: String?, trailerUrl: String)? {
+        guard let trailers else { return nil }
+
+        for trailer in trailers {
+            guard let rawUrl = trailer.url?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !rawUrl.isEmpty else {
+                continue
+            }
+
+            if let videoId = extractYouTubeVideoId(from: rawUrl) {
+                return (videoId: videoId, trailerUrl: rawUrl)
+            }
+
+            if URL(string: rawUrl) != nil {
+                return (videoId: nil, trailerUrl: rawUrl)
+            }
+        }
+
+        return nil
+    }
+
     static func extractYouTubeVideoId(from urlString: String) -> String? {
         guard let url = URL(string: urlString) else { return nil }
         guard let host = url.host?.lowercased() else { return nil }
@@ -276,8 +297,8 @@ enum TrailerPlaybackHelper {
             }
         } catch { }
 
-        if let videoId = firstYouTubeVideoId(from: item.remoteTrailers) {
-            router.navigate(to: .trailerPlayer(videoId: videoId))
+        if let target = firstRemoteTrailerPlaybackTarget(from: item.remoteTrailers) {
+            router.navigate(to: .trailerPlayer(videoId: target.videoId, trailerUrl: target.trailerUrl))
             return true
         }
 

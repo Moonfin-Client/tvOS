@@ -218,7 +218,8 @@ final class PlaybackManager: ObservableObject {
         episodesPlayed = 0
         nextUpManager.resetForNewQueue()
 
-        if preferences[UserPreferences.cinemaModeEnabled],
+          if preferences[UserPreferences.cinemaModeEnabled],
+              startPosition <= 0,
            let item = queue[safe: startIndex]?.item,
            item.type == .movie {
             await prependIntros(for: item)

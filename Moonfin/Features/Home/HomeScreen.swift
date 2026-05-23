@@ -1157,14 +1157,33 @@ struct HomeScreen: View {
             }
         }
 
-        guard let videoId = TrailerPlaybackHelper.firstYouTubeVideoId(from: item.remoteTrailers) else { return }
-        guard let result = await resolvePreviewStreamWithTimeout(videoId: videoId) else { return }
-        guard let streamInfo = result.stream else { return }
-        guard !Task.isCancelled, isMediaBarMode else { return }
+        for trailer in item.remoteTrailers ?? [] {
+            guard let rawUrl = trailer.url?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !rawUrl.isEmpty else {
+                continue
+            }
 
-        configureMediaBarPreview(isYouTube: true)
-        await inlineTrailerPlayer.play(url: streamInfo.url)
-        lastPreviewedMediaBarItemId = slideItem.id
+            if let videoId = TrailerPlaybackHelper.extractYouTubeVideoId(from: rawUrl) {
+                guard let result = await resolvePreviewStreamWithTimeout(videoId: videoId),
+                      let streamInfo = result.stream else {
+                    continue
+                }
+                guard !Task.isCancelled, isMediaBarMode else { return }
+
+                configureMediaBarPreview(isYouTube: true)
+                await inlineTrailerPlayer.play(url: streamInfo.url)
+                lastPreviewedMediaBarItemId = slideItem.id
+                return
+            }
+
+            guard URL(string: rawUrl) != nil else { continue }
+            guard !Task.isCancelled, isMediaBarMode else { return }
+
+            configureMediaBarPreview(isYouTube: false)
+            await inlineTrailerPlayer.play(streamUrl: rawUrl)
+            lastPreviewedMediaBarItemId = slideItem.id
+            return
+        }
     }
 
     private func syncMakdBackdrop(for item: MediaBarSlideItem?) {
