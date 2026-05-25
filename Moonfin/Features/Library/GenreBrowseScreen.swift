@@ -6,6 +6,7 @@ struct GenreBrowseScreen: View {
     @EnvironmentObject var theme: MoonfinTheme
     @EnvironmentObject var router: NavigationRouter
     @State private var showSortDialog = false
+    @State private var showLibraryFilter = false
     @State private var showDisplaySettings = false
 
     init(container: AppContainer, parentId: String? = nil, includeType: String? = nil) {
@@ -57,6 +58,13 @@ struct GenreBrowseScreen: View {
                 onSortSelected: { viewModel.setSortOption($0) }
             )
         }
+        .sheet(isPresented: $showLibraryFilter) {
+            GenreLibraryFilterDialogView(
+                libraries: viewModel.availableLibraries,
+                selectedLibraryId: viewModel.selectedLibraryId,
+                onLibrarySelected: { viewModel.setLibraryFilter($0) }
+            )
+        }
         .sheet(isPresented: $showDisplaySettings) {
             GenreDisplaySettingsDialogView(
                 posterSize: viewModel.posterSize,
@@ -102,6 +110,13 @@ struct GenreBrowseScreen: View {
                     isActive: false,
                     theme: theme,
                     action: { showSortDialog = true }
+                )
+
+                ToolbarIconButton(
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    isActive: viewModel.selectedLibraryId != nil,
+                    theme: theme,
+                    action: { showLibraryFilter = true }
                 )
 
                 ToolbarIconButton(
@@ -456,5 +471,76 @@ struct GenreDisplaySettingsDialogView: View {
             RoundedRectangle(cornerRadius: 20)
                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
         )
+    }
+}
+
+struct GenreLibraryFilterDialogView: View {
+    let libraries: [GenreLibraryFilterOption]
+    let selectedLibraryId: String?
+    let onLibrarySelected: (String?) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(Strings.selectLibrary)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+
+            Divider().background(Color.white.opacity(0.08))
+
+            libraryRow(name: Strings.allLibraries, id: nil)
+
+            if !libraries.isEmpty {
+                Divider()
+                    .background(Color.white.opacity(0.06))
+                    .padding(.horizontal, 24)
+            }
+
+            ForEach(libraries) { library in
+                libraryRow(name: library.name, id: library.id)
+            }
+
+            Spacer()
+        }
+        .frame(minWidth: 340, maxWidth: 440)
+        .background(Color(red: 0.078, green: 0.078, blue: 0.078).opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+    }
+
+    @ViewBuilder
+    private func libraryRow(name: String, id: String?) -> some View {
+        let isSelected = selectedLibraryId == id
+        Button(action: {
+            onLibrarySelected(id)
+            dismiss()
+        }) {
+            HStack(spacing: 16) {
+                Circle()
+                    .stroke(isSelected ? Color(hex: 0x00A4DC) : .white.opacity(0.3), lineWidth: 2)
+                    .frame(width: 18, height: 18)
+                    .overlay(
+                        isSelected ?
+                            Circle().fill(Color(hex: 0x00A4DC)).frame(width: 10, height: 10)
+                            : nil
+                    )
+
+                Text(name)
+                    .font(.system(size: 16, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? Color(hex: 0x00A4DC) : .white.opacity(0.8))
+
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(SortRowButtonStyle())
     }
 }

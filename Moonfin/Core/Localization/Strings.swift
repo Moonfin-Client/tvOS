@@ -818,6 +818,7 @@ enum Strings {
     // Shuffle Dialog
     static var shuffleBy: String { l("shuffle_by") }
     static var selectLibrary: String { l("select_library") }
+    static var allLibraries: String { l("all_libraries") }
     static var selectGenre: String { l("select_genre") }
     static var quickShuffle: String { l("quick_shuffle") }
     static var librarySingular: String { l("lbl_library") }

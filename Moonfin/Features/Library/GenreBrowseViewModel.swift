@@ -33,6 +33,11 @@ struct GenreItem: Identifiable, Equatable {
     let serverId: String?
 }
 
+struct GenreLibraryFilterOption: Identifiable, Equatable {
+    let id: String
+    let name: String
+}
+
 @MainActor
 final class GenreBrowseViewModel: ObservableObject {
     @Published private(set) var genres: [GenreItem] = []
@@ -40,26 +45,39 @@ final class GenreBrowseViewModel: ObservableObject {
     @Published private(set) var totalGenres = 0
     @Published private(set) var focusedGenre: GenreItem?
     @Published private(set) var title = "Genres"
+    @Published private(set) var availableLibraries: [GenreLibraryFilterOption] = []
     @Published var currentSort: GenreSortOption = .nameAsc
     @Published var posterSize: PosterSize
     @Published var imageType: ImageDisplayType
+    @Published private(set) var selectedLibraryId: String?
 
     let backgroundService = BackgroundService()
 
     private let container: AppContainer
-    private let parentId: String?
+    private let baseParentId: String?
     let includeType: String?
     private var allGenres: [GenreItem] = []
     private var hasLoaded = false
     private var cancellables = Set<AnyCancellable>()
     private static let posterSizeDefaultsKey = "genre_browse_poster_size"
     private static let imageTypeDefaultsKey = "genre_browse_image_type"
+    private static let libraryDefaultsKey = "genre_browse_library_id"
     private static let supportedImageTypes: [ImageDisplayType] = [.poster, .thumb, .banner]
+
+    private var resolvedParentId: String? {
+        baseParentId ?? selectedLibraryId
+    }
 
     init(container: AppContainer, parentId: String? = nil, includeType: String? = nil) {
         self.container = container
-        self.parentId = parentId
+        self.baseParentId = parentId
         self.includeType = includeType
+        if let parentId, !parentId.isEmpty {
+            self.selectedLibraryId = parentId
+        } else {
+            let storedLibraryId = UserDefaults.standard.string(forKey: Self.libraryDefaultsKey)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            self.selectedLibraryId = (storedLibraryId?.isEmpty == false) ? storedLibraryId : nil
+        }
         if let raw = UserDefaults.standard.string(forKey: Self.posterSizeDefaultsKey),
            let saved = PosterSize(rawValue: raw) {
             self.posterSize = saved
@@ -105,11 +123,38 @@ final class GenreBrowseViewModel: ObservableObject {
         hasLoaded = true
         Task {
             guard let client else { isLoading = false; return }
-            if let parentId {
+            if baseParentId == nil {
+                await loadLibraries(client: client)
+            }
+            if let parentId = resolvedParentId {
                 await loadLibraryName(client: client, parentId: parentId)
+            } else {
+                title = Strings.genres
             }
             await loadGenres(client: client)
         }
+    }
+
+    func setLibraryFilter(_ libraryId: String?) {
+        guard baseParentId == nil else { return }
+
+        let normalized = libraryId?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nextLibraryId = (normalized?.isEmpty == false) ? normalized : nil
+        guard selectedLibraryId != nextLibraryId else { return }
+
+        selectedLibraryId = nextLibraryId
+        if let nextLibraryId {
+            UserDefaults.standard.set(nextLibraryId, forKey: Self.libraryDefaultsKey)
+            if let libraryName = availableLibraries.first(where: { $0.id == nextLibraryId })?.name {
+                title = "\(Strings.genres) — \(libraryName)"
+            }
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.libraryDefaultsKey)
+            title = Strings.genres
+        }
+
+        guard let client else { return }
+        Task { await loadGenres(client: client) }
     }
 
     func setSortOption(_ option: GenreSortOption) {
@@ -126,13 +171,36 @@ final class GenreBrowseViewModel: ObservableObject {
 
     func buildStatusText() -> String {
         var parts = ["Showing", "\(totalGenres) genres"]
-        if let parentId, !parentId.isEmpty {
+        if let parentId = resolvedParentId, !parentId.isEmpty {
             parts.append("from '\(title)'")
         } else {
             parts.append("from all libraries")
         }
         parts.append("sorted by \(currentSort.displayName)")
         return parts.joined(separator: " ")
+    }
+
+    private func loadLibraries(client: MediaServerClient) async {
+        let userId = client.userId ?? ""
+        guard !userId.isEmpty else {
+            availableLibraries = []
+            return
+        }
+
+        do {
+            let views = try await client.userViewsApi.getUserViews(userId: userId)
+            availableLibraries = views
+                .map { GenreLibraryFilterOption(id: $0.id, name: $0.name) }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+
+            if let selectedLibraryId,
+               !availableLibraries.contains(where: { $0.id == selectedLibraryId }) {
+                self.selectedLibraryId = nil
+                UserDefaults.standard.removeObject(forKey: Self.libraryDefaultsKey)
+            }
+        } catch {
+            availableLibraries = []
+        }
     }
 
     private func loadLibraryName(client: MediaServerClient, parentId: String) async {
@@ -145,6 +213,7 @@ final class GenreBrowseViewModel: ObservableObject {
 
     private func loadGenres(client: MediaServerClient) async {
         isLoading = true
+        let parentId = resolvedParentId
 
         do {
             let userId = client.userId ?? ""
@@ -160,7 +229,7 @@ final class GenreBrowseViewModel: ObservableObject {
             allGenres = await withTaskGroup(of: GenreItem?.self) { group in
                 for genre in genreBaseItems {
                     group.addTask { [weak self] in
-                        await self?.createGenreItem(genre: genre, client: client)
+                        await self?.createGenreItem(genre: genre, client: client, parentId: parentId)
                     }
                 }
                 var items: [GenreItem] = []
@@ -176,7 +245,7 @@ final class GenreBrowseViewModel: ObservableObject {
         }
     }
 
-    private func createGenreItem(genre: ServerItem, client: MediaServerClient) async -> GenreItem? {
+    private func createGenreItem(genre: ServerItem, client: MediaServerClient, parentId: String?) async -> GenreItem? {
         do {
             let resolvedTypes: [ItemType]
             if let includeType, let t = resolveIncludeType(includeType) {
