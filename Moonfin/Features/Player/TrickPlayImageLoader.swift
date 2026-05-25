@@ -9,14 +9,11 @@ class TrickPlayImageLoader: ObservableObject {
     private var loadTask: Task<Void, Never>?
     private static let tileCache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
-        cache.countLimit = 20
+        cache.countLimit = 60
         return cache
     }()
 
     func load(tile: TrickPlayTile) {
-        if tile.imageUrl == currentUrl && tile.sourceRect == currentRect {
-            return
-        }
         currentUrl = tile.imageUrl
         currentRect = tile.sourceRect
 
