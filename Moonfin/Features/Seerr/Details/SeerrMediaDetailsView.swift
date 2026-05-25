@@ -633,11 +633,12 @@ struct SeerrMediaDetailsView: View {
                 ProgressView().tint(theme.colorScheme.onBackground)
             }
 
-            HStack {
-                Spacer()
+            HStack(spacing: SpaceTokens.spaceSm) {
                 FocusableDialogButton(title: Strings.seerrSkip) { viewModel.confirmAdvancedOptions() }
                 FocusableDialogButton(title: Strings.seerrConfirm) { viewModel.confirmAdvancedOptions() }
             }
+            .focusSection()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(40)
         .background(theme.colorScheme.background)

@@ -39,6 +39,12 @@ struct ChapterSelectionView: View {
                             }
                         }
                     }
+                    .onChange(of: focusedIndex) { newIndex in
+                        guard let newIndex else { return }
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            proxy.scrollTo(newIndex, anchor: .center)
+                        }
+                    }
                 }
             }
             .padding(.vertical, 40)
@@ -59,6 +65,7 @@ struct ChapterSelectionView: View {
 
     private func chapterCard(chapter: ServerChapter, index: Int) -> some View {
         let isCurrent = index == viewModel.currentChapterIndex()
+        let isFocused = focusedIndex == index
 
         return Button {
             viewModel.seekToChapter(chapter)
@@ -89,6 +96,12 @@ struct ChapterSelectionView: View {
                     if isCurrent {
                         RoundedRectangle(cornerRadius: RadiusTokens.small)
                             .stroke(theme.accent, lineWidth: 2)
+                    }
+
+                    if isFocused {
+                        RoundedRectangle(cornerRadius: RadiusTokens.small + 2)
+                            .stroke(Color.white.opacity(0.95), lineWidth: 4)
+                            .padding(-2)
                     }
                 }
                 .cornerRadius(RadiusTokens.small)

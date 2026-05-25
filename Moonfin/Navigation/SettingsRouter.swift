@@ -184,16 +184,24 @@ struct SettingsFocusRestorationModifier: ViewModifier {
     @EnvironmentObject var settingsRouter: SettingsRouter
     var focusedRoute: FocusState<SettingsRoute?>.Binding
 
+    private func applyFocus(_ route: SettingsRoute) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            focusedRoute.wrappedValue = nil
+            focusedRoute.wrappedValue = route
+        }
+    }
+
     func body(content: Content) -> some View {
         content.onAppear {
             guard let route = settingsRouter.lastPoppedRoute else { return }
             settingsRouter.lastPoppedRoute = nil
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    focusedRoute.wrappedValue = route
-                }
+            DispatchQueue.main.async {
+                applyFocus(route)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                applyFocus(route)
             }
         }
     }

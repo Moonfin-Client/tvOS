@@ -469,7 +469,7 @@ struct AccountSwitcherDialog: View {
                         .foregroundColor(theme.colorScheme.onBackground.opacity(0.7))
                         .frame(maxWidth: .infinity, alignment: .center)
                 } else {
-                    HStack(spacing: SpaceTokens.spaceSm) {
+                    HStack(spacing: SpaceTokens.spaceMd) {
                         AccountSwitcherActionButton(
                             title: Strings.selectServer,
                             isFocused: focusedTarget == .selectServer,
@@ -478,6 +478,7 @@ struct AccountSwitcherDialog: View {
                         )
                         .focused($focusedTarget, equals: .selectServer)
                         .disabled(isBusy)
+                        .frame(maxWidth: .infinity)
 
                         AccountSwitcherActionButton(
                             title: Strings.signOut,
@@ -487,24 +488,22 @@ struct AccountSwitcherDialog: View {
                         )
                         .focused($focusedTarget, equals: .signOut)
                         .disabled(isBusy)
+                        .frame(maxWidth: .infinity)
+
+                        if accounts.count > 1 {
+                            AccountSwitcherActionButton(
+                                title: Strings.signOutAllUsers,
+                                isFocused: focusedTarget == .signOutAll,
+                                isDestructive: true,
+                                action: onSignOutAllUsers
+                            )
+                            .focused($focusedTarget, equals: .signOutAll)
+                            .disabled(isBusy)
+                            .frame(maxWidth: .infinity)
+                        }
                     }
                     .focusSection()
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-
-                if accounts.count > 1 {
-                    HStack {
-                        Spacer(minLength: 0)
-                        AccountSwitcherActionButton(
-                            title: Strings.signOutAllUsers,
-                            isFocused: focusedTarget == .signOutAll,
-                            isDestructive: true,
-                            action: onSignOutAllUsers
-                        )
-                        .focused($focusedTarget, equals: .signOutAll)
-                        .disabled(isBusy)
-                        Spacer(minLength: 0)
-                    }
+                    .frame(maxWidth: .infinity)
                 }
             }
             .padding(.horizontal, 38)
@@ -776,6 +775,8 @@ private struct AccountSwitcherActionButton: View {
                 .font(.bodyMd)
                 .fontWeight(.medium)
                 .foregroundColor(titleColor)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, SpaceTokens.spaceLg)
                 .padding(.vertical, SpaceTokens.spaceSm)
                 .background(
@@ -784,6 +785,7 @@ private struct AccountSwitcherActionButton: View {
                 )
         }
         .buttonStyle(CleanButtonStyle())
+        .frame(maxWidth: .infinity)
         .scaleEffect(isFocused ? 1.04 : 1.0)
         .animation(.easeInOut(duration: 0.12), value: isFocused)
     }

@@ -205,6 +205,29 @@ struct BrowseItemCard: View {
                         ? AnyShape(Circle())
                         : AnyShape(RoundedRectangle(cornerRadius: RadiusTokens.small))
                 )
+                .overlay(
+                    Group {
+                        if item.type == .person {
+                            Circle()
+                                .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: isFocused ? 3 : 0)
+                        } else {
+                            RoundedRectangle(cornerRadius: RadiusTokens.small)
+                                .stroke(isFocused ? theme.effectiveFocusColor : .clear, lineWidth: isFocused ? 3 : 0)
+                        }
+                    }
+                )
+                .shadow(
+                    color: isFocused && theme.activeSpec.borders.focusGlow.count > 0 ? theme.activeSpec.borders.focusGlow[0].color.color : .clear,
+                    radius: theme.activeSpec.borders.focusGlow.count > 0 ? theme.activeSpec.borders.focusGlow[0].blurRadius : 0,
+                    x: theme.activeSpec.borders.focusGlow.count > 0 ? theme.activeSpec.borders.focusGlow[0].offsetX : 0,
+                    y: theme.activeSpec.borders.focusGlow.count > 0 ? theme.activeSpec.borders.focusGlow[0].offsetY : 0
+                )
+                .shadow(
+                    color: isFocused && theme.activeSpec.borders.focusGlow.count > 1 ? theme.activeSpec.borders.focusGlow[1].color.color : .clear,
+                    radius: theme.activeSpec.borders.focusGlow.count > 1 ? theme.activeSpec.borders.focusGlow[1].blurRadius : 0,
+                    x: theme.activeSpec.borders.focusGlow.count > 1 ? theme.activeSpec.borders.focusGlow[1].offsetX : 0,
+                    y: theme.activeSpec.borders.focusGlow.count > 1 ? theme.activeSpec.borders.focusGlow[1].offsetY : 0
+                )
 
                 Text(item.name)
                     .font(.captionXs)
