@@ -259,23 +259,29 @@ final class NavbarViewModel: ObservableObject {
 
     func fetchShuffleRatings(for item: ServerItem) async -> [(String, Float)] {
         var result: [(String, Float)] = []
+        let enabledSourcesOrdered = RatingSource.canonicalEnabledSourceOrder(container.userPreferences[UserPreferences.enabledRatings])
+        let episodeRatingsEnabled = container.userPreferences[UserPreferences.enableEpisodeRatings]
 
         func appendUnique(_ source: String, _ value: Float) {
-            if !result.contains(where: { $0.0 == source }) {
-                result.append((source, value))
+            let canonical = RatingSource.canonicalSourceRawValue(source)
+            guard !canonical.isEmpty else { return }
+            if !result.contains(where: { $0.0 == canonical }) {
+                result.append((canonical, value))
             }
         }
 
         if let community = item.communityRating, community > 0 {
-            appendUnique("stars", Float(community))
+            appendUnique(RatingSource.communityRawValue, Float(community))
         }
 
         if enableAdditionalRatings,
            let apiRatings = await container.mdbListRepository.getRatings(item: item) {
             for (source, value) in apiRatings {
-                if source == "tomatoes" && item.criticRating != nil { continue }
-                let normalized = RatingSource(rawValue: source)?.normalize(value) ?? (value / 100.0)
-                appendUnique(source, normalized)
+                let canonical = RatingSource.canonicalSourceRawValue(source)
+                if canonical == "tomatoes" && item.criticRating != nil { continue }
+                if let normalized = RatingSource.normalizedApiRating(source: canonical, rawValue: value) {
+                    appendUnique(normalized.source, normalized.normalizedValue)
+                }
             }
         }
 
@@ -283,7 +289,14 @@ final class NavbarViewModel: ObservableObject {
             appendUnique("tomatoes", RatingSource.tomatoes.normalize(Float(critic)))
         }
 
-        return result
+        return RatingDisplayPolicy.apply(
+            ratings: result,
+            enabledSourcesOrdered: enabledSourcesOrdered,
+            enableAdditionalRatings: enableAdditionalRatings,
+            isEpisode: item.type == .episode,
+            enableEpisodeRatings: episodeRatingsEnabled,
+            hasEpisodeRating: false
+        )
     }
 
     func fetchShufflePreviewItems(libraryId: String? = nil, genreName: String? = nil, limit: Int = 5) async -> [ServerItem] {

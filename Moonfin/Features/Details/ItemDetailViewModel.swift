@@ -43,6 +43,7 @@ final class ItemDetailViewModel: ObservableObject {
     @Published private(set) var isPlayed: Bool = false
 
     @Published private(set) var showRatingLabels: Bool = false
+    @Published private(set) var showRatingBadges: Bool = true
     @Published private(set) var enableEpisodeRatings: Bool = false
 
     let backgroundService = BackgroundService()
@@ -55,15 +56,18 @@ final class ItemDetailViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var lastEnableAdditionalRatings: Bool = true
     private var lastEnableEpisodeRatings: Bool = false
+    private var lastEnabledRatingSourcesOrder: [String] = []
 
     init(container: AppContainer, itemId: String, serverId: String?) {
         self.container = container
         self.itemId = itemId
         self.serverId = serverId
         self.showRatingLabels = container.userPreferences[UserPreferences.showRatingLabels]
+        self.showRatingBadges = container.userPreferences[UserPreferences.showRatingBadges]
         self.enableEpisodeRatings = container.userPreferences[UserPreferences.enableEpisodeRatings]
         self.lastEnableAdditionalRatings = container.userPreferences[UserPreferences.enableAdditionalRatings]
         self.lastEnableEpisodeRatings = container.userPreferences[UserPreferences.enableEpisodeRatings]
+        self.lastEnabledRatingSourcesOrder = RatingSource.canonicalEnabledSourceOrder(container.userPreferences[UserPreferences.enabledRatings])
         backgroundService.configure(preferences: container.userPreferences)
 
         // Throttle background service updates to max 1 per 300ms to avoid
@@ -94,22 +98,32 @@ final class ItemDetailViewModel: ObservableObject {
     private func refreshPreferences() {
         let prefs = container.userPreferences
         showRatingLabels = prefs[UserPreferences.showRatingLabels]
+        showRatingBadges = prefs[UserPreferences.showRatingBadges]
+
         let newEnableEpisode = prefs[UserPreferences.enableEpisodeRatings]
         enableEpisodeRatings = newEnableEpisode
 
+        var shouldReloadRatings = false
+
         if newEnableEpisode != lastEnableEpisodeRatings {
             lastEnableEpisodeRatings = newEnableEpisode
-            if let item {
-                Task { await loadRatings(for: item) }
-            }
+            shouldReloadRatings = true
         }
 
         let newEnableAdditional = prefs[UserPreferences.enableAdditionalRatings]
         if newEnableAdditional != lastEnableAdditionalRatings {
             lastEnableAdditionalRatings = newEnableAdditional
-            if let item {
-                Task { await loadRatings(for: item) }
-            }
+            shouldReloadRatings = true
+        }
+
+        let newEnabledOrder = RatingSource.canonicalEnabledSourceOrder(prefs[UserPreferences.enabledRatings])
+        if newEnabledOrder != lastEnabledRatingSourcesOrder {
+            lastEnabledRatingSourcesOrder = newEnabledOrder
+            shouldReloadRatings = true
+        }
+
+        if shouldReloadRatings, let item {
+            Task { await loadRatings(for: item) }
         }
     }
 
@@ -792,10 +806,25 @@ final class ItemDetailViewModel: ObservableObject {
         }
     }
 
-    private func buildMediaBadges(for item: ServerItem) -> [MediaBadge] {
+    func mediaBadges(for item: ServerItem, mediaSourceIndex: Int?) -> [MediaBadge] {
+        buildMediaBadges(for: item, mediaSourceIndex: mediaSourceIndex)
+    }
+
+    private func buildMediaBadges(for item: ServerItem, mediaSourceIndex: Int? = nil) -> [MediaBadge] {
         var badges: [MediaBadge] = []
 
-        if let streams = item.mediaStreams ?? item.mediaSources?.first?.mediaStreams {
+        let selectedSource: ServerMediaSource? = {
+            guard let sources = item.mediaSources, !sources.isEmpty else { return nil }
+            if let mediaSourceIndex,
+               mediaSourceIndex >= 0,
+               mediaSourceIndex < sources.count {
+                return sources[mediaSourceIndex]
+            }
+            return sources.first
+        }()
+
+        let streams = selectedSource?.mediaStreams ?? item.mediaStreams ?? item.mediaSources?.first?.mediaStreams
+        if let streams {
             if let video = streams.first(where: { $0.type == .video }) {
                 if let w = video.width, let h = video.height,
                    let res = ResolutionHelper.resolutionName(width: w, height: h) {
@@ -815,7 +844,8 @@ final class ItemDetailViewModel: ObservableObject {
             }
         }
 
-        if let container = item.container, !container.isEmpty {
+        if let container = selectedSource?.container ?? item.container,
+           !container.isEmpty {
             badges.append(MediaBadge(label: container.uppercased()))
         }
 
@@ -834,12 +864,15 @@ final class ItemDetailViewModel: ObservableObject {
         let tmdbId = item.providerIds?["Tmdb"]
         let enableAdditional = container.userPreferences[UserPreferences.enableAdditionalRatings]
         let enableEpisodeRatings = container.userPreferences[UserPreferences.enableEpisodeRatings]
+        let enabledSourcesOrder = RatingSource.canonicalEnabledSourceOrder(container.userPreferences[UserPreferences.enabledRatings])
         let isEpisode = item.type == .episode
 
         var result: [(String, Float)] = []
         func appendUnique(_ source: String, _ value: Float) {
-            if !result.contains(where: { $0.0 == source }) {
-                result.append((source, value))
+            let canonical = RatingSource.canonicalSourceRawValue(source)
+            guard !canonical.isEmpty else { return }
+            if !result.contains(where: { $0.0 == canonical }) {
+                result.append((canonical, value))
             }
         }
         var episodeRating: Float?
@@ -856,10 +889,12 @@ final class ItemDetailViewModel: ObservableObject {
             let apiRatings = await container.mdbListRepository.getRatings(tmdbId: tmdbId, type: item.type)
             if let apiRatings {
                 for (source, value) in apiRatings {
-                    if source == "tomatoes" && criticRating != nil { continue }
-                    if source == "tmdb" && isEpisode && enableEpisodeRatings && episodeRating != nil { continue }
-                    let normalized = RatingSource(rawValue: source)?.normalize(value) ?? (value / 100.0)
-                    appendUnique(source, normalized)
+                    let canonical = RatingSource.canonicalSourceRawValue(source)
+                    if canonical == "tomatoes" && criticRating != nil { continue }
+                    if canonical == "tmdb" && isEpisode && enableEpisodeRatings && episodeRating != nil { continue }
+                    if let normalized = RatingSource.normalizedApiRating(source: canonical, rawValue: value) {
+                        appendUnique(normalized.source, normalized.normalizedValue)
+                    }
                 }
             }
         }
@@ -873,7 +908,14 @@ final class ItemDetailViewModel: ObservableObject {
             appendUnique("tmdb_episode", episodeRating / 10.0)
         }
 
-        ratings = result
+        ratings = RatingDisplayPolicy.apply(
+            ratings: result,
+            enabledSourcesOrdered: enabledSourcesOrder,
+            enableAdditionalRatings: enableAdditional,
+            isEpisode: isEpisode,
+            enableEpisodeRatings: enableEpisodeRatings,
+            hasEpisodeRating: episodeRating != nil
+        )
     }
 
     private static func audioChannelLabel(channels: Int) -> String {

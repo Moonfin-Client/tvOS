@@ -279,10 +279,15 @@ final class LibraryBrowseViewModel: ObservableObject {
 
     func buildMetadata(for item: ServerItem) -> String {
         var parts: [String] = []
+        let enabledSourcesOrdered = RatingSource.canonicalEnabledSourceOrder(container.userPreferences[UserPreferences.enabledRatings])
         if let year = item.productionYear, year > 0 { parts.append(String(year)) }
         if let rating = item.officialRating, !rating.isEmpty { parts.append(rating) }
         if let ticks = item.runTimeTicks, ticks > 0 { parts.append(RuntimeFormatter.format(ticks: ticks)) }
-        if let cr = item.communityRating { parts.append(" \(String(format: "%.1f", cr))") }
+        if RatingSource.isSourceEnabled(RatingSource.communityRawValue, enabledSourcesOrdered: enabledSourcesOrdered),
+           let cr = item.communityRating,
+           cr > 0 {
+            parts.append(" \(String(format: "%.1f", cr))")
+        }
         return parts.joined(separator: "  ")
     }
 

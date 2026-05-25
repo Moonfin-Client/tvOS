@@ -80,17 +80,23 @@ struct RatingChipView: View {
     var sharedHeight: CGFloat? = nil
 
     var body: some View {
+        let canonicalSource = RatingSource.canonicalSourceRawValue(source)
         let scorePercent = Int(normalizedValue * 100)
-        if let iconName = RatingIconProvider.getIcon(source: source, scorePercent: scorePercent) {
-            let ratingSource = RatingSource(rawValue: source)
-            let formatted = ratingSource?.format(normalizedValue) ?? "\(scorePercent)%"
-            let label = ratingSource?.label ?? source
+        let iconName = RatingIconProvider.getIcon(source: canonicalSource, scorePercent: scorePercent)
+        let ratingSource = RatingSource(rawValue: canonicalSource)
+        let formatted = ratingSource?.format(normalizedValue) ?? "\(scorePercent)%"
+        let label = ratingSource?.label ?? canonicalSource
 
-            BaseRatingChipView(valueText: formatted, labelText: showLabel ? label : nil, sharedHeight: sharedHeight) {
+        BaseRatingChipView(valueText: formatted, labelText: showLabel ? label : nil, sharedHeight: sharedHeight) {
+            if let iconName {
                 Image(iconName)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 32, height: 32)
+            } else {
+                Image(systemName: "tag.fill")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.9))
             }
         }
     }
@@ -117,17 +123,24 @@ struct CompactRatingChipView: View {
     @EnvironmentObject var theme: MoonfinTheme
 
     var body: some View {
+        let canonicalSource = RatingSource.canonicalSourceRawValue(source)
         let scorePercent = Int(normalizedValue * 100)
-        if let iconName = RatingIconProvider.getIcon(source: source, scorePercent: scorePercent) {
-            let ratingSource = RatingSource(rawValue: source)
-            let formatted = ratingSource?.format(normalizedValue) ?? "\(scorePercent)%"
+        let iconName = RatingIconProvider.getIcon(source: canonicalSource, scorePercent: scorePercent)
+        let ratingSource = RatingSource(rawValue: canonicalSource)
+        let formatted = ratingSource?.format(normalizedValue) ?? "\(scorePercent)%"
 
-            HStack(spacing: 3) {
+        HStack(spacing: 3) {
+            if let iconName {
                 Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 16, height: 16)
-                Text(formatted)
-                    .font(.token(13, weight: .semibold))
+            } else {
+                Image(systemName: "tag.fill")
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.7))
             }
+
+            Text(formatted)
+                .font(.token(13, weight: .semibold))
+                .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white.opacity(0.7))
         }
     }
 }
@@ -144,10 +157,10 @@ struct MediaBarRatingRow: View {
 
     var body: some View {
         Group {
-            if source == "stars" {
+            if RatingSource.canonicalSourceRawValue(source) == RatingSource.communityRawValue {
                 HStack(spacing: 4) {
-                    Text("★")
-                        .font(.token(24))
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
                     Text(String(format: "%.1f", value))
                         .font(.token(TypographyTokens.fontSizeXs))
@@ -155,13 +168,18 @@ struct MediaBarRatingRow: View {
                         .fixedSize()
                 }
             } else {
+                let canonicalSource = RatingSource.canonicalSourceRawValue(source)
                 let scorePercent = Int(value * 100)
-                let iconName = RatingIconProvider.getIcon(source: source, scorePercent: scorePercent)
-                let formatted = RatingSource(rawValue: source)?.format(value) ?? "\(scorePercent)%"
+                let iconName = RatingIconProvider.getIcon(source: canonicalSource, scorePercent: scorePercent)
+                let formatted = RatingSource(rawValue: canonicalSource)?.format(value) ?? "\(scorePercent)%"
 
                 HStack(spacing: 4) {
                     if let iconName {
                         Image(iconName).resizable().aspectRatio(contentMode: .fit).frame(width: 28, height: 28)
+                    } else {
+                        Image(systemName: "tag.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(theme.isNeonPulseTheme ? theme.neonSecondaryColor : .white)
                     }
                     Text(formatted)
                         .font(.token(TypographyTokens.fontSizeXs))
@@ -228,14 +246,25 @@ struct CompactRatingsFlowView: View {
 struct MediaBarRatingsRow: View {
     let ratings: [(String, Float)]
     let enableAdditionalRatings: Bool
+    @EnvironmentObject var container: AppContainer
 
     var body: some View {
-        let filtered = ratings.filter { source, _ in
-            if !enableAdditionalRatings && source != "stars" && source != "tomatoes" && source != "tmdb_episode" { return false }
-            return true
-        }
+        let prefs = container.userPreferences
+        let showRatingBadges = prefs[UserPreferences.showRatingBadges]
 
-        if !filtered.isEmpty {
+        let enabledSourcesOrdered = RatingSource.canonicalEnabledSourceOrder(prefs[UserPreferences.enabledRatings])
+        let hasEpisodeRating = ratings.contains { RatingSource.canonicalSourceRawValue($0.0) == RatingSource.tmdbEpisodeRawValue }
+
+        let filtered = RatingDisplayPolicy.apply(
+            ratings: ratings,
+            enabledSourcesOrdered: enabledSourcesOrdered,
+            enableAdditionalRatings: enableAdditionalRatings,
+            isEpisode: hasEpisodeRating,
+            enableEpisodeRatings: prefs[UserPreferences.enableEpisodeRatings],
+            hasEpisodeRating: hasEpisodeRating
+        )
+
+        if showRatingBadges && !filtered.isEmpty {
             HStack(spacing: 16) {
                 ForEach(filtered, id: \.0) { source, value in
                     MediaBarRatingRow(source: source, value: value)

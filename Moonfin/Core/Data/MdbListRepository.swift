@@ -58,15 +58,18 @@ final class MdbListRepository {
             guard response.success, response.error == nil else { return nil }
 
             var ratingsList: [(String, Float)] = []
+            var seenSources = Set<String>()
             for rating in response.ratings ?? [] {
-                guard let source = rating.source?.lowercased() else { continue }
+                guard let rawSource = rating.source else { continue }
+                let source = RatingSource.canonicalSourceRawValue(rawSource)
+                guard !source.isEmpty else { continue }
                 let value: Float?
                 if source == "metacriticuser" {
                     value = (rating.score ?? rating.value).flatMap { $0 > 0 ? $0 : nil }
                 } else {
                     value = (rating.value ?? rating.score).flatMap { $0 > 0 ? $0 : nil }
                 }
-                if let value {
+                if let value, seenSources.insert(source).inserted {
                     ratingsList.append((source, value))
                 }
             }

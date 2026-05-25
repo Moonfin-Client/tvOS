@@ -524,6 +524,7 @@ enum SettingsRatingSource: String, CaseIterable {
     case metacriticUser = "metacriticuser"
     case trakt
     case letterboxd
+    case rogerebert
     case myanimelist
     case anilist
     case stars
@@ -537,6 +538,7 @@ enum SettingsRatingSource: String, CaseIterable {
         .metacriticUser,
         .trakt,
         .letterboxd,
+        .rogerebert,
         .myanimelist,
         .anilist,
         .stars,
@@ -552,9 +554,10 @@ enum SettingsRatingSource: String, CaseIterable {
         case .metacriticUser: return "Metacritic User"
         case .trakt: return "Trakt"
         case .letterboxd: return "Letterboxd"
+        case .rogerebert: return "Roger Ebert"
         case .myanimelist: return "MyAnimeList"
         case .anilist: return "AniList"
-        case .stars: return "Stars"
+        case .stars: return "Community Rating"
         }
     }
 }
@@ -572,7 +575,7 @@ enum PosterSize: String, StringRepresentableEnum, CaseIterable {
         case .small: return userPreferencesLocalized("poster_size_small")
         case .medium: return userPreferencesLocalized("poster_size_medium")
         case .large: return userPreferencesLocalized("poster_size_large")
-        case .xLarge: return userPreferencesLocalized("poster_size_xlarge")
+        case .xLarge: return userPreferencesLocalized("poster_size_x_large")
         }
     }
 

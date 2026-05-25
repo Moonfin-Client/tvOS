@@ -82,20 +82,35 @@ struct SettingsRatingSourcesScreen: View {
     }
 
     private func loadRows() {
-        let enabledSet = Set(prefs[UserPreferences.enabledRatings])
-        rows = SettingsRatingSource.defaultOrder.enumerated().map { index, source in
+        let enabledOrder = RatingSource.canonicalEnabledSourceOrder(prefs[UserPreferences.enabledRatings])
+        let enabledSet = Set(enabledOrder)
+        let orderedSources = orderedSourcesForDisplay(enabledOrder: enabledOrder)
+
+        rows = orderedSources.enumerated().map { index, source in
             RatingSourceRow(source: source, enabled: enabledSet.contains(source.rawValue), order: index)
         }
     }
 
     private func saveRows() {
-        let enabledInOrder = rows
+        let enabledInOrder = RatingSource.canonicalEnabledSourceOrder(rows
             .enumerated()
             .sorted { $0.offset < $1.offset }
             .map(\.element)
             .filter(\.enabled)
-            .map { $0.source.rawValue }
+            .map { $0.source.rawValue })
         prefs[UserPreferences.enabledRatings] = enabledInOrder
+    }
+
+    private func orderedSourcesForDisplay(enabledOrder: [String]) -> [SettingsRatingSource] {
+        let defaults = SettingsRatingSource.defaultOrder.map(\.rawValue)
+        let orderedRaw = enabledOrder + defaults.filter { !enabledOrder.contains($0) }
+
+        var seen = Set<String>()
+        return orderedRaw.compactMap { raw in
+            let canonical = RatingSource.canonicalSourceRawValue(raw)
+            guard seen.insert(canonical).inserted else { return nil }
+            return SettingsRatingSource(rawValue: canonical)
+        }
     }
 
     private func toggleRow(at index: Int) {

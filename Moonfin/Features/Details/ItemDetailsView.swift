@@ -620,7 +620,8 @@ struct ItemDetailsView: View {
     }
 
     private func detailInfoRow(item: ServerItem) -> some View {
-        HStack(spacing: SpaceTokens.spaceSm) {
+        let badges = viewModel.mediaBadges(for: item, mediaSourceIndex: selectedMediaSourceIndex)
+        return HStack(spacing: SpaceTokens.spaceSm) {
             if item.type == .episode,
                let season = item.parentIndexNumber,
                let episode = item.indexNumber {
@@ -656,19 +657,19 @@ struct ItemDetailsView: View {
             if item.type == .series, let status = item.status?.lowercased(),
                status == "continuing" || status == "ended" {
                 seriesStatusBadge(status)
-                if item.officialRating != nil || !viewModel.badges.isEmpty {
+                if item.officialRating != nil || !badges.isEmpty {
                     infoSeparator
                 }
             }
 
             if let rating = item.officialRating, !rating.isEmpty {
                 infoBadge(rating)
-                if !viewModel.badges.isEmpty {
+                if !badges.isEmpty {
                     infoSeparator
                 }
             }
 
-            ForEach(viewModel.badges) { badge in
+            ForEach(badges) { badge in
                 infoBadge(badge.label)
             }
         }
@@ -710,14 +711,18 @@ struct ItemDetailsView: View {
             .background(badgeColor.opacity(0.8), in: RoundedRectangle(cornerRadius: RadiusTokens.extraSmall))
     }
 
+    @ViewBuilder
     private var ratingsRow: some View {
         let showLabels = viewModel.showRatingLabels
-        return EqualHeightRatingRow(spacing: 8) { sharedHeight in
-            ForEach(viewModel.ratings, id: \.0) { source, value in
-                if source == "stars" {
-                    StarRatingChipView(value: value, showLabel: showLabels, sharedHeight: sharedHeight)
-                } else {
-                    RatingChipView(source: source, normalizedValue: value, showLabel: showLabels, sharedHeight: sharedHeight)
+        if viewModel.showRatingBadges {
+            EqualHeightRatingRow(spacing: 8) { sharedHeight in
+                ForEach(viewModel.ratings, id: \.0) { source, value in
+                    let canonicalSource = RatingSource.canonicalSourceRawValue(source)
+                    if canonicalSource == RatingSource.communityRawValue {
+                        StarRatingChipView(value: value, showLabel: showLabels, sharedHeight: sharedHeight)
+                    } else {
+                        RatingChipView(source: canonicalSource, normalizedValue: value, showLabel: showLabels, sharedHeight: sharedHeight)
+                    }
                 }
             }
         }

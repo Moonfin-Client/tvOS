@@ -79,6 +79,7 @@ struct TmdbSeasonResponse: Codable {
 
 enum RatingSource: String, CaseIterable {
     case tomatoes
+    case tomatoesAudience = "tomatoes_audience"
     case popcorn
     case imdb
     case tmdb
@@ -91,6 +92,109 @@ enum RatingSource: String, CaseIterable {
     case myanimelist
     case anilist
 
+    static let communityRawValue = "stars"
+    static let tmdbEpisodeRawValue = "tmdb_episode"
+    private static let baseSourcesWhenAdditionalDisabled: Set<String> = [
+        communityRawValue,
+        "tomatoes",
+        tmdbEpisodeRawValue,
+    ]
+
+    static var defaultEnabledSourceOrder: [String] {
+        SettingsRatingSource.defaultOrder.map(\.rawValue)
+    }
+
+    static var knownSettingsSourceRawValues: Set<String> {
+        Set(SettingsRatingSource.allCases.map(\.rawValue))
+    }
+
+    static func canonicalSourceRawValue(_ rawSource: String) -> String {
+        let source = rawSource
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        switch source {
+        case "rt":
+            return "tomatoes"
+        case "rt_audience", "rtaudience", "tomatoes_audience", "tomatoesaudience", "popcorn":
+            return "tomatoes_audience"
+        case "metacritic_user", "metacritic user":
+            return "metacriticuser"
+        case "roger_ebert", "roger ebert":
+            return "rogerebert"
+        case "community", "community_rating", "communityrating", "stars":
+            return communityRawValue
+        case "tmdbepisode":
+            return tmdbEpisodeRawValue
+        default:
+            return source
+        }
+    }
+
+    static func canonicalEnabledSourceOrder(_ rawSources: [String]) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+
+        for rawSource in rawSources {
+            let canonical = canonicalSourceRawValue(rawSource)
+            guard !canonical.isEmpty else { continue }
+            if seen.insert(canonical).inserted {
+                result.append(canonical)
+            }
+        }
+
+        return result
+    }
+
+    static func normalizedApiRating(source: String, rawValue: Float) -> (source: String, normalizedValue: Float)? {
+        guard rawValue > 0 else { return nil }
+        let canonical = canonicalSourceRawValue(source)
+
+        if canonical == communityRawValue {
+            return (source: canonical, normalizedValue: rawValue)
+        }
+
+        if let sourceModel = RatingSource(rawValue: canonical) {
+            return (source: canonical, normalizedValue: sourceModel.normalize(rawValue))
+        }
+
+        return (source: canonical, normalizedValue: rawValue / 100.0)
+    }
+
+    static func isSourceEnabled(_ sourceRawValue: String, enabledSourcesOrdered: [String]) -> Bool {
+        let canonicalSource = canonicalSourceRawValue(sourceRawValue)
+        let canonicalEnabled = Set(canonicalEnabledSourceOrder(enabledSourcesOrdered))
+
+        if canonicalSource == tmdbEpisodeRawValue {
+            return canonicalEnabled.contains("tmdb")
+        }
+
+        if canonicalEnabled.contains(canonicalSource) {
+            return true
+        }
+
+        if knownSettingsSourceRawValues.contains(canonicalSource) {
+            return false
+        }
+
+        return true
+    }
+
+    static func allowsAdditionalRatings(_ sourceRawValue: String, enableAdditionalRatings: Bool) -> Bool {
+        if enableAdditionalRatings {
+            return true
+        }
+        return baseSourcesWhenAdditionalDisabled.contains(canonicalSourceRawValue(sourceRawValue))
+    }
+
+    static func orderKey(_ sourceRawValue: String) -> String {
+        let canonical = canonicalSourceRawValue(sourceRawValue)
+        if canonical == tmdbEpisodeRawValue {
+            return "tmdb"
+        }
+        return canonical
+    }
+
     private static func l(_ key: String) -> String {
         Bundle.main.localizedString(forKey: key, value: nil, table: nil)
     }
@@ -98,7 +202,7 @@ enum RatingSource: String, CaseIterable {
     var label: String {
         switch self {
         case .tomatoes: return Self.l("rating_rotten_tomatoes")
-        case .popcorn: return Self.l("rating_rt_audience")
+        case .tomatoesAudience, .popcorn: return Self.l("rating_rt_audience")
         case .imdb: return Self.l("rating_imdb")
         case .tmdb, .tmdbEpisode: return Self.l("rating_tmdb")
         case .metacritic: return Self.l("rating_metacritic")
@@ -113,7 +217,7 @@ enum RatingSource: String, CaseIterable {
 
     func normalize(_ value: Float) -> Float {
         switch self {
-        case .tomatoes, .popcorn, .tmdb, .tmdbEpisode, .metacritic, .metacriticuser, .trakt, .anilist: return value / 100.0
+        case .tomatoes, .tomatoesAudience, .popcorn, .tmdb, .tmdbEpisode, .metacritic, .metacriticuser, .trakt, .anilist: return value / 100.0
         case .imdb, .myanimelist: return value / 10.0
         case .letterboxd: return value / 5.0
         case .rogerebert: return value / 4.0
@@ -122,7 +226,7 @@ enum RatingSource: String, CaseIterable {
 
     func format(_ normalized: Float) -> String {
         switch self {
-        case .tomatoes, .popcorn, .tmdb, .tmdbEpisode, .metacritic, .metacriticuser, .trakt, .anilist:
+        case .tomatoes, .tomatoesAudience, .popcorn, .tmdb, .tmdbEpisode, .metacritic, .metacriticuser, .trakt, .anilist:
             return "\(Int(normalized * 100))%"
         case .letterboxd:
             return String(format: "%.1f", normalized * 5.0)
@@ -131,5 +235,57 @@ enum RatingSource: String, CaseIterable {
         case .imdb, .myanimelist:
             return String(format: "%.1f", normalized * 10.0)
         }
+    }
+}
+
+struct RatingDisplayPolicy {
+    static func apply(
+        ratings: [(String, Float)],
+        enabledSourcesOrdered: [String],
+        enableAdditionalRatings: Bool,
+        isEpisode: Bool = false,
+        enableEpisodeRatings: Bool = false,
+        hasEpisodeRating: Bool = false
+    ) -> [(String, Float)] {
+        let canonicalEnabledOrder = RatingSource.canonicalEnabledSourceOrder(enabledSourcesOrdered)
+        let orderIndexBySource = Dictionary(uniqueKeysWithValues: canonicalEnabledOrder.enumerated().map { ($1, $0) })
+
+        var seenSources = Set<String>()
+        let canonicalized = ratings.enumerated().compactMap { index, rating -> (source: String, value: Float, originalIndex: Int)? in
+            let canonicalSource = RatingSource.canonicalSourceRawValue(rating.0)
+            guard !canonicalSource.isEmpty else { return nil }
+            guard rating.1 > 0 else { return nil }
+            guard seenSources.insert(canonicalSource).inserted else { return nil }
+            return (source: canonicalSource, value: rating.1, originalIndex: index)
+        }
+
+        let filtered = canonicalized.filter { rating in
+            if !RatingSource.allowsAdditionalRatings(rating.source, enableAdditionalRatings: enableAdditionalRatings) {
+                return false
+            }
+
+            if rating.source == RatingSource.tmdbEpisodeRawValue {
+                return isEpisode && enableEpisodeRatings && RatingSource.isSourceEnabled(rating.source, enabledSourcesOrdered: canonicalEnabledOrder)
+            }
+
+            if rating.source == "tmdb" && isEpisode && enableEpisodeRatings && hasEpisodeRating {
+                return false
+            }
+
+            return RatingSource.isSourceEnabled(rating.source, enabledSourcesOrdered: canonicalEnabledOrder)
+        }
+
+        return filtered
+            .sorted { lhs, rhs in
+                let lhsIndex = orderIndexBySource[RatingSource.orderKey(lhs.source)] ?? Int.max
+                let rhsIndex = orderIndexBySource[RatingSource.orderKey(rhs.source)] ?? Int.max
+
+                if lhsIndex != rhsIndex {
+                    return lhsIndex < rhsIndex
+                }
+
+                return lhs.originalIndex < rhs.originalIndex
+            }
+            .map { ($0.source, $0.value) }
     }
 }
