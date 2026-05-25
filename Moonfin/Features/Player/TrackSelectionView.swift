@@ -80,13 +80,25 @@ struct PlayerSubtitleTrackDialog: View {
                 action: { viewModel.playbackManager.disableSubtitles() }
             )
 
-            ForEach(viewModel.player.subtitleTracks) { track in
-                FocusableTrackSelectorRow(
-                    label: track.name,
-                    detail: nil,
-                    isSelected: track.id == viewModel.player.currentSubtitleTrackIndex,
-                    action: { viewModel.playbackManager.setSubtitleTrack(track.id) }
-                )
+            if viewModel.usesServerSubtitleStreams {
+                ForEach(viewModel.serverSubtitleStreams, id: \.index) { stream in
+                    FocusableTrackSelectorRow(
+                        label: viewModel.subtitleLabel(for: stream),
+                        detail: viewModel.subtitleDetail(for: stream),
+                        isSelected: stream.index == viewModel.activeServerSubtitleStreamIndex
+                            && viewModel.player.currentSubtitleTrackIndex != -1,
+                        action: { viewModel.selectSubtitle(serverStream: stream) }
+                    )
+                }
+            } else {
+                ForEach(viewModel.player.subtitleTracks) { track in
+                    FocusableTrackSelectorRow(
+                        label: track.name,
+                        detail: nil,
+                        isSelected: track.id == viewModel.player.currentSubtitleTrackIndex,
+                        action: { viewModel.playbackManager.setSubtitleTrack(track.id) }
+                    )
+                }
             }
 
             Divider().background(Color.white.opacity(0.2))

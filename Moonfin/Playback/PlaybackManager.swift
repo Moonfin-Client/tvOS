@@ -52,6 +52,10 @@ final class PlaybackManager: ObservableObject {
     private var userSubtitleOverrideSessionToken: Int?
     private var startupSubtitleEnforcementTask: Task<Void, Never>?
     private var startupExternalSubtitleLoadingTask: Task<Void, Never>?
+    private var externalSubtitleTrackIdsByStreamIndex: [Int: Int32] = [:]
+    private var externalSubtitleUrlsByStreamIndex: [Int: URL] = [:]
+
+    private func subtitleDebug(_ message: @autoclosure () -> String) {}
 
     var currentEntry: QueueEntry? {
         guard currentIndex >= 0 && currentIndex < queue.count else { return nil }
@@ -64,6 +68,31 @@ final class PlaybackManager: ObservableObject {
     var nextEntry: QueueEntry? {
         guard hasNext else { return nil }
         return queue[currentIndex + 1]
+    }
+
+    var activeSubtitleStreamIndex: Int? {
+        guard let stream = currentStreamInfo else { return nil }
+        let activeTrackId = player.currentSubtitleTrackIndex
+        guard activeTrackId != -1 else { return nil }
+
+        if let mappedExternalStreamIndex = externalSubtitleTrackIdsByStreamIndex
+            .first(where: { $0.value == activeTrackId })?.key {
+            return mappedExternalStreamIndex
+        }
+
+        let embeddedStreams = stream.subtitleStreams.filter { !$0.isExternal }
+        guard let trackPosition = player.subtitleTracks.firstIndex(where: { $0.id == activeTrackId }) else {
+            return nil
+        }
+
+        if trackPosition < embeddedStreams.count {
+            return embeddedStreams[trackPosition].index
+        }
+
+        let externalStreams = stream.subtitleStreams.filter { $0.isExternal }
+        let externalPosition = trackPosition - embeddedStreams.count
+        guard externalPosition >= 0, externalPosition < externalStreams.count else { return nil }
+        return externalStreams[externalPosition].index
     }
 
     func imageUrl(for item: ServerItem, type: ImageType = .primary, maxWidth: Int = 960, maxHeight: Int = 540) -> String? {
@@ -318,6 +347,7 @@ final class PlaybackManager: ObservableObject {
 
     func setSubtitleTrack(_ index: Int32) {
         markUserSubtitleOverrideForCurrentSession()
+        subtitleDebug("subtitle_select_direct track_id=\(index) session=\(self.playbackSessionToken) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))")
         player.setSubtitleTrack(index)
         Task { [weak self] in
             await self?.reportPlaybackProgressBoundary()
@@ -326,6 +356,7 @@ final class PlaybackManager: ObservableObject {
 
     func disableSubtitles() {
         markUserSubtitleOverrideForCurrentSession()
+        subtitleDebug("subtitle_disable session=\(self.playbackSessionToken) current_track=\(self.player.currentSubtitleTrackIndex)")
         player.disableSubtitles()
         Task { [weak self] in
             await self?.reportPlaybackProgressBoundary()
@@ -333,7 +364,56 @@ final class PlaybackManager: ObservableObject {
     }
 
     func addSubtitle(url: URL) {
+        subtitleDebug("subtitle_add request_url=\(self.redactedURLString(url)) session=\(self.playbackSessionToken)")
         player.addSubtitle(url: url)
+    }
+
+    func selectSubtitleStream(_ stream: ServerMediaStream) {
+        markUserSubtitleOverrideForCurrentSession()
+        let sessionToken = playbackSessionToken
+        subtitleDebug(
+            "subtitle_select_stream request session=\(sessionToken) stream=\(self.subtitleStreamDebugSummary(stream)) active_track=\(self.player.currentSubtitleTrackIndex) mapped_externals=\(self.externalSubtitleTrackIdsByStreamIndex.count) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))"
+        )
+
+        Task { [weak self] in
+            guard let self else { return }
+            guard self.playbackSessionToken == sessionToken else {
+                self.subtitleDebug("subtitle_select_stream drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+                return
+            }
+
+            if stream.isExternal {
+                self.subtitleDebug("subtitle_select_stream path=external stream_index=\(stream.index) session=\(sessionToken)")
+                await self.loadAndSelectExternalSubtitle(stream, sessionToken: sessionToken, entry: self.currentEntry)
+                guard self.playbackSessionToken == sessionToken else {
+                    self.subtitleDebug("subtitle_select_stream external_complete dropped session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+                    return
+                }
+                self.subtitleDebug("subtitle_select_stream external_complete stream_index=\(stream.index) selected_track=\(self.player.currentSubtitleTrackIndex)")
+                await self.reportPlaybackProgressBoundary()
+                return
+            }
+
+            if let currentStream = self.currentStreamInfo,
+               let embeddedTrackId = self.embeddedSubtitleTrackId(for: stream.index, in: currentStream) {
+                self.subtitleDebug("subtitle_select_stream path=embedded_positional stream_index=\(stream.index) track_id=\(embeddedTrackId)")
+                self.player.setSubtitleTrack(embeddedTrackId)
+                await self.reportPlaybackProgressBoundary()
+                return
+            }
+
+            let embeddedCandidateIds = self.embeddedSubtitleCandidateTrackIds(stream: self.currentStreamInfo)
+            if let matchedTrackId = self.matchSubtitleTrackId(stream, candidateTrackIds: embeddedCandidateIds) {
+                self.subtitleDebug("subtitle_select_stream path=embedded_match stream_index=\(stream.index) track_id=\(matchedTrackId) candidates=\(embeddedCandidateIds.count)")
+                self.player.setSubtitleTrack(matchedTrackId)
+                await self.reportPlaybackProgressBoundary()
+                return
+            }
+
+            self.logger.warning(
+                "subtitle_select_stream no_match stream=\(self.subtitleStreamDebugSummary(stream)) active_track=\(self.player.currentSubtitleTrackIndex) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))"
+            )
+        }
     }
 
     func replaceQueue(_ newQueue: [QueueEntry]) {
@@ -386,6 +466,8 @@ final class PlaybackManager: ObservableObject {
         playbackSessionToken += 1
         let currentSessionToken = playbackSessionToken
         userSubtitleOverrideSessionToken = nil
+        externalSubtitleTrackIdsByStreamIndex = [:]
+        externalSubtitleUrlsByStreamIndex = [:]
 
         playbackState = .resolving
 
@@ -492,9 +574,12 @@ final class PlaybackManager: ObservableObject {
             enforceSubtitleOffAtStartupIfNeeded(sessionToken: currentSessionToken, enabled: shouldEnforceSubtitlesOffAtStartup)
 
             applyPreferredAudioTrack(stream: stream)
-            let externalSubtitleStreams = stream.subtitleStreams.filter { $0.isExternal && !($0.deliveryUrl?.isEmpty ?? true) }
+            let externalSubtitleStreams = stream.subtitleStreams.filter { $0.isExternal }
             let hasExternalSubtitles = !externalSubtitleStreams.isEmpty
             let hasSubtitleSelection = (entry.subtitleStreamIndex ?? -1) >= 0
+            subtitleDebug(
+                "subtitle_startup stream_subtitles=\(stream.subtitleStreams.count) external_subtitles=\(externalSubtitleStreams.count) selected_stream_index=\(entry.subtitleStreamIndex ?? -999) default_stream_index=\(stream.defaultSubtitleStreamIndex ?? -999) has_external=\(hasExternalSubtitles) has_selection=\(hasSubtitleSelection) session=\(currentSessionToken)"
+            )
             if hasExternalSubtitles || hasSubtitleSelection {
                 startupExternalSubtitleLoadingTask = Task { [weak self] in
                     guard let self else { return }
@@ -640,6 +725,8 @@ final class PlaybackManager: ObservableObject {
         steadyStateTelemetryTask = nil
         prefetchedStreamInfo = nil
         prefetchedItemId = nil
+        externalSubtitleTrackIdsByStreamIndex = [:]
+        externalSubtitleUrlsByStreamIndex = [:]
         segmentHandler.reset()
         nextUpManager.reset()
         lastEvaluatedSecond = -1
@@ -677,7 +764,7 @@ final class PlaybackManager: ObservableObject {
         let startup = startupLatencyMs ?? -1
 
         logger.info(
-            "playback_telemetry backend=\(backend, privacy: .public) fallback_reason=\(fallbackReason, privacy: .public) startup_latency_ms=\(startup) stall_count=\(self.stallCount) terminal_outcome=\(self.terminalOutcome, privacy: .public)"
+            "playback_telemetry backend=\(backend) fallback_reason=\(fallbackReason) startup_latency_ms=\(startup) stall_count=\(self.stallCount) terminal_outcome=\(self.terminalOutcome)"
         )
     }
 
@@ -709,7 +796,7 @@ final class PlaybackManager: ObservableObject {
             .sorted()
 
         logger.info(
-            "playback_dynamic_range \((streamTelemetry + outputTelemetry).joined(separator: " "), privacy: .public)"
+            "playback_dynamic_range \((streamTelemetry + outputTelemetry).joined(separator: " "))"
         )
     }
 
@@ -819,12 +906,7 @@ final class PlaybackManager: ObservableObject {
         if entry.item.mediaType == .audio {
             subtitle = nil
         } else {
-            subtitle = mapPlayerTrackToServerStreamIndex(
-                playerTrackId: player.currentSubtitleTrackIndex,
-                playerTracks: player.subtitleTracks,
-                serverStreams: stream.subtitleStreams,
-                fallback: stream.defaultSubtitleStreamIndex
-            )
+            subtitle = activeSubtitleStreamIndex ?? stream.defaultSubtitleStreamIndex
         }
 
         return (audio, subtitle)
@@ -888,16 +970,111 @@ final class PlaybackManager: ObservableObject {
         return components.url
     }
 
+    private func loadAndSelectExternalSubtitle(_ stream: ServerMediaStream, sessionToken: Int, entry: QueueEntry? = nil) async {
+        subtitleDebug(
+            "subtitle_external_load begin session=\(sessionToken) stream=\(self.subtitleStreamDebugSummary(stream)) active_track=\(self.player.currentSubtitleTrackIndex) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks)) mapped=\(self.externalSubtitleTrackIdsByStreamIndex.count)"
+        )
+        guard playbackSessionToken == sessionToken else {
+            subtitleDebug("subtitle_external_load drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+            return
+        }
+
+        if let mappedTrackId = externalSubtitleTrackIdsByStreamIndex[stream.index] {
+            subtitleDebug("subtitle_external_load mapped_hit stream_index=\(stream.index) track_id=\(mappedTrackId)")
+            player.setSubtitleTrack(mappedTrackId)
+            return
+        }
+
+        if let currentStream = currentStreamInfo,
+           let positionalTrackId = externalSubtitleTrackId(for: stream.index, in: currentStream) {
+            externalSubtitleTrackIdsByStreamIndex[stream.index] = positionalTrackId
+            subtitleDebug("subtitle_external_load positional_hit stream_index=\(stream.index) track_id=\(positionalTrackId)")
+            player.setSubtitleTrack(positionalTrackId)
+            return
+        }
+
+        let preAddCandidateTrackIds = externalSubtitleCandidateTrackIds(stream: currentStreamInfo)
+        if let preAddMatch = matchSubtitleTrackId(stream, candidateTrackIds: preAddCandidateTrackIds) {
+            externalSubtitleTrackIdsByStreamIndex[stream.index] = preAddMatch
+            subtitleDebug("subtitle_external_load preadd_match stream_index=\(stream.index) track_id=\(preAddMatch) candidates=\(preAddCandidateTrackIds.count)")
+            player.setSubtitleTrack(preAddMatch)
+            return
+        }
+
+        guard let subtitleUrl = await resolveExternalSubtitleURL(for: stream, entry: entry, streamInfo: currentStreamInfo) else {
+            logger.warning("subtitle_external_load unresolved_url stream=\(self.subtitleStreamDebugSummary(stream))")
+            return
+        }
+
+        let existingTrackIds = Set(player.subtitleTracks.map(\.id))
+        subtitleDebug("subtitle_external_load sub_add stream_index=\(stream.index) url=\(self.redactedURLString(subtitleUrl)) existing_tracks=\(existingTrackIds.count)")
+        addSubtitle(url: subtitleUrl)
+
+        for attempt in 0..<20 {
+            guard playbackSessionToken == sessionToken else {
+                subtitleDebug("subtitle_external_load poll_drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+                return
+            }
+
+            let addedTracks = player.subtitleTracks.filter { !existingTrackIds.contains($0.id) }
+
+            if let firstAddedTrack = addedTracks.first {
+                externalSubtitleTrackIdsByStreamIndex[stream.index] = firstAddedTrack.id
+                subtitleDebug(
+                    "subtitle_external_load poll_success attempt=\(attempt + 1) stream_index=\(stream.index) track_id=\(firstAddedTrack.id) added_count=\(addedTracks.count) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))"
+                )
+                player.setSubtitleTrack(firstAddedTrack.id)
+                return
+            }
+
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+
+        guard playbackSessionToken == sessionToken else {
+            subtitleDebug("subtitle_external_load post_poll_drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+            return
+        }
+
+        logger.warning(
+            "subtitle_external_load poll_timeout stream_index=\(stream.index) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))"
+        )
+
+        if let mappedTrackId = externalSubtitleTrackIdsByStreamIndex[stream.index] {
+            subtitleDebug("subtitle_external_load mapped_fallback stream_index=\(stream.index) track_id=\(mappedTrackId)")
+            player.setSubtitleTrack(mappedTrackId)
+            return
+        }
+
+        let candidateTrackIds = externalSubtitleCandidateTrackIds(stream: currentStreamInfo)
+        if let matchedTrackId = matchSubtitleTrackId(stream, candidateTrackIds: candidateTrackIds) {
+            externalSubtitleTrackIdsByStreamIndex[stream.index] = matchedTrackId
+            subtitleDebug("subtitle_external_load match_fallback stream_index=\(stream.index) track_id=\(matchedTrackId) candidates=\(candidateTrackIds.count)")
+            player.setSubtitleTrack(matchedTrackId)
+            return
+        }
+
+        logger.error(
+            "subtitle_external_load failed stream=\(self.subtitleStreamDebugSummary(stream)) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))"
+        )
+    }
+
     private func loadExternalSubtitlesAndApplySelection(
         stream: StreamInfo,
         externalStreams: [ServerMediaStream],
         entry: QueueEntry,
         sessionToken: Int
     ) async {
+        subtitleDebug(
+            "subtitle_startup_load begin session=\(sessionToken) selected_stream_index=\(entry.subtitleStreamIndex ?? -999) default_stream_index=\(stream.defaultSubtitleStreamIndex ?? -999) stream_subtitles=\(stream.subtitleStreams.count) external_streams=\(externalStreams.count) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))"
+        )
         let embeddedSubtitleCount = stream.subtitleStreams.filter { !$0.isExternal }.count
+        var readinessSatisfied = false
 
-        for _ in 0..<20 {
-            guard playbackSessionToken == sessionToken else { return }
+        for attempt in 0..<20 {
+            guard playbackSessionToken == sessionToken else {
+                subtitleDebug("subtitle_startup_load drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+                return
+            }
 
             let tracksReady = player.subtitleTracks.count >= embeddedSubtitleCount
             let playerReady: Bool
@@ -909,43 +1086,629 @@ final class PlaybackManager: ObservableObject {
             }
 
             if tracksReady && playerReady {
+                readinessSatisfied = true
+                subtitleDebug(
+                    "subtitle_startup_load readiness attempt=\(attempt + 1) tracks_ready=\(tracksReady) player_ready=\(playerReady) track_count=\(self.player.subtitleTracks.count) embedded_expected=\(embeddedSubtitleCount) state=\(String(describing: self.player.state))"
+                )
                 break
             }
 
             try? await Task.sleep(nanoseconds: 100_000_000)
         }
 
-        guard playbackSessionToken == sessionToken else { return }
-
-        for subtitleStream in externalStreams {
-            guard playbackSessionToken == sessionToken else { return }
-            guard let deliveryUrl = subtitleStream.deliveryUrl,
-                  let subtitleUrl = buildExternalSubtitleURL(deliveryUrl)
-            else { continue }
-
-            addSubtitle(url: subtitleUrl)
+        if !readinessSatisfied {
+            logger.warning(
+                "subtitle_startup_load readiness_timeout track_count=\(self.player.subtitleTracks.count) embedded_expected=\(embeddedSubtitleCount) state=\(String(describing: self.player.state))"
+            )
         }
 
-        if !externalStreams.isEmpty {
-            try? await Task.sleep(nanoseconds: 300_000_000)
-        }
-
-        guard playbackSessionToken == sessionToken else { return }
-        guard userSubtitleOverrideSessionToken != sessionToken else { return }
-        applyPreferredSubtitleTrack(stream: stream, entry: entry)
-    }
-
-    private func applyPreferredSubtitleTrack(stream: StreamInfo, entry: QueueEntry) {
-        guard let selectedSubtitleStreamIndex = entry.subtitleStreamIndex,
-              selectedSubtitleStreamIndex >= 0
-        else { return }
-
-        guard let streamPosition = stream.subtitleStreams.firstIndex(where: { $0.index == selectedSubtitleStreamIndex }) else {
+        guard playbackSessionToken == sessionToken else {
+            subtitleDebug("subtitle_startup_load pre_select_drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
             return
         }
-        guard let trackId = player.subtitleTracks[safe: streamPosition]?.id else { return }
 
-        player.setSubtitleTrack(trackId)
+        let preferredStreamIndex = preferredSubtitleStreamIndex(stream: stream, entry: entry)
+        let preferredExternalStream = preferredStreamIndex.flatMap { selectedIndex in
+            externalStreams.first(where: { $0.index == selectedIndex })
+        }
+        subtitleDebug(
+            "subtitle_startup_load preferred stream_index=\(preferredStreamIndex ?? -999) preferred_external=\(preferredExternalStream != nil) backend=\(self.player.playbackBackendIdentifier)"
+        )
+
+        if player.playbackBackendIdentifier == PlaybackBackendDirective.native.rawValue {
+            guard playbackSessionToken == sessionToken else {
+                subtitleDebug("subtitle_startup_load native_drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+                return
+            }
+            guard userSubtitleOverrideSessionToken != sessionToken else {
+                subtitleDebug("subtitle_startup_load native_drop user_override session=\(sessionToken)")
+                return
+            }
+
+            if let preferredExternalStream {
+                await loadAndSelectExternalSubtitle(preferredExternalStream, sessionToken: sessionToken, entry: entry)
+            } else {
+                applyPreferredSubtitleTrack(stream: stream, entry: entry)
+            }
+            return
+        }
+
+        let existingTrackIds = Set(player.subtitleTracks.map(\.id))
+        var successfullyAddedExternalStreamIndexes: [Int] = []
+
+        for subtitleStream in externalStreams {
+            guard playbackSessionToken == sessionToken else {
+                subtitleDebug("subtitle_startup_load sub_add_drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+                return
+            }
+            guard let subtitleUrl = await resolveExternalSubtitleURL(for: subtitleStream, entry: entry, streamInfo: stream) else {
+                logger.warning("subtitle_startup_load skip_unresolved_url stream=\(self.subtitleStreamDebugSummary(subtitleStream))")
+                continue
+            }
+
+            subtitleDebug("subtitle_startup_load sub_add stream_index=\(subtitleStream.index) url=\(self.redactedURLString(subtitleUrl))")
+            addSubtitle(url: subtitleUrl)
+            successfullyAddedExternalStreamIndexes.append(subtitleStream.index)
+        }
+
+        var externalTrackIdsByStreamIndex: [Int: Int32] = [:]
+
+        if !successfullyAddedExternalStreamIndexes.isEmpty {
+            for attempt in 0..<20 {
+                guard playbackSessionToken == sessionToken else {
+                    subtitleDebug("subtitle_startup_load map_drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+                    return
+                }
+                let addedTracks = player.subtitleTracks.filter { !existingTrackIds.contains($0.id) }
+                if addedTracks.count >= successfullyAddedExternalStreamIndexes.count {
+                    for (offset, streamIndex) in successfullyAddedExternalStreamIndexes.enumerated()
+                    where offset < addedTracks.count {
+                        externalTrackIdsByStreamIndex[streamIndex] = addedTracks[offset].id
+                    }
+                    subtitleDebug(
+                        "subtitle_startup_load map_success attempt=\(attempt + 1) mapped=\(externalTrackIdsByStreamIndex.count) expected=\(successfullyAddedExternalStreamIndexes.count)"
+                    )
+                    break
+                }
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+
+            if externalTrackIdsByStreamIndex.isEmpty {
+                let addedTracks = player.subtitleTracks.filter { !existingTrackIds.contains($0.id) }
+                for (offset, streamIndex) in successfullyAddedExternalStreamIndexes.enumerated()
+                where offset < addedTracks.count {
+                    externalTrackIdsByStreamIndex[streamIndex] = addedTracks[offset].id
+                }
+            }
+        }
+
+        if !externalTrackIdsByStreamIndex.isEmpty {
+            externalSubtitleTrackIdsByStreamIndex.merge(externalTrackIdsByStreamIndex) { _, new in new }
+            subtitleDebug("subtitle_startup_load map_merged mapped=\(externalTrackIdsByStreamIndex.count) global=\(self.externalSubtitleTrackIdsByStreamIndex.count)")
+        } else if !successfullyAddedExternalStreamIndexes.isEmpty {
+            logger.warning("subtitle_startup_load map_empty expected=\(successfullyAddedExternalStreamIndexes.count) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))")
+        }
+
+        guard playbackSessionToken == sessionToken else {
+            subtitleDebug("subtitle_startup_load apply_drop session_mismatch request=\(sessionToken) active=\(self.playbackSessionToken)")
+            return
+        }
+        guard userSubtitleOverrideSessionToken != sessionToken else {
+            subtitleDebug("subtitle_startup_load apply_drop user_override session=\(sessionToken)")
+            return
+        }
+        applyPreferredSubtitleTrack(
+            stream: stream,
+            entry: entry,
+            externalTrackIdsByStreamIndex: externalTrackIdsByStreamIndex
+        )
+    }
+
+    private func resolveExternalSubtitleURL(
+        for stream: ServerMediaStream,
+        entry: QueueEntry?,
+        streamInfo: StreamInfo?
+    ) async -> URL? {
+        if let cachedUrl = externalSubtitleUrlsByStreamIndex[stream.index] {
+            subtitleDebug("subtitle_url_resolve cache_hit stream_index=\(stream.index) url=\(self.redactedURLString(cachedUrl))")
+            return cachedUrl
+        }
+
+        if let deliveryUrl = stream.deliveryUrl,
+           let resolved = buildExternalSubtitleURL(deliveryUrl) {
+            if await validateExternalSubtitleURLCandidate(resolved, source: "stream_delivery", streamIndex: stream.index) {
+                externalSubtitleUrlsByStreamIndex[stream.index] = resolved
+                subtitleDebug("subtitle_url_resolve stream_delivery stream_index=\(stream.index) url=\(self.redactedURLString(resolved))")
+                return resolved
+            }
+        }
+
+        let preferredMediaSourceId = streamInfo?.mediaSourceId ?? entry?.mediaSourceId
+
+        if let entryDeliveryUrl = externalDeliveryUrlFromEntryItem(
+            streamIndex: stream.index,
+            entry: entry,
+            preferredMediaSourceId: preferredMediaSourceId
+        ),
+           let resolved = buildExternalSubtitleURL(entryDeliveryUrl) {
+            if await validateExternalSubtitleURLCandidate(resolved, source: "entry_delivery", streamIndex: stream.index) {
+                externalSubtitleUrlsByStreamIndex[stream.index] = resolved
+                subtitleDebug("subtitle_url_resolve entry_delivery stream_index=\(stream.index) url=\(self.redactedURLString(resolved))")
+                return resolved
+            }
+        }
+
+        if let refreshedDeliveryUrl = await fetchExternalDeliveryUrlFromPlaybackInfo(
+            streamIndex: stream.index,
+            entry: entry,
+            preferredMediaSourceId: preferredMediaSourceId
+        ),
+           let resolved = buildExternalSubtitleURL(refreshedDeliveryUrl) {
+            if await validateExternalSubtitleURLCandidate(resolved, source: "playback_info", streamIndex: stream.index) {
+                externalSubtitleUrlsByStreamIndex[stream.index] = resolved
+                subtitleDebug("subtitle_url_resolve playback_info stream_index=\(stream.index) url=\(self.redactedURLString(resolved))")
+                return resolved
+            }
+        }
+
+        if let synthesized = await buildSyntheticExternalSubtitleURL(
+            streamIndex: stream.index,
+            codec: stream.codec,
+            entry: entry,
+            preferredMediaSourceId: preferredMediaSourceId
+        ) {
+            externalSubtitleUrlsByStreamIndex[stream.index] = synthesized
+            subtitleDebug("subtitle_url_resolve synthesized stream_index=\(stream.index) url=\(self.redactedURLString(synthesized))")
+            return synthesized
+        }
+
+        logger.warning("subtitle_url_resolve failed stream=\(self.subtitleStreamDebugSummary(stream))")
+        return nil
+    }
+
+    private func externalDeliveryUrlFromEntryItem(
+        streamIndex: Int,
+        entry: QueueEntry?,
+        preferredMediaSourceId: String?
+    ) -> String? {
+        let queueEntry = entry ?? currentEntry
+        guard let queueEntry else { return nil }
+
+        let selectedSource = queueEntry.item.mediaSources?.first(where: { $0.id == preferredMediaSourceId })
+            ?? queueEntry.item.mediaSources?.first(where: { $0.id == queueEntry.mediaSourceId })
+            ?? queueEntry.item.mediaSources?.first
+
+        let sourceStreams = selectedSource?.mediaStreams ?? []
+        if let delivery = sourceStreams.first(where: { $0.type == .subtitle && $0.index == streamIndex })?.deliveryUrl {
+            let trimmed = delivery.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return trimmed
+            }
+        }
+
+        let itemStreams = queueEntry.item.mediaStreams ?? []
+        if let delivery = itemStreams.first(where: { $0.type == .subtitle && $0.index == streamIndex })?.deliveryUrl {
+            let trimmed = delivery.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return trimmed
+            }
+        }
+
+        return nil
+    }
+
+    private func fetchExternalDeliveryUrlFromPlaybackInfo(
+        streamIndex: Int,
+        entry: QueueEntry?,
+        preferredMediaSourceId: String?
+    ) async -> String? {
+        let queueEntry = entry ?? currentEntry
+        guard let queueEntry else { return nil }
+        guard let userId = client.userId else {
+            subtitleDebug("subtitle_url_resolve playback_info_skip missing_user_id")
+            return nil
+        }
+
+        let request = PlaybackInfoRequest(
+            userId: userId,
+            mediaSourceId: preferredMediaSourceId,
+            subtitleStreamIndex: streamIndex
+        )
+
+        do {
+            let result = try await client.playbackApi.getPlaybackInfo(itemId: queueEntry.item.id, request: request)
+            let source = result.mediaSources.first(where: { $0.id == preferredMediaSourceId }) ?? result.mediaSources.first
+            guard let source else {
+                subtitleDebug("subtitle_url_resolve playback_info_no_source stream_index=\(streamIndex)")
+                return nil
+            }
+
+            if let delivery = source.mediaStreams
+                .first(where: { $0.type == .subtitle && $0.index == streamIndex })?
+                .deliveryUrl {
+                let trimmed = delivery.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    subtitleDebug("subtitle_url_resolve playback_info_delivery_found stream_index=\(streamIndex)")
+                    return trimmed
+                }
+            }
+
+            subtitleDebug("subtitle_url_resolve playback_info_delivery_missing stream_index=\(streamIndex)")
+            return nil
+        } catch {
+            logger.warning("subtitle_url_resolve playback_info_error stream_index=\(streamIndex) error=\(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private func buildSyntheticExternalSubtitleURL(
+        streamIndex: Int,
+        codec: String?,
+        entry: QueueEntry?,
+        preferredMediaSourceId: String?
+    ) async -> URL? {
+        let queueEntry = entry ?? currentEntry
+        guard let queueEntry else { return nil }
+
+        let itemId = queueEntry.item.id
+        let mediaSourceId = preferredMediaSourceId ?? queueEntry.mediaSourceId
+        let fileExtension = subtitleFileExtension(for: codec)
+
+        var candidates: [String] = []
+        if let mediaSourceId, !mediaSourceId.isEmpty {
+            candidates.append("/Videos/\(itemId)/\(mediaSourceId)/Subtitles/\(streamIndex)/Stream.\(fileExtension)")
+            candidates.append("/Videos/\(itemId)/\(mediaSourceId)/Subtitles/\(streamIndex)/Stream")
+        }
+        candidates.append("/Videos/\(itemId)/Subtitles/\(streamIndex)/Stream.\(fileExtension)")
+        candidates.append("/Videos/\(itemId)/Subtitles/\(streamIndex)/Stream")
+
+        for candidate in candidates {
+            guard let resolved = buildExternalSubtitleURL(candidate) else { continue }
+            if await validateExternalSubtitleURLCandidate(resolved, source: "synthesized", streamIndex: streamIndex) {
+                return resolved
+            }
+        }
+
+        return nil
+    }
+
+    private func validateExternalSubtitleURLCandidate(_ url: URL, source: String, streamIndex: Int) async -> Bool {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 4
+        request.httpMethod = "GET"
+        request.setValue("bytes=0-1024", forHTTPHeaderField: "Range")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                logger.warning("subtitle_url_validate no_http_response source=\(source) stream_index=\(streamIndex) url=\(self.redactedURLString(url))")
+                return false
+            }
+
+            let statusCode = httpResponse.statusCode
+            let contentType = httpResponse.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
+
+            guard statusCode == 200 || statusCode == 206 else {
+                logger.warning("subtitle_url_validate bad_status source=\(source) stream_index=\(streamIndex) status=\(statusCode) content_type=\(contentType) url=\(self.redactedURLString(url))")
+                return false
+            }
+
+            guard !data.isEmpty else {
+                logger.warning("subtitle_url_validate empty_body source=\(source) stream_index=\(streamIndex) status=\(statusCode) url=\(self.redactedURLString(url))")
+                return false
+            }
+
+            let payloadLooksValid = isLikelySubtitlePayload(data: data, contentType: contentType)
+            if !payloadLooksValid {
+                let preview = String(data: data.prefix(120), encoding: .utf8)?.replacingOccurrences(of: "\n", with: " ") ?? "<binary>"
+                logger.warning(
+                    "subtitle_url_validate payload_rejected source=\(source) stream_index=\(streamIndex) status=\(statusCode) content_type=\(contentType) preview=\(preview) url=\(self.redactedURLString(url))"
+                )
+                return false
+            }
+
+            subtitleDebug("subtitle_url_validate success source=\(source) stream_index=\(streamIndex) status=\(statusCode) content_type=\(contentType) bytes=\(data.count) url=\(self.redactedURLString(url))")
+            return true
+        } catch {
+            logger.warning("subtitle_url_validate request_error source=\(source) stream_index=\(streamIndex) error=\(error.localizedDescription) url=\(self.redactedURLString(url))")
+            return false
+        }
+    }
+
+    private func isLikelySubtitlePayload(data: Data, contentType: String) -> Bool {
+        if contentType.contains("text/html") || contentType.contains("application/json") {
+            return false
+        }
+
+        if contentType.contains("text/plain") ||
+            contentType.contains("application/x-subrip") ||
+            contentType.contains("text/vtt") ||
+            contentType.contains("application/octet-stream") {
+            return true
+        }
+
+        guard let text = String(data: data.prefix(2048), encoding: .utf8)?.lowercased() else {
+            return data.count > 32
+        }
+
+        if text.contains("<html") || text.contains("<!doctype") || text.contains("\"error\"") {
+            return false
+        }
+
+        if text.contains("-->") || text.contains("webvtt") || text.contains("{\\an") {
+            return true
+        }
+
+        return data.count > 64
+    }
+
+    private func subtitleFileExtension(for codec: String?) -> String {
+        switch codec?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "subrip", "srt":
+            return "srt"
+        case "ass", "ssa":
+            return "ass"
+        case "webvtt", "vtt":
+            return "vtt"
+        case "ttml", "dfxp":
+            return "ttml"
+        default:
+            return "srt"
+        }
+    }
+
+    private func applyPreferredSubtitleTrack(
+        stream: StreamInfo,
+        entry: QueueEntry,
+        externalTrackIdsByStreamIndex: [Int: Int32] = [:]
+    ) {
+        guard let selectedSubtitleStreamIndex = preferredSubtitleStreamIndex(stream: stream, entry: entry) else { return }
+        let targetStream = stream.subtitleStreams.first(where: { $0.index == selectedSubtitleStreamIndex })
+        subtitleDebug(
+            "subtitle_apply_preferred selected_stream_index=\(selectedSubtitleStreamIndex) target=\(self.subtitleStreamDebugSummary(targetStream)) local_map=\(externalTrackIdsByStreamIndex.count) global_map=\(self.externalSubtitleTrackIdsByStreamIndex.count) tracks=\(self.subtitleTrackDebugSummary(self.player.subtitleTracks))"
+        )
+
+        if let externalTrackId = externalTrackIdsByStreamIndex[selectedSubtitleStreamIndex]
+            ?? self.externalSubtitleTrackIdsByStreamIndex[selectedSubtitleStreamIndex] {
+            subtitleDebug("subtitle_apply_preferred path=external_map track_id=\(externalTrackId)")
+            player.setSubtitleTrack(externalTrackId)
+            return
+        }
+
+        if let targetStream, targetStream.isExternal {
+            if let positionalExternalTrackId = externalSubtitleTrackId(for: selectedSubtitleStreamIndex, in: stream) {
+                externalSubtitleTrackIdsByStreamIndex[selectedSubtitleStreamIndex] = positionalExternalTrackId
+                subtitleDebug("subtitle_apply_preferred path=external_positional track_id=\(positionalExternalTrackId)")
+                player.setSubtitleTrack(positionalExternalTrackId)
+                return
+            }
+
+            let externalCandidateIds = externalSubtitleCandidateTrackIds(stream: stream)
+            if let matchedExternalTrackId = matchSubtitleTrackId(targetStream, candidateTrackIds: externalCandidateIds) {
+                externalSubtitleTrackIdsByStreamIndex[selectedSubtitleStreamIndex] = matchedExternalTrackId
+                subtitleDebug("subtitle_apply_preferred path=external_match track_id=\(matchedExternalTrackId) candidates=\(externalCandidateIds.count)")
+                player.setSubtitleTrack(matchedExternalTrackId)
+                return
+            }
+
+            logger.warning("subtitle_apply_preferred path=external_async_reload stream_index=\(selectedSubtitleStreamIndex)")
+            let sessionToken = playbackSessionToken
+            Task { [weak self] in
+                guard let self else { return }
+                guard self.playbackSessionToken == sessionToken else { return }
+                guard self.userSubtitleOverrideSessionToken != sessionToken else { return }
+                await self.loadAndSelectExternalSubtitle(targetStream, sessionToken: sessionToken, entry: entry)
+            }
+            return
+        }
+
+        if let embeddedTrackId = embeddedSubtitleTrackId(for: selectedSubtitleStreamIndex, in: stream) {
+            subtitleDebug("subtitle_apply_preferred path=embedded_positional track_id=\(embeddedTrackId)")
+            player.setSubtitleTrack(embeddedTrackId)
+            return
+        }
+
+        guard let targetStream,
+                            let matchedTrackId = matchSubtitleTrackId(
+                                targetStream,
+                                candidateTrackIds: embeddedSubtitleCandidateTrackIds(stream: stream)
+                            )
+        else {
+            logger.warning("subtitle_apply_preferred no_match selected_stream_index=\(selectedSubtitleStreamIndex)")
+            return
+        }
+
+        subtitleDebug("subtitle_apply_preferred path=embedded_match track_id=\(matchedTrackId)")
+        player.setSubtitleTrack(matchedTrackId)
+    }
+
+    private func preferredSubtitleStreamIndex(stream: StreamInfo, entry: QueueEntry) -> Int? {
+        if let selected = entry.subtitleStreamIndex {
+            return selected >= 0 ? selected : nil
+        }
+        return stream.defaultSubtitleStreamIndex
+    }
+
+    private func matchSubtitleTrackId(_ stream: ServerMediaStream, candidateTrackIds: Set<Int32>? = nil) -> Int32? {
+        let expectedLanguage = normalizedSubtitleToken(stream.language)
+        let expectedDisplayTitle = normalizedSubtitleToken(stream.displayTitle)
+        let expectedCodec = normalizedSubtitleToken(stream.codec)
+        let expectedPathComponent = normalizedSubtitlePathComponent(stream.path ?? stream.deliveryUrl)
+
+        var bestMatch: (trackId: Int32, score: Int)?
+
+        for track in player.subtitleTracks {
+            if let candidateTrackIds, !candidateTrackIds.contains(track.id) {
+                continue
+            }
+
+            let normalizedTrackLanguage = normalizedSubtitleToken(track.language)
+            let normalizedTrackTitle = normalizedSubtitleToken(track.title)
+            let normalizedTrackName = normalizedSubtitleToken(track.name)
+            let normalizedTrackCodec = normalizedSubtitleToken(track.codec)
+
+            var score = 0
+
+            if let expectedLanguage,
+               let normalizedTrackLanguage,
+               normalizedTrackLanguage == expectedLanguage {
+                score += 6
+            }
+
+            if let expectedCodec,
+               let normalizedTrackCodec,
+               normalizedTrackCodec == expectedCodec {
+                score += 3
+            }
+
+            if let expectedDisplayTitle {
+                if normalizedTrackTitle == expectedDisplayTitle {
+                    score += 8
+                } else if normalizedTrackName == expectedDisplayTitle {
+                    score += 6
+                } else if normalizedTrackTitle?.contains(expectedDisplayTitle) == true || expectedDisplayTitle.contains(normalizedTrackTitle ?? "") {
+                    score += 4
+                } else if normalizedTrackName?.contains(expectedDisplayTitle) == true || expectedDisplayTitle.contains(normalizedTrackName ?? "") {
+                    score += 3
+                }
+            }
+
+            if let expectedPathComponent {
+                if normalizedTrackTitle == expectedPathComponent {
+                    score += 9
+                } else if normalizedTrackName == expectedPathComponent {
+                    score += 7
+                } else if normalizedTrackTitle?.contains(expectedPathComponent) == true || expectedPathComponent.contains(normalizedTrackTitle ?? "") {
+                    score += 5
+                } else if normalizedTrackName?.contains(expectedPathComponent) == true || expectedPathComponent.contains(normalizedTrackName ?? "") {
+                    score += 4
+                }
+            }
+
+            if stream.isForced && track.isForced {
+                score += 2
+            }
+            if stream.isDefault && track.isDefault {
+                score += 1
+            }
+
+            guard score > 0 else { continue }
+
+            if bestMatch == nil || score > bestMatch!.score {
+                bestMatch = (track.id, score)
+            }
+        }
+
+        subtitleDebug(
+            "subtitle_match stream=\(self.subtitleStreamDebugSummary(stream)) candidates=\(candidateTrackIds?.count ?? -1) tracks=\(self.player.subtitleTracks.count) best_track=\(bestMatch?.trackId ?? -1) best_score=\(bestMatch?.score ?? 0)"
+        )
+
+        return bestMatch?.trackId
+    }
+
+    private func embeddedSubtitleTrackId(for streamIndex: Int, in stream: StreamInfo) -> Int32? {
+        let embeddedStreams = stream.subtitleStreams.filter { !$0.isExternal }
+        guard let embeddedPosition = embeddedStreams.firstIndex(where: { $0.index == streamIndex }) else {
+            return nil
+        }
+        return player.subtitleTracks[safe: embeddedPosition]?.id
+    }
+
+    private func externalSubtitleTrackId(for streamIndex: Int, in stream: StreamInfo) -> Int32? {
+        let embeddedStreams = stream.subtitleStreams.filter { !$0.isExternal }
+        let externalStreams = stream.subtitleStreams.filter { $0.isExternal }
+        guard let externalPosition = externalStreams.firstIndex(where: { $0.index == streamIndex }) else {
+            return nil
+        }
+        let trackPosition = embeddedStreams.count + externalPosition
+        return player.subtitleTracks[safe: trackPosition]?.id
+    }
+
+    private func externalSubtitleCandidateTrackIds(stream: StreamInfo?) -> Set<Int32> {
+        guard let stream else { return [] }
+        let embeddedCount = stream.subtitleStreams.filter { !$0.isExternal }.count
+        guard embeddedCount < player.subtitleTracks.count else { return [] }
+        return Set(player.subtitleTracks.dropFirst(embeddedCount).map(\.id))
+    }
+
+    private func embeddedSubtitleCandidateTrackIds(stream: StreamInfo?) -> Set<Int32> {
+        guard let stream else { return [] }
+        let embeddedCount = stream.subtitleStreams.filter { !$0.isExternal }.count
+        guard embeddedCount > 0 else { return [] }
+        return Set(player.subtitleTracks.prefix(embeddedCount).map(\.id))
+    }
+
+    private func normalizedSubtitleToken(_ text: String?) -> String? {
+        guard let text else { return nil }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let lowercased = trimmed.lowercased()
+        let normalized = lowercased
+            .replacingOccurrences(of: "[^a-z0-9]+", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return normalized.isEmpty ? nil : normalized
+    }
+
+    private func normalizedSubtitlePathComponent(_ pathOrUrl: String?) -> String? {
+        guard let pathOrUrl else { return nil }
+        let trimmed = pathOrUrl.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let components = URLComponents(string: trimmed),
+           let decodedPath = components.percentEncodedPath.removingPercentEncoding,
+           !decodedPath.isEmpty {
+            let fileName = URL(fileURLWithPath: decodedPath).deletingPathExtension().lastPathComponent
+            if !fileName.isEmpty {
+                return normalizedSubtitleToken(fileName)
+            }
+        }
+
+        let pathOnly = String(trimmed.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false).first ?? "")
+        let rawFileName = pathOnly.split(separator: "/").last.map(String.init) ?? pathOnly
+        let fileName = URL(fileURLWithPath: rawFileName).deletingPathExtension().lastPathComponent
+        if !fileName.isEmpty {
+            return normalizedSubtitleToken(fileName)
+        }
+
+        return normalizedSubtitleToken(trimmed)
+    }
+
+    private func subtitleStreamDebugSummary(_ stream: ServerMediaStream?) -> String {
+        guard let stream else { return "nil" }
+        let language = stream.language ?? "-"
+        let title = stream.displayTitle ?? "-"
+        let codec = stream.codec ?? "-"
+        let hasDelivery = !(stream.deliveryUrl?.isEmpty ?? true)
+        return "idx=\(stream.index),external=\(stream.isExternal),forced=\(stream.isForced),default=\(stream.isDefault),lang=\(language),title=\(title),codec=\(codec),hasDelivery=\(hasDelivery)"
+    }
+
+    private func subtitleTrackDebugSummary(_ tracks: [PlayerTrack]) -> String {
+        guard !tracks.isEmpty else { return "[]" }
+        return "[" + tracks.map { track in
+            let language = track.language ?? "-"
+            let title = redactedTrackText(track.title ?? "-")
+            let name = redactedTrackText(track.name)
+            return "\(track.id){name=\(name),lang=\(language),title=\(title),default=\(track.isDefault),forced=\(track.isForced)}"
+        }.joined(separator: ";") + "]"
+    }
+
+    private func redactedURLString(_ url: URL) -> String {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return url.absoluteString
+        }
+        components.query = nil
+        components.fragment = nil
+        return components.string ?? url.absoluteString
+    }
+
+    private func redactedTrackText(_ text: String) -> String {
+        var value = text
+        value = value.replacingOccurrences(of: "api_key=[^&\\s]+", with: "api_key=<redacted>", options: .regularExpression)
+        value = value.replacingOccurrences(of: "x-emby-token=[^&\\s]+", with: "x-emby-token=<redacted>", options: [.regularExpression, .caseInsensitive])
+        return value
     }
 
     private func mapPlayerTrackToServerStreamIndex(

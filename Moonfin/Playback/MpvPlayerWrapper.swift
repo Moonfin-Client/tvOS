@@ -149,6 +149,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     private let wakeColorRestoreThrottleInterval: CFAbsoluteTime = 0.25
     private var surfaceAttachedContinuations: [CheckedContinuation<Void, Never>] = []
 
+    private func subtitleDebug(_ message: @autoclosure () -> String) {}
+
     override init() {
         super.init()
         registerLifecycleObservers()
@@ -420,13 +422,21 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     }
 
     func setSubtitleTrack(_ trackIndex: Int32) {
+        subtitleDebug(
+            "subtitle_mpv_set track_id=\(trackIndex) current_track_before=\(self.currentSubtitleTrackIndex) tracks=\(self.subtitleTrackDebugSummary(self.subtitleTracks))"
+        )
         _ = engine?.setSubtitleTrack(trackIndex)
+        _ = engine?.command(["set", "sub-visibility", "yes"])
         currentSubtitleTrackIndex = trackIndex
+        subtitleDebug("subtitle_mpv_set_done track_id=\(trackIndex) current_track_after=\(self.currentSubtitleTrackIndex)")
     }
 
     func disableSubtitles() {
+        subtitleDebug("subtitle_mpv_disable current_track_before=\(self.currentSubtitleTrackIndex)")
         _ = engine?.disableSubtitles()
+        _ = engine?.command(["set", "sub-visibility", "no"])
         currentSubtitleTrackIndex = -1
+        subtitleDebug("subtitle_mpv_disable_done current_track_after=\(self.currentSubtitleTrackIndex)")
     }
 
     func setSubtitleDelay(_ interval: TimeInterval) {
@@ -446,7 +456,8 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
     }
 
     func addSubtitle(url: URL) {
-        _ = engine?.command(["sub-add", url.absoluteString])
+        subtitleDebug("subtitle_mpv_add url=\(self.redactedURLString(url)) tracks_before=\(self.subtitleTracks.count)")
+        _ = engine?.command(["sub-add", url.absoluteString, "auto", "External"])
     }
 
     func setZoomMode(_ mode: ZoomMode) {
@@ -1100,6 +1111,9 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         }
         if nextSubtitles != subtitleTracks {
             subtitleTracks = nextSubtitles
+            subtitleDebug(
+                "subtitle_mpv_tracks_refreshed count=\(nextSubtitles.count) tracks=\(self.subtitleTrackDebugSummary(nextSubtitles)) current_sid=\(self.currentSubtitleTrackIndex)"
+            )
         }
     }
 
@@ -1144,6 +1158,32 @@ class MpvPlayerWrapper: NSObject, ObservableObject {
         guard let text else { return nil }
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
         return value.isEmpty ? nil : value
+    }
+
+    private func subtitleTrackDebugSummary(_ tracks: [PlayerTrack]) -> String {
+        guard !tracks.isEmpty else { return "[]" }
+        return "[" + tracks.map { track in
+            let language = track.language ?? "-"
+            let title = redactedTrackText(track.title ?? "-")
+            let name = redactedTrackText(track.name)
+            return "\(track.id){name=\(name),lang=\(language),title=\(title),default=\(track.isDefault),forced=\(track.isForced)}"
+        }.joined(separator: ";") + "]"
+    }
+
+    private func redactedURLString(_ url: URL) -> String {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return url.absoluteString
+        }
+        components.query = nil
+        components.fragment = nil
+        return components.string ?? url.absoluteString
+    }
+
+    private func redactedTrackText(_ text: String) -> String {
+        var value = text
+        value = value.replacingOccurrences(of: "api_key=[^&\\s]+", with: "api_key=<redacted>", options: .regularExpression)
+        value = value.replacingOccurrences(of: "x-emby-token=[^&\\s]+", with: "x-emby-token=<redacted>", options: [.regularExpression, .caseInsensitive])
+        return value
     }
 
     private func registerLifecycleObservers() {

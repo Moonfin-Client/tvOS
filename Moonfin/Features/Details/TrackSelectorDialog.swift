@@ -127,13 +127,11 @@ struct FocusableTrackSelectorRow: View {
                     .foregroundColor(isSelected ? theme.accent : theme.colorScheme.onBackground.opacity(0.5))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        Text(label)
-                            .font(.bodyLg)
-                            .foregroundColor(theme.colorScheme.onBackground)
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-                    }
+                    Text(label)
+                        .font(.bodyLg)
+                        .foregroundColor(theme.colorScheme.onBackground)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                     if let detail {
                         Text(detail)
                             .font(.captionXs)

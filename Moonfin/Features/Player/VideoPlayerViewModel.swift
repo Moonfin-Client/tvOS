@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import OSLog
 
 @MainActor
 final class VideoPlayerViewModel: ObservableObject {
@@ -26,12 +27,16 @@ final class VideoPlayerViewModel: ObservableObject {
 
     private var hideTask: Task<Void, Never>?
     private var scrubSeekTask: Task<Void, Never>?
+    private var scrubIdleTask: Task<Void, Never>?
     private var castPrefetchTask: Task<Void, Never>?
     private var livePauseStartedAt: Date?
     private var jumpToLivePromptDismissed = false
     private var lastExitCommandHandledAt: CFAbsoluteTime = 0
+    private var didDebouncedSeekRun = false
     private var cancellables = Set<AnyCancellable>()
+    private let logger = Logger(subsystem: "org.moonfin.appletv", category: "VideoPlayerViewModel")
     private let overlayTimeout: TimeInterval = 5
+    private let scrubIdleTimeout: TimeInterval = 3
     private let endTimeFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "h:mm a"
@@ -52,6 +57,8 @@ final class VideoPlayerViewModel: ObservableObject {
     private var _cachedEntryId: String?
     private var _castResolvedItemId: String?
 
+    private func subtitleDebug(_ message: @autoclosure () -> String) {}
+
     var canDownloadSubtitles: Bool {
         guard let item = playbackManager.currentEntry?.item else { return false }
         return playbackManager.serverType == .jellyfin
@@ -59,6 +66,18 @@ final class VideoPlayerViewModel: ObservableObject {
     }
 
     var player: MpvPlayerWrapper { playbackManager.player }
+
+    var serverSubtitleStreams: [ServerMediaStream] {
+        playbackManager.currentStreamInfo?.subtitleStreams.filter { $0.type == .subtitle } ?? []
+    }
+
+    var usesServerSubtitleStreams: Bool {
+        !serverSubtitleStreams.isEmpty
+    }
+
+    var activeServerSubtitleStreamIndex: Int? {
+        playbackManager.activeSubtitleStreamIndex
+    }
 
     var title: String { ensureItemCache(); return _cachedTitle }
     var subtitle: String { ensureItemCache(); return _cachedSubtitle }
@@ -121,6 +140,7 @@ final class VideoPlayerViewModel: ObservableObject {
         bindObjectWillChange(playbackManager.player.$currentAudioTrackIndex.removeDuplicates())
         bindObjectWillChange(playbackManager.player.$currentSubtitleTrackIndex.removeDuplicates())
         bindObjectWillChange(playbackManager.player.$rate.removeDuplicates())
+        bindObjectWillChange(playbackManager.$currentStreamInfo)
 
         playbackManager.player.$currentTime
             .throttle(for: .milliseconds(500), scheduler: DispatchQueue.main, latest: true)
@@ -275,12 +295,15 @@ final class VideoPlayerViewModel: ObservableObject {
     func beginScrub() {
         isScrubbing = true
         scrubPosition = player.position
+        didDebouncedSeekRun = false
         hideTask?.cancel()
+        scrubIdleTask?.cancel()
     }
 
     func updateScrub(by delta: Float) {
         scrubPosition = max(0, min(1, scrubPosition + delta))
         debouncedSeek()
+        restartScrubIdleTimer()
     }
 
     func updateScrub(bySeconds deltaSeconds: TimeInterval) {
@@ -297,24 +320,42 @@ final class VideoPlayerViewModel: ObservableObject {
             guard !Task.isCancelled, isScrubbing else { return }
             let target = TimeInterval(scrubPosition) * player.duration
             playbackManager.seek(to: target)
+            didDebouncedSeekRun = true
+        }
+    }
+
+    private func restartScrubIdleTimer() {
+        scrubIdleTask?.cancel()
+        scrubIdleTask = Task {
+            try? await Task.sleep(nanoseconds: UInt64(scrubIdleTimeout * 1_000_000_000))
+            guard !Task.isCancelled, isScrubbing else { return }
+            commitScrub()
         }
     }
 
     func commitScrub() {
         guard isScrubbing else { return }
+        scrubIdleTask?.cancel()
         scrubSeekTask?.cancel()
         let target = TimeInterval(scrubPosition) * player.duration
         if let spm = syncPlayManager, spm.state.enabled {
             spm.requestSeek(to: target)
         } else {
-            playbackManager.seek(to: target)
+            let current = player.currentTime
+            let shouldSeek = !didDebouncedSeekRun || abs(current - target) > 0.25
+            if shouldSeek {
+                playbackManager.seek(to: target)
+            }
         }
+        didDebouncedSeekRun = false
         isScrubbing = false
         resetHideTimer()
     }
 
     func cancelScrub() {
+        scrubIdleTask?.cancel()
         scrubSeekTask?.cancel()
+        didDebouncedSeekRun = false
         isScrubbing = false
         resetHideTimer()
     }
@@ -656,6 +697,36 @@ final class VideoPlayerViewModel: ObservableObject {
         objectWillChange.send()
     }
 
+    func selectSubtitle(serverStream: ServerMediaStream) {
+        subtitleDebug(
+            "subtitle_ui_select stream_index=\(serverStream.index) external=\(serverStream.isExternal) title=\(serverStream.displayTitle ?? "-") language=\(serverStream.language ?? "-") active_stream_index=\(self.activeServerSubtitleStreamIndex ?? -999) active_track=\(self.player.currentSubtitleTrackIndex)"
+        )
+        playbackManager.selectSubtitleStream(serverStream)
+        resetHideTimer()
+    }
+
+    func subtitleLabel(for stream: ServerMediaStream) -> String {
+        if let displayTitle = normalizedSubtitleText(stream.displayTitle) {
+            return displayTitle
+        }
+        if let language = normalizedSubtitleText(stream.language) {
+            return language
+        }
+        return "Track \(stream.index)"
+    }
+
+    func subtitleDetail(for stream: ServerMediaStream) -> String? {
+        var parts: [String] = []
+        if stream.isForced {
+            parts.append("Forced")
+        }
+        if stream.isExternal {
+            parts.append("External")
+        }
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: " | ")
+    }
+
     func adjustSubtitleDelay(by delta: TimeInterval) {
         subtitleDelay += delta
         player.setSubtitleDelay(subtitleDelay)
@@ -676,6 +747,12 @@ final class VideoPlayerViewModel: ObservableObject {
             return String(format: "%d:%02d:%02d", h, m, s)
         }
         return String(format: "%d:%02d", m, s)
+    }
+
+    private func normalizedSubtitleText(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 
     private static let maxBitrateOptions: [(Int, String)] = [
