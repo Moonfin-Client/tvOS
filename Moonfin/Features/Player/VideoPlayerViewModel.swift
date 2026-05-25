@@ -33,6 +33,7 @@ final class VideoPlayerViewModel: ObservableObject {
     private var jumpToLivePromptDismissed = false
     private var lastExitCommandHandledAt: CFAbsoluteTime = 0
     private var didDebouncedSeekRun = false
+    private var lastDebouncedSeekTarget: TimeInterval?
     private var cancellables = Set<AnyCancellable>()
     private let logger = Logger(subsystem: "org.moonfin.appletv", category: "VideoPlayerViewModel")
     private let overlayTimeout: TimeInterval = 5
@@ -296,12 +297,14 @@ final class VideoPlayerViewModel: ObservableObject {
         isScrubbing = true
         scrubPosition = player.position
         didDebouncedSeekRun = false
+        lastDebouncedSeekTarget = nil
         hideTask?.cancel()
         scrubIdleTask?.cancel()
     }
 
     func updateScrub(by delta: Float) {
         scrubPosition = max(0, min(1, scrubPosition + delta))
+        didDebouncedSeekRun = false
         debouncedSeek()
         restartScrubIdleTimer()
     }
@@ -321,6 +324,7 @@ final class VideoPlayerViewModel: ObservableObject {
             let target = TimeInterval(scrubPosition) * player.duration
             playbackManager.seek(to: target)
             didDebouncedSeekRun = true
+            lastDebouncedSeekTarget = target
         }
     }
 
@@ -341,13 +345,20 @@ final class VideoPlayerViewModel: ObservableObject {
         if let spm = syncPlayManager, spm.state.enabled {
             spm.requestSeek(to: target)
         } else {
-            let current = player.currentTime
-            let shouldSeek = !didDebouncedSeekRun || abs(current - target) > 0.25
+            let shouldSeek: Bool
+            if !didDebouncedSeekRun {
+                shouldSeek = true
+            } else if let lastDebouncedSeekTarget {
+                shouldSeek = abs(lastDebouncedSeekTarget - target) > 0.25
+            } else {
+                shouldSeek = true
+            }
             if shouldSeek {
                 playbackManager.seek(to: target)
             }
         }
         didDebouncedSeekRun = false
+        lastDebouncedSeekTarget = nil
         isScrubbing = false
         resetHideTimer()
     }
@@ -356,6 +367,7 @@ final class VideoPlayerViewModel: ObservableObject {
         scrubIdleTask?.cancel()
         scrubSeekTask?.cancel()
         didDebouncedSeekRun = false
+        lastDebouncedSeekTarget = nil
         isScrubbing = false
         resetHideTimer()
     }
