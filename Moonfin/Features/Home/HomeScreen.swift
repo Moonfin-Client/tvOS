@@ -434,6 +434,13 @@ struct HomeScreen: View {
     }
 
     private func shouldApplyRestorationDefaultFocus(for rowId: String) -> Bool {
+        if mediaBarDownHandoffInProgress,
+           mediaBarDownHandoffTargetRowId == rowId,
+           let handoffRow = row(withId: rowId),
+           !handoffRow.items.isEmpty {
+            return true
+        }
+
         guard isRestoringPosition,
               !mediaBarDownHandoffInProgress,
               lastFocusedRowId == rowId,
@@ -507,8 +514,10 @@ struct HomeScreen: View {
             details: "token=\(handoffToken) target_row=\(firstVisibleRowId) target_item=\(firstVisibleItemId ?? "nil") target_index=\(resolvedTarget.itemIndex.map(String.init) ?? "nil") target_reason=\(resolvedTarget.reason) visible_rows=\(viewModel.visibleRows.count)"
         )
 
-        DispatchQueue.main.async {
-            guard handoffToken == mediaBarDownHandoffToken else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            guard handoffToken == mediaBarDownHandoffToken,
+                  mediaBarDownHandoffInProgress
+            else { return }
             resetFocus(in: rowsNamespace)
             debugLog("media_bar_down_handoff_reset_focus", details: "namespace=rows attempt=0")
         }
