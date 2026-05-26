@@ -52,6 +52,10 @@ struct ContentRow: View {
         .easeInOut(duration: 0.2)
     }
 
+    private var isFocusExpansionEnabled: Bool {
+        container.userPreferences[UserPreferences.cardFocusExpansion]
+    }
+
     private var imageDisplayType: ImageDisplayType {
         switch row.rowType {
         case .continueWatching, .resumeBook:
@@ -243,9 +247,10 @@ struct ContentRow: View {
 
     private func v2CardView(for item: ServerItem) -> some View {
         let isFocused = isRowFocused && v2FocusedItemId == item.id
-        let targetCardWidth = isFocused ? v2FocusedWidth : v2PortraitWidth
+        let isExpanded = isFocused && isFocusExpansionEnabled
+        let targetCardWidth = isExpanded ? v2FocusedWidth : v2PortraitWidth
         let cardWidth = (targetCardWidth.isFinite && targetCardWidth > 1) ? targetCardWidth : max(1, v2PortraitWidth)
-        let aspectRatio: CGFloat = isFocused ? (16.0 / 9.0) : (2.0 / 3.0)
+        let aspectRatio: CGFloat = isExpanded ? (16.0 / 9.0) : (2.0 / 3.0)
 
         return VStack(alignment: .leading, spacing: SpaceTokens.spaceSm) {
             ItemPreview(
@@ -289,7 +294,7 @@ struct ContentRow: View {
             )
         }
         .frame(width: cardWidth, alignment: .leading)
-        .animation(v2FocusAnimation, value: isFocused)
+        .animation(isFocusExpansionEnabled ? v2FocusAnimation : nil, value: isFocused)
     }
 
     private func v2ImageUrl(for item: ServerItem, isFocused: Bool) -> String? {
@@ -451,7 +456,16 @@ struct LibraryActionCard: View {
     let onFocused: () -> Void
     let onSelect: () -> Void
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var container: AppContainer
     @FocusState private var isFocused: Bool
+
+    private var focusScale: CGFloat {
+        container.userPreferences[UserPreferences.cardFocusExpansion] && isFocused ? 1.05 : 1.0
+    }
+
+    private var focusAnimation: Animation? {
+        container.userPreferences[UserPreferences.cardFocusExpansion] ? .easeOut(duration: 0.15) : nil
+    }
 
     private var iconName: String {
         guard let ct = item.collectionType?.lowercased() else { return "folder" }
@@ -492,8 +506,8 @@ struct LibraryActionCard: View {
                 RoundedRectangle(cornerRadius: RadiusTokens.medium)
                     .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 3)
             )
-            .scaleEffect(isFocused ? 1.05 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: isFocused)
+            .scaleEffect(focusScale)
+            .animation(focusAnimation, value: isFocused)
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)
@@ -510,7 +524,16 @@ struct LiveTvActionCard: View {
     let onFocused: () -> Void
     let onSelect: () -> Void
     @EnvironmentObject var theme: MoonfinTheme
+    @EnvironmentObject var container: AppContainer
     @FocusState private var isFocused: Bool
+
+    private var focusScale: CGFloat {
+        container.userPreferences[UserPreferences.cardFocusExpansion] && isFocused ? 1.05 : 1.0
+    }
+
+    private var focusAnimation: Animation? {
+        container.userPreferences[UserPreferences.cardFocusExpansion] ? .easeOut(duration: 0.15) : nil
+    }
 
     private var iconName: String {
         switch item.id {
@@ -542,9 +565,9 @@ struct LiveTvActionCard: View {
                 RoundedRectangle(cornerRadius: RadiusTokens.medium)
                     .stroke(isFocused ? theme.focusBorder.color : .clear, lineWidth: 3)
             )
-            .scaleEffect(isFocused ? 1.05 : 1.0)
+            .scaleEffect(focusScale)
             .shadow(color: isFocused ? theme.accent.opacity(0.5) : .clear, radius: 8)
-            .animation(.easeOut(duration: 0.15), value: isFocused)
+            .animation(focusAnimation, value: isFocused)
         }
         .buttonStyle(CleanButtonStyle())
         .focused($isFocused)

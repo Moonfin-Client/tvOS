@@ -45,6 +45,10 @@ struct ItemCard: View {
         shape == .circle ? safeCardWidth / 2 : RadiusTokens.small
     }
 
+    private var isFocusExpansionEnabled: Bool {
+        container.userPreferences[UserPreferences.cardFocusExpansion]
+    }
+
     var body: some View {
         Button(action: { onSelect?() }) {
             ZStack(alignment: .bottomLeading) {
@@ -66,9 +70,10 @@ struct ItemCard: View {
         .buttonStyle(ItemCardButtonStyle(
             isFocused: isFocused,
             cornerRadius: cornerRadius,
-            focusScale: focusScale,
+            focusScale: isFocusExpansionEnabled ? focusScale : 1.0,
             focusBorderColor: theme.effectiveFocusColor,
-            focusGlow: theme.activeSpec.borders.focusGlow
+            focusGlow: theme.activeSpec.borders.focusGlow,
+            animateFocusChange: isFocusExpansionEnabled
         ))
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
@@ -245,19 +250,22 @@ struct ItemCardButtonStyle: ButtonStyle {
     let focusScale: CGFloat
     let focusBorderColor: Color
     let focusGlow: [ThemeShadowSpec]
+    let animateFocusChange: Bool
 
     init(
         isFocused: Bool,
         cornerRadius: CGFloat,
         focusScale: CGFloat = 1.05,
         focusBorderColor: Color,
-        focusGlow: [ThemeShadowSpec]
+        focusGlow: [ThemeShadowSpec],
+        animateFocusChange: Bool = true
     ) {
         self.isFocused = isFocused
         self.cornerRadius = cornerRadius
         self.focusScale = focusScale
         self.focusBorderColor = focusBorderColor
         self.focusGlow = focusGlow
+        self.animateFocusChange = animateFocusChange
     }
 
     func makeBody(configuration: Configuration) -> some View {
@@ -279,7 +287,7 @@ struct ItemCardButtonStyle: ButtonStyle {
                 y: focusGlow.count > 1 ? focusGlow[1].offsetY : 0
             )
             .scaleEffect(isFocused ? focusScale : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: isFocused)
+            .animation(animateFocusChange ? .easeInOut(duration: 0.15) : nil, value: isFocused)
     }
 }
 
