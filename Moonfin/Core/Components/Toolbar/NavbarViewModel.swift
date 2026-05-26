@@ -98,8 +98,8 @@ final class NavbarViewModel: ObservableObject {
                   let client = self.client else { return false }
             return client.serverType.supports(.syncPlay)
         }()
-        overlayColor = prefs[UserPreferences.mediaBarOverlayColor].color
-        overlayOpacity = Double(prefs[UserPreferences.mediaBarOverlayOpacity]) / 100.0
+        overlayColor = prefs[UserPreferences.navbarColor].color
+        overlayOpacity = Double(prefs[UserPreferences.navbarOpacity]) / 100.0
         refreshSeerrVisibility()
     }
 
