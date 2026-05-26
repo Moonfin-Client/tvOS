@@ -174,12 +174,14 @@ struct EmbyItemsApi: ServerItemsApi {
     }
 
     func getLatestMedia(request: GetLatestMediaRequest) async throws -> [ServerItem] {
+        let groupItems: Bool? = request.includeItemTypes == [.series] ? true : request.groupItems
+
         let query = buildQuery([
             ("ParentId", request.parentId),
             ("Fields", request.fields?.map(\.rawValue).joined(separator: ",")),
             ("IncludeItemTypes", request.includeItemTypes?.map(\.apiValue).joined(separator: ",")),
             ("Limit", request.limit.map(String.init)),
-            ("GroupItems", request.groupItems.map(String.init)),
+            ("GroupItems", groupItems.map(String.init)),
             ("ImageTypeLimit", request.imageTypeLimit.map(String.init)),
         ])
 
