@@ -626,6 +626,7 @@ struct HomeScreen: View {
                 isRestoringPosition = true
                 hasInitiallyFocusedFirstRow = true
                 resolveFocus(delay: 100_000_000)
+                scheduleSidebarRowRestore(delay: 150_000_000)
             } else if viewModel.isMediaBarActive {
                 isMediaBarMode = true
                 requestMediaBarFocus(after: 0)

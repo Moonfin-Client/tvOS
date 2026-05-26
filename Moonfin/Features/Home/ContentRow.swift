@@ -174,7 +174,7 @@ struct ContentRow: View {
                     preferredItemId: preferredItemId,
                     focusTrigger: focusTrigger,
                     transitionToken: transitionToken,
-                    applyFocusSection: false
+                    applyFocusSection: true
                 ) { focusBinding in
                     LazyHStack(alignment: .top, spacing: SpaceTokens.spaceMd) {
                         ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
@@ -192,7 +192,6 @@ struct ContentRow: View {
                 .modifier(ScrollClipDisabledModifier())
             }
         }
-        .focusSection()
     }
 
     @ViewBuilder
@@ -286,8 +285,7 @@ struct ContentRow: View {
                 isVisible: isFocused,
                 width: cardWidth,
                 height: v2ExtendedSectionHeight,
-                ratings: viewModel.mediaBarRatingsViewModel.ratings,
-                enableAdditionalRatings: viewModel.mediaBarRatingsViewModel.enableAdditionalRatings
+                ratingsViewModel: viewModel.mediaBarRatingsViewModel
             )
         }
         .frame(width: cardWidth, alignment: .leading)
@@ -331,8 +329,7 @@ private struct HomeRowV2ExtendedSection: View {
     let isVisible: Bool
     let width: CGFloat
     let height: CGFloat
-    let ratings: [(String, Float)]
-    let enableAdditionalRatings: Bool
+    @ObservedObject var ratingsViewModel: MediaBarRatingsViewModel
 
     @EnvironmentObject var theme: MoonfinTheme
 
@@ -378,8 +375,8 @@ private struct HomeRowV2ExtendedSection: View {
             }
 
             MediaBarRatingsRow(
-                ratings: ratings,
-                enableAdditionalRatings: enableAdditionalRatings
+                ratings: ratingsViewModel.ratings,
+                enableAdditionalRatings: ratingsViewModel.enableAdditionalRatings
             )
 
             if let overviewText {
