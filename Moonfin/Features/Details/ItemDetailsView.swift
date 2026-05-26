@@ -912,23 +912,46 @@ struct ItemDetailsView: View {
         }
     }
 
+    @MainActor
     private func playTrailer(item: ServerItem) async {
+        let initialRemoteTarget = TrailerPlaybackHelper.firstRemoteTrailerPlaybackTarget(from: item.remoteTrailers)
+        if let target = initialRemoteTarget {
+            router.navigate(to: .trailerPlayer(videoId: target.videoId, trailerUrl: target.trailerUrl))
+            return
+        }
+
+        let resolvedServerId = routeServerId ?? item.effectiveServerId
         let server: Server?
-        if let routeServerId,
-           let parsedId = UUID.from(rawId: routeServerId) {
+        if let resolvedServerId,
+           let parsedId = UUID.from(rawId: resolvedServerId) {
             server = container.serverRepository.storedServers.value.first(where: { $0.id == parsedId })
         } else {
             server = container.serverRepository.currentServer.value
         }
 
-        guard let server else { return }
+        guard let server else {
+            if let target = initialRemoteTarget {
+                router.navigate(to: .trailerPlayer(videoId: target.videoId, trailerUrl: target.trailerUrl))
+            }
+            return
+        }
+
         let client = container.serverClientFactory.client(for: server)
-        _ = await TrailerPlaybackHelper.playTrailer(
-            for: item,
+        let trailerItem = (try? await client.userLibraryApi.getItem(itemId: item.id)) ?? item
+
+        let played = await TrailerPlaybackHelper.playTrailer(
+            for: trailerItem,
             client: client,
             playbackCoordinator: container.playbackCoordinator,
-            router: router
+            router: router,
+            serverId: resolvedServerId
         )
+
+        if !played,
+           let target = TrailerPlaybackHelper.firstRemoteTrailerPlaybackTarget(from: trailerItem.remoteTrailers)
+                ?? initialRemoteTarget {
+            router.navigate(to: .trailerPlayer(videoId: target.videoId, trailerUrl: target.trailerUrl))
+        }
     }
 
     private func playTrackNext(_ track: ServerItem) {

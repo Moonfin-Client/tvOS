@@ -286,18 +286,30 @@ enum TrailerPlaybackHelper {
         for item: ServerItem,
         client: MediaServerClient,
         playbackCoordinator: PlaybackCoordinator,
-        router: NavigationRouter
+        router: NavigationRouter,
+        serverId: String? = nil
     ) async -> Bool {
         do {
             let trailers = try await client.userLibraryApi.getLocalTrailers(itemId: item.id)
             if !trailers.isEmpty {
-                await playbackCoordinator.startVideoPlayback(items: trailers)
+                await playbackCoordinator.startVideoPlayback(
+                    items: trailers,
+                    serverId: serverId ?? item.effectiveServerId
+                )
                 router.navigate(to: .videoPlayer)
                 return true
             }
         } catch { }
 
-        if let target = firstRemoteTrailerPlaybackTarget(from: item.remoteTrailers) {
+        let refreshedRemoteTrailers: [MediaUrl]?
+        if let refreshedItem = try? await client.userLibraryApi.getItem(itemId: item.id) {
+            let refreshed = refreshedItem.remoteTrailers ?? []
+            refreshedRemoteTrailers = refreshed.isEmpty ? item.remoteTrailers : refreshed
+        } else {
+            refreshedRemoteTrailers = item.remoteTrailers
+        }
+
+        if let target = firstRemoteTrailerPlaybackTarget(from: refreshedRemoteTrailers) {
             router.navigate(to: .trailerPlayer(videoId: target.videoId, trailerUrl: target.trailerUrl))
             return true
         }
@@ -1540,230 +1552,110 @@ enum YouTubeStreamResolver {
 
     // MARK: - Strategy 2: Piped API
 
-    private static let fallbackPipedInstances = [
-        "https://pipedapi.tokhmi.xyz",
-        "https://pipedapi.moodkiller.moe",
-        "https://pipedapi.syncpundit.io",
-        "https://api.piped.yt",
+    private static let pipedBases = [
         "https://pipedapi.kavin.rocks",
-        "https://pipedapi.adminforge.de",
         "https://pipedapi.moomoo.me",
-        "https://api.piped.privacydev.net",
     ]
 
     private static func resolveViaPiped(videoId: String) async -> StreamInfo? {
-        log("[Piped] Fetching instances...")
-        let fetched = await fetchPipedInstances()
-        let instances = mergedInstances(primary: fetched, fallback: fallbackPipedInstances)
-        log("[Piped] Trying \(min(instances.count, 8)) instances")
+        log("[Piped] Trying \(pipedBases.count) instances")
 
-        for instance in instances.prefix(8) {
-            let candidates = pipedStreamEndpointCandidates(instance: instance, videoId: videoId)
-            for apiURL in candidates {
-                do {
-                    var request = URLRequest(url: apiURL)
-                    request.timeoutInterval = 8
-                    request.setValue(browserUA, forHTTPHeaderField: "User-Agent")
-                    request.setValue("application/json", forHTTPHeaderField: "Accept")
-                    let (data, response) = try await URLSession.shared.data(for: request)
-                    guard let http = response as? HTTPURLResponse else {
-                        log("[Piped] \(instance): non-HTTP response")
-                        continue
-                    }
-                    guard (200...299).contains(http.statusCode) else {
-                        log("[Piped] \(instance): HTTP \(http.statusCode)")
-                        continue
-                    }
-                    guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                        log("[Piped] \(instance): non-JSON response")
-                        continue
-                    }
-                    if json["error"] as? String != nil {
-                        log("[Piped] \(instance): error response")
-                        continue
-                    }
+        for base in pipedBases {
+            guard let apiURL = URL(string: "\(base)/streams/\(videoId)") else { continue }
 
-                    if let hls = json["hls"] as? String, let url = URL(string: hls) {
-                        log("[Piped]  HLS from \(instance)")
-                        return StreamInfo(url: url, isHLS: true)
-                    }
-
-                    if let streams = json["videoStreams"] as? [[String: Any]] {
-                        let muxed = streams.filter { ($0["videoOnly"] as? Bool) == false }
-                        let target = muxed.isEmpty ? streams : muxed
-                        let best = target
-                            .filter { ($0["url"] as? String) != nil }
-                            .filter { ($0["height"] as? Int ?? 0) >= 1080 || ($0["height"] as? Int ?? 0) == 0 }
-                            .sorted { a, b in
-                                let ac = codecPriority(a["mimeType"] as? String)
-                                let bc = codecPriority(b["mimeType"] as? String)
-                                if ac != bc { return ac < bc }
-                                return (a["bitrate"] as? Int ?? 0) > (b["bitrate"] as? Int ?? 0)
-                            }
-                            .first
-                        if let urlStr = best?["url"] as? String, let url = URL(string: urlStr) {
-                            return StreamInfo(url: url, isHLS: false)
-                        }
-                    }
-                } catch {
-                    log("[Piped] \(instance): \(error.localizedDescription)")
-                    continue
-                }
-            }
-        }
-        log("[Piped]  No instance returned a stream")
-        return nil
-    }
-
-    private static func pipedStreamEndpointCandidates(instance: String, videoId: String) -> [URL] {
-        let apiBase = instance.contains("/api/v1") ? instance : instance + "/api/v1"
-        guard let url = URL(string: "\(apiBase)/streams/\(videoId)") else { return [] }
-        return [url]
-    }
-
-    private static func fetchPipedInstances() async -> [String]? {
-        let registryURLs = [
-            "https://piped-instances.kavin.rocks/",
-            "https://instances.piped.video/",
-        ]
-        for urlStr in registryURLs {
-            guard let url = URL(string: urlStr) else { continue }
-            var request = URLRequest(url: url)
-            request.timeoutInterval = 10
-            request.setValue(browserUA, forHTTPHeaderField: "User-Agent")
-            request.setValue("application/json", forHTTPHeaderField: "Accept")
-            do {
-                let (data, response) = try await URLSession.shared.data(for: request)
-                guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { continue }
-                guard let instances = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { continue }
-                let result = instances.compactMap { inst -> String? in
-                    guard let apiUrl = inst["api_url"] as? String, !apiUrl.isEmpty else { return nil }
-                    return apiUrl.hasSuffix("/") ? String(apiUrl.dropLast()) : apiUrl
-                }
-                if !result.isEmpty { return result }
-            } catch { continue }
-        }
-        return nil
-    }
-
-    // MARK: - Strategy 3: Invidious API
-
-    private static let fallbackInvidiousInstances = [
-        "https://invidious.fdn.fr",
-        "https://iv.datura.network",
-        "https://invidious.0011.lt",
-        "https://inv.tux.pizza",
-        "https://yewtu.be",
-        "https://inv.nadeko.net",
-        "https://invidious.privacydev.net",
-        "https://invidious.nerdvpn.de",
-    ]
-
-    private static func resolveViaInvidious(videoId: String) async -> StreamInfo? {
-        log("[Invidious] Fetching instances...")
-        let fetched = await fetchInvidiousInstances()
-        let instances = mergedInstances(primary: fetched, fallback: fallbackInvidiousInstances)
-        log("[Invidious] Trying \(min(instances.count, 8)) instances")
-
-        for instance in instances.prefix(8) {
-            guard let apiURL = URL(string: "\(instance)/api/v1/videos/\(videoId)") else { continue }
             do {
                 var request = URLRequest(url: apiURL)
                 request.timeoutInterval = 8
                 request.setValue(browserUA, forHTTPHeaderField: "User-Agent")
                 request.setValue("application/json", forHTTPHeaderField: "Accept")
+
                 let (data, response) = try await URLSession.shared.data(for: request)
                 guard let http = response as? HTTPURLResponse else {
-                    log("[Invidious] \(instance): non-HTTP response")
+                    log("[Piped] \(base): non-HTTP response")
                     continue
                 }
                 guard (200...299).contains(http.statusCode) else {
-                    log("[Invidious] \(instance): HTTP \(http.statusCode)")
+                    log("[Piped] \(base): HTTP \(http.statusCode)")
                     continue
                 }
                 guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                    log("[Invidious] \(instance): non-JSON response")
+                    log("[Piped] \(base): non-JSON response")
                     continue
                 }
-                if json["error"] as? String != nil { continue }
 
-                if let hls = json["hlsUrl"] as? String, let url = URL(string: hls) {
-                    log("[Invidious]  HLS from \(instance)")
+                if let hls = json["hls"] as? String, let url = URL(string: hls) {
+                    log("[Piped]  HLS from \(base)")
                     return StreamInfo(url: url, isHLS: true)
                 }
 
-                let formatStreams = json["formatStreams"] as? [[String: Any]] ?? []
-                let adaptiveFormats = json["adaptiveFormats"] as? [[String: Any]] ?? []
-                let combined = formatStreams + adaptiveFormats
-
-                let playable = combined.filter { format in
-                    guard let url = format["url"] as? String, URL(string: url) != nil else { return false }
-                    guard let mime = (format["type"] as? String)?.lowercased() else { return true }
-                    return mime.contains("video/mp4") || mime.contains("video/webm")
+                let videoStreams = json["videoStreams"] as? [[String: Any]] ?? []
+                let muxed = videoStreams.filter { stream in
+                    guard stream["url"] as? String != nil else { return false }
+                    return (stream["videoOnly"] as? Bool) == false
                 }
 
-                let best = playable
-                    .filter { format in
-                        let height = parseHeight(format["qualityLabel"] as? String) ?? 0
-                        return height >= 1080 || height == 0
-                    }
-                    .sorted { a, b in
-                        let ac = codecPriority(a["type"] as? String)
-                        let bc = codecPriority(b["type"] as? String)
-                        if ac != bc { return ac < bc }
-                        let aq = parseHeight(a["qualityLabel"] as? String) ?? 0
-                        let bq = parseHeight(b["qualityLabel"] as? String) ?? 0
-                        return aq > bq
-                    }
-                    .first
-
-                if let urlStr = best?["url"] as? String, let url = URL(string: urlStr) {
+                if let url = pickBestAPIStreamURL(from: muxed) {
                     return StreamInfo(url: url, isHLS: false)
                 }
             } catch {
-                log("[Invidious] \(instance): \(error.localizedDescription)")
-                continue
+                log("[Piped] \(base): \(error.localizedDescription)")
             }
         }
-        log("[Invidious] \u{2717} No instance returned a stream")
+
+        log("[Piped]  No instance returned a stream")
         return nil
     }
 
-    private static func mergedInstances(primary: [String]?, fallback: [String]) -> [String] {
-        var seen = Set<String>()
-        var out: [String] = []
+    // MARK: - Strategy 3: Invidious API
 
-        for item in (primary ?? []) + fallback {
-            let normalized = item.hasSuffix("/") ? String(item.dropLast()) : item
-            guard !normalized.isEmpty else { continue }
-            if seen.insert(normalized).inserted {
-                out.append(normalized)
+    private static let invidiousBases = [
+        "https://invidious.fdn.fr",
+        "https://invidious.privacyredirect.com",
+        "https://invidious.projectsegfau.lt",
+    ]
+
+    private static func resolveViaInvidious(videoId: String) async -> StreamInfo? {
+        log("[Invidious] Trying \(invidiousBases.count) instances")
+
+        for base in invidiousBases {
+            guard let apiURL = URL(string: "\(base)/api/v1/videos/\(videoId)") else { continue }
+
+            do {
+                var request = URLRequest(url: apiURL)
+                request.timeoutInterval = 8
+                request.setValue(browserUA, forHTTPHeaderField: "User-Agent")
+                request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let http = response as? HTTPURLResponse else {
+                    log("[Invidious] \(base): non-HTTP response")
+                    continue
+                }
+                guard (200...299).contains(http.statusCode) else {
+                    log("[Invidious] \(base): HTTP \(http.statusCode)")
+                    continue
+                }
+
+                guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    log("[Invidious] \(base): non-JSON response")
+                    continue
+                }
+
+                let formatStreams = (json["formatStreams"] as? [[String: Any]] ?? []).filter { stream in
+                    guard let url = stream["url"] as? String else { return false }
+                    return URL(string: url) != nil
+                }
+
+                if let url = pickBestAPIStreamURL(from: formatStreams) {
+                    return StreamInfo(url: url, isHLS: false)
+                }
+            } catch {
+                log("[Invidious] \(base): \(error.localizedDescription)")
             }
         }
-        return out
-    }
 
-    private static func fetchInvidiousInstances() async -> [String]? {
-        guard let url = URL(string: "https://api.invidious.io/instances.json?sort_by=health") else { return nil }
-        var request = URLRequest(url: url)
-        request.timeoutInterval = 12
-        request.setValue(browserUA, forHTTPHeaderField: "User-Agent")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return nil }
-            guard let instances = try JSONSerialization.jsonObject(with: data) as? [[Any]] else { return nil }
-            return instances.compactMap { entry -> String? in
-                guard entry.count >= 2,
-                      let meta = entry[1] as? [String: Any],
-                      let uri = meta["uri"] as? String,
-                      let type = meta["type"] as? String,
-                      type == "https",
-                      meta["api"] as? Bool == true else { return nil }
-                return uri
-            }
-        } catch { return nil }
+        log("[Invidious] \u{2717} No instance returned a stream")
+        return nil
     }
 
     // MARK: - Helpers
@@ -1810,6 +1702,72 @@ enum YouTubeStreamResolver {
         if mime.contains("vp9") || mime.contains("vp09") { return 1 }
         if mime.contains("av01") { return 2 }
         return 3
+    }
+
+    private static func pickBestAPIStreamURL(from streams: [[String: Any]]) -> URL? {
+        guard !streams.isEmpty else { return nil }
+
+        var bestURL: URL?
+        var bestScore = Int.min
+
+        for stream in streams {
+            guard let urlString = stream["url"] as? String, let url = URL(string: urlString) else { continue }
+            let score = streamScore(stream)
+            if score > bestScore {
+                bestScore = score
+                bestURL = url
+            }
+        }
+
+        if let bestURL { return bestURL }
+        if let firstURLString = streams.first?["url"] as? String { return URL(string: firstURLString) }
+        return nil
+    }
+
+    private static func streamScore(_ stream: [String: Any]) -> Int {
+        let mime = ((stream["mimeType"] as? String) ?? (stream["type"] as? String) ?? "").lowercased()
+        let container = ((stream["container"] as? String) ?? "").lowercased()
+        let quality = qualityFromStream(stream)
+
+        let hasAudio = streamHasAudio(stream)
+        let isMP4 = mime.contains("video/mp4") || container == "mp4"
+        let isH264 = mime.contains("avc1") || mime.contains("h264")
+        let isVP9 = mime.contains("vp9") || mime.contains("vp09")
+        let isAV1 = mime.contains("av01") || mime.contains("av1")
+        let isHLS = (stream["hls"] as? Bool ?? false) || (stream["isHLS"] as? Bool ?? false)
+
+        var score = 0
+
+        if hasAudio { score += 5000 }
+        if isMP4 { score += 2500 }
+        if isH264 { score += 2500 }
+        if isVP9 { score -= 1500 }
+        if isAV1 { score -= 2500 }
+        if isHLS { score += 500 }
+
+        let clampedQuality = quality > 0 ? min(max(quality, 144), 1080) : 480
+        let qualityDelta = abs(clampedQuality - 480)
+        score += 1000 - qualityDelta
+
+        return score
+    }
+
+    private static func qualityFromStream(_ stream: [String: Any]) -> Int {
+        let raw = ((stream["quality"] as? String) ?? (stream["qualityLabel"] as? String) ?? "")
+        let head = raw.components(separatedBy: CharacterSet(charactersIn: "p@")).first ?? ""
+        return Int(head.trimmingCharacters(in: .whitespaces)) ?? 0
+    }
+
+    private static func streamHasAudio(_ stream: [String: Any]) -> Bool {
+        let mime = ((stream["mimeType"] as? String) ?? (stream["type"] as? String) ?? "").lowercased()
+        let audioCodec = ((stream["audioCodec"] as? String) ?? "").lowercased()
+
+        return (stream["videoOnly"] as? Bool) == false ||
+            mime.contains("mp4a") ||
+            mime.contains("opus") ||
+            mime.contains("vorbis") ||
+            mime.contains("audio") ||
+            !audioCodec.isEmpty
     }
 
     private static func parseHeight(_ qualityLabel: String?) -> Int? {

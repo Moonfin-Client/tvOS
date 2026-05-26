@@ -560,7 +560,7 @@ struct HomeScreen: View {
                         },
                         onPlayTrailer: { item in
                             cancelMediaBarTrailerPreview()
-                            Task { await playTrailerFromMediaBar(item) }
+                            Task { await playTrailerFromMediaBarAction(item) }
                         },
                         onFocusedItemChanged: { item in
                             lastContentAreaWasMediaBar = item != nil
@@ -1141,7 +1141,16 @@ struct HomeScreen: View {
     }
 
     private func playTrailerFromMediaBar(_ slideItem: MediaBarSlideItem) async {
-        guard let server = container.serverRepository.currentServer.value else { return }
+        let resolvedServerId = slideItem.serverId
+        let server: Server?
+        if let resolvedServerId,
+           let parsedId = UUID.from(rawId: resolvedServerId) {
+            server = container.serverRepository.storedServers.value.first(where: { $0.id == parsedId })
+        } else {
+            server = container.serverRepository.currentServer.value
+        }
+
+        guard let server else { return }
         let client = container.serverClientFactory.client(for: server)
         guard let item = try? await client.userLibraryApi.getItem(itemId: slideItem.id) else { return }
 
@@ -1194,6 +1203,29 @@ struct HomeScreen: View {
             lastPreviewedMediaBarItemId = slideItem.id
             return
         }
+    }
+
+    private func playTrailerFromMediaBarAction(_ slideItem: MediaBarSlideItem) async {
+        let resolvedServerId = slideItem.serverId
+        let server: Server?
+        if let resolvedServerId,
+           let parsedId = UUID.from(rawId: resolvedServerId) {
+            server = container.serverRepository.storedServers.value.first(where: { $0.id == parsedId })
+        } else {
+            server = container.serverRepository.currentServer.value
+        }
+
+        guard let server else { return }
+        let client = container.serverClientFactory.client(for: server)
+        guard let item = try? await client.userLibraryApi.getItem(itemId: slideItem.id) else { return }
+
+        _ = await TrailerPlaybackHelper.playTrailer(
+            for: item,
+            client: client,
+            playbackCoordinator: container.playbackCoordinator,
+            router: router,
+            serverId: resolvedServerId
+        )
     }
 
     private func syncMakdBackdrop(for item: MediaBarSlideItem?) {
