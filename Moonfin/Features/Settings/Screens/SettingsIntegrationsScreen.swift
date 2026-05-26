@@ -24,7 +24,7 @@ struct SettingsIntegrationsScreen: View {
             SettingsNavRow(
                 focusedRoute: $focusedRoute,
                 route: .seerr,
-                icon: "film",
+                icon: "asset:settings-seerr",
                 heading: "Seerr",
                 caption: "Seerr integration settings"
             )
@@ -32,7 +32,7 @@ struct SettingsIntegrationsScreen: View {
             SettingsNavRow(
                 focusedRoute: $focusedRoute,
                 route: .integrationsHomeScreenSections,
-                icon: "rectangle.3.group",
+                icon: "asset:settings-hss",
                 heading: "Home Screen Sections",
                 caption: "Integration status and linked sections"
             )

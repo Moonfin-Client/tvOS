@@ -9,12 +9,28 @@ struct SettingsItemContent<Trailing: View>: View {
     @EnvironmentObject var theme: MoonfinTheme
     @Environment(\.isFocused) private var isFocused
 
+    private var assetIconName: String? {
+        let assetIconPrefix = "asset:"
+        guard icon.hasPrefix(assetIconPrefix) else { return nil }
+        let name = String(icon.dropFirst(assetIconPrefix.count))
+        return name.isEmpty ? nil : name
+    }
+
     var body: some View {
         HStack(spacing: SpaceTokens.spaceMd) {
-            Image(systemName: icon)
-                .font(.bodyLg)
-                .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : theme.colorScheme.listOverline)
-                .frame(width: 36)
+            if let assetIconName {
+                Image(assetIconName)
+                    .resizable()
+                    .renderingMode(.original)
+                    .scaledToFit()
+                    .frame(width: 38, height: 38)
+                    .frame(width: 36)
+            } else {
+                Image(systemName: icon)
+                    .font(.bodyLg)
+                    .foregroundColor(isFocused ? theme.colorScheme.listHeadlineFocused : theme.colorScheme.listOverline)
+                    .frame(width: 36)
+            }
 
             VStack(alignment: .leading, spacing: SpaceTokens.space2xs) {
                 Text(heading)

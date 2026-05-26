@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "settings-seerr.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

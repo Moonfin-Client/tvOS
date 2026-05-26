@@ -304,9 +304,9 @@ struct HomeSectionEntry: Identifiable {
     private static func pluginIcon(for source: HomeSectionPluginSource) -> String {
         switch source {
         case .hss:
-            return "puzzlepiece.extension"
+            return "asset:settings-hss"
         case .kefinTweaks:
-            return "slider.horizontal.3"
+            return "asset:settings-kf"
         case .collections:
             return "square.stack.3d.up"
         case .genres:
