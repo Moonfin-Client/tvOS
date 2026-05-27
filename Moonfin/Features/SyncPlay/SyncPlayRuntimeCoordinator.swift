@@ -4,6 +4,8 @@ import OSLog
 
 @MainActor
 final class SyncPlayRuntimeCoordinator {
+    var onDisplayMessage: ((String?, String) -> Void)?
+
     private weak var syncPlayManager: SyncPlayManager?
     private let serverRepository: ServerRepositoryProtocol
     private let serverClientFactory: MediaServerClientFactory
@@ -126,6 +128,8 @@ final class SyncPlayRuntimeCoordinator {
             syncPlayManager?.handlePlaybackCommand(command)
         case .syncPlayGroupUpdate(let update):
             syncPlayManager?.handleGroupUpdate(update)
+        case .generalCommand(let name, let arguments):
+            routeGeneralCommand(name: name, arguments: arguments)
         case .serverRestarting:
             syncPlayManager?.handleRealtimeSessionInterrupted(message: "Server is restarting")
         case .serverShuttingDown:
@@ -135,5 +139,31 @@ final class SyncPlayRuntimeCoordinator {
         default:
             break
         }
+    }
+
+    private func routeGeneralCommand(name: String, arguments: [String: String]) {
+        guard name.caseInsensitiveCompare("DisplayMessage") == .orderedSame else {
+            return
+        }
+
+        guard let text = argumentValue("Text", in: arguments),
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+
+        let header = argumentValue("Header", in: arguments)
+        onDisplayMessage?(header, text)
+    }
+
+    private func argumentValue(_ key: String, in arguments: [String: String]) -> String? {
+        if let value = arguments[key] {
+            return value
+        }
+
+        for (name, value) in arguments where name.caseInsensitiveCompare(key) == .orderedSame {
+            return value
+        }
+
+        return nil
     }
 }

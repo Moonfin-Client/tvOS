@@ -6,6 +6,8 @@ final class PluginSyncService: ObservableObject {
     @Published private(set) var isPluginAvailable = false
     @Published private(set) var syncCompletedCount = 0
 
+    var onAdminMessage: ((String) -> Void)?
+
     private let resolveClient: () -> HttpClient?
     private let resolveSeerrRepository: () -> SeerrRepositoryProtocol?
     private let resolveParentalRepository: () -> ParentalControlsRepository?
@@ -138,8 +140,21 @@ final class PluginSyncService: ObservableObject {
 
                         guard let data = payload.data(using: .utf8),
                               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                              let type = json["type"] as? String,
-                              type == "settingsUpdated" else {
+                              let type = json["type"] as? String else {
+                            continue
+                        }
+
+                        if type == "adminMessage" {
+                            if let text = json["text"] as? String {
+                                let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if !trimmed.isEmpty {
+                                    self.onAdminMessage?(trimmed)
+                                }
+                            }
+                            continue
+                        }
+
+                        guard type == "settingsUpdated" else {
                             continue
                         }
 

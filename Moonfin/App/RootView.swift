@@ -114,6 +114,11 @@ struct StartupNavigationView: View {
     }
 }
 
+private struct AdminMessagePayload: Equatable {
+    let title: String
+    let message: String
+}
+
 struct MainNavigationView: View {
     @EnvironmentObject var container: AppContainer
     @EnvironmentObject var router: NavigationRouter
@@ -131,6 +136,7 @@ struct MainNavigationView: View {
     @State private var isCurrentDestinationDetails = false
     @State private var contentHandoffResetTask: Task<Void, Never>?
     @State private var showExitConfirmation = false
+    @State private var adminMessage: AdminMessagePayload?
 
     private var navbarPosition: NavbarPosition {
         container.userPreferences[UserPreferences.navbarPosition]
@@ -205,11 +211,11 @@ struct MainNavigationView: View {
             mainContent
                 .focusSection()
                 .prefersDefaultFocus(contentShouldPreferDefaultFocus, in: mainNamespace)
-                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible || showExitConfirmation)
+                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible || showExitConfirmation || adminMessage != nil)
 
             navigationOverlay
                 .opacity(container.inactivityTracker.isScreensaverVisible ? 0 : 1)
-                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible || showExitConfirmation)
+                .disabled(settingsRouter.isPresented || container.inactivityTracker.isScreensaverVisible || showExitConfirmation || adminMessage != nil)
 
             clockOverlay
 
@@ -256,6 +262,20 @@ struct MainNavigationView: View {
                 )
                 .zIndex(2)
             }
+
+            if let adminMessage {
+                theme.colorScheme.scrim
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                    .zIndex(3)
+
+                AdminMessageDialog(
+                    title: adminMessage.title,
+                    message: adminMessage.message,
+                    onDismiss: { adminMessage = nil }
+                )
+                .zIndex(4)
+            }
         }
         .ignoresSafeArea()
         .focusScope(mainNamespace)
@@ -287,8 +307,23 @@ struct MainNavigationView: View {
         }
         .onDisappear {
             contentHandoffResetTask?.cancel()
+            container.pluginSyncService.onAdminMessage = nil
+            container.syncPlayRuntimeCoordinator.onDisplayMessage = nil
         }
         .onAppear {
+            container.pluginSyncService.onAdminMessage = { text in
+                adminMessage = AdminMessagePayload(title: "Server Message", message: text)
+            }
+
+            container.syncPlayRuntimeCoordinator.onDisplayMessage = { header, text in
+                let trimmedMessage = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmedMessage.isEmpty else { return }
+
+                let trimmedHeader = header?.trimmingCharacters(in: .whitespacesAndNewlines)
+                let title = (trimmedHeader?.isEmpty == false ? trimmedHeader : nil) ?? "Server Message"
+                adminMessage = AdminMessagePayload(title: title, message: trimmedMessage)
+            }
+
             if router.isPlaybackActive {
                 container.inactivityTracker.notifyInteraction()
             }
@@ -314,6 +349,11 @@ struct MainNavigationView: View {
             }
         }
         .onExitCommand {
+            if adminMessage != nil {
+                adminMessage = nil
+                return
+            }
+
             if showExitConfirmation {
                 showExitConfirmation = false
                 return
@@ -616,6 +656,48 @@ private struct ExitConfirmationDialog: View {
         .onAppear {
             DispatchQueue.main.async {
                 focusedTarget = .cancel
+            }
+        }
+        .onExitCommand(perform: onDismiss)
+    }
+}
+
+private struct AdminMessageDialog: View {
+    let title: String
+    let message: String
+    let onDismiss: () -> Void
+
+    @EnvironmentObject var theme: MoonfinTheme
+    @FocusState private var focusedButton: Bool
+
+    var body: some View {
+        VStack(spacing: SpaceTokens.spaceLg) {
+            Image(systemName: "megaphone.fill")
+                .font(.system(size: 40))
+                .foregroundColor(theme.accent)
+
+            Text(title)
+                .font(.titleMd)
+                .foregroundColor(theme.colorScheme.onBackground)
+
+            Text(message)
+                .font(.bodyMd)
+                .foregroundColor(theme.colorScheme.onBackground.opacity(0.8))
+                .multilineTextAlignment(.center)
+
+            FocusableDialogButton(title: Strings.ok, action: onDismiss)
+                .focused($focusedButton)
+        }
+        .padding(SpaceTokens.spaceXl)
+        .background(
+            RoundedRectangle(cornerRadius: RadiusTokens.large)
+                .fill(theme.colorScheme.surface)
+        )
+        .frame(maxWidth: 560)
+        .focusSection()
+        .onAppear {
+            DispatchQueue.main.async {
+                focusedButton = true
             }
         }
         .onExitCommand(perform: onDismiss)
