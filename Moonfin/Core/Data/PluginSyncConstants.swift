@@ -33,7 +33,7 @@ struct SyncablePreference {
 enum PluginSyncConstants {
     static let snapshotKey = "moonfin_sync_snapshot"
     static let snapshotVersionKey = "_snapshot_version"
-    static let snapshotVersion = 8
+    static let snapshotVersion = 9
     static let clientId = "moonfin-appletv"
     static let pingPath = "/Moonfin/Ping"
     static let settingsPath = "/Moonfin/Settings"
@@ -47,6 +47,8 @@ enum PluginSyncConstants {
         SyncablePreference(key: "pref_custom_theme_id", type: .string, serverKey: "customThemeId", defaultValue: ""),
 
         SyncablePreference(key: "navbar_position", type: .enum, serverKey: "navbarPosition", defaultValue: "top"),
+        SyncablePreference(key: "navbar_color", type: .enum, serverKey: "navbarColor", defaultValue: "gray"),
+        SyncablePreference(key: "navbar_opacity", type: .int, serverKey: "navbarOpacity", defaultValue: 100),
         SyncablePreference(key: "shuffle_content_type", type: .enum, serverKey: "shuffleContentType", defaultValue: "both"),
 
         SyncablePreference(key: "navbar_show_shuffle", type: .boolean, serverKey: "showShuffleButton", defaultValue: true),
@@ -80,6 +82,16 @@ enum PluginSyncConstants {
         SyncablePreference(key: "backdrop_enabled", type: .boolean, serverKey: "backdropEnabled", defaultValue: true),
         SyncablePreference(key: "details_background_blur", type: .int, serverKey: "detailsScreenBlur", defaultValue: 10),
         SyncablePreference(key: "browsing_background_blur", type: .int, serverKey: "browsingBlur", defaultValue: 10),
+        SyncablePreference(key: "home_rows_style", type: .enum, serverKey: "homeRowsStyle", defaultValue: "v2"),
+        SyncablePreference(key: "home_rows_image_type_override", type: .boolean, serverKey: "homeRowsImageTypeOverride", defaultValue: false),
+        SyncablePreference(key: "home_poster_size", type: .enum, serverKey: "posterSize", defaultValue: "medium"),
+        SyncablePreference(key: "display_favorites_rows", type: .boolean, serverKey: "displayFavoritesRows", defaultValue: true),
+        SyncablePreference(key: "display_collections_rows", type: .boolean, serverKey: "displayCollectionsRows", defaultValue: true),
+        SyncablePreference(key: "display_genres_rows", type: .boolean, serverKey: "displayGenresRows", defaultValue: true),
+        SyncablePreference(key: "favorites_row_sort_by", type: .enum, serverKey: "favoritesRowSortBy", defaultValue: "name"),
+        SyncablePreference(key: "collections_row_sort_by", type: .enum, serverKey: "collectionsRowSortBy", defaultValue: "name"),
+        SyncablePreference(key: "genres_row_sort_by", type: .enum, serverKey: "genresRowSortBy", defaultValue: "name"),
+        SyncablePreference(key: "genres_row_items", type: .enum, serverKey: "genresRowItemFilter", defaultValue: "both"),
         SyncablePreference(key: "home_rows_image_type", type: .enum, serverKey: "homeRowsImageType", defaultValue: "poster"),
         SyncablePreference(key: "home_image_type_continue_watching", type: .enum, serverKey: "homeImageTypeContinueWatching", defaultValue: "thumb"),
         SyncablePreference(key: "home_image_type_next_up", type: .enum, serverKey: "homeImageTypeNextUp", defaultValue: "thumb"),
@@ -89,14 +101,11 @@ enum PluginSyncConstants {
         SyncablePreference(key: "home_image_use_series_image", type: .boolean, serverKey: "homeImageUseSeriesImage", defaultValue: false),
 
         SyncablePreference(key: "enable_additional_ratings", type: .boolean, serverKey: "mdblistEnabled", defaultValue: false),
+        SyncablePreference(key: "tmdb_api_key", type: .string, serverKey: "tmdbApiKey", defaultValue: ""),
         SyncablePreference(key: "enable_episode_ratings", type: .boolean, serverKey: "tmdbEpisodeRatingsEnabled", defaultValue: false),
         SyncablePreference(key: "show_rating_labels", type: .boolean, serverKey: "mdblistShowRatingNames", defaultValue: true),
-
-        SyncablePreference(key: "clock_behavior", type: .enum, serverKey: "clockBehavior", defaultValue: "always"),
+        SyncablePreference(key: "show_rating_badges", type: .boolean, serverKey: "mdblistShowRatingBadges", defaultValue: true),
         SyncablePreference(key: "watched_indicator", type: .enum, serverKey: "watchedIndicator", defaultValue: "always"),
-
-        SyncablePreference(key: "screensaver_mode", type: .enum, serverKey: "screensaverMode", defaultValue: "logo"),
-        SyncablePreference(key: "screensaver_timeout", type: .int, serverKey: "screensaverTimeout", defaultValue: 5),
 
         SyncablePreference(key: "enable_multi_server_libraries", type: .boolean, serverKey: "enableMultiServerLibraries", defaultValue: false),
 
@@ -108,6 +117,11 @@ enum PluginSyncConstants {
         SyncablePreference(key: "seerr_block_nsfw", type: .boolean, serverKey: "jellyseerrBlockNsfw", defaultValue: true, source: .seerr),
 
         SyncablePreference(key: "syncplay_enabled", type: .boolean, serverKey: "showSyncPlayButton", defaultValue: false),
+
+        SyncablePreference(key: "episode_preview_enabled", type: .boolean, serverKey: "episodePreviewEnabled", defaultValue: true),
+        SyncablePreference(key: "preview_audio_enabled", type: .boolean, serverKey: "previewAudioEnabled", defaultValue: true),
+        SyncablePreference(key: "card_focus_expansion", type: .boolean, serverKey: "cardFocusExpansion", defaultValue: true),
+        SyncablePreference(key: "focus_color", type: .string, serverKey: "focusColor", defaultValue: ""),
 
         SyncablePreference(key: "blocked_ratings", type: .list, serverKey: "blockedRatings", defaultValue: [String](), source: .parental),
 

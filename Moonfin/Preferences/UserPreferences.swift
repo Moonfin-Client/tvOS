@@ -43,6 +43,7 @@ final class UserPreferences: ObservableObject {
 
     static let homeSections = Preference(key: "home_active_sections", defaultValue: "")
     static let homePosterSize = Preference(key: "home_poster_size", defaultValue: PosterSize.medium)
+    static let homeRowsImageTypeOverride = Preference(key: "home_rows_image_type_override", defaultValue: false)
     static let homeRowsImageType = Preference(key: "home_rows_image_type", defaultValue: ImageDisplayType.poster)
     static let homeImageTypeContinueWatching = Preference(key: "home_image_type_continue_watching", defaultValue: ImageDisplayType.thumb)
     static let homeImageTypeNextUp = Preference(key: "home_image_type_next_up", defaultValue: ImageDisplayType.thumb)
@@ -82,6 +83,7 @@ final class UserPreferences: ObservableObject {
     static let mediaBarExcludedGenres = Preference(key: "media_bar_excluded_genres", defaultValue: [String]())
 
     static let enableAdditionalRatings = Preference(key: "enable_additional_ratings", defaultValue: false)
+    static let tmdbApiKey = Preference(key: "tmdb_api_key", defaultValue: "")
     static let enableEpisodeRatings = Preference(key: "enable_episode_ratings", defaultValue: false)
     static let showRatingLabels = Preference(key: "show_rating_labels", defaultValue: true)
     static let showRatingBadges = Preference(key: "show_rating_badges", defaultValue: true)
@@ -185,6 +187,7 @@ final class UserPreferences: ObservableObject {
     static let userPinHash = Preference(key: "user_pin_hash", defaultValue: "")
     static let confirmExit = Preference(key: "confirm_exit", defaultValue: true)
     static let use24HourClock = Preference(key: "use_24_hour_clock", defaultValue: false)
+    static let focusColor = Preference(key: "focus_color", defaultValue: "")
     static let cardFocusExpansion = Preference(key: "card_focus_expansion", defaultValue: true)
     static let preferSystemImeKeyboard = Preference(key: "prefer_system_ime_keyboard", defaultValue: false)
     static let showSyncPlayButton = Preference(key: "show_syncplay_button", defaultValue: true)

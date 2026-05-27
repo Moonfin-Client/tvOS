@@ -14,6 +14,7 @@ final class PluginSyncService: ObservableObject {
     private var serverSchemaVersion = 1
     private var pendingSeerrRowsConfig: [String: Any]?
     private var pushTask: Task<Void, Never>?
+    private var sseTask: Task<Void, Never>?
     private var changeObserver: NSObjectProtocol?
     private var seerrChangeObserver: NSObjectProtocol?
     private var parentalChangeObserver: NSObjectProtocol?
@@ -34,16 +35,26 @@ final class PluginSyncService: ObservableObject {
         let syncEnabled = defaults.bool(forKey: UserPreferences.pluginSyncEnabled.key)
 
         if !syncEnabled {
+            sseTask?.cancel()
+            sseTask = nil
             unregisterChangeListener()
             return
         }
 
-        guard let client = resolveClient(), client.isUsable else { return }
+        guard let client = resolveClient(), client.isUsable else {
+            sseTask?.cancel()
+            sseTask = nil
+            return
+        }
 
         let available = await ping(client: client)
         isPluginAvailable = available
 
-        guard available else { return }
+        guard available else {
+            sseTask?.cancel()
+            sseTask = nil
+            return
+        }
 
         await refreshCustomThemes(client: client)
 
@@ -65,11 +76,97 @@ final class PluginSyncService: ObservableObject {
 
         registerChangeListener()
         await configureJellyseerrProxy(client: client)
+        startSseListener(client: client)
     }
 
     func initialSync() async {
+        sseTask?.cancel()
+        sseTask = nil
         clearSnapshot()
         await syncOnStartup()
+    }
+
+    private func pullAndApplySettings(client: HttpClient) async {
+        guard let serverSettings = await fetchServerSettings(client: client) else { return }
+
+        applySettings(serverSettings)
+        applySeerrRowConfig()
+        syncCompletedCount += 1
+    }
+
+    private func startSseListener(client: HttpClient) {
+        sseTask?.cancel()
+
+        sseTask = Task { [weak self] in
+            guard let self else { return }
+
+            var reconnectAttempt: UInt64 = 0
+
+            while !Task.isCancelled {
+                guard let baseURL = client.baseURL else { return }
+
+                var didReceiveAnyLine = false
+
+                do {
+                    let streamPath = "\(PluginSyncConstants.settingsPath)/Stream"
+                        .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+
+                    var request = URLRequest(url: baseURL.appendingPathComponent(streamPath))
+                    request.httpMethod = "GET"
+                    request.setValue(client.authorizationHeader, forHTTPHeaderField: "Authorization")
+                    request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+
+                    let (bytes, response) = try await URLSession.shared.bytes(for: request)
+                    guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                        throw URLError(.badServerResponse)
+                    }
+
+                    for try await rawLine in bytes.lines {
+                        try Task.checkCancellation()
+
+                        didReceiveAnyLine = true
+
+                        if !rawLine.hasPrefix("data:") {
+                            continue
+                        }
+
+                        let payload = rawLine.dropFirst("data:".count)
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        if payload.isEmpty {
+                            continue
+                        }
+
+                        guard let data = payload.data(using: .utf8),
+                              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                              let type = json["type"] as? String,
+                              type == "settingsUpdated" else {
+                            continue
+                        }
+
+                        await self.pullAndApplySettings(client: client)
+                    }
+                } catch {
+                    if Task.isCancelled {
+                        break
+                    }
+                }
+
+                if Task.isCancelled {
+                    break
+                }
+
+                if didReceiveAnyLine {
+                    reconnectAttempt = 0
+                }
+
+                let delaySeconds = min(UInt64(1) << reconnectAttempt, UInt64(30))
+                try? await Task.sleep(nanoseconds: delaySeconds * 1_000_000_000)
+
+                if !didReceiveAnyLine {
+                    reconnectAttempt = min(reconnectAttempt + 1, 6)
+                }
+            }
+        }
     }
 
     // MARK: - Ping
@@ -655,6 +752,8 @@ final class PluginSyncService: ObservableObject {
         }
         pushTask?.cancel()
         pushTask = nil
+        sseTask?.cancel()
+        sseTask = nil
     }
 
     private func handleDefaultsChange() {
