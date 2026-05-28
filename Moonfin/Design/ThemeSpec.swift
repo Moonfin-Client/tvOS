@@ -378,17 +378,11 @@ struct ThemeBookTokensSpec: Equatable {
     }
 }
 
-enum ThemeBrightness: String, Equatable {
-    case dark
-    case light
-}
-
 struct ThemeSpec: Equatable {
     static let currentSchemaVersion = 1
 
     let id: String
     let displayName: String
-    let brightness: ThemeBrightness
     let fontFamily: String?
     let textGlow: [ThemeShadowSpec]
     let navColorCycle: [ThemeHexColor]
@@ -419,10 +413,6 @@ struct ThemeSpec: Equatable {
         }
 
         let displayName = try ThemeParser.requiredString(map, key: "displayName", field: "displayName")
-        let brightnessRaw = try ThemeParser.requiredString(map, key: "brightness", field: "brightness")
-        guard let brightness = ThemeBrightness(rawValue: brightnessRaw) else {
-            throw ThemeSpecValidationError.invalidField("brightness")
-        }
 
         let textGlow = try ThemeParser.shadowList(
             map["textGlow"],
@@ -442,7 +432,6 @@ struct ThemeSpec: Equatable {
         return ThemeSpec(
             id: id,
             displayName: displayName,
-            brightness: brightness,
             fontFamily: fontFamily,
             textGlow: textGlow,
             navColorCycle: try ThemeParser.colorList(map["navColorCycle"], field: "navColorCycle", maxItems: 16, allowEmpty: true, fallback: []),

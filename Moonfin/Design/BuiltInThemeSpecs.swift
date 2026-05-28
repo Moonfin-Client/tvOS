@@ -4,7 +4,6 @@ extension ThemeSpec {
     static let moonfin = ThemeSpec(
         id: "moonfin",
         displayName: "Moonfin",
-        brightness: .dark,
         fontFamily: nil,
         textGlow: [],
         navColorCycle: [],
@@ -67,7 +66,6 @@ extension ThemeSpec {
     static let neonPulse = ThemeSpec(
         id: "neon_pulse",
         displayName: "Neon Pulse",
-        brightness: .dark,
         fontFamily: "NeonPulseDisplay",
         textGlow: [
             ThemeShadowSpec(
