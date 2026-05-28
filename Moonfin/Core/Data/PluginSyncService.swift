@@ -12,6 +12,7 @@ final class PluginSyncService: ObservableObject {
     private let resolveSeerrRepository: () -> SeerrRepositoryProtocol?
     private let resolveParentalRepository: () -> ParentalControlsRepository?
     private let defaults: UserDefaults
+    private let themeCacheStore: ThemeCacheStore
 
     private var serverSchemaVersion = 1
     private var pendingSeerrRowsConfig: [String: Any]?
@@ -25,12 +26,14 @@ final class PluginSyncService: ObservableObject {
         resolveClient: @escaping () -> HttpClient?,
         resolveSeerrRepository: @escaping () -> SeerrRepositoryProtocol? = { nil },
         resolveParentalRepository: @escaping () -> ParentalControlsRepository? = { nil },
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        themeCacheStore: ThemeCacheStore = ThemeCacheStore()
     ) {
         self.resolveClient = resolveClient
         self.resolveSeerrRepository = resolveSeerrRepository
         self.resolveParentalRepository = resolveParentalRepository
         self.defaults = defaults
+        self.themeCacheStore = themeCacheStore
     }
 
     func syncOnStartup() async {
@@ -49,6 +52,8 @@ final class PluginSyncService: ObservableObject {
             return
         }
 
+        await refreshCustomThemes(client: client)
+
         let available = await ping(client: client)
         isPluginAvailable = available
 
@@ -57,8 +62,6 @@ final class PluginSyncService: ObservableObject {
             sseTask = nil
             return
         }
-
-        await refreshCustomThemes(client: client)
 
         let serverSettings = await fetchServerSettings(client: client)
         let localSettings = collectLocalSettings()
@@ -86,6 +89,34 @@ final class PluginSyncService: ObservableObject {
         sseTask = nil
         clearSnapshot()
         await syncOnStartup()
+    }
+
+    func listSavedThemes() -> [SavedThemeEntry] {
+        guard let client = resolveClient() else { return [] }
+        return themeCacheStore.listSavedThemes(serverKey: themeCacheStore.serverKey(for: client))
+    }
+
+    @discardableResult
+    func deleteSavedTheme(themeId: String) -> Bool {
+        let trimmedThemeId = themeId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedThemeId.isEmpty,
+              !ThemeRegistry.builtInIds.contains(trimmedThemeId),
+              let client = resolveClient() else {
+            return false
+        }
+
+        let serverKey = themeCacheStore.serverKey(for: client)
+        let deleted = (try? themeCacheStore.deleteCachedTheme(themeId: trimmedThemeId, serverKey: serverKey)) ?? false
+        guard deleted else {
+            return false
+        }
+
+        ThemeRegistry.shared.removeCustom(id: trimmedThemeId)
+        if defaults.string(forKey: UserPreferences.customThemeId.key) == trimmedThemeId {
+            defaults.set("", forKey: UserPreferences.customThemeId.key)
+        }
+
+        return true
     }
 
     private func pullAndApplySettings(client: HttpClient) async {
@@ -151,6 +182,11 @@ final class PluginSyncService: ObservableObject {
                                     self.onAdminMessage?(trimmed)
                                 }
                             }
+                            continue
+                        }
+
+                        if type == "themesChanged" {
+                            await self.refreshCustomThemes(client: client)
                             continue
                         }
 
@@ -491,10 +527,23 @@ final class PluginSyncService: ObservableObject {
     }
 
     private func refreshCustomThemes(client: HttpClient) async {
+        let serverKey = themeCacheStore.serverKey(for: client)
+        let cachedSpecs = themeCacheStore.loadCachedThemes(serverKey: serverKey)
+        ThemeRegistry.shared.replaceCustomThemes(cachedSpecs)
+
         let payload = await fetchThemesPayload(client: client)
+        guard let payload else {
+            let customThemeId = defaults.string(forKey: UserPreferences.customThemeId.key) ?? ""
+            if !customThemeId.isEmpty && ThemeRegistry.shared.availableThemes[customThemeId] == nil {
+                defaults.set("", forKey: UserPreferences.customThemeId.key)
+            }
+            return
+        }
+
         let objects = extractThemeObjects(payload)
 
         var specs: [ThemeSpec] = []
+        var validThemeObjects: [[String: Any]] = []
         for entry in objects {
             guard let map = entry as? [String: Any] else { continue }
             do {
@@ -503,12 +552,15 @@ final class PluginSyncService: ObservableObject {
                     continue
                 }
                 specs.append(spec)
-            } catch {
-                // Ignore malformed theme entries from plugin response.
-            }
+                validThemeObjects.append(map)
+            } catch {}
         }
 
         ThemeRegistry.shared.replaceCustomThemes(specs)
+
+        do {
+            try themeCacheStore.writeCachedThemes(validThemeObjects, serverKey: serverKey)
+        } catch {}
 
         let customThemeId = defaults.string(forKey: UserPreferences.customThemeId.key) ?? ""
         if !customThemeId.isEmpty && ThemeRegistry.shared.availableThemes[customThemeId] == nil {

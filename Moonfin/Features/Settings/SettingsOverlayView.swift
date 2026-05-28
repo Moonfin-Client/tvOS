@@ -158,6 +158,8 @@ private struct SettingsRouteResolver: View {
             SettingsCustomizationScreen()
         case .customizationAppearanceTheme:
             SettingsAppearanceThemeScreen()
+        case .customizationSavedThemes:
+            SettingsAppearanceSavedThemesScreen()
         case .customizationFocusBorder:
             SettingsPickerScreen(
                 title: "Focus Border Color",

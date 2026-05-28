@@ -39,6 +39,7 @@ enum SettingsRoute: Hashable {
 
     case customization
     case customizationAppearanceTheme
+    case customizationSavedThemes
     case customizationFocusBorder
     case customizationClock
     case customizationWatchedIndicator

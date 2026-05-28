@@ -18,6 +18,14 @@ struct SettingsGeneralStyleScreen: View {
             .focused($focusedRoute, equals: .customizationAppearanceTheme)
 
             SettingsListButton(
+                icon: "square.and.arrow.down",
+                heading: "Saved Themes",
+                caption: "Manage downloaded plugin themes on this device",
+                action: { settingsRouter.navigate(to: .customizationSavedThemes) }
+            )
+            .focused($focusedRoute, equals: .customizationSavedThemes)
+
+            SettingsListButton(
                 icon: "circle.lefthalf.filled",
                 heading: "Focus Border Color",
                 caption: "Adjust the focus highlight color",
